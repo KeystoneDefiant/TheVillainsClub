@@ -1,0 +1,48 @@
+{
+  "by_date": {
+    "2026-04-03": "grand_opening"
+  },
+  "fallback_cycle": [
+    "lucky_streak",
+    "house_cut",
+    "double_rum",
+    "quiet_night"
+  ],
+  "definitions": {
+    "grand_opening": {
+      "title": "Grand Opening",
+      "modifier": {
+        "type": "payout_mult",
+        "value": 1.35
+      }
+    },
+    "lucky_streak": {
+      "title": "Lucky Streak",
+      "modifier": {
+        "type": "payout_mult",
+        "value": 1.15
+      }
+    },
+    "house_cut": {
+      "title": "House Cut",
+      "modifier": {
+        "type": "payout_mult",
+        "value": 0.9
+      }
+    },
+    "double_rum": {
+      "title": "Double Rum",
+      "modifier": {
+        "type": "payout_mult",
+        "value": 1.25
+      }
+    },
+    "quiet_night": {
+      "title": "Quiet Night",
+      "modifier": {
+        "type": "payout_mult",
+        "value": 1.05
+      }
+    }
+  }
+}

@@ -1,0 +1,181 @@
+[gd_scene load_steps=2 format=3 uid="uid://mc3gc8uwrl5q"]
+
+[ext_resource type="Script" path="res://scenes/main.gd" id="1_script"]
+
+[node name="Main" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_bottom = 24
+
+[node name="VBox" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "THE VILLAINS CLUB — Development floor"
+
+[node name="Subtitle" type="Label" parent="Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.6, 0.65, 1)
+text = "Phases 0–2: save, credits, daily stipend, specials, loans, house band queue"
+
+[node name="HSeparator" type="HSeparator" parent="Margin/VBox"]
+layout_mode = 2
+
+[node name="RowDate" type="HBoxContainer" parent="Margin/VBox"]
+layout_mode = 2
+
+[node name="Lbl" type="Label" parent="Margin/VBox/RowDate"]
+layout_mode = 2
+text = "Bar date:"
+
+[node name="DateValue" type="Label" parent="Margin/VBox/RowDate"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "—"
+
+[node name="RowCredits" type="HBoxContainer" parent="Margin/VBox"]
+layout_mode = 2
+
+[node name="Lbl2" type="Label" parent="Margin/VBox/RowCredits"]
+layout_mode = 2
+text = "Credits:"
+
+[node name="CreditsValue" type="Label" parent="Margin/VBox/RowCredits"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "0"
+
+[node name="BtnSpend" type="Button" parent="Margin/VBox/RowCredits"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Spend 10 (test)"
+
+[node name="RowSpecial" type="HBoxContainer" parent="Margin/VBox"]
+layout_mode = 2
+
+[node name="Lbl3" type="Label" parent="Margin/VBox/RowSpecial"]
+layout_mode = 2
+text = "Tonight's special:"
+
+[node name="SpecialValue" type="Label" parent="Margin/VBox/RowSpecial"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "—"
+
+[node name="ModifiersValue" type="Label" parent="Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "—"
+autowrap_mode = 3
+
+[node name="LoanValue" type="Label" parent="Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "—"
+autowrap_mode = 3
+
+[node name="RowLoans" type="HBoxContainer" parent="Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="LblLoan" type="Label" parent="Margin/VBox/RowLoans"]
+layout_mode = 2
+text = "Loans:"
+
+[node name="LoanShort" type="Button" parent="Margin/VBox/RowLoans"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Short pour (+200)"
+
+[node name="LoanDeep" type="Button" parent="Margin/VBox/RowLoans"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Deep glass (+500)"
+
+[node name="HSeparator2" type="HSeparator" parent="Margin/VBox"]
+layout_mode = 2
+
+[node name="LblMusic" type="Label" parent="Margin/VBox"]
+layout_mode = 2
+text = "House band (now playing):"
+
+[node name="MusicValue" type="Label" parent="Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "—"
+autowrap_mode = 3
+
+[node name="BtnEnterBar" type="Button" parent="Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Enter bar / unlock audio (click once — web)"
+
+[node name="AudioHint" type="Label" parent="Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.75, 0.55, 1)
+
+[node name="HSeparator3" type="HSeparator" parent="Margin/VBox"]
+layout_mode = 2
+
+[node name="LblCheats" type="Label" parent="Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.55, 0.45, 1)
+text = "Cheats / QA"
+
+[node name="RowCheats" type="HBoxContainer" parent="Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="CheatCredits" type="SpinBox" parent="Margin/VBox/RowCheats"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 1.0
+max_value = 999999.0
+value = 100.0
+
+[node name="BtnGrant" type="Button" parent="Margin/VBox/RowCheats"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Grant credits"
+
+[node name="BtnNextDay" type="Button" parent="Margin/VBox/RowCheats"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Next calendar day (debug)"
+
+[node name="RowSave" type="HBoxContainer" parent="Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="BtnSave" type="Button" parent="Margin/VBox/RowSave"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Save now"
+
+[node name="BtnLoad" type="Button" parent="Margin/VBox/RowSave"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Reload save"

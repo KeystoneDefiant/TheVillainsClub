@@ -1,0 +1,32 @@
+{
+  "bands": [
+    {
+      "id": "velvet_rats",
+      "display_name": "The Velvet Rats",
+      "track_clips": [
+        "res://content/audio/placeholder_a.ogg",
+        "res://content/audio/placeholder_b.ogg",
+        "res://content/audio/placeholder_c.ogg",
+        "res://content/audio/placeholder_d.ogg"
+      ],
+      "track_duration_if_missing_sec": 3.5,
+      "interlude_every_n_tracks": 3,
+      "interlude_duration_sec": 2.0,
+      "full_break_every_n_tracks": 6,
+      "break_duration_sec": 5.0
+    },
+    {
+      "id": "smoke_hex",
+      "display_name": "Smoke & Hex",
+      "track_clips": [
+        "res://content/audio/placeholder_a.ogg",
+        "res://content/audio/placeholder_b.ogg"
+      ],
+      "track_duration_if_missing_sec": 4.0,
+      "interlude_every_n_tracks": 2,
+      "interlude_duration_sec": 2.5,
+      "full_break_every_n_tracks": 4,
+      "break_duration_sec": 6.0
+    }
+  ]
+}

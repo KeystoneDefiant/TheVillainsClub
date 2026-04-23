@@ -12,13 +12,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Godot 4.3
-        run: |
-          curl -fsSL -o godot.zip "https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_linux.x86_64.zip"
-          unzip -q godot.zip
-          chmod +x Godot_v4.3-stable_linux.x86_64
-          sudo mv Godot_v4.3-stable_linux.x86_64 /usr/local/bin/godot
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
 
-      - name: Run headless tests
-        working-directory: ${{ github.workspace }}
-        run: godot --path . --headless res://tests/test_runner.tscn
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm run test
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build

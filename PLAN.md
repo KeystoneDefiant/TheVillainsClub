@@ -2,143 +2,123 @@
 
 This document describes **how** the project is built and operated. Overarching outcomes and phase completion are in **GOALS.MD**.
 
+---
+
+## Current status (for agents — read this first)
+
+**Stack:** The playable shell is **Electron + Vite + React + TypeScript**, not Godot. Godot project files, GDScript, scenes, and Godot-only tooling have been removed from this branch.
+
+**Dev environment:** Use **Docker / Dev Container** when the host has no Node toolchain. See **AGENTS.md** (`## Dev container`) and **`.devcontainer/README.md`**. Typical flow inside the container: `npm ci` (or rely on `post-create`), then `npm run dev:web` and open forwarded **http://localhost:5173**. Full Electron: `npm run dev` (needs a display).
+
+**What exists today (milestone: club shell + playground):**
+
+- **Renderer:** Vite + React 19, **Mantine** UI, **Framer Motion** for intro/menu motion.
+- **Routes:** Intro (`/`) → main menu (`/menu`), bar stub (`/bar`), dev-only UI playground (`/__playground` in development).
+- **Theme:** Club palette in `src/theme/`; typography loads via **Google Fonts** in `src/styles/fonts.css` (add self-hosted files under `assets/fonts/` later if you want fully offline dev).
+- **Economy contract (stub):** `src/game/money.ts` + Zustand `src/game/clubWalletStore.ts` — **club balance** vs **table session / buy-in**; minigames must only see session stake (documented in code).
+- **Content / reference (unchanged on disk):** **`content/*.json`** (and JSONC where present) remain the long-term data source; not all are consumed by the React app yet. **`TO_PORT/`** remains the **git submodule** JS reference (e.g. Oubliette); not bundled into the Electron app until explicitly ported.
+- **Tests / CI:** **Vitest** + **ESLint**; CI runs `npm ci` → `lint` / `test` / `typecheck` / `build` (see `.github/workflows/ci.yml`).
+
+**Immediate next steps (suggested order):**
+
+1. Wire **save persistence** (e.g. `localStorage` or Electron `userData`) to `clubWalletStore` and settings.
+2. **Bar flow:** drink catalog from `content/drinks.json`, transitions, buy-in UI aligned with `money.ts`.
+3. **First minigame host:** embed or port from **`TO_PORT/OublietteNo9`**, passing only **`MinigameRuntimeProps`**-style props.
+4. **Audio:** SFX/music from `content/*_sfx.json` and optional `assets/sounds/` when added.
+5. Refresh **`docs/architecture.md`** when autoload-style boundaries are replaced by React/Electron modules.
+
+---
+
 ## Engine and language
 
-- **Engine:** Godot 4.x (pin an exact minor version in `AGENTS.md` and match CI export templates).
-- **Language:** **GDScript** as the default for gameplay, UI, and tools unless the team explicitly commits to C# and its export/toolchain overhead (especially mobile).
-- **Reference sources:** JavaScript originals live in **`TO_PORT/`** as a **git submodule**. Ports are new Godot implementations; do not embed a JS runtime in shipping builds.
+- **Shell:** **Electron** (main/preload under `electron/`), renderer **Vite + React + TypeScript** under `src/`.
+- **Reference sources:** JavaScript originals live in **`TO_PORT/`** as a **git submodule**. Ports become first-party React (or shared packages); keep parity notes (e.g. `docs/oubliette_port_parity.md`) updated when behavior is ported.
 
 ## Platforms
 
-Target every platform Godot supports that the team can sign and maintain:
+- **Primary:** **Desktop** via Electron (Windows first in `electron-builder` config; Linux/macOS follow signing and pipeline needs).
+- **Web / dev:** **Vite dev server** (`npm run dev:web`) for UI iteration inside containers or without Electron; production web export is optional unless reintroduced explicitly.
 
-- **Desktop:** Windows, Linux; add **macOS** if Apple developer signing/notarization is available.
-- **Mobile:** Android, iOS (certificates, provisioning, store policies).
-- **Web:** **HTML5 / WebAssembly** export — same Godot project and (ideally) same gameplay code paths as native; ship via static hosting (itch.io, GitHub Pages, your own CDN, etc.).
-
-Use **export presets** per platform; document required secrets (keystore, API keys) outside the repo.
-
-### Web-specific implementation notes
-
-- **Performance and size:** Web builds are **larger downloads** and typically **more CPU/GPU constrained** than desktop; cap initial load (texture audio compression, lazy loading where Godot allows), and profile minigames on mid-tier laptops in Chrome/Firefox/Safari.
-- **Threads:** Depending on Godot version and export settings, the web player may be **single-threaded** or require specific **COOP/COEP** (and related) headers on the host. Treat **threading and worker assumptions** as a web compatibility checklist, not identical to desktop.
-- **Persistence:** `user://` on web maps to **browser storage** (persistent across sessions when storage is not cleared). Same **save schema and migration** logic as native; avoid assuming a real filesystem path.
-- **Input:** Touch, pointer, and **keyboard focus** (fullscreen, canvas focus) differ from native; bar UI should remain usable with mouse, touch, and common gamepad mappings where you support them elsewhere.
-- **Audio:** Browsers enforce **user-gesture** rules for starting audio; ensure the first tap/click can **unlock** the audio bus (Godot often handles this if UX starts from a clear “enter bar” / play action).
-- **DLC and mods on web:** There is no arbitrary `mods/` folder like on disk. Plan **HTTP(S) fetch** of optional `.pck` (or split asset bundles) into a web-safe location, then load via Godot’s documented **pack loading** APIs, with **CORS** and **hosting** documented. Community mods may be **URL-based** or **curated packs** only unless you build a workshop-style pipeline later.
-- **“Management favor” / optional online:** Web builds are already **URL-delivered**; optional session features align naturally, but still keep **core play** working **offline** via **PWA** / **service worker** caching only if you explicitly invest in that (otherwise web implies network for first load).
-
-## Repository layout (suggested)
+## Repository layout (current)
 
 ```
-TO_PORT/              # git submodule — JS reference only, not shipped
-games/                # one folder per minigame (scenes, resources, tests)
-core/                 # autoloads, bar shell, economy, time, save, unlocks
-content/              # data: drink catalog, specials, bands, loan rules
-dlc/                  # optional pack projects, manifests, build notes
-addons/               # third-party plugins, shared editor tools
-docs/                 # architecture, modding, i18n notes
+TO_PORT/              # git submodule — JS reference; not auto-imported by app
+content/              # JSON/JSONC catalogs (drinks, bands, sfx manifests, etc.)
+electron/             # main.cjs, preload.cjs
+src/                  # React app: pages, theme, components, game/, dev playground
+.devcontainer/        # Dockerfile, devcontainer.json, post-create.sh
+compose.yaml          # optional plain Docker `dev` service
+docs/                 # architecture, roadmaps (some Godot-era text may be stale)
 .github/workflows/    # CI
 ```
 
-Initialize the submodule in onboarding and in `AGENTS.md`:
+Submodule init:
 
 `git submodule update --init --recursive`
 
-## Architecture
+## Architecture (high level)
 
-### Autoloads (conceptual)
-
-| Area        | Responsibility |
-|------------|----------------|
-| Game state | Credits, profile, unlock flags, active modifiers |
-| Time / day | Local calendar day boundary, “bar date,” daily infusion eligibility |
-| Save       | Serialize/deserialize, versioning, migration |
-| Audio      | Band-of-the-day, playlists, interludes, buses |
-| Content    | Load catalogs; merge DLC/mod manifests |
+| Area | Responsibility (target) |
+|------|-------------------------|
+| Renderer state | React + Zustand (or similar) for UI and session flows |
+| Persistence | Versioned save JSON under Electron `userData` (or web storage if you add a web target) |
+| Audio | Web Audio / HTMLAudio; map from `content` manifests |
+| Content | Load `content/*.json` at runtime or bundle via Vite; handle JSONC for browser |
 
 ### Offline-first vs optional online
 
-- **Required:** No network to play. All progression, specials, loans, and audio rotation work locally.
-- **Optional (later):** “Management favor” (remote admin buff) is a **separate module**: session discovery, auth, and transport (LAN, relay, or store-specific) must not block the offline path.
+Unchanged as a product goal: core play should not require network. Optional online features stay a separate module.
 
-### Cheats / debug
+### Economy (product + code contract)
 
-- **Cheats menu:** Grant credits, optional day skip for QA; accessible in dev builds or via explicit player-facing toggle (product decision). Keep logic shared with tests where possible.
-
-### Daily systems
-
-- **Clock:** **Local system time**; document cheatability as acceptable for non-competitive play.
-- **Specials:** Data-driven rules keyed to calendar day (or rolling 24h from a stored anchor if you switch models — document in `docs/architecture` if so).
-- **Loans:** Grant credits; apply timed debuff/restriction until expiry; persist in save.
-- **Band rotation:** Per-day band id → playlist (5–10 tracks); interlude every 2–3 tracks; breaks as configured in data.
-
-### Economy
-
-- Rolling **credits** across games.
-- Per game: **max bring-in (wager cap)** and **max payout** derived from wager (rules per minigame, validated in tests).
-- **Daily credit infusion** once per local day (or as designed).
+- **Club balance:** global persisted credits.
+- **Table session:** **buy-in** moves value from club balance into an isolated **session wallet** for the active minigame.
+- **Minigames** receive only session-scoped props (see `src/game/money.ts`); they do not read or write the full club balance directly.
 
 ### Minigame integration contract
 
-Each game should expose a small, testable surface, for example:
+- **Entry:** Session wallet, rules payload, modifiers as data.
+- **Exit:** Outcome and amount returned to the shell for settlement (`settleTableSession` pattern in `money.ts`).
 
-- Entry: current credits, allowed wager range, active meta-modifiers.
-- Exit: outcome, payout, optional unlock triggers (data only; core applies unlock rules).
+## DLC, mods, and packs (later)
 
-Use a **factory or registry** so DLC can register new drink ids without editing core code beyond manifest merge.
-
-## DLC, mods, and Steam
-
-- **v1:** **`.pck`** (or Godot’s documented add-on pack flow) with a **manifest** (id, version, dependencies, contributed drinks/games/assets).
-- **Load order (native):** Core → official packs → optional `mods/` directory (path documented; unsigned community content is opt-in).
-- **Load order (web):** Core WASM + main pack; optional packs via **fetched** `.pck` URLs (see **Web-specific implementation notes**). Same **manifest schema** as native where possible.
-- **Later:** Steam depot/DLC integration; keep manifest schema stable so Steam builds wrap the same pack format.
+Electron builds can still use **HTTP-fetched** optional content packs or local drop-ins; define a manifest schema when you implement it.
 
 ## Persistence
 
-- **Format:** Versioned JSON or Godot-config-style files under **`user://`**; **migration** functions per save version. On web, `user://` is backed by the browser’s persistent storage for the origin.
-- **Scope:** Credits, unlocks, loan state, last processed day, audio/band state, per-game stats if needed.
+- **Target:** Versioned JSON in **Electron `app.getPath('userData')`**, with migrations keyed by a **version** field.
+- **Scope:** Credits, unlocks, loan state, audio settings, per-game stats as the product requires.
 
 ## Internationalization
 
-- **v1:** English strings; use **string keys** (e.g. `tr("drink.oubliette.name")`) or CSV/gettext workflow early to avoid a full string sweep later.
+- **v1:** English; prefer string keys or a small i18n layer early. Legacy copy may still live under `content/lang/` as JSONC until migrated.
 
 ## Testing
 
-- **Framework:** One chosen stack (e.g. **GdUnit4**) for the whole repo.
-- **Unit tests:** Economy, daily rollover, specials selection, loan expiry, playlist/interlude logic, save migration.
-- **Integration:** Bar → stub game → return with credit update; minimal scene tests where stable.
-- **Per-game tests:** Cover documented rules (inputs → outcomes), not necessarily every UI path.
+- **Framework:** **Vitest** + Testing Library for React units and smoke tests (`npm test`).
+- **Integration:** Expand with Playwright or Electron test driver when flows stabilize.
 
 ## CI (GitHub Actions)
 
-- **On push/PR:** Run tests headless (Godot `--headless` or project’s test command).
-- **On tag (or workflow_dispatch):** Export builds for platforms you can produce on runners (typically Windows + Linux first); upload artifacts to **GitHub Releases**.
-- **Web:** Add an export job that produces **`index.html` + `.wasm` + `.pck` + JS glue** (zip for upload to itch.io, static host, or **GitHub Pages**). Validate with a **smoke checklist** (load, save, audio unlock, one minigame) in a real browser.
-- **Mobile:** Add jobs when signing secrets exist (often separate protected workflows).
-
-Cache Godot binaries and export templates where practical.
+- **On push/PR:** `npm ci`, then **`npm run lint`**, **`npm run test`**, **`npm run typecheck`**, **`npm run build`**.
 
 ## Agentic development
 
-- **`AGENTS.md`:** Current state, pinned Godot version, submodule steps, how to run tests and builds, links to architecture and open work.
-- **`.cursor/rules` (optional):** Non-negotiables mirrored for editor agents.
-- **Issues / project board:** Source of truth for todos, bugs, enhancements; `AGENTS.md` summarizes and links rather than duplicating every ticket.
-- **Living docs:** `docs/architecture.md` (text or Mermaid); update when boundaries change.
-- **Each cycle:** Update `AGENTS.md` when behavior or commands change; add/adjust tests for specified behavior; note optimizations in a short backlog section or Issues.
+- **`AGENTS.md`:** Commands for **Dev Container**, **Vite**, **Electron**, tests, and builds.
+- **`PLAN.md` (this file):** Update the **Current status** section whenever a milestone lands so container and editor agents share the same picture.
+- **Living docs:** Update `docs/architecture.md` when module boundaries change.
 
 ## Brand and UI implementation
 
-- Visual reference: `_examples/Villain's Club.ai` (and exported assets as they are added to the repo).
-- Implement **design tokens** (colors, type, spacing) in one place; favor textures/nine-slices for filigree and damask; consistent lighting/mood pass on bar scenes.
+- **Tokens:** `src/theme/clubTokens.ts`, Mantine theme in `src/theme/clubTheme.ts`, shared primitives under `src/components/ui/`.
+- **Motion:** Shared presets in `src/motion/`; tune in **`/__playground`** (dev only).
 
 ## Security and scope
 
-- No secrets in git; use CI secrets for signing.
-- Submodule is **read-only reference** for implementers; Godot game code does not execute arbitrary JS from `TO_PORT/`.
+- No secrets in git; use CI secrets for signing and publishing.
+- **`TO_PORT/`** is reference-only until code is copied or wrapped intentionally in `src/`.
 
 ## References
 
-- **GOALS.MD** — Phase outcomes and “what must work.”
-- **AGENTS.md** — Operational handoff (create/update as the project starts).
+- **GOALS.MD** — Phase outcomes and what must work.
+- **AGENTS.md** — Operational handoff (Dev Container, npm scripts, submodule).

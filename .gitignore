@@ -1,4 +1,4 @@
-# Godot 4
+# Godot (legacy / optional assets)
 .godot/
 *.translation
 export/
@@ -10,12 +10,20 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Local Godot binary (optional dev download)
+# Local Godot binary (legacy)
 _tools/
 
 # Builds
 build/
 dist/
+_dist/
+release/
 *.exe
 *.pck
 *.zip
+
+# Node / Electron
+node_modules/
+*.tsbuildinfo
+npm-debug.log*
+.npm

@@ -4,7 +4,7 @@ Handoff for humans and coding agents. **Goals:** `GOALS.MD` (repo root). **Techn
 
 ## Current status (read first)
 
-- **Shell:** **Electron + Vite + React + TypeScript** (`electron/`, `src/`). There is **no Godot project** in this tree anymore.
+- **Shell:** **Electron + Vite + React 18 + TypeScript** (`electron/`, `src/`). There is **no Godot project** in this tree anymore. If `PLAN.md` and **`package.json`** disagree on a dependency version, trust **`package.json`**.
 - **What works:** Intro (`/`), main menu (`/menu`), bar stub (`/bar`), Mantine + Club theme, Framer Motion presets, dev-only **`/__playground`**, economy contract stubs in `src/game/` (club balance vs session buy-in — see `money.ts`).
 - **Data / reference on disk:** **`content/`** catalogs (JSON/JSONC) are kept for future wiring; **`TO_PORT/`** is the **git submodule** JS reference (e.g. Oubliette), not auto-bundled until ported.
 - **Where to look next:** `PLAN.md` → **Current status** → **Immediate next steps** (persistence, bar flow, first minigame host, audio, architecture doc refresh).
@@ -22,8 +22,10 @@ Handoff for humans and coding agents. **Goals:** `GOALS.MD` (repo root). **Techn
 - **Install:** `npm ci` (preferred) or `npm install`.
 - **Dev (Vite only):** `npm run dev:web` — best inside containers or without a GUI.
 - **Dev (Electron + Vite):** `npm run dev` — starts Vite on **5173** and opens Electron when the dev server is ready.
-- **Quality:** `npm run lint`, `npm run test`, `npm run typecheck`.
+- **Quality:** `npm run lint` (covers `src/**/*.ts(x)`, `vite.config.ts`, `vitest.config.ts`), `npm run test`, `npm run typecheck`.
+- **Tests (watch):** `npm run test:watch` — Vitest in watch mode during development.
 - **Production bundle (renderer):** `npm run build`.
+- **Preview built renderer:** `npm run preview` — serves the Vite production build locally (run after `npm run build`).
 - **Packaged desktop (local):** `npm run pack` or `npm run dist` (requires a full toolchain for `electron-builder` targets you enable).
 
 ## Repository layout (current)

@@ -10,6 +10,10 @@ Each agent session that does more than a trivial typo-only pass should **before 
 2. **Documentation** — When behavior, milestones, or contracts shift: **`PLAN.md` → Current status** (and other `PLAN.md` sections as needed); **`docs/architecture.md`** when module boundaries or data flow change; any other doc the work makes wrong or obsolete. Do not add new markdown files unless the user asked for them.
 3. **Tests** — Add or adjust **Vitest** for deterministic logic you change; add or extend **Playwright** when shell routing, menu/bar flows, or other CI-critical journeys change. Run **`npm run lint`**, **`npm run test`**, and **`npm run typecheck`** when you touched code; run **`npm run test:e2e`** when the production build or those journeys may be affected.
 
+### Tests and tunable values
+
+When a number or string is defined in app **settings / config** (for example `src/config/villainsGameDefaults.ts`, `src/config/minigames/oublietteNo9GameRules.ts`, or other exported defaults), **tests should import and use that value** instead of duplicating a magic number, **when the test is asserting or driving behavior tied to that setting**. Pure math fixtures (synthetic profiles, edge-case shapes) may still use small literals if they are not meant to track production defaults—prefer deriving expected results from the same config object when the assertion would otherwise drift.
+
 The **Agent cycle checklist** below is the same bar, itemized.
 
 ## Current status (read first)

@@ -2,7 +2,11 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, act } from '../../test/testingLibrary';
 import { ParallelHandsAnimation } from '../screen-ParallelHandsAnimation';
 import { Hand, Card } from '../../types';
+import { gameConfig } from '@/config/minigames/oublietteNo9GameRules';
 import { getTestRewardTable } from '../../test/testHelpers';
+
+const sampledHandCount =
+  (gameConfig.animation.parallelHandsAbstractWave?.individualMaxHands ?? 24) + 200;
 
 vi.mock('../../hooks/useThemeAudio', () => ({
   useThemeAudio: () => ({
@@ -78,7 +82,7 @@ describe('ParallelHandsAnimation', () => {
   });
 
   it('switches to sampled mode for large rounds', () => {
-    const { container } = renderAnimation(500);
+    const { container } = renderAnimation(sampledHandCount);
 
     expect(container.querySelector('[data-reveal-mode="sampled"]')).toBeTruthy();
     expect(container.querySelector('[data-reveal-style="abstract-wave"]')).toBeTruthy();

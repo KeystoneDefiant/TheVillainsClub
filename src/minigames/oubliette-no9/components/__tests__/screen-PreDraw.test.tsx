@@ -4,13 +4,14 @@ import { PreDraw } from '../screen-PreDraw';
 import { Settings } from '../Settings';
 import { FailureStateType, GameState } from '../../types';
 import { getTestRewardTable } from '../../test/testHelpers';
-import { getCurrentGameMode } from '@/config/minigames/oublietteNo9GameRules';
+import { gameConfig, getCurrentGameMode } from '@/config/minigames/oublietteNo9GameRules';
 
 const mode = getCurrentGameMode();
+const generousCredits = mode.startingCredits * 2;
 
 describe('PreDraw Component', () => {
   const mockProps = {
-    credits: 10000,
+    credits: generousCredits,
     handCount: 50,
     selectedHandCount: mode.startingHandCount,
     betAmount: 5,
@@ -43,7 +44,7 @@ describe('PreDraw Component', () => {
 
     it('should display current credits correctly', () => {
       render(<PreDraw {...mockProps} />);
-      expect(screen.getByText(/10,000/)).toBeInTheDocument();
+      expect(screen.getByText(new RegExp(generousCredits.toLocaleString()))).toBeInTheDocument();
     });
 
     it('should display current round correctly', () => {
@@ -63,16 +64,16 @@ describe('PreDraw Component', () => {
   describe('Display Values', () => {
     it('should display bet amount and hand count from config', () => {
       render(<PreDraw {...mockProps} />);
-      // minimumBet=2, handCount=50, totalBetCost=100
-      expect(document.body.textContent).toMatch(/2/);
+      const totalBetCost = mockProps.minimumBet * mockProps.handCount;
+      expect(document.body.textContent).toMatch(new RegExp(String(mockProps.minimumBet)));
       expect(document.body.textContent).toMatch(/50/);
-      expect(document.body.textContent).toMatch(/100/);
+      expect(document.body.textContent).toMatch(new RegExp(String(totalBetCost)));
     });
 
     it('should show total cost to play', () => {
       render(<PreDraw {...mockProps} />);
-      // Cost panel shows total (minimumBet * handCount = 2 * 50 = 100)
-      expect(screen.getByText(/^100$/)).toBeInTheDocument();
+      const totalBetCost = mockProps.minimumBet * mockProps.handCount;
+      expect(screen.getByText(new RegExp(`^${totalBetCost}$`))).toBeInTheDocument();
       expect(screen.getByText(/Cost/i)).toBeInTheDocument();
     });
   });
@@ -225,7 +226,11 @@ describe('PreDraw Component', () => {
       );
       const cheatsAccordion = screen.getByRole('button', { name: /Cheats/i });
       fireEvent.click(cheatsAccordion);
-      expect(screen.getByText(/Add 1000 Credits/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          new RegExp(`Add\\s*${gameConfig.cheatsModal.creditTopUps[0].toLocaleString()}\\s*Credits`, "i"),
+        ),
+      ).toBeInTheDocument();
     });
   });
 

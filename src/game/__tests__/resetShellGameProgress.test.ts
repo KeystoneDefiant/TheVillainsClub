@@ -7,7 +7,7 @@ import { resetShellGameProgress } from "../resetShellGameProgress";
 describe("resetShellGameProgress", () => {
   beforeEach(() => {
     useClubWallet.setState({
-      clubBalance: 99_999,
+      clubBalance: villainsGameDefaults.defaultClubBalance + 1,
       activeSession: null,
       hasSave: true,
     });

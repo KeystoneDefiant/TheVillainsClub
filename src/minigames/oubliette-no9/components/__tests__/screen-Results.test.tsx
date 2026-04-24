@@ -5,7 +5,9 @@ import { Results } from '../screen-Results';
 import { Card as CardType, Hand } from '../../types';
 import { getTestRewardTable } from '../../test/testHelpers';
 import { calculateStreakMultiplier } from '../../utils/streakCalculator';
-import { gameConfig } from '@/config/minigames/oublietteNo9GameRules';
+import { gameConfig, getCurrentGameMode } from '@/config/minigames/oublietteNo9GameRules';
+
+const mode = getCurrentGameMode();
 
 describe('Results Component', () => {
   const createMockCard = (rank: string, suit: string, id: string): CardType => ({
@@ -33,9 +35,9 @@ describe('Results Component', () => {
     parallelHands: [{ ...mockHand, id: 'h1' }, { ...mockHand, id: 'h2' }, { ...mockHand, id: 'h3' }],
     betAmount: 10,
     selectedHandCount: 3,
-    credits: 10000,
+    credits: mode.startingCredits * 2,
     round: 5,
-    totalEarnings: 5000,
+    totalEarnings: mode.startingCredits,
     rewardTable: getTestRewardTable(),
     onReturnToPreDraw: vi.fn(),
   };

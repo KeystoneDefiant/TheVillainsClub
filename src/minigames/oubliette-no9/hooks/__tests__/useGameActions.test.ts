@@ -4,6 +4,8 @@ import { useGameActions } from '../useGameActions';
 import { GameState } from '../../types';
 import { getCurrentGameMode } from '@/config/minigames/oublietteNo9GameRules';
 
+const mode = getCurrentGameMode();
+
 vi.mock('../useThemeAudio', () => ({
   useThemeAudio: () => ({ playSound: vi.fn() }),
 }));
@@ -74,7 +76,11 @@ describe('useGameActions', () => {
   });
 
   it('should call setState when dealHand is invoked with sufficient credits', () => {
-    const state = createMockState({ credits: 10000, betAmount: 5, selectedHandCount: 10 });
+    const state = createMockState({
+      credits: mode.startingCredits * 2,
+      betAmount: 5,
+      selectedHandCount: 10,
+    });
     const { result } = renderHook(() => useGameActions(state, setState));
 
     act(() => {

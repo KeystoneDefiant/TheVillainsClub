@@ -16,7 +16,9 @@ export function MenuHazeBackground() {
           radial-gradient(900px 600px at 85% 25%, rgba(214, 184, 122, 0.12), transparent 50%),
           radial-gradient(800px 500px at 50% 100%, rgba(50, 34, 28, 0.9), transparent 60%)
         `,
-        filter: "saturate(1.05)",
+        transform: "translateZ(0)",
+        backfaceVisibility: "hidden",
+        isolation: "isolate",
       }}
     />
   );

@@ -1,0 +1,121 @@
+.tutorial-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 5, 8, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 1rem;
+}
+
+.tutorial-modal {
+  background: linear-gradient(180deg, var(--game-bg-card) 0%, var(--game-bg-panel) 100%);
+  border: 1px solid var(--game-border);
+  border-radius: 1rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  max-width: 32rem;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.tutorial-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1.5rem 1.5rem 0.5rem;
+  flex-shrink: 0;
+}
+
+.tutorial-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--game-accent-gold);
+  margin: 0;
+  padding-right: 2rem;
+}
+
+.tutorial-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 1.75rem;
+  color: var(--game-text-muted);
+  cursor: pointer;
+  line-height: 1;
+  padding: 0.25rem;
+}
+
+.tutorial-close:hover {
+  color: var(--game-text);
+}
+
+.tutorial-content {
+  padding: 1rem 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.tutorial-body {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--game-text-muted);
+  margin: 0;
+  white-space: pre-line;
+}
+
+.tutorial-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem 1.5rem;
+  border-top: 1px solid var(--game-border);
+  flex-shrink: 0;
+}
+
+.tutorial-progress {
+  font-size: 0.875rem;
+  color: var(--game-text-muted);
+}
+
+.tutorial-nav {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.tutorial-btn {
+  font-weight: 600;
+  padding: 0.5rem 1.25rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: none;
+}
+
+.tutorial-btn-primary {
+  background: linear-gradient(180deg, var(--game-accent-red-bright) 0%, var(--game-accent-red) 100%);
+  color: var(--game-text);
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.4);
+}
+
+.tutorial-btn-primary:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.tutorial-btn-secondary {
+  background: transparent;
+  color: var(--game-accent-gold);
+  border: 2px solid var(--game-accent-gold);
+}
+
+.tutorial-btn-secondary:hover {
+  background: rgba(201, 162, 39, 0.15);
+}

@@ -1,0 +1,275 @@
+/* Vertical Thermometer Design */
+.streak-thermometer {
+  position: fixed;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.3s ease-out;
+}
+
+.multiplier-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(145deg, var(--game-bg-card) 0%, var(--game-bg-panel) 100%);
+  padding: 10px 16px;
+  border-radius: 20px;
+  color: var(--game-accent-gold);
+  min-width: 70px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--game-border);
+}
+
+.badge-value {
+  font-size: 24px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.thermometer-container {
+  position: relative;
+  width: 60px;
+  height: 300px;
+  background: linear-gradient(145deg, var(--game-bg-card) 0%, var(--game-bg-panel) 100%);
+  border-radius: 30px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--game-border);
+}
+
+.thermometer-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(180deg, var(--game-accent-gold) 0%, var(--game-accent-gold-dim) 100%);
+  transition: height 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+  border-radius: 0 0 27px 27px;
+}
+
+.thermometer-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--game-text);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.current-count {
+  color: var(--game-accent-gold);
+  font-weight: 900;
+}
+
+.next-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--game-text-muted);
+  background: linear-gradient(145deg, var(--game-bg-card) 0%, var(--game-bg-panel) 100%);
+  padding: 6px 12px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--game-border);
+}
+
+/* Pulse animations */
+.pulse-green {
+  animation: pulseGreen 0.5s ease-out;
+}
+
+.pulse-red {
+  animation: pulseRed 0.5s ease-out;
+}
+
+@keyframes pulseGreen {
+  0%, 100% { 
+    transform: translateY(-50%) scale(1); 
+  }
+  50% { 
+    transform: translateY(-50%) scale(1.05); 
+    filter: drop-shadow(0 8px 30px var(--game-accent-gold-glow));
+  }
+}
+
+@keyframes pulseRed {
+  0%, 100% { 
+    transform: translateY(-50%) scale(1); 
+  }
+  50% { 
+    transform: translateY(-50%) scale(1.05); 
+    filter: drop-shadow(0 8px 30px var(--game-accent-red-glow));
+  }
+}
+
+/* Celebration animation for reaching new tier */
+.celebrate {
+  animation: celebrate 1s ease-out;
+}
+
+@keyframes celebrate {
+  0%, 100% { 
+    transform: translateY(-50%) scale(1); 
+  }
+  20% { 
+    transform: translateY(-50%) scale(1.1) rotate(-3deg); 
+  }
+  40% { 
+    transform: translateY(-50%) scale(1.1) rotate(3deg); 
+  }
+  60% { 
+    transform: translateY(-50%) scale(1.1) rotate(-3deg); 
+  }
+  80% { 
+    transform: translateY(-50%) scale(1.1) rotate(3deg); 
+  }
+}
+
+/* Make thermometer fill pulse when full */
+.thermometer-fill[style*="100%"] {
+  animation: thermometerPulse 1.5s infinite;
+}
+
+@keyframes thermometerPulse {
+  0%, 100% { 
+    filter: brightness(1); 
+  }
+  50% { 
+    filter: brightness(1.2); 
+  }
+}
+
+/* Horizontal segment bar variant */
+.streak-segments {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 16px;
+  background: linear-gradient(145deg, var(--game-bg-card) 0%, var(--game-bg-panel) 100%);
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--game-border);
+  width: 320px;
+  flex-shrink: 0;
+}
+
+.segments-multiplier-badge {
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--game-accent-gold);
+  width: 48px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.segments-bar {
+  display: flex;
+  gap: 4px;
+  width: 160px;
+  flex-shrink: 0;
+}
+
+.segment-block {
+  flex: 1;
+  height: 20px;
+  background: var(--game-bg-elevated);
+  border-radius: 4px;
+  transition: background 0.3s ease;
+  border: 1px solid var(--game-border-subtle);
+}
+
+.segment-block.segment-filled {
+  background: linear-gradient(180deg, var(--game-accent-gold) 0%, var(--game-accent-gold-dim) 100%);
+  border-color: rgba(201, 162, 39, 0.4);
+}
+
+.segments-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--game-text-muted);
+  width: 48px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.segments-current {
+  color: var(--game-accent-gold);
+}
+
+.segments-sep {
+  color: var(--game-text-dim);
+  margin: 0 2px;
+}
+
+.segments-next {
+  color: var(--game-text-muted);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .streak-thermometer {
+    right: 10px;
+    top: 40%;
+  }
+
+  .multiplier-badge {
+    padding: 8px 12px;
+    min-width: 60px;
+  }
+
+  .badge-value {
+    font-size: 20px;
+  }
+
+  .thermometer-container {
+    width: 50px;
+    height: 250px;
+  }
+
+  .thermometer-label {
+    font-size: 18px;
+  }
+
+  .next-label {
+    font-size: 12px;
+    padding: 4px 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .streak-thermometer {
+    right: 5px;
+    top: 35%;
+  }
+
+  .multiplier-badge {
+    padding: 6px 10px;
+    min-width: 50px;
+  }
+
+  .badge-value {
+    font-size: 18px;
+  }
+
+  .thermometer-container {
+    width: 45px;
+    height: 200px;
+  }
+
+  .thermometer-label {
+    font-size: 16px;
+  }
+
+  .next-label {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+}

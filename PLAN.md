@@ -10,22 +10,23 @@ This document describes **how** the project is built and operated. Overarching o
 
 **Dev environment:** Use **Docker / Dev Container** when the host has no Node toolchain. See **AGENTS.md** (`## Dev container`) and **`.devcontainer/README.md`**. Typical flow inside the container: `npm ci` (or rely on `post-create`), then `npm run dev:web` and open forwarded **http://localhost:5173**. Full Electron: `npm run dev` (needs a display).
 
-**What exists today (milestone: club shell + playground):**
+**What exists today (milestone: club shell + Oubliette No. 9 host):**
 
 - **Renderer:** Vite + React 19, **Mantine** UI, **Framer Motion** for intro/menu motion.
-- **Routes:** Intro (`/`) → main menu (`/menu`), bar stub (`/bar`), dev-only UI playground (`/__playground` in development).
+- **Routes:** Intro (`/`) → main menu (`/menu`) → club floor (`/bar`, table buy-ins) → **Oubliette No. 9** (`/minigames/oubliette-no9` after `startSession`), return to **`/bar`** with optional flash state on settle; dev-only UI playground (`/__playground` in development).
 - **Theme:** Club palette in `src/theme/`; typography loads via **Google Fonts** in `src/styles/fonts.css` (add self-hosted files under `assets/fonts/` later if you want fully offline dev).
-- **Economy contract (stub):** `src/game/money.ts` + Zustand `src/game/clubWalletStore.ts` — **club balance** vs **table session / buy-in**; minigames must only see session stake (documented in code).
-- **Content / reference (unchanged on disk):** **`content/*.json`** (and JSONC where present) remain the long-term data source; not all are consumed by the React app yet. **`TO_PORT/`** remains the **git submodule** JS reference (e.g. Oubliette); not bundled into the Electron app until explicitly ported.
-- **Tests / CI:** **Vitest** + **ESLint**; CI runs `npm ci` → `lint` / `test` / `typecheck` / `build` (see `.github/workflows/ci.yml`).
+- **Economy:** `src/game/money.ts` + persisted **`clubWalletStore`** — buy-in leaves the club; **return settlement** uses `src/game/sessionSettlement.ts` (base cap = `buyIn × maxReturnMultiple × oubliette_cap_mult × all_minigames_cap_mult`, plus tiered overachievement bonuses). Defaults in **`src/config/villainsGameDefaults.ts`**; cap keys on specials rows in **`content/specials.json`** (`oubliette_cap_mult`, `all_minigames_cap_mult`) resolved in **`src/game/specialsResolver.ts`** (separate from `payout_mult`).
+- **Oubliette port:** First-party copy under **`src/minigames/oubliette-no9/`**; table rules config at **`src/config/minigames/oublietteNo9GameRules.ts`**; Tailwind + theme SCSS loaded from **`OublietteNo9Page`**. **`TO_PORT/OublietteNo9`** remains the upstream reference submodule.
+- **Audio:** **`src/audio/clubAudioStore.ts`** (persisted) drives Oubliette SFX/BGM paths via **`import.meta.env.BASE_URL`**; main menu Settings controls global music, SFX, and repeating-SFX floor.
+- **Tests / CI:** **Vitest** + **ESLint** + **Playwright** smoke (`npm run test:e2e` after a build); Oubliette tests live under `src/minigames/oubliette-no9/**`; shell/table helpers under `src/components/club/` and `src/game/`.
 
 **Immediate next steps (suggested order):**
 
-1. Wire **save persistence** (e.g. `localStorage` or Electron `userData`) to `clubWalletStore` and settings.
-2. **Bar flow:** drink catalog from `content/drinks.json`, transitions, buy-in UI aligned with `money.ts`.
-3. **First minigame host:** embed or port from **`TO_PORT/OublietteNo9`**, passing only **`MinigameRuntimeProps`**-style props.
-4. **Audio:** SFX/music from `content/*_sfx.json` and optional `assets/sounds/` when added.
-5. Refresh **`docs/architecture.md`** when autoload-style boundaries are replaced by React/Electron modules.
+1. Wire **save persistence** (e.g. `localStorage` or Electron `userData`) to **`clubWalletStore`** (beyond audio).
+2. **Bar flow:** drink catalog from `content/drinks.json`, richer host UI; buy-in already starts from **`/bar`** via `ClubTableGamesSection` + `clubWalletStore.startSession`.
+3. **Oubliette UI pass:** progressively replace Tailwind surfaces with **Mantine** + club primitives where product priority dictates.
+4. **Content audio manifests:** optional `content/*_sfx.json` mapping into the club audio layer.
+5. Refresh **`docs/architecture.md`** for minigame host boundaries.
 
 ---
 

@@ -1,4 +1,6 @@
 import "@testing-library/jest-dom/vitest";
+import { afterEach } from "vitest";
+import { cleanup } from "@testing-library/react";
 
 Object.defineProperty(window, "matchMedia", {
   writable: true,
@@ -13,4 +15,15 @@ Object.defineProperty(window, "matchMedia", {
     removeEventListener: () => {},
     dispatchEvent: () => false,
   }),
+});
+
+/** Mantine ScrollArea and related layout hooks expect this in jsdom. */
+globalThis.ResizeObserver = class ResizeObserver {
+  observe(): void {}
+  unobserve(): void {}
+  disconnect(): void {}
+};
+
+afterEach(() => {
+  cleanup();
 });

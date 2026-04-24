@@ -1,0 +1,99 @@
+/* VIP Shop - golden sheen on background */
+.shop-vip-sheen {
+  position: relative;
+  overflow: hidden;
+}
+
+.shop-vip-sheen::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    135deg,
+    transparent 0%,
+    transparent 38%,
+    rgba(201, 162, 39, 0.04) 42%,
+    rgba(201, 162, 39, 0.1) 50%,
+    rgba(201, 162, 39, 0.04) 58%,
+    transparent 62%,
+    transparent 100%
+  );
+  animation: shop-vip-sheen 12s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.shop-vip-sheen > * {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes shop-vip-sheen {
+  0%,
+  100% {
+    transform: translate(-20%, -20%);
+  }
+  50% {
+    transform: translate(20%, 20%);
+  }
+}
+
+/* VIP Shop option cards - sheen overlay + animated gradient border */
+.shop-vip-card {
+  position: relative;
+  border-radius: 14px;
+  padding: 2px;
+  background: linear-gradient(
+    135deg,
+    transparent 0%,
+    rgba(201, 162, 39, 0.15) 25%,
+    rgba(201, 162, 39, 0.45) 50%,
+    rgba(201, 162, 39, 0.15) 75%,
+    transparent 100%
+  );
+  background-size: 200% 200%;
+  animation: shop-vip-border-sheen 12s ease-in-out infinite;
+  overflow: hidden;
+}
+
+.shop-vip-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    135deg,
+    transparent 0%,
+    transparent 38%,
+    rgba(201, 162, 39, 0.05) 42%,
+    rgba(201, 162, 39, 0.12) 50%,
+    rgba(201, 162, 39, 0.05) 58%,
+    transparent 62%,
+    transparent 100%
+  );
+  animation: shop-vip-sheen 30s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.shop-vip-card > * {
+  position: relative;
+  z-index: 1;
+  border-radius: 12px;
+  height: 100%;
+}
+
+@keyframes shop-vip-border-sheen {
+  0%,
+  100% {
+    background-position: 0% 0%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+}

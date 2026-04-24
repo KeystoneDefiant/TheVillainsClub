@@ -5,8 +5,8 @@ Handoff for humans and coding agents. **Goals:** `GOALS.MD` (repo root). **Techn
 ## Current status (read first)
 
 - **Shell:** **Electron + Vite + React + TypeScript** (`electron/`, `src/`). There is **no Godot project** in this tree anymore.
-- **What works:** Intro (`/`), main menu (`/menu`), bar stub (`/bar`), Mantine + Club theme, Framer Motion presets, dev-only **`/__playground`**, economy contract stubs in `src/game/` (club balance vs session buy-in — see `money.ts`).
-- **Data / reference on disk:** **`content/`** catalogs (JSON/JSONC) are kept for future wiring; **`TO_PORT/`** is the **git submodule** JS reference (e.g. Oubliette), not auto-bundled until ported.
+- **What works:** Intro (`/`), main menu (`/menu`), club floor / bar (`/bar` — **table buy-ins and minigame starts live here**, not on `/menu`), Mantine + Club theme, Framer Motion presets (honors **`prefers-reduced-motion`** on shell routes), dev-only **`/__playground`**, economy contract stubs in `src/game/` (club balance vs session buy-in — see `money.ts`). Settling Oubliette returns you to **`/bar`** with a short recap when the shell passes router state.
+- **Data / reference on disk:** **`content/`** catalogs (JSON/JSONC) are kept for future wiring; **`TO_PORT/`** is the **git submodule** legacy JS tree (Oubliette source of truth was copied into `src/minigames/oubliette-no9/` — treat `TO_PORT/` as reference only unless syncing upstream).
 - **Where to look next:** `PLAN.md` → **Current status** → **Immediate next steps** (persistence, bar flow, first minigame host, audio, architecture doc refresh).
 
 ## Dev container (no local Node)
@@ -22,7 +22,7 @@ Handoff for humans and coding agents. **Goals:** `GOALS.MD` (repo root). **Techn
 - **Install:** `npm ci` (preferred) or `npm install`.
 - **Dev (Vite only):** `npm run dev:web` — best inside containers or without a GUI.
 - **Dev (Electron + Vite):** `npm run dev` — starts Vite on **5173** and opens Electron when the dev server is ready.
-- **Quality:** `npm run lint`, `npm run test`, `npm run typecheck`.
+- **Quality:** `npm run lint`, `npm run test`, `npm run typecheck`. After `npm run build`, **`npm run test:e2e`** runs Playwright smoke against `vite preview` (also used in CI).
 - **Production bundle (renderer):** `npm run build`.
 - **Packaged desktop (local):** `npm run pack` or `npm run dist` (requires a full toolchain for `electron-builder` targets you enable).
 
@@ -61,7 +61,9 @@ git submodule update --init --recursive
 
 ## CI (GitHub Actions)
 
-- **Push/PR:** `npm ci`, then **`npm run lint`**, **`npm run test`**, **`npm run typecheck`**, **`npm run build`** (see `.github/workflows/ci.yml`).
+- **Push/PR:** `npm ci`, then **`npm run lint`**, **`npm run test`**, **`npm run typecheck`**, **`npm run build`**, Playwright smoke, **Electron** packaging on Ubuntu / Windows / macOS (`dist:electron:*`, unsigned), and on pushes to the **default branch** a **GitHub Pages** deploy (see `.github/workflows/ci.yml`).
+- **Pages setup:** Repository **Settings → Pages**: set **Build and deployment** source to **GitHub Actions** (not “Deploy from a branch”). The site is built with `VITE_BASE=/<repository-name>/` so asset URLs and `BrowserRouter` match project Pages (`https://<user>.github.io/<repo>/`). SPA deep links use **`404.html`** copied from `index.html` in CI.
+- **Local desktop installers:** `npm run dist` (Windows **NSIS** in `package.json`); CI uses **`dir`** targets for speed and to avoid signing.
 
 ## Web / browser dev notes
 

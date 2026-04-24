@@ -14,7 +14,9 @@
       "modifier": {
         "type": "payout_mult",
         "value": 1.35
-      }
+      },
+      "oubliette_cap_mult": 1.05,
+      "all_minigames_cap_mult": 1
     },
     "lucky_streak": {
       "title": "Lucky Streak",

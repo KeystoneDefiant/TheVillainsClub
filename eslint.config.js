@@ -4,7 +4,17 @@ import reactHooks from "eslint-plugin-react-hooks";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist/**", "release/**", "node_modules/**", "TO_PORT/**", "electron/**/*.cjs"] },
+  {
+    ignores: [
+      "dist/**",
+      "release/**",
+      "node_modules/**",
+      "TO_PORT/**",
+      "electron/**/*.cjs",
+      "e2e/**",
+      "playwright.config.ts",
+    ],
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

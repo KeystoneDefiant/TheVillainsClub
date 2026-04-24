@@ -15,7 +15,8 @@ export function ClubPanel(props: ClubPanelProps) {
         root: {
           backgroundColor: clubTokens.surface.panel,
           border: `1px solid ${clubTokens.surface.brassStroke}`,
-          backdropFilter: "blur(8px)",
+          backdropFilter: "blur(5px)",
+          WebkitBackdropFilter: "blur(5px)",
           ...(typeof rootUser === "object" && rootUser ? rootUser : {}),
         },
       }}

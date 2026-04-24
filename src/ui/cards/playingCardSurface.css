@@ -1,0 +1,92 @@
+/**
+ * Playing card surface tokens + utilities (global).
+ * Imported from app entry so any screen can render {@link PlayingCardFace} / {@link PlayingCard}.
+ * Scope light vs dark with `data-card-theme` on an ancestor (see Oubliette root).
+ */
+
+:root {
+  --game-card-background: #1a1418;
+  --game-card-border: #2a1f24;
+  --game-card-back-bg: linear-gradient(145deg, #1a1418 0%, #0d0a0c 100%);
+  --game-card-back-text: #8a8279;
+  --game-card-suit-red: #dc2626;
+  --game-card-suit-black: #cbd5e1;
+  --game-card-small-bg: #0d0a0c;
+  --game-card-small-border: #2a1f24;
+  --game-card-panel-bg: #120e10;
+  --game-card-held-border: #c9a227;
+  --game-card-held-border-width: 3px;
+  --game-card-held-border-style: solid;
+  --game-card-held-glow: rgba(201, 162, 39, 0.25);
+  --game-card-wild-color: #ea580c;
+  --game-card-back-text-offset-y: 0.15em;
+}
+
+[data-card-theme="light"] {
+  --game-card-background: #ffffff;
+  --game-card-border: #e5e7eb;
+  --game-card-back-bg: linear-gradient(145deg, #f3f4f6 0%, #e5e7eb 100%);
+  --game-card-back-text: #6b7280;
+  --game-card-suit-red: #dc2626;
+  --game-card-suit-black: #1f2937;
+  --game-card-small-bg: #ffffff;
+  --game-card-small-border: #d1d5db;
+  --game-card-panel-bg: #f9fafb;
+  --game-card-held-border: #c9a227;
+  --game-card-held-border-width: 3px;
+  --game-card-held-border-style: solid;
+  --game-card-held-glow: rgba(201, 162, 39, 0.35);
+  --game-card-wild-color: #ea580c;
+  --game-card-back-text-offset-y: 0.15em;
+}
+
+[data-card-theme="dark"] {
+  --game-card-background: #1a1418;
+  --game-card-border: #2a1f24;
+  --game-card-back-bg: linear-gradient(145deg, #1a1418 0%, #0d0a0c 100%);
+  --game-card-back-text: #8a8279;
+  --game-card-suit-red: #dc2626;
+  --game-card-suit-black: #cbd5e1;
+  --game-card-small-bg: #0d0a0c;
+  --game-card-small-border: #2a1f24;
+  --game-card-panel-bg: #120e10;
+  --game-card-held-border: #c9a227;
+  --game-card-held-border-width: 3px;
+  --game-card-held-border-style: solid;
+  --game-card-held-glow: rgba(201, 162, 39, 0.25);
+  --game-card-wild-color: #ea580c;
+  --game-card-back-text-offset-y: 0.15em;
+}
+
+.card-back {
+  background: var(--game-card-back-bg);
+  border-color: var(--game-card-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute !important;
+}
+
+.card-back-text {
+  color: var(--game-card-back-text);
+  margin-top: var(--game-card-back-text-offset-y);
+}
+
+.card-held {
+  border-width: var(--game-card-held-border-width);
+  border-style: var(--game-card-held-border-style);
+  border-color: var(--game-card-held-border);
+  box-shadow: 0 0 12px var(--game-card-held-glow);
+}
+
+.card-suit-red {
+  color: var(--game-card-suit-red);
+}
+
+.card-suit-black {
+  color: var(--game-card-suit-black);
+}
+
+.card-wild {
+  color: var(--game-card-wild-color);
+}

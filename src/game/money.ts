@@ -3,14 +3,18 @@
  *
  * - `clubBalance` is the persisted global wallet.
  * - `sessionWallet` is the stake isolated for the active minigame session.
- * - Minigames receive only `{ sessionWallet, rulesPayload }` and never read or write `clubBalance`.
+ * - Minigames never read or write `clubBalance` directly; the shell settles using `settlement` snapshots.
  */
+
+import type { OublietteSettlementProfile } from "./sessionSettlement";
 
 export type TableSession = {
   gameId: string;
   drinkId: string;
   buyIn: number;
   sessionWallet: number;
+  /** Game-specific settlement snapshot (Oubliette profile when `gameId` is oubliette). */
+  settlement: OublietteSettlementProfile;
 };
 
 export type MinigameRuntimeProps = {
@@ -22,6 +26,7 @@ export type StartSessionInput = {
   gameId: string;
   drinkId: string;
   buyIn: number;
+  settlement: OublietteSettlementProfile;
 };
 
 export type StartSessionResult =
@@ -38,6 +43,9 @@ export function startTableSession(
   if (input.buyIn > clubBalance) {
     return { ok: false, reason: "insufficient_funds" };
   }
+  if (!input.settlement || Math.floor(input.settlement.buyIn) !== Math.floor(input.buyIn)) {
+    return { ok: false, reason: "invalid_buy_in" };
+  }
   return {
     ok: true,
     session: {
@@ -45,6 +53,7 @@ export function startTableSession(
       drinkId: input.drinkId,
       buyIn: input.buyIn,
       sessionWallet: input.buyIn,
+      settlement: input.settlement,
     },
   };
 }

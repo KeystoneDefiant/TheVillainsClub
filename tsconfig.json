@@ -22,5 +22,6 @@
     },
     "types": ["vite/client", "@testing-library/jest-dom"]
   },
-  "include": ["src", "vite.config.ts", "vitest.config.ts"]
+  "include": ["src", "vite.config.ts", "vitest.config.ts"],
+  "exclude": ["node_modules", "src/minigames/**/__tests__", "src/minigames/**/test"]
 }

@@ -1,0 +1,1024 @@
+.parallel-hands-animation-container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  opacity: 1;
+  transition: opacity calc(var(--fade-out-ms, 800) * 1ms) ease-out;
+}
+
+.parallel-hands-animation-container.parallel-hands-fade-out {
+  opacity: 0;
+}
+
+.animation-background {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at top right, rgba(201, 162, 39, 0.1), transparent 30%),
+    radial-gradient(circle at bottom left, rgba(139, 21, 32, 0.18), transparent 36%),
+    rgba(0, 0, 0, 0.4);
+  z-index: 11;
+}
+
+.parallel-hands-animation-container.phase-b-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 320px) 1fr;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    "top-bar top-bar"
+    "left-panel sampled-stage"
+    "bottom-bar bottom-bar";
+  align-items: stretch;
+  padding: max(12px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px))
+    max(12px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  gap: 16px;
+  height: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.phase-b-top-bar {
+  grid-area: top-bar;
+  z-index: 14;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding-bottom: 8px;
+  pointer-events: auto;
+}
+
+.phase-b-top-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.phase-b-speed-btn,
+.phase-b-skip-btn {
+  font-weight: bold;
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: all 0.2s;
+  cursor: pointer;
+  border: 2px solid var(--game-border);
+  background: var(--game-bg-card);
+  color: var(--game-text);
+}
+
+.phase-b-speed-btn:hover,
+.phase-b-skip-btn:hover {
+  opacity: 0.9;
+  transform: scale(1.02);
+}
+
+.phase-b-skip-btn {
+  background: rgba(185, 28, 28, 0.3);
+  border-color: var(--game-accent-red);
+  color: var(--game-accent-red-bright);
+  margin-left: 8px;
+}
+
+.phase-b-left-panel {
+  grid-area: left-panel;
+  z-index: 12;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: var(--game-bg-card);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  border: 2px solid var(--game-border);
+}
+
+.phase-b-held-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.phase-b-held-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--game-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.phase-b-held-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.phase-b-held-empty {
+  font-size: 13px;
+  color: var(--game-text-dim);
+  font-style: italic;
+}
+
+.phase-b-scores-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.phase-b-scores-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--game-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.phase-b-scores-counter {
+  flex: 0 0 auto;
+  font-size: 11px;
+  color: var(--game-text-dim);
+  white-space: nowrap;
+  transition: color 220ms ease, text-shadow 220ms ease;
+}
+
+.phase-b-scores-counter.is-live {
+  color: var(--game-text);
+  text-shadow: 0 0 12px rgba(201, 162, 39, 0.16);
+}
+
+.phase-b-reveal-meta {
+  display: flex;
+  align-items: baseline;
+  min-width: 0;
+}
+
+.phase-b-scores-list {
+  font-size: 13px;
+  color: var(--game-text);
+}
+
+.phase-b-score-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  gap: 8px;
+  min-width: 0;
+  border-radius: 10px;
+  transition:
+    background-color 240ms ease,
+    border-color 240ms ease,
+    box-shadow 240ms ease,
+    transform 240ms ease;
+}
+
+.phase-b-score-row:last-child {
+  border-bottom: none;
+}
+
+.phase-b-score-row.is-focused {
+  background: rgba(201, 162, 39, 0.08);
+  border-bottom-color: rgba(201, 162, 39, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(201, 162, 39, 0.12);
+  transform: translateX(2px);
+}
+
+.phase-b-score-row.is-premium .phase-b-score-left {
+  color: #f6e9bf;
+}
+
+.phase-b-score-left {
+  text-align: left;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.phase-b-score-right {
+  text-align: right;
+  flex: 0 0 auto;
+  font-weight: 600;
+  color: var(--game-accent-gold);
+}
+
+.phase-b-scores-empty {
+  color: var(--game-text-dim);
+  font-style: italic;
+}
+
+.phase-b-total {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--game-accent-gold);
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 2px solid var(--game-border);
+  text-align: center;
+  transition: text-shadow 240ms ease, transform 240ms ease;
+}
+
+.phase-b-total.is-live {
+  text-shadow: 0 0 16px rgba(201, 162, 39, 0.18);
+  transform: translateY(-1px);
+}
+
+.abstract-wave-stage {
+  grid-area: sampled-stage;
+  z-index: 12;
+  position: relative;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  overflow: visible;
+}
+
+.abstract-wave-stage::before {
+  content: '';
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(circle at 20% 18%, rgba(214, 184, 94, 0.22), transparent 22%),
+    radial-gradient(circle at 78% 68%, rgba(112, 22, 47, 0.22), transparent 30%),
+    radial-gradient(circle at 48% 50%, rgba(54, 41, 94, 0.24), transparent 28%);
+  filter: blur(62px);
+  opacity: 0.96;
+  animation: abstractWaveAmbientPulse 6.4s ease-in-out infinite;
+}
+
+.abstract-wave-stage > * {
+  position: relative;
+  z-index: 1;
+}
+
+.abstract-wave-field {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: clamp(220px, 40vh, 420px);
+  border-radius: 0;
+  border: none;
+  background:
+    radial-gradient(circle at center, rgba(255, 248, 220, 0.045), transparent 34%),
+    linear-gradient(180deg, rgba(6, 6, 8, 0.15) 0%, rgba(3, 3, 4, 0.42) 100%);
+  box-shadow: none;
+}
+
+.abstract-wave-stage-stack {
+  position: relative;
+  width: min(100%, 720px);
+  max-width: min(100%, 720px);
+  height: clamp(180px, 36vh, 320px);
+}
+
+.abstract-wave-orbs {
+  position: absolute;
+  inset: 6% 0 4%;
+  pointer-events: none;
+}
+
+.abstract-wave-orb {
+  position: absolute;
+  width: clamp(120px, 18vw, 240px);
+  aspect-ratio: 1;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, rgba(248, 234, 187, 0.22) 0%, rgba(168, 126, 42, 0.16) 28%, rgba(44, 28, 77, 0.12) 54%, transparent 76%);
+  filter: blur(20px);
+  mix-blend-mode: screen;
+  animation: abstractWaveOrbDrift 10s ease-in-out infinite;
+}
+
+.abstract-wave-orb:nth-child(1) {
+  top: 10%;
+  left: 8%;
+}
+
+.abstract-wave-orb:nth-child(2) {
+  top: 54%;
+  left: 18%;
+  width: clamp(90px, 12vw, 180px);
+}
+
+.abstract-wave-orb:nth-child(3) {
+  top: 20%;
+  right: 10%;
+}
+
+.abstract-wave-orb:nth-child(4) {
+  bottom: 8%;
+  right: 18%;
+  width: clamp(100px, 14vw, 190px);
+}
+
+.abstract-wave-flow {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  gap: 10px;
+  padding: 24px;
+  pointer-events: none;
+}
+
+.abstract-wave-flow-node {
+  width: 14px;
+  height: min(62%, 260px);
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(244, 227, 170, 0.26), rgba(255, 255, 255, 0));
+  border: 1px solid rgba(255, 244, 210, 0.06);
+  box-shadow: 0 0 24px rgba(244, 227, 170, 0.06);
+  animation: abstractWaveFlowPulse 1350ms ease-in-out infinite;
+}
+
+.abstract-wave-idle,
+.abstract-wave-beat {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  max-width: 100%;
+  min-height: 0;
+  margin: 0;
+  border-radius: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.abstract-wave-idle {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+}
+
+.abstract-wave-idle.is-empty {
+  opacity: 0;
+}
+
+.abstract-wave-idle-sigil {
+  width: clamp(96px, 16vw, 160px);
+  aspect-ratio: 1;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 248, 223, 0.12);
+  background:
+    radial-gradient(circle, rgba(255, 248, 223, 0.1), rgba(214, 184, 94, 0.06) 34%, transparent 66%);
+  box-shadow:
+    0 0 34px rgba(214, 184, 94, 0.12),
+    0 0 0 1px rgba(255, 248, 223, 0.05) inset;
+  animation: abstractWaveSigilBreathe 4.8s ease-in-out infinite;
+}
+
+.abstract-wave-beat {
+  padding: 0;
+  transition:
+    transform calc(var(--card-transition-ms, 400) * 1ms) cubic-bezier(0.22, 1, 0.36, 1),
+    opacity calc(var(--card-transition-ms, 400) * 1ms) ease-out,
+    filter calc(var(--card-transition-ms, 400) * 1ms) ease-out;
+}
+
+.abstract-wave-beat-enter {
+  opacity: 0;
+  transform: translateX(26px) translateY(12px) scale(0.978);
+  filter: blur(2.2px);
+}
+
+.abstract-wave-beat-cards,
+.abstract-wave-beat-result {
+  opacity: 1;
+  transform: translateY(0) scale(1.002);
+  filter: blur(0);
+}
+
+.abstract-wave-beat-exit {
+  opacity: 0;
+  transform: translateX(-24px) translateY(-2px) scale(0.996);
+  filter: blur(0.55px);
+}
+
+.abstract-wave-beat.is-exiting-overlay {
+  z-index: 1;
+}
+
+.abstract-wave-beat.is-active-overlay {
+  z-index: 2;
+}
+
+.abstract-wave-beat.is-premium-winning .wave-hand-card-featured {
+  box-shadow:
+    0 18px 34px rgba(0, 0, 0, 0.34),
+    0 0 26px rgba(214, 184, 94, 0.14),
+    0 0 0 1px rgba(255, 255, 255, 0.14) inset;
+}
+
+.abstract-wave-beat.is-premium-winning .abstract-wave-result-rank {
+  text-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.62),
+    0 0 24px rgba(214, 184, 94, 0.22);
+}
+
+.abstract-wave-beat-center {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.abstract-wave-ghost-field {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.abstract-wave-ghost-card {
+  position: absolute;
+  width: 62px;
+  height: 88px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 248, 223, 0.08);
+  background: linear-gradient(180deg, rgba(255, 248, 223, 0.06), rgba(255, 255, 255, 0.01));
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.24);
+  animation: abstractWaveGhostDrift 1700ms ease-in-out infinite;
+}
+
+.abstract-wave-ghost-card:nth-child(1) {
+  transform: translate(-148px, 8px) rotate(-20deg);
+}
+
+.abstract-wave-ghost-card:nth-child(2) {
+  transform: translate(-88px, -14px) rotate(-10deg);
+}
+
+.abstract-wave-ghost-card:nth-child(3) {
+  transform: translate(0, 16px) rotate(0deg);
+}
+
+.abstract-wave-ghost-card:nth-child(4) {
+  transform: translate(88px, -14px) rotate(10deg);
+}
+
+.abstract-wave-ghost-card:nth-child(5) {
+  transform: translate(148px, 8px) rotate(20deg);
+}
+
+.abstract-wave-pulse {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.abstract-wave-pulse-line {
+  width: 12px;
+  height: 108px;
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(244, 227, 170, 0.48), rgba(255, 255, 255, 0));
+  box-shadow: 0 0 20px rgba(244, 227, 170, 0.09);
+  animation: abstractWavePulseLine 900ms ease-in-out infinite;
+}
+
+.abstract-wave-pulse-line:nth-child(2) {
+  animation-delay: 120ms;
+}
+
+.abstract-wave-pulse-line:nth-child(3) {
+  animation-delay: 240ms;
+}
+
+.abstract-wave-result-layer {
+  position: absolute;
+  inset: auto 18px 10px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.22rem;
+  opacity: 0;
+  transform: translateY(16px) scale(0.96);
+  transition: opacity 240ms ease-out, transform 360ms cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.abstract-wave-stage-stack.is-overlapping .abstract-wave-beat.is-exiting-overlay .abstract-wave-result-layer {
+  transition:
+    opacity 180ms ease-out,
+    transform 240ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.abstract-wave-result-layer.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.abstract-wave-beat-exit .abstract-wave-result-layer {
+  opacity: 0.28;
+  transform: translateX(-16px) translateY(-1px) scale(0.985);
+}
+
+.abstract-wave-stage-stack.is-overlapping .abstract-wave-beat-exit .abstract-wave-result-layer {
+  opacity: 0.12;
+  transform: translateX(-20px) translateY(0) scale(0.99);
+}
+
+.abstract-wave-result-rank {
+  font-size: clamp(1.55rem, 2.8vw, 2.3rem);
+  font-weight: 800;
+  color: #fff9ea;
+  letter-spacing: 0.02em;
+  text-shadow:
+    0 6px 28px rgba(0, 0, 0, 0.58),
+    0 0 18px rgba(214, 184, 94, 0.14);
+}
+
+.abstract-wave-result-payout {
+  font-size: 1.18rem;
+  font-weight: 900;
+  color: #f0d387;
+  text-shadow: 0 0 16px rgba(214, 184, 94, 0.16);
+}
+
+.wave-hand-cards {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: nowrap;
+  position: relative;
+  z-index: 1;
+  perspective: 1200px;
+}
+
+.wave-hand-cards-featured {
+  gap: 10px;
+}
+
+.wave-hand-cards-compact {
+  gap: 4px;
+}
+
+.wave-hand-card {
+  background: var(--game-card-background);
+  border: 1px solid var(--game-card-border);
+  border-radius: 9px;
+  color: var(--game-card-suit-black);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 10px 22px rgba(0, 0, 0, 0.24),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+  font-weight: 700;
+  transform-origin: center bottom;
+  transition:
+    transform calc(var(--card-transition-ms, 400) * 1ms) cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 220ms ease-out,
+    filter 220ms ease-out;
+  will-change: transform, opacity;
+}
+
+.wave-hand-card::after {
+  content: '';
+  position: absolute;
+  inset: -20% auto -20% -70%;
+  width: 48%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transform: skewX(-18deg);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.wave-hand-card-featured {
+  width: 58px;
+  height: 82px;
+  font-size: 18px;
+}
+
+.wave-hand-card-compact {
+  width: 28px;
+  height: 40px;
+  font-size: 10px;
+  border-width: 1px;
+  border-radius: 6px;
+}
+
+.wave-hand-card .suit {
+  line-height: 1;
+}
+
+.wave-hand-card-featured .suit {
+  font-size: 18px;
+}
+
+.wave-hand-card-compact .suit {
+  font-size: 11px;
+}
+
+.wave-hand-card-emoji {
+  font-size: 1.2rem;
+}
+
+.abstract-wave-beat-enter .wave-hand-card-featured {
+  opacity: 0;
+  transform:
+    translateY(32px)
+    rotateX(-10deg)
+    rotate(calc((var(--card-order) - 2) * 3deg))
+    scale(0.94);
+}
+
+.abstract-wave-beat-cards .wave-hand-card-featured,
+.abstract-wave-beat-result .wave-hand-card-featured {
+  opacity: 1;
+  transform:
+    translateY(0)
+    rotateX(0deg)
+    rotate(calc((var(--card-order) - 2) * 1.2deg))
+    scale(1);
+}
+
+.abstract-wave-beat-cards .wave-hand-card-featured {
+  animation: abstractWaveFeaturedCardSettle 960ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--card-order) * 70ms);
+}
+
+.abstract-wave-stage-stack.is-overlapping
+  .abstract-wave-beat.is-active-overlay.abstract-wave-beat-cards
+  .wave-hand-card-featured {
+  animation-delay: calc(120ms + (var(--card-order) * 70ms));
+}
+
+.abstract-wave-beat-result .wave-hand-card-featured {
+  box-shadow:
+    0 16px 30px rgba(0, 0, 0, 0.32),
+    0 0 22px rgba(214, 184, 94, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+}
+
+.abstract-wave-beat.is-winning.abstract-wave-beat-result .wave-hand-card-featured::after {
+  animation: abstractWaveCardGlint 900ms ease-out both;
+  animation-delay: calc(var(--card-order) * 45ms);
+}
+
+.abstract-wave-beat-exit .wave-hand-card-featured {
+  opacity: 0.16;
+  transform:
+    translateX(-22px)
+    translateY(-2px)
+    rotateX(5deg)
+    rotate(calc((var(--card-order) - 2) * 0.75deg))
+    scale(0.994);
+}
+
+.abstract-wave-stage-stack.is-overlapping .abstract-wave-beat.is-exiting-overlay .wave-hand-card-featured {
+  transition-duration: calc(var(--card-transition-ms, 400) * 1ms * 0.9);
+}
+
+.abstract-wave-stage-stack.is-overlapping .abstract-wave-beat-exit .wave-hand-card-featured {
+  opacity: 0.1;
+  transform:
+    translateX(-18px)
+    translateY(-1px)
+    rotateX(4deg)
+    rotate(calc((var(--card-order) - 2) * 0.6deg))
+    scale(0.996);
+}
+
+.phase-b-bottom-bar {
+  grid-area: bottom-bar;
+  z-index: 13;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 20px;
+}
+
+.phase-b-bottom-bar .streak-thermometer,
+.phase-b-bottom-bar .streak-segments {
+  position: relative;
+  top: auto;
+  right: auto;
+  transform: none;
+}
+
+@keyframes abstractWaveAmbientPulse {
+  0%,
+  100% {
+    transform: scale(0.98) rotate(0deg);
+    opacity: 0.82;
+  }
+  50% {
+    transform: scale(1.05) rotate(4deg);
+    opacity: 1;
+  }
+}
+
+@keyframes abstractWaveFlowPulse {
+  0%,
+  100% {
+    transform: scaleY(0.74);
+    opacity: 0.54;
+  }
+  50% {
+    transform: scaleY(1.16);
+    opacity: 1;
+  }
+}
+
+@keyframes abstractWaveOrbDrift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(0.96);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translate3d(0, -24px, 0) scale(1.12);
+    opacity: 0.82;
+  }
+}
+
+@keyframes abstractWaveGhostDrift {
+  0%,
+  100% {
+    margin-top: 0;
+    opacity: 0.5;
+  }
+  50% {
+    margin-top: -10px;
+    opacity: 0.8;
+  }
+}
+
+@keyframes abstractWavePulseLine {
+  0%,
+  100% {
+    transform: scaleY(0.76);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scaleY(1.08);
+    opacity: 0.95;
+  }
+}
+
+@keyframes abstractWaveFeaturedCardSettle {
+  0% {
+    filter: brightness(0.94) contrast(1.03);
+  }
+  55% {
+    filter: brightness(1.02) contrast(1.08);
+  }
+  100% {
+    filter: brightness(1) contrast(1.05);
+  }
+}
+
+@keyframes abstractWaveSigilSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes abstractWaveSigilBreathe {
+  0%,
+  100% {
+    transform: scale(0.96);
+    opacity: 0.56;
+  }
+  50% {
+    transform: scale(1.02);
+    opacity: 0.88;
+  }
+}
+
+@keyframes abstractWaveCardGlint {
+  0% {
+    opacity: 0;
+    transform: translateX(0) skewX(-18deg);
+  }
+  20% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(340%) skewX(-18deg);
+  }
+}
+
+@media (max-width: 900px) {
+  .parallel-hands-animation-container.phase-b-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 36vh) minmax(0, 1fr) auto;
+    grid-template-areas:
+      "top-bar"
+      "left-panel"
+      "sampled-stage"
+      "bottom-bar";
+  }
+
+  .phase-b-left-panel {
+    min-height: 0;
+    overflow: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .parallel-hands-animation-container.phase-b-layout {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .phase-b-left-panel {
+    padding: 12px;
+  }
+
+  .phase-b-held-label,
+  .phase-b-scores-label {
+    font-size: 11px;
+  }
+
+  .phase-b-scores-list {
+    font-size: 12px;
+  }
+
+  .phase-b-score-row {
+    padding: 3px 0;
+    gap: 6px;
+  }
+
+  .phase-b-total {
+    font-size: 14px;
+    margin-top: 6px;
+    padding-top: 6px;
+  }
+
+  .abstract-wave-idle,
+  .abstract-wave-beat {
+    width: min(100%, 640px);
+  }
+
+  .abstract-wave-stage-stack {
+    height: clamp(160px, 32vh, 240px);
+  }
+
+  .abstract-wave-field {
+    min-height: 100%;
+  }
+
+  .abstract-wave-ghost-card {
+    width: 50px;
+    height: 72px;
+  }
+
+  .wave-hand-card-featured {
+    width: 48px;
+    height: 70px;
+    font-size: 15px;
+  }
+
+  .abstract-wave-result-rank {
+    font-size: 1.34rem;
+  }
+
+  .abstract-wave-result-payout {
+    font-size: 1rem;
+  }
+
+  .phase-b-bottom-bar {
+    padding: 14px 16px;
+  }
+
+  .phase-b-bottom-bar .streak-segments {
+    width: 280px;
+    padding: 10px 14px;
+    gap: 12px;
+  }
+
+  .phase-b-bottom-bar .segments-multiplier-badge {
+    width: 42px;
+    font-size: 18px;
+  }
+
+  .phase-b-bottom-bar .segments-bar {
+    width: 120px;
+  }
+
+  .phase-b-bottom-bar .segment-block {
+    height: 24px;
+  }
+
+  .phase-b-bottom-bar .segments-label {
+    width: 42px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .parallel-hands-animation-container.phase-b-layout {
+    padding: 8px;
+    gap: 8px;
+    grid-template-rows: auto minmax(0, 34vh) minmax(0, 1fr) auto;
+  }
+
+  .phase-b-left-panel {
+    padding: 10px;
+  }
+
+  .phase-b-held-label,
+  .phase-b-scores-label {
+    font-size: 10px;
+  }
+
+  .phase-b-scores-list {
+    font-size: 11px;
+  }
+
+  .phase-b-total {
+    font-size: 13px;
+  }
+
+  .abstract-wave-idle,
+  .abstract-wave-beat {
+    width: 100%;
+  }
+
+  .abstract-wave-ghost-card {
+    display: none;
+  }
+
+  .abstract-wave-orb:nth-child(2),
+  .abstract-wave-orb:nth-child(4) {
+    display: none;
+  }
+
+  .wave-hand-card-featured {
+    width: 40px;
+    height: 58px;
+    font-size: 13px;
+  }
+
+  .wave-hand-card-featured .suit {
+    font-size: 14px;
+  }
+
+  .abstract-wave-stage-stack {
+    height: clamp(136px, 28vh, 184px);
+  }
+
+  .abstract-wave-field {
+    min-height: 100%;
+  }
+
+  .phase-b-bottom-bar {
+    padding: 12px 14px;
+  }
+
+  .phase-b-bottom-bar .streak-segments {
+    width: 240px;
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .phase-b-bottom-bar .segments-multiplier-badge {
+    width: 38px;
+    font-size: 16px;
+  }
+
+  .phase-b-bottom-bar .segments-bar {
+    width: 100px;
+  }
+
+  .phase-b-bottom-bar .segment-block {
+    height: 22px;
+  }
+
+  .phase-b-bottom-bar .segments-label {
+    width: 36px;
+    font-size: 11px;
+  }
+}

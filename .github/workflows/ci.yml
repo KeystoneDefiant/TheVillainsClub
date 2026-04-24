@@ -6,6 +6,13 @@ on:
   pull_request:
     branches: [main, master]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -32,3 +39,83 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: E2E smoke
+        run: |
+          npx playwright install chromium
+          npm run test:e2e
+
+  electron-build:
+    needs: test
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 35
+    env:
+      # Unsigned CI builds (avoids winCodeSign / symlink issues on Windows runners)
+      CSC_IDENTITY_AUTO_DISCOVERY: false
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            script: dist:electron:linux
+          - os: windows-latest
+            script: dist:electron:win
+          - os: macos-latest
+            script: dist:electron:mac
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install
+        run: npm ci
+
+      - name: Electron package (${{ matrix.script }})
+        run: npm run ${{ matrix.script }}
+
+  deploy-pages:
+    if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install
+        run: npm ci
+
+      - name: Build for GitHub Pages
+        env:
+          VITE_BASE: /${{ github.event.repository.name }}/
+        run: npm run build
+
+      - name: SPA fallback for client-side routes
+        run: cp dist/index.html dist/404.html
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

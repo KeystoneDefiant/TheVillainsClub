@@ -49,7 +49,6 @@ function renderAnimation(handCount: number) {
       betAmount={10}
       initialStreakCounter={0}
       onAnimationComplete={vi.fn()}
-      audioSettings={{ musicEnabled: true, soundEffectsEnabled: true }}
       animationSpeedMode={1}
     />
   );

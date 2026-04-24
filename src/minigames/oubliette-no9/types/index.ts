@@ -136,14 +136,6 @@ export interface GameState {
   currentStreakMultiplier: number; // Current active streak multiplier (1.0, 1.5, 2.0, etc.)
   runHighestCombo: number; // Best combo streak reached during the current run
   runHighestMultiplier: number; // Best streak multiplier reached during the current run
-  audioSettings: {
-    musicEnabled: boolean;
-    soundEffectsEnabled: boolean;
-    musicVolume: number; // 0.0 to 1.0
-    soundEffectsVolume: number; // 0.0 to 1.0
-    /** Min volume when scoring many same-rank hands in a row (0–10%). 0 = can go silent. */
-    handScoringMinVolumePercent: number;
-  };
   /** Animation speed: 0.5 to 7 (multiplier), or 'skip' to skip animations */
   animationSpeedMode: number | 'skip';
   /** Card visual theme: 'light' (white cards) or 'dark' (dark cards) */

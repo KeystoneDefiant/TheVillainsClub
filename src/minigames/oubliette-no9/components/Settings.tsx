@@ -21,18 +21,6 @@ type AnimationSpeedMode = number | "skip";
 
 interface SettingsProps {
   onClose: () => void;
-  audioSettings?: {
-    musicEnabled: boolean;
-    soundEffectsEnabled: boolean;
-    musicVolume: number;
-    soundEffectsVolume: number;
-    handScoringMinVolumePercent: number;
-  };
-  onMusicVolumeChange?: (value: number) => void;
-  onSoundEffectsVolumeChange?: (value: number) => void;
-  onHandScoringMinVolumeChange?: (value: number) => void;
-  onToggleMusic?: () => void;
-  onToggleSoundEffects?: () => void;
   animationSpeedMode?: AnimationSpeedMode;
   onAnimationSpeedChange?: (speed: number | "skip") => void;
   cardTheme?: "light" | "dark";
@@ -58,12 +46,6 @@ const sectionPaper = {
 
 export function Settings({
   onClose,
-  audioSettings,
-  onMusicVolumeChange,
-  onSoundEffectsVolumeChange,
-  onHandScoringMinVolumeChange,
-  onToggleMusic,
-  onToggleSoundEffects,
   animationSpeedMode = 1,
   onAnimationSpeedChange,
   cardTheme = "dark",
@@ -73,11 +55,6 @@ export function Settings({
   onCheatSetDevilsDeal,
 }: SettingsProps) {
   const [cheatsExpanded, setCheatsExpanded] = useState(false);
-  const musicVolume = audioSettings?.musicVolume ?? 0.7;
-  const soundEffectsVolume = audioSettings?.soundEffectsVolume ?? 1.0;
-  const handScoringMinVolumePercent = audioSettings?.handScoringMinVolumePercent ?? 0;
-  const musicEnabled = audioSettings?.musicEnabled ?? true;
-  const soundEffectsEnabled = audioSettings?.soundEffectsEnabled ?? true;
 
   const speedValue =
     animationSpeedMode === "skip"
@@ -106,100 +83,6 @@ export function Settings({
       }}
     >
       <Stack gap="lg">
-        {(onMusicVolumeChange != null ||
-          onSoundEffectsVolumeChange != null ||
-          onHandScoringMinVolumeChange != null ||
-          onToggleMusic != null ||
-          onToggleSoundEffects != null) && (
-          <Paper {...sectionPaper}>
-            <Stack gap="md">
-              <Title order={5} c={clubTokens.text.brass} tt="uppercase" fz="sm">
-                Audio
-              </Title>
-              {onToggleMusic != null && (
-                <Switch
-                  label="Music"
-                  checked={musicEnabled}
-                  onChange={() => onToggleMusic()}
-                  color="yellow"
-                />
-              )}
-              {onMusicVolumeChange != null && (
-                <Stack gap={6}>
-                  <Group justify="space-between">
-                    <Text size="sm" c={clubTokens.text.secondary}>
-                      Music volume
-                    </Text>
-                    <Text size="sm" c={clubTokens.text.muted}>
-                      {Math.round(musicVolume * 100)}%
-                    </Text>
-                  </Group>
-                  <Slider
-                    min={0}
-                    max={100}
-                    value={Math.round(musicVolume * 100)}
-                    onChange={(v) => onMusicVolumeChange(v / 100)}
-                    color="yellow"
-                    aria-label="Music volume"
-                  />
-                </Stack>
-              )}
-              {onToggleSoundEffects != null && (
-                <Switch
-                  label="Sound effects"
-                  checked={soundEffectsEnabled}
-                  onChange={() => onToggleSoundEffects()}
-                  color="yellow"
-                />
-              )}
-              {onSoundEffectsVolumeChange != null && (
-                <Stack gap={6}>
-                  <Group justify="space-between">
-                    <Text size="sm" c={clubTokens.text.secondary}>
-                      SFX volume
-                    </Text>
-                    <Text size="sm" c={clubTokens.text.muted}>
-                      {Math.round(soundEffectsVolume * 100)}%
-                    </Text>
-                  </Group>
-                  <Slider
-                    min={0}
-                    max={100}
-                    value={Math.round(soundEffectsVolume * 100)}
-                    onChange={(v) => onSoundEffectsVolumeChange(v / 100)}
-                    color="yellow"
-                    aria-label="Sound effects volume"
-                  />
-                </Stack>
-              )}
-              {onHandScoringMinVolumeChange != null && (
-                <Stack gap={6}>
-                  <Group justify="space-between">
-                    <Text size="sm" c={clubTokens.text.secondary}>
-                      Min volume (repeated hands)
-                    </Text>
-                    <Text size="sm" c={clubTokens.text.muted}>
-                      {handScoringMinVolumePercent}%
-                    </Text>
-                  </Group>
-                  <Slider
-                    min={0}
-                    max={10}
-                    step={1}
-                    value={handScoringMinVolumePercent}
-                    onChange={onHandScoringMinVolumeChange}
-                    color="yellow"
-                    aria-label="Minimum volume when scoring multiple hands in a row"
-                  />
-                  <Text size="xs" c={clubTokens.text.muted}>
-                    Floor when scoring many same-rank hands. 0 = can go silent.
-                  </Text>
-                </Stack>
-              )}
-            </Stack>
-          </Paper>
-        )}
-
         {onAnimationSpeedChange != null && (
           <Paper {...sectionPaper}>
             <Stack gap="md">

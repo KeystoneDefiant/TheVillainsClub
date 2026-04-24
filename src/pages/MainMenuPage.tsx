@@ -1,6 +1,6 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Box, Group, Modal, Slider, Stack, Switch, Text, Title } from "@mantine/core";
+import { Alert, Box, Divider, Group, Modal, Slider, Stack, Switch, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { motion } from "framer-motion";
 import { useClubAudioStore } from "@/audio/clubAudioStore";
@@ -9,6 +9,7 @@ import { ClubButton } from "@/components/ui/ClubButton";
 import { ClubHeading } from "@/components/ui/ClubHeading";
 import { ClubPanel } from "@/components/ui/ClubPanel";
 import { useClubWallet } from "@/game/clubWalletStore";
+import { resetShellGameProgress } from "@/game/resetShellGameProgress";
 import { useMotionPresetStore } from "@/motion/motionPresetStore";
 import { shellMenuContainerVariants, shellMenuItemVariants } from "@/motion/shellMotion";
 import { usePrefersReducedMotion } from "@/motion/usePrefersReducedMotion";
@@ -20,10 +21,17 @@ export function MainMenuPage() {
   const reduceMotion = usePrefersReducedMotion();
   const { clubBalance, hasSave, setHasSave, activeSession } = useClubWallet();
   const [settingsOpened, { open: openSettings, close: closeSettings }] = useDisclosure(false);
+  const [resetProgressArmed, setResetProgressArmed] = useState(false);
 
   useEffect(() => {
     document.title = "Main menu — The Villains Club";
   }, []);
+
+  useEffect(() => {
+    if (!settingsOpened) {
+      setResetProgressArmed(false);
+    }
+  }, [settingsOpened]);
 
   const musicEnabled = useClubAudioStore((s) => s.musicEnabled);
   const sfxEnabled = useClubAudioStore((s) => s.sfxEnabled);
@@ -157,45 +165,82 @@ export function MainMenuPage() {
         </ClubPanel>
       </Group>
 
-      <Modal opened={settingsOpened} onClose={closeSettings} title="Audio" centered size="md">
+      <Modal opened={settingsOpened} onClose={closeSettings} title="Settings" centered size="md">
         <Stack gap="md">
-          <Switch
-            data-autofocus
-            label="Music"
-            checked={musicEnabled}
-            onChange={(e) => setMusicEnabled(e.currentTarget.checked)}
-          />
-          <Switch
-            label="Sound effects"
-            checked={sfxEnabled}
-            onChange={(e) => setSfxEnabled(e.currentTarget.checked)}
-          />
-          <div>
-            <Text size="sm" mb={6}>
-              Global music volume
-            </Text>
-            <Slider value={Math.round(musicVolume * 100)} onChange={(v) => setMusicVolume(v / 100)} />
-          </div>
-          <div>
-            <Text size="sm" mb={6}>
-              Global sound effects volume
-            </Text>
-            <Slider value={Math.round(sfxVolume * 100)} onChange={(v) => setSfxVolume(v / 100)} />
-          </div>
-          <div>
-            <Text size="sm" mb={6}>
-              Repeating SFX attenuation floor (% of SFX volume, 0–10)
-            </Text>
-            <Slider
-              max={10}
-              step={0.5}
-              value={repeatSfxAttenuationPercent}
-              onChange={setRepeatSfxAttenuationPercent}
-            />
-          </div>
-          <Text size="xs" c="dimmed">
-            These settings apply to the club shell and minigames (persisted in this build).
-          </Text>
+          {!resetProgressArmed ? (
+            <>
+              <Switch
+                data-autofocus
+                label="Music"
+                checked={musicEnabled}
+                onChange={(e) => setMusicEnabled(e.currentTarget.checked)}
+              />
+              <Switch
+                label="Sound effects"
+                checked={sfxEnabled}
+                onChange={(e) => setSfxEnabled(e.currentTarget.checked)}
+              />
+              <div>
+                <Text size="sm" mb={6}>
+                  Global music volume
+                </Text>
+                <Slider value={Math.round(musicVolume * 100)} onChange={(v) => setMusicVolume(v / 100)} />
+              </div>
+              <div>
+                <Text size="sm" mb={6}>
+                  Global sound effects volume
+                </Text>
+                <Slider value={Math.round(sfxVolume * 100)} onChange={(v) => setSfxVolume(v / 100)} />
+              </div>
+              <div>
+                <Text size="sm" mb={6}>
+                  Repeating SFX attenuation floor (% of SFX volume, 0–10)
+                </Text>
+                <Slider
+                  max={10}
+                  step={0.5}
+                  value={repeatSfxAttenuationPercent}
+                  onChange={setRepeatSfxAttenuationPercent}
+                />
+              </div>
+              <Text size="xs" c="dimmed">
+                These options apply to the club shell and minigames (persisted in this build).
+              </Text>
+              <Divider />
+              <Text size="sm" fw={600}>
+                Progress
+              </Text>
+              <Text size="xs" c="dimmed">
+                Reset your club balance to the starting amount, clear any open table session and resume flags, and
+                clear meta unlocks when they exist. Audio levels, motion, and minigame UI preferences are kept.
+              </Text>
+              <ClubButton variant="light" color="red" fullWidth onClick={() => setResetProgressArmed(true)}>
+                Reset game progress…
+              </ClubButton>
+            </>
+          ) : (
+            <>
+              <Alert color="red" variant="light" title="Reset all progress?">
+                This cannot be undone. Your configuration (audio, etc.) stays as it is now.
+              </Alert>
+              <Group grow>
+                <ClubButton variant="light" onClick={() => setResetProgressArmed(false)}>
+                  Back
+                </ClubButton>
+                <ClubButton
+                  variant="filled"
+                  color="red"
+                  onClick={() => {
+                    resetShellGameProgress();
+                    setResetProgressArmed(false);
+                    closeSettings();
+                  }}
+                >
+                  Confirm reset
+                </ClubButton>
+              </Group>
+            </>
+          )}
         </Stack>
       </Modal>
     </Box>

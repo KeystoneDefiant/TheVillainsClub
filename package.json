@@ -16,7 +16,7 @@
     "lint": "eslint \"src/**/*.{ts,tsx}\" \"vite.config.ts\" \"vitest.config.ts\"",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test",
+    "test:e2e": "npm run build && playwright test",
     "pack": "npm run build && electron-builder --dir --publish never",
     "dist": "npm run build && electron-builder --publish never",
     "dist:electron:linux": "npm run build && electron-builder --linux dir --publish never",

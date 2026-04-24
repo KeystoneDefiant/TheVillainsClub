@@ -3,9 +3,15 @@
  * Table rules for Oubliette live in {@link ./minigames/oublietteNo9GameRules}.
  */
 export const villainsGameDefaults = {
+  /**
+   * Starting **club wallet** credits for a new game (used when there is no persisted wallet yet).
+   * Persisted balance in `localStorage` overrides this after the first save.
+   */
+  defaultClubBalance: 10000,
+
   oublietteNo9: {
     /** Default stake when starting a table (static for now; specials may vary later). */
-    defaultBuyIn: 100,
+    defaultBuyIn: 2000,
     /**
      * Max credits **returned to the club** from the session before overachievement bonuses.
      * Effective ceiling: `floor(buyIn * maxReturnMultipleOfBuyIn * oubliette_cap_mult * all_minigames_cap_mult)`.

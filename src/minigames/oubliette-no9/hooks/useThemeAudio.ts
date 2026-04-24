@@ -68,7 +68,7 @@ export interface ThemeAudioSettings {
 /** Oubliette SFX / BGM — routed through the club-wide audio store (no theme loader). */
 export function useThemeAudio(audioSettings?: ThemeAudioSettings) {
   void audioSettings;
-  useClubAudioStore((s) => [s.musicVolume, s.sfxVolume]);
+  // Volume sync: only the `subscribe` below (no allocating Zustand selector — unstable snapshots caused React #185).
 
   useEffect(() => {
     const unsub = useClubAudioStore.subscribe((s) => {

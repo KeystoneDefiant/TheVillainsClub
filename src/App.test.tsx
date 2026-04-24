@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
 import { buildClubTheme } from "@/theme/clubTheme";
@@ -23,6 +23,24 @@ describe("MainMenuPage", () => {
     expect(screen.queryByRole("button", { name: /oubliette no\. 9/i })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /settings/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^continue$/i })).toBeDisabled();
+  });
+
+  it("settings modal includes reset game progress", async () => {
+    render(
+      <MantineProvider theme={buildClubTheme()} defaultColorScheme="dark">
+        <MemoryRouter initialEntries={["/menu"]}>
+          <Routes>
+            <Route path="/menu" element={<MainMenuPage />} />
+          </Routes>
+        </MemoryRouter>
+      </MantineProvider>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /settings/i }));
+    await waitFor(() => {
+      expect(screen.getByRole("dialog", { name: /settings/i })).toBeInTheDocument();
+    });
+    expect(screen.getByRole("button", { name: /reset game progress/i })).toBeInTheDocument();
   });
 });
 

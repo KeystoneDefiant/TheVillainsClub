@@ -11,7 +11,8 @@ export default defineConfig({
   webServer: {
     command: `npx vite preview --host ${previewHost} --port ${previewPort}`,
     url: previewOrigin,
-    reuseExistingServer: !process.env.CI,
+    // Always start a fresh preview so `dist/` matches the latest build (avoids stale chunks after `npm run test:e2e` changed code).
+    reuseExistingServer: false,
     timeout: 90_000,
   },
   use: {

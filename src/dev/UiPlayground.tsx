@@ -150,7 +150,17 @@ export function UiPlayground() {
   const easing = preset.easing;
 
   return (
-    <Box style={{ position: "relative", minHeight: "100%", overflow: "auto" }}>
+    <Box
+      style={{
+        position: "relative",
+        minHeight: "100dvh",
+        maxHeight: "100dvh",
+        overflowX: "hidden",
+        overflowY: "auto",
+        WebkitOverflowScrolling: "touch",
+        boxSizing: "border-box",
+      }}
+    >
       <MenuHazeBackground />
       <Stack p="md" pb="xl" gap="md" style={{ position: "relative", zIndex: 1, maxWidth: 1100, margin: "0 auto" }}>
         <Group justify="space-between" align="flex-end" wrap="wrap">

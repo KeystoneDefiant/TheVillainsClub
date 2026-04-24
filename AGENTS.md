@@ -2,6 +2,16 @@
 
 Handoff for humans and coding agents. **Goals:** `GOALS.MD` (repo root). **Technical plan:** `PLAN.md` (includes **Current status** for milestones). **Architecture sketch:** `docs/architecture.md` (may lag the pivot; prefer `PLAN.md` + `src/`).
 
+## Expectations for every coding-agent run
+
+Each agent session that does more than a trivial typo-only pass should **before finishing** update everything that applies. Skip an item only when the change genuinely does not touch it (say so briefly in the handoff).
+
+1. **`AGENTS.md`** — When commands, ports, devcontainer behavior, CI, Playwright/Electron flows, or agent-facing expectations change, update this file so the next run matches reality.
+2. **Documentation** — When behavior, milestones, or contracts shift: **`PLAN.md` → Current status** (and other `PLAN.md` sections as needed); **`docs/architecture.md`** when module boundaries or data flow change; any other doc the work makes wrong or obsolete. Do not add new markdown files unless the user asked for them.
+3. **Tests** — Add or adjust **Vitest** for deterministic logic you change; add or extend **Playwright** when shell routing, menu/bar flows, or other CI-critical journeys change. Run **`npm run lint`**, **`npm run test`**, and **`npm run typecheck`** when you touched code; run **`npm run test:e2e`** when the production build or those journeys may be affected.
+
+The **Agent cycle checklist** below is the same bar, itemized.
+
 ## Current status (read first)
 
 - **Shell:** **Electron + Vite + React + TypeScript** (`electron/`, `src/`). There is **no Godot project** in this tree anymore.
@@ -22,7 +32,7 @@ Handoff for humans and coding agents. **Goals:** `GOALS.MD` (repo root). **Techn
 - **Install:** `npm ci` (preferred) or `npm install`.
 - **Dev (Vite only):** `npm run dev:web` — best inside containers or without a GUI.
 - **Dev (Electron + Vite):** `npm run dev` — starts Vite on **5173** and opens Electron when the dev server is ready.
-- **Quality:** `npm run lint`, `npm run test`, `npm run typecheck`. After `npm run build`, **`npm run test:e2e`** runs Playwright smoke against `vite preview` (also used in CI).
+- **Quality:** `npm run lint`, `npm run test`, `npm run typecheck`. **`npm run test:e2e`** runs a **production `vite build`** then Playwright against `vite preview` (CI uses the same script).
 - **Production bundle (renderer):** `npm run build`.
 - **Packaged desktop (local):** `npm run pack` or `npm run dist` (requires a full toolchain for `electron-builder` targets you enable).
 
@@ -51,12 +61,14 @@ git submodule update --init --recursive
 - **Legacy (Godot):** Older branches used `user://villains_club_save.json` with versioned migrations; that implementation is **not** in this tree.
 - **Current / TODO:** Persist settings and club progress via **Electron `userData`** (or equivalent) with a **versioned JSON** schema and migrations — wire into `clubWalletStore` and settings UI when implemented.
 
-## Agent cycle checklist (when you touch behavior)
+## Agent cycle checklist (every run — when applicable)
 
-- [ ] Update **`PLAN.md` → Current status** when a milestone lands (container agents read it first).
-- [ ] Update **this file** when run commands, ports, or devcontainer behavior change.
+- [ ] Update **`PLAN.md` → Current status** when a milestone lands or direction changes materially (container agents read it first).
+- [ ] Update **`AGENTS.md`** (this file) when run commands, ports, devcontainer behavior, CI, or agent expectations change.
 - [ ] Update **`docs/architecture.md`** when module boundaries or data contracts change.
-- [ ] Add or adjust **Vitest** tests under `src/` for deterministic rules.
+- [ ] Add or adjust **Vitest** tests under `src/` for deterministic rules and regressions you might introduce.
+- [ ] Add or adjust **Playwright** (`e2e/`) when shell routing, menu/bar/minigame entry, or other user journeys you rely on in CI change.
+- [ ] Run **`npm run lint`**, **`npm run test`**, **`npm run typecheck`** before handoff when code changed; run **`npm run test:e2e`** when a production build or those journeys may break.
 - [ ] Keep **`content/*.json`** valid JSON where the app parses them; JSONC files cannot be parsed by `JSON.parse` until converted or stripped.
 
 ## CI (GitHub Actions)

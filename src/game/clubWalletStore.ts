@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { villainsGameDefaults } from "@/config/villainsGameDefaults";
 import { settleTableSession, startTableSession, type TableSession } from "./money";
 import type { ClubTableReturnDetail } from "./sessionSettlement";
 
@@ -20,6 +21,8 @@ type ClubWalletState = {
   endSession: (returned: number | ClubTableReturnDetail) => void;
   creditClub: (amount: number) => void;
   setHasSave: (value: boolean) => void;
+  /** Club balance → default, clear table session and resume stub. Does not touch audio or other prefs. */
+  resetWalletAndSession: () => void;
 };
 
 const STORAGE_KEY = "villains-club-wallet";
@@ -27,7 +30,7 @@ const STORAGE_KEY = "villains-club-wallet";
 export const useClubWallet = create<ClubWalletState>()(
   persist(
     (set, get) => ({
-      clubBalance: 250,
+      clubBalance: villainsGameDefaults.defaultClubBalance,
       activeSession: null,
       hasSave: false,
       startSession: (input) => {
@@ -59,6 +62,12 @@ export const useClubWallet = create<ClubWalletState>()(
         set({ clubBalance: get().clubBalance + amount });
       },
       setHasSave: (value) => set({ hasSave: value }),
+      resetWalletAndSession: () =>
+        set({
+          clubBalance: villainsGameDefaults.defaultClubBalance,
+          activeSession: null,
+          hasSave: false,
+        }),
     }),
     {
       name: STORAGE_KEY,

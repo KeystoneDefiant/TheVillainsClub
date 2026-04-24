@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { fireEvent, render, screen } from "../../test/testingLibrary";
+import { gameConfig } from "@/config/minigames/oublietteNo9GameRules";
 import { CheatsModal } from "../CheatsModal";
 
 describe("CheatsModal", () => {
@@ -7,11 +8,16 @@ describe("CheatsModal", () => {
     const onClose = vi.fn();
     const onAddCredits = vi.fn();
     const onAddHands = vi.fn();
+    const firstCredits = gameConfig.cheatsModal.creditTopUps[0];
 
     render(<CheatsModal onClose={onClose} onAddCredits={onAddCredits} onAddHands={onAddHands} />);
 
-    fireEvent.click(screen.getByRole("button", { name: /Add 1000 Credits/i }));
-    expect(onAddCredits).toHaveBeenCalledWith(1000);
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: new RegExp(`Add\\s*${firstCredits.toLocaleString()}\\s*Credits`, "i"),
+      }),
+    );
+    expect(onAddCredits).toHaveBeenCalledWith(firstCredits);
     expect(onClose).toHaveBeenCalled();
   });
 
@@ -19,11 +25,14 @@ describe("CheatsModal", () => {
     const onClose = vi.fn();
     const onAddCredits = vi.fn();
     const onAddHands = vi.fn();
+    const firstHands = gameConfig.cheatsModal.parallelHandTopUps[0];
 
     render(<CheatsModal onClose={onClose} onAddCredits={onAddCredits} onAddHands={onAddHands} />);
 
-    fireEvent.click(screen.getByRole("button", { name: /Add 10 Parallel Hands/i }));
-    expect(onAddHands).toHaveBeenCalledWith(10);
+    fireEvent.click(
+      screen.getByRole("button", { name: new RegExp(`Add\\s*${firstHands}\\s*Parallel Hands`, "i") }),
+    );
+    expect(onAddHands).toHaveBeenCalledWith(firstHands);
     expect(onClose).toHaveBeenCalled();
   });
 

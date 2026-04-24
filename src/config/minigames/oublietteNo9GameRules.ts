@@ -62,6 +62,15 @@ export const gameConfig = {
     },
   },
 
+  /**
+   * Dev / QA cheat credit and parallel-hand top-ups (used by `CheatsModal`, `Settings`, and tests).
+   * Order is display order; amounts are literal values passed to callbacks.
+   */
+  cheatsModal: {
+    creditTopUps: [1000, 10000, 100_000],
+    parallelHandTopUps: [10, 50, 250],
+  },
+
   // Animation timing configuration (in milliseconds)
   animation: {
     cardFlip: 500, // Card flip animation delay

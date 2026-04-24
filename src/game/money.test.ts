@@ -1,26 +1,25 @@
 import { describe, expect, it } from "vitest";
+import { villainsGameDefaults } from "@/config/villainsGameDefaults";
 import { settleTableSession, startTableSession, type TableSession } from "./money";
 import type { OublietteSettlementProfile } from "./sessionSettlement";
 
+const o9 = villainsGameDefaults.oublietteNo9;
+
 const profile = (buyIn: number): OublietteSettlementProfile => ({
   buyIn,
-  maxReturnMultipleOfBuyIn: 50,
+  maxReturnMultipleOfBuyIn: o9.maxReturnMultipleOfBuyIn,
   capModifierProduct: 1,
-  overachievement: {
-    capMultiple: 50,
-    buyInSlab: 1,
-    tierStepMultiple: 5,
-    bonusMultipleOfBuyInPerTier: 5,
-  },
+  overachievement: { ...o9.overachievement },
 });
 
 describe("startTableSession", () => {
   it("stores settlement on the session", () => {
-    const settlement = profile(100);
-    const r = startTableSession(1000, {
+    const buyIn = o9.defaultBuyIn;
+    const settlement = profile(buyIn);
+    const r = startTableSession(villainsGameDefaults.defaultClubBalance, {
       gameId: "oubliette_no9",
       drinkId: "x",
-      buyIn: 100,
+      buyIn,
       settlement,
     });
     expect(r.ok).toBe(true);
@@ -28,23 +27,25 @@ describe("startTableSession", () => {
   });
 
   it("rejects settlement buy-in mismatch", () => {
-    const r = startTableSession(1000, {
+    const buyIn = o9.defaultBuyIn;
+    const r = startTableSession(villainsGameDefaults.defaultClubBalance, {
       gameId: "x",
       drinkId: "x",
-      buyIn: 100,
-      settlement: profile(99),
+      buyIn,
+      settlement: profile(buyIn - 1),
     });
     expect(r.ok).toBe(false);
   });
 });
 
 describe("settleTableSession", () => {
+  const buyIn = o9.defaultBuyIn;
   const session: TableSession = {
     gameId: "x",
     drinkId: "x",
-    buyIn: 100,
-    sessionWallet: 100,
-    settlement: profile(100),
+    buyIn,
+    sessionWallet: buyIn,
+    settlement: profile(buyIn),
   };
 
   it("adds returned credits to club balance", () => {

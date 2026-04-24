@@ -3,12 +3,19 @@ import { render, screen, fireEvent, within } from '../../test/testingLibrary';
 import { Shop } from '../Shop';
 import { ShopOptionType } from '../../types';
 import { getCurrentGameMode } from '@/config/minigames/oublietteNo9GameRules';
+import {
+  applyShopCostMultiplier,
+  calculateWildCardCost,
+  getCreditsNeededForDisplayedRound,
+  getParallelHandsBundleBaseCost,
+} from '../../utils/config';
 
 const mode = getCurrentGameMode();
+const generousCredits = mode.startingCredits * 2;
 
 describe('Shop Component', () => {
   const mockProps = {
-    credits: 10000,
+    credits: generousCredits,
     handCount: 50,
     betAmount: mode.startingBet,
     selectedHandCount: mode.startingHandCount,
@@ -109,7 +116,7 @@ describe('Shop Component', () => {
     });
 
     it('should disable button when player cannot afford', () => {
-      const props = { ...mockProps, credits: 100 };
+      const props = { ...mockProps, credits: Math.max(0, mode.startingBet - 1) };
       render(<Shop {...props} />);
       
       const buttons = screen.getAllByRole('button');
@@ -142,13 +149,16 @@ describe('Shop Component', () => {
     it('should show increasing cost for multiple wild cards', () => {
       const props = { ...mockProps, wildCardCount: 1 };
       render(<Shop {...props} />);
-      
-      // wildCardCount 1 -> next cost is 10000 (base 5000 * 2)
-      expect(screen.getAllByText(/10,?000/i).length).toBeGreaterThanOrEqual(1);
+
+      const nextCost = calculateWildCardCost(1);
+      expect(
+        screen.getAllByText((_, el) => (el?.textContent ?? '').includes(nextCost.toLocaleString())).length,
+      ).toBeGreaterThanOrEqual(1);
     });
 
     it('should disable when max wild cards reached', () => {
-      const props = { ...mockProps, wildCardCount: 3 };
+      const maxWild = mode.shop.wildCard.maxCount;
+      const props = { ...mockProps, wildCardCount: maxWild };
       render(<Shop {...props} />);
       
       const buttons = screen.getAllByRole('button');
@@ -379,9 +389,11 @@ describe('Shop Component', () => {
     it('should show escalating costs correctly', () => {
       const props = { ...mockProps, wildCardCount: 2 };
       render(<Shop {...props} />);
-      
-      // Third wild card: 5000 * (2^2) = 20000 (locale may format as 20,000 or 20000)
-      expect(screen.getAllByText(/20,?000/i).length).toBeGreaterThanOrEqual(1);
+
+      const nextCost = calculateWildCardCost(2);
+      expect(
+        screen.getAllByText((_, el) => (el?.textContent ?? '').includes(nextCost.toLocaleString())).length,
+      ).toBeGreaterThanOrEqual(1);
     });
   });
 
@@ -417,22 +429,37 @@ describe('Shop Component', () => {
 
   describe('Affordability Warning Modal', () => {
     it('should show warning modal when purchase would leave player unable to afford next round', async () => {
-      // credits: 25, round cost: 2*10=20. Wild card costs 5000 - but we need a cheaper item.
-      // Extra draw costs 10000. Parallel hands +5 costs 50. So with credits 60, bet 2, selected 10,
-      // round cost = 20. Buying parallel hands +5 (cost 50) -> credits after = 10, round cost after = 2*15=30.
-      // 10 < 30, so warning should show.
+      const bundleSize = 5;
+      const betAmount = mode.startingBet;
+      const selectedHandCount = mode.startingHandCount;
+      const handCount = mode.startingHandCount;
+      const pricingCredits = generousCredits;
+      const bundleCost = applyShopCostMultiplier(
+        getParallelHandsBundleBaseCost(bundleSize, pricingCredits),
+        pricingCredits,
+      );
+      const roundCostAfter = getCreditsNeededForDisplayedRound(
+        betAmount,
+        selectedHandCount + bundleSize,
+        handCount + bundleSize,
+      );
+      const credits = bundleCost + roundCostAfter - 1;
+
       const props = {
         ...mockProps,
-        credits: 60,
-        betAmount: 2,
-        selectedHandCount: 10,
-        handCount: 10,
+        credits,
+        betAmount,
+        selectedHandCount,
+        handCount,
+        creditsForPricing: pricingCredits,
         selectedShopOptions: ['parallel-hands-bundle-5' as ShopOptionType],
       };
       render(<Shop {...props} />);
 
       const card = screen.getByRole('heading', { name: /Parallel Hands \+5/i }).closest('.game-panel');
-      const handsButton = within(card!).getByRole('button', { name: /50 Credits/i });
+      const handsButton = within(card!).getByRole('button', {
+        name: new RegExp(`${bundleCost.toLocaleString()}\\s*Credits`, 'i'),
+      });
       fireEvent.click(handsButton);
 
       const heading = await screen.findByRole("heading", { name: /cannot afford next round/i });
@@ -446,18 +473,39 @@ describe('Shop Component', () => {
     });
 
     it('should complete purchase when user confirms in warning modal', async () => {
+      const bundleSize = 5;
+      const betAmount = mode.startingBet;
+      const selectedHandCount = mode.startingHandCount;
+      const handCount = mode.startingHandCount;
+      const pricingCredits = generousCredits;
+      const bundleCost = applyShopCostMultiplier(
+        getParallelHandsBundleBaseCost(bundleSize, pricingCredits),
+        pricingCredits,
+      );
+      const roundCostAfter = getCreditsNeededForDisplayedRound(
+        betAmount,
+        selectedHandCount + bundleSize,
+        handCount + bundleSize,
+      );
+      const credits = bundleCost + roundCostAfter - 1;
+
       const props = {
         ...mockProps,
-        credits: 60,
-        betAmount: 2,
-        selectedHandCount: 10,
-        handCount: 10,
+        credits,
+        betAmount,
+        selectedHandCount,
+        handCount,
+        creditsForPricing: pricingCredits,
         selectedShopOptions: ['parallel-hands-bundle-5' as ShopOptionType],
       };
       render(<Shop {...props} />);
 
       const card = screen.getByRole('heading', { name: /Parallel Hands \+5/i }).closest('.game-panel');
-      fireEvent.click(within(card!).getByRole('button', { name: /50 Credits/i }));
+      fireEvent.click(
+        within(card!).getByRole('button', {
+          name: new RegExp(`${bundleCost.toLocaleString()}\\s*Credits`, 'i'),
+        }),
+      );
       const heading = await screen.findByRole("heading", { name: /cannot afford next round/i });
       const warnDialog = heading.closest('[role="dialog"]');
       expect(warnDialog).toBeTruthy();
@@ -469,19 +517,40 @@ describe('Shop Component', () => {
     });
 
     it('should cancel purchase when user clicks Cancel in warning modal', async () => {
+      const bundleSize = 5;
+      const betAmount = mode.startingBet;
+      const selectedHandCount = mode.startingHandCount;
+      const handCount = mode.startingHandCount;
+      const pricingCredits = generousCredits;
+      const bundleCost = applyShopCostMultiplier(
+        getParallelHandsBundleBaseCost(bundleSize, pricingCredits),
+        pricingCredits,
+      );
+      const roundCostAfter = getCreditsNeededForDisplayedRound(
+        betAmount,
+        selectedHandCount + bundleSize,
+        handCount + bundleSize,
+      );
+      const credits = bundleCost + roundCostAfter - 1;
+
       const props = {
         ...mockProps,
-        credits: 60,
-        betAmount: 2,
-        selectedHandCount: 10,
-        handCount: 10,
+        credits,
+        betAmount,
+        selectedHandCount,
+        handCount,
+        creditsForPricing: pricingCredits,
         selectedShopOptions: ['parallel-hands-bundle-5' as ShopOptionType],
       };
       render(<Shop {...props} />);
 
       const card = screen.getByRole('heading', { name: /Parallel Hands \+5/i }).closest('.game-panel');
       expect(card).toBeTruthy();
-      fireEvent.click(within(card!).getByRole('button', { name: /50 Credits/i }));
+      fireEvent.click(
+        within(card!).getByRole('button', {
+          name: new RegExp(`${bundleCost.toLocaleString()}\\s*Credits`, 'i'),
+        }),
+      );
       const heading = await screen.findByRole("heading", { name: /cannot afford next round/i });
       const warnDialog = heading.closest('[role="dialog"]');
       expect(warnDialog).toBeTruthy();

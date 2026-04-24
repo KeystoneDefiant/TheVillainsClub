@@ -13,6 +13,7 @@ import {
   Title,
   UnstyledButton,
 } from "@mantine/core";
+import { gameConfig } from "@/config/minigames/oublietteNo9GameRules";
 import { clubTokens } from "@/theme/clubTokens";
 import { GameButton } from "./GameButton";
 
@@ -289,32 +290,30 @@ export function Settings({
             </UnstyledButton>
             <Collapse in={cheatsExpanded}>
               <Stack gap="xs" px="md" pb="md">
-                {onCheatAddCredits != null && (
-                  <>
-                    <GameButton onClick={() => onCheatAddCredits(1000)} variant="secondary" size="sm" fullWidth>
-                      Add 1000 Credits
+                {onCheatAddCredits != null &&
+                  gameConfig.cheatsModal.creditTopUps.map((amount) => (
+                    <GameButton
+                      key={`cheat-credits-${amount}`}
+                      onClick={() => onCheatAddCredits(amount)}
+                      variant="secondary"
+                      size="sm"
+                      fullWidth
+                    >
+                      Add {amount.toLocaleString()} Credits
                     </GameButton>
-                    <GameButton onClick={() => onCheatAddCredits(10000)} variant="secondary" size="sm" fullWidth>
-                      Add 10000 Credits
+                  ))}
+                {onCheatAddHands != null &&
+                  gameConfig.cheatsModal.parallelHandTopUps.map((amount) => (
+                    <GameButton
+                      key={`cheat-hands-${amount}`}
+                      onClick={() => onCheatAddHands(amount)}
+                      variant="secondary"
+                      size="sm"
+                      fullWidth
+                    >
+                      Add {amount} Parallel Hands
                     </GameButton>
-                    <GameButton onClick={() => onCheatAddCredits(100_000)} variant="secondary" size="sm" fullWidth>
-                      Add 100,000 Credits
-                    </GameButton>
-                  </>
-                )}
-                {onCheatAddHands != null && (
-                  <>
-                    <GameButton onClick={() => onCheatAddHands(10)} variant="secondary" size="sm" fullWidth>
-                      Add 10 Parallel Hands
-                    </GameButton>
-                    <GameButton onClick={() => onCheatAddHands(50)} variant="secondary" size="sm" fullWidth>
-                      Add 50 Parallel Hands
-                    </GameButton>
-                    <GameButton onClick={() => onCheatAddHands(250)} variant="secondary" size="sm" fullWidth>
-                      Add 250 Parallel Hands
-                    </GameButton>
-                  </>
-                )}
+                  ))}
                 {onCheatSetDevilsDeal != null && (
                   <GameButton onClick={onCheatSetDevilsDeal} variant="secondary" size="sm" fullWidth>
                     Devil&apos;s Deal: 100% Chance, 1% Cost

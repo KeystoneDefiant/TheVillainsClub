@@ -50,7 +50,6 @@ function createMockState(overrides: Partial<GameState> = {}): GameState {
     extraCardsInHand: 0,
     streakCounter: 0,
     currentStreakMultiplier: 1.0,
-    audioSettings: { musicEnabled: true, soundEffectsEnabled: true, musicVolume: 0.7, soundEffectsVolume: 1.0, handScoringMinVolumePercent: 0 },
     animationSpeedMode: 1,
     cardTheme: 'dark',
     ...overrides,

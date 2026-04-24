@@ -107,11 +107,6 @@ export const gameConfig = {
     cardPadding: 'p-8',
   },
 
-  // Audio configuration
-  audio: {
-    musicVolume: 0.7, // Background music volume multiplier (0.0 to 1.0)
-  },
-
   // Streak multiplier configuration
   streakMultiplier: {
     enabled: true,

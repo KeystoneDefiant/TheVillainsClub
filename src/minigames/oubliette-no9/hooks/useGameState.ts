@@ -1,11 +1,4 @@
-import {
-  useState,
-  useCallback,
-  useEffect,
-  useRef,
-  startTransition,
-} from "react";
-import { useClubAudioStore } from "@/audio/clubAudioStore";
+import { useState, useCallback, useRef, startTransition } from "react";
 import type { OublietteShellBinding } from "@/game/sessionSettlement";
 import { computeOublietteReturn } from "@/game/sessionSettlement";
 import { GameState, GameOverReason, HandRank, Card } from "../types";
@@ -24,17 +17,6 @@ import { getStoredCardTheme, setStoredCardTheme } from "@/ui/cards/cardThemes";
 const currentMode = getCurrentGameMode();
 
 export type { OublietteShellBinding } from "@/game/sessionSettlement";
-
-function syncAudioFromClubStore(): GameState["audioSettings"] {
-  const a = useClubAudioStore.getState();
-  return {
-    musicEnabled: a.musicEnabled,
-    soundEffectsEnabled: a.sfxEnabled,
-    musicVolume: a.musicVolume,
-    soundEffectsVolume: a.sfxVolume,
-    handScoringMinVolumePercent: a.repeatSfxAttenuationPercent,
-  };
-}
 
 const DEFAULT_ANIMATION_SPEED: GameState['animationSpeedMode'] = 1;
 
@@ -94,7 +76,6 @@ function createInitialState(shell?: OublietteShellBinding | null): GameState {
     currentStreakMultiplier: 1.0,
     runHighestCombo: 0,
     runHighestMultiplier: 1.0,
-    audioSettings: syncAudioFromClubStore(),
     animationSpeedMode: loadAnimationSettings(),
     cardTheme: getStoredCardTheme(),
   };
@@ -106,34 +87,10 @@ export function useGameState(shellBinding?: OublietteShellBinding | null) {
 
   const [state, setState] = useState<GameState>(() => createInitialState(shellBinding ?? null));
 
-  useEffect(() => {
-    if (!shellBinding) return;
-    return useClubAudioStore.subscribe(() => {
-      setState((s) => ({ ...s, audioSettings: syncAudioFromClubStore() }));
-    });
-  }, [shellBinding]);
-
   // Use specialized hooks for different action types
   const gameActions = useGameActions(state, setState);
   const shopActions = useShopActions(state, setState);
-  const { playSound, playMusic, stopMusic, resetRoundSoundCounts } = useThemeAudio(state.audioSettings);
-
-  // Track previous music enabled state to handle re-enabling
-  const prevMusicEnabledRef = useRef(state.audioSettings.musicEnabled);
-
-  // Handle music play/stop when musicEnabled changes
-  useEffect(() => {
-    const currentMusicEnabled = state.audioSettings.musicEnabled;
-    const prevMusicEnabled = prevMusicEnabledRef.current;
-
-    // If music was just enabled (transitioned from false to true)
-    if (currentMusicEnabled && !prevMusicEnabled && state.screen !== 'menu') {
-      playMusic();
-    }
-
-    // Update ref for next comparison
-    prevMusicEnabledRef.current = currentMusicEnabled;
-  }, [state.audioSettings.musicEnabled, state.screen, playMusic]);
+  const { playSound, resetRoundSoundCounts } = useThemeAudio();
 
   const openShop = useCallback(() => {
     setState((prev) => ({
@@ -320,7 +277,6 @@ export function useGameState(shellBinding?: OublietteShellBinding | null) {
   }, [playSound, resetRoundSoundCounts]);
 
   const startNewRun = useCallback(() => {
-    playMusic();
     setState((prev) => ({
       ...prev,
       screen: 'game',
@@ -358,7 +314,7 @@ export function useGameState(shellBinding?: OublietteShellBinding | null) {
       runHighestCombo: 0,
       runHighestMultiplier: 1.0,
     }));
-  }, [playMusic]);
+  }, []);
 
   /**
    * End the current run and show game over summary screen.
@@ -366,7 +322,6 @@ export function useGameState(shellBinding?: OublietteShellBinding | null) {
    * @param reason - Why the run ended; if omitted, uses state.gameOverReason or 'voluntary'
    */
   const endRun = useCallback((reason?: GameOverReason) => {
-    stopMusic();
     setState((prev) => ({
       ...prev,
       screen: 'gameOver',
@@ -384,7 +339,7 @@ export function useGameState(shellBinding?: OublietteShellBinding | null) {
       prevRoundMinimumBet: null,
       shopDisplayBetAmount: null,
     }));
-  }, [stopMusic]);
+  }, []);
 
   const buyAnotherHand = useCallback(() => {
     setState((prev) => {
@@ -564,64 +519,6 @@ export function useGameState(shellBinding?: OublietteShellBinding | null) {
     }));
   }, []);
 
-  const toggleMusic = useCallback(() => {
-    setState((prev) => {
-      const newMusicEnabled = !prev.audioSettings.musicEnabled;
-      useClubAudioStore.getState().setMusicEnabled(newMusicEnabled);
-      if (!newMusicEnabled) {
-        stopMusic();
-      }
-      return {
-        ...prev,
-        audioSettings: {
-          ...prev.audioSettings,
-          musicEnabled: newMusicEnabled,
-        },
-      };
-    });
-  }, [stopMusic]);
-
-  const toggleSoundEffects = useCallback(() => {
-    setState((prev) => {
-      const newSoundEffectsEnabled = !prev.audioSettings.soundEffectsEnabled;
-      useClubAudioStore.getState().setSfxEnabled(newSoundEffectsEnabled);
-      return {
-        ...prev,
-        audioSettings: {
-          ...prev.audioSettings,
-          soundEffectsEnabled: newSoundEffectsEnabled,
-        },
-      };
-    });
-  }, []);
-
-  const setMusicVolume = useCallback((musicVolume: number) => {
-    const clamped = Math.max(0, Math.min(1, musicVolume));
-    useClubAudioStore.getState().setMusicVolume(clamped);
-    setState((prev) => ({
-      ...prev,
-      audioSettings: { ...prev.audioSettings, musicVolume: clamped },
-    }));
-  }, []);
-
-  const setSoundEffectsVolume = useCallback((soundEffectsVolume: number) => {
-    const clamped = Math.max(0, Math.min(1, soundEffectsVolume));
-    useClubAudioStore.getState().setSfxVolume(clamped);
-    setState((prev) => ({
-      ...prev,
-      audioSettings: { ...prev.audioSettings, soundEffectsVolume: clamped },
-    }));
-  }, []);
-
-  const setHandScoringMinVolumePercent = useCallback((handScoringMinVolumePercent: number) => {
-    const clamped = Math.max(0, Math.min(10, handScoringMinVolumePercent));
-    useClubAudioStore.getState().setRepeatSfxAttenuationPercent(clamped);
-    setState((prev) => ({
-      ...prev,
-      audioSettings: { ...prev.audioSettings, handScoringMinVolumePercent: clamped },
-    }));
-  }, []);
-
   const setAnimationSpeed = useCallback((speed: number | 'skip') => {
     setState((prev) => {
       try {
@@ -681,11 +578,6 @@ export function useGameState(shellBinding?: OublietteShellBinding | null) {
     cheatSetDevilsDeal,
     toggleDevilsDealHold,
     updateStreakCounter,
-    toggleMusic,
-    toggleSoundEffects,
-    setMusicVolume,
-    setSoundEffectsVolume,
-    setHandScoringMinVolumePercent,
     setAnimationSpeed,
     setCardTheme,
   };

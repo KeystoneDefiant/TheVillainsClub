@@ -68,13 +68,6 @@ export function createTestGameState(overrides: Partial<GameState> = {}): GameSta
     currentStreakMultiplier: 1.0,
     runHighestCombo: 0,
     runHighestMultiplier: 1.0,
-    audioSettings: {
-      musicEnabled: true,
-      soundEffectsEnabled: true,
-      musicVolume: 0.7,
-      soundEffectsVolume: 1.0,
-      handScoringMinVolumePercent: 0,
-    },
     animationSpeedMode: 1,
     cardTheme: 'dark',
   };

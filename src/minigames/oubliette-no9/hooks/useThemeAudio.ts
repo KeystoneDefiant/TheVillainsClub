@@ -1,9 +1,7 @@
 import { useCallback, useEffect } from "react";
 import { useClubAudioStore } from "@/audio/clubAudioStore";
-import { gameConfig } from "@/config/minigames/oublietteNo9GameRules";
 import {
   OUBLIETTE_SOUND_PACK_DIR,
-  oublietteBackgroundTracks,
   oublietteHandScoringFiles,
   oublietteUiSoundFiles,
 } from "@/config/minigames/oublietteAudioAssets";
@@ -19,32 +17,21 @@ type SoundEvent =
 
 interface AudioInstances {
   soundEffects: Map<string, HTMLAudioElement>;
-  backgroundMusic: HTMLAudioElement | null;
 }
 
 const globalAudioCache: AudioInstances = {
   soundEffects: new Map(),
-  backgroundMusic: null,
 };
-
-let lastPlayedMusicIndex = -1;
 
 const handRankPlaysThisRound: Record<string, number> = {};
 
-/** Stop all Oubliette HTMLAudio instances (call when leaving the minigame route). */
+/** Stop cached Oubliette SFX instances (call when leaving the minigame route). */
 export function disposeOublietteAudio(): void {
   globalAudioCache.soundEffects.forEach((a) => {
     a.pause();
     a.currentTime = 0;
   });
   globalAudioCache.soundEffects.clear();
-  const m = globalAudioCache.backgroundMusic;
-  if (m) {
-    m.pause();
-    m.currentTime = 0;
-    m.removeAttribute("src");
-    globalAudioCache.backgroundMusic = null;
-  }
   Object.keys(handRankPlaysThisRound).forEach((k) => delete handRankPlaysThisRound[k]);
 }
 
@@ -54,28 +41,12 @@ function soundBaseUrl(): string {
 }
 
 /**
- * Legacy settings shape kept for API compatibility with Oubliette components.
- * Playback volumes and mute flags are driven by {@link useClubAudioStore}.
+ * Oubliette UI / table SFX only. Volumes and mute are read from {@link useClubAudioStore}
+ * (main menu / shell settings). Background music is owned by the shell, not this hook.
  */
-export interface ThemeAudioSettings {
-  musicEnabled: boolean;
-  soundEffectsEnabled: boolean;
-  musicVolume?: number;
-  soundEffectsVolume?: number;
-  handScoringMinVolumePercent?: number;
-}
-
-/** Oubliette SFX / BGM — routed through the club-wide audio store (no theme loader). */
-export function useThemeAudio(audioSettings?: ThemeAudioSettings) {
-  void audioSettings;
-  // Volume sync: only the `subscribe` below (no allocating Zustand selector — unstable snapshots caused React #185).
-
+export function useThemeAudio() {
   useEffect(() => {
     const unsub = useClubAudioStore.subscribe((s) => {
-      const m = s.musicVolume;
-      if (globalAudioCache.backgroundMusic) {
-        globalAudioCache.backgroundMusic.volume = m;
-      }
       globalAudioCache.soundEffects.forEach((audio) => {
         audio.volume = s.sfxVolume;
       });
@@ -140,85 +111,12 @@ export function useThemeAudio(audioSettings?: ThemeAudioSettings) {
     }
   }, []);
 
-  const playMusic = useCallback(() => {
-    const { musicEnabled, musicVolume } = useClubAudioStore.getState();
-    if (!musicEnabled) return;
-
-    try {
-      const tracks = [...oublietteBackgroundTracks];
-      if (tracks.length === 0) return;
-
-      const basePath = `${soundBaseUrl()}${OUBLIETTE_SOUND_PACK_DIR}/`;
-      const volume = musicVolume ?? gameConfig.audio.musicVolume;
-
-      const pickNextIndex = (): number => {
-        if (tracks.length === 1) return 0;
-        let idx = Math.floor(Math.random() * tracks.length);
-        if (idx === lastPlayedMusicIndex && tracks.length > 1) {
-          idx = (idx + 1) % tracks.length;
-        }
-        return idx;
-      };
-
-      const playTrack = (index: number) => {
-        const file = tracks[index]!;
-        lastPlayedMusicIndex = index;
-        const musicPath = basePath + file;
-        let audio = globalAudioCache.backgroundMusic;
-
-        if (!audio) {
-          audio = new Audio(musicPath);
-          audio.volume = volume;
-          globalAudioCache.backgroundMusic = audio;
-        } else {
-          audio.src = musicPath;
-          audio.volume = volume;
-        }
-
-        audio.loop = tracks.length === 1;
-        if (tracks.length > 1) {
-          const onEnded = () => {
-            audio!.removeEventListener("ended", onEnded);
-            const nextIdx = pickNextIndex();
-            playTrack(nextIdx);
-          };
-          audio.addEventListener("ended", onEnded);
-        }
-
-        void audio.play().catch(() => {});
-      };
-
-      playTrack(pickNextIndex());
-    } catch {
-      // silence
-    }
-  }, []);
-
-  const stopMusic = useCallback(() => {
-    const audio = globalAudioCache.backgroundMusic;
-    if (audio) {
-      audio.pause();
-      audio.currentTime = 0;
-    }
-  }, []);
-
-  const stopAll = useCallback(() => {
-    globalAudioCache.soundEffects.forEach((a) => {
-      a.pause();
-      a.currentTime = 0;
-    });
-    stopMusic();
-  }, [stopMusic]);
-
   const resetRoundSoundCounts = useCallback(() => {
     Object.keys(handRankPlaysThisRound).forEach((k) => delete handRankPlaysThisRound[k]);
   }, []);
 
   return {
     playSound,
-    playMusic,
-    stopMusic,
-    stopAll,
     resetRoundSoundCounts,
   };
 }

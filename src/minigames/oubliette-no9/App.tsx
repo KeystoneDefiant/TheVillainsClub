@@ -117,13 +117,8 @@ export function OublietteNo9Root(props?: OublietteShellBinding) {
     purchaseDevilsDealCostReduction,
     purchaseExtraCardInHand,
     updateStreakCounter,
-    toggleMusic,
-    toggleSoundEffects,
     setAnimationSpeed,
     setCardTheme,
-    setMusicVolume,
-    setSoundEffectsVolume,
-    setHandScoringMinVolumePercent,
   } = useGameState(shellBinding ?? null);
 
   return (
@@ -234,7 +229,6 @@ export function OublietteNo9Root(props?: OublietteShellBinding) {
               selectedHandCount={state.selectedHandCount}
               betAmount={state.betAmount}
               initialStreakCounter={state.streakCounter}
-              audioSettings={state.audioSettings}
               animationSpeedMode={state.animationSpeedMode}
               onShowSettings={() => setShowSettings(true)}
               onAnimationComplete={({ finalStreakCount, highestCombo, highestMultiplier }) => {
@@ -336,12 +330,6 @@ export function OublietteNo9Root(props?: OublietteShellBinding) {
           <div className="modal-enter">
             <Settings
               onClose={() => setShowSettings(false)}
-              audioSettings={state.audioSettings}
-              onMusicVolumeChange={setMusicVolume}
-              onSoundEffectsVolumeChange={setSoundEffectsVolume}
-              onHandScoringMinVolumeChange={setHandScoringMinVolumePercent}
-              onToggleMusic={toggleMusic}
-              onToggleSoundEffects={toggleSoundEffects}
               animationSpeedMode={state.animationSpeedMode}
               onAnimationSpeedChange={setAnimationSpeed}
               cardTheme={state.cardTheme}

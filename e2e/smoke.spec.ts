@@ -31,6 +31,9 @@ test("club table buy-in opens 7 Year Itch", async ({ page }) => {
   await expect(page).toHaveURL(/\/minigames\/seven-year-itch$/);
 
   await expect(page.getByTestId("seven-year-itch-root")).toBeVisible({ timeout: 30_000 });
-  await expect(page.getByRole("button", { name: /^roll$/i })).toBeDisabled();
+  const pass = page.getByTestId("felt-pass");
+  await pass.click();
+  await pass.click();
+  await expect(page.getByRole("button", { name: /^roll$/i })).toBeEnabled();
   await expect(page.getByRole("button", { name: /return to the bar/i })).toBeVisible();
 });

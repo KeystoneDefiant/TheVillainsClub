@@ -35,6 +35,13 @@ export type OublietteShellBinding = {
   onReturnToClubMenu?: (detail: ClubTableReturnDetail) => void;
 };
 
+/** Props for 7 Year Itch (Crapless) — settlement shape matches {@link OublietteSettlementProfile}. */
+export type SevenYearItchShellBinding = {
+  sessionCredits: number;
+  settlement: OublietteSettlementProfile;
+  onReturnToClubMenu?: (detail: ClubTableReturnDetail) => void;
+};
+
 export function buildOublietteSettlementProfile(buyIn: number, now: Date = new Date()): OublietteSettlementProfile {
   const b = Math.floor(buyIn);
   const special = resolveActiveClubSpecial(now);
@@ -49,10 +56,36 @@ export function buildOublietteSettlementProfile(buyIn: number, now: Date = new D
   };
 }
 
+export function buildSevenYearItchSettlementProfile(buyIn: number, now: Date = new Date()): OublietteSettlementProfile {
+  const b = Math.floor(buyIn);
+  const special = resolveActiveClubSpecial(now);
+  const row = resolveSpecialDefinitionRow(special);
+  const { sevenYearItchCapMult, allMinigamesCapMult } = capModifiersFromSpecialDefinition(row);
+  const cfg = villainsGameDefaults.sevenYearItch;
+  return {
+    buyIn: b,
+    maxReturnMultipleOfBuyIn: cfg.maxReturnMultipleOfBuyIn,
+    capModifierProduct: sevenYearItchCapMult * allMinigamesCapMult,
+    overachievement: { ...cfg.overachievement },
+  };
+}
+
 /** Max credits paid back from the **capped** portion of the table (before overachievement tiers). */
 export function getOublietteBaseReturnCeiling(profile: OublietteSettlementProfile): number {
   const b = Math.max(1, Math.floor(profile.buyIn));
   return Math.floor(b * profile.maxReturnMultipleOfBuyIn * profile.capModifierProduct);
+}
+
+export function getSevenYearItchBaseReturnCeiling(profile: OublietteSettlementProfile): number {
+  return getOublietteBaseReturnCeiling(profile);
+}
+
+/** Same cap / tier math as Oubliette; profile comes from {@link buildSevenYearItchSettlementProfile}. */
+export function computeSevenYearItchReturn(
+  uncappedCredits: number,
+  profile: OublietteSettlementProfile,
+): ClubTableReturnDetail {
+  return computeOublietteReturn(uncappedCredits, profile);
 }
 
 /**

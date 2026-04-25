@@ -1,0 +1,19 @@
+.seven-year-itch-root {
+  --7yi-amber: #c4782d;
+  --7yi-amber-dim: #8a5220;
+  --7yi-bg: #14100c;
+  --7yi-paper: rgba(32, 24, 18, 0.92);
+  min-height: 100%;
+  background: radial-gradient(ellipse at 50% 0%, rgba(196, 120, 45, 0.12), transparent 55%), var(--7yi-bg);
+  color: #e8dfd4;
+}
+
+.seven-year-itch-root .mantine-Slider-thumb {
+  border-color: var(--7yi-amber);
+}
+
+.seven-year-itch-dice {
+  font-family: "Georgia", "Times New Roman", serif;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}

@@ -4,7 +4,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
 import { villainsGameDefaults } from "@/config/villainsGameDefaults";
 import { useClubWallet } from "@/game/clubWalletStore";
-import { buildOublietteSettlementProfile } from "@/game/sessionSettlement";
+import { buildOublietteSettlementProfile, buildSevenYearItchSettlementProfile } from "@/game/sessionSettlement";
 import { buildClubTheme } from "@/theme/clubTheme";
 import { ClubTableGamesSection } from "../ClubTableGamesSection";
 
@@ -15,6 +15,7 @@ function renderSection() {
         <Routes>
           <Route path="/bar" element={<ClubTableGamesSection />} />
           <Route path="/minigames/oubliette-no9" element={<div data-testid="in-game">in game</div>} />
+          <Route path="/minigames/seven-year-itch" element={<div data-testid="in-7yi">7yi</div>} />
         </Routes>
       </MemoryRouter>
     </MantineProvider>,
@@ -70,5 +71,28 @@ describe("ClubTableGamesSection", () => {
     });
     renderSection();
     expect(screen.getByRole("button", { name: /oubliette no\. 9 \(table\)/i })).toBeDisabled();
+  });
+
+  it("navigates to 7 Year Itch when start succeeds", () => {
+    renderSection();
+    fireEvent.click(screen.getByRole("button", { name: /7 year itch \(crapless\)/i }));
+    expect(screen.getByTestId("in-7yi")).toBeInTheDocument();
+  });
+
+  it("shows resume when a 7 Year Itch session is already open", () => {
+    const buyIn = villainsGameDefaults.sevenYearItch.defaultBuyIn;
+    useClubWallet.setState({
+      clubBalance: villainsGameDefaults.defaultClubBalance,
+      activeSession: {
+        gameId: "seven_year_itch",
+        drinkId: "seven_year_itch",
+        buyIn,
+        sessionWallet: buyIn,
+        settlement: buildSevenYearItchSettlementProfile(buyIn),
+      },
+    });
+    renderSection();
+    expect(screen.getByRole("button", { name: /resume 7 year itch/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /7 year itch \(crapless\)/i })).toBeDisabled();
   });
 });

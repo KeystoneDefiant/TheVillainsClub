@@ -28,6 +28,21 @@ export function isBarRouteState(value: unknown): value is BarRouteState {
 
 /** Short in-character line after settling (driven only by settlement numbers). */
 export function tableReturnTagline(f: BarRouteState["lastTable"]): string {
+  if (f.gameId === "seven_year_itch") {
+    if (f.tableRound >= 24) {
+      return "That many rolls? The syndicate will tell stories about you.";
+    }
+    if (f.totalReturn === 0) {
+      return "The feds took the layout. Your club tab still breathes.";
+    }
+    if (f.totalReturn >= f.buyIn * 8) {
+      return "The rye was worth it — walk before the heat comes back.";
+    }
+    if (f.tiers > 0) {
+      return "The house cut a check through clenched teeth. Enjoy the tiers.";
+    }
+    return "Back from the felt — club balance squared.";
+  }
   if (f.tableRound >= 30) {
     return "You went deep. The bar will pretend it never saw the math.";
   }

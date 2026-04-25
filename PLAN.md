@@ -10,15 +10,16 @@ This document describes **how** the project is built and operated. Overarching o
 
 **Dev environment:** Use **Docker / Dev Container** when the host has no Node toolchain. See **AGENTS.md** (`## Dev container`) and **`.devcontainer/README.md`**. Typical flow inside the container: `npm ci` (or rely on `post-create`), then `npm run dev:web` and open forwarded **http://localhost:5173**. Full Electron: `npm run dev` (needs a display).
 
-**What exists today (milestone: club shell + Oubliette No. 9 host):**
+**What exists today (milestone: club shell + Oubliette No. 9 + 7 Year Itch host):**
 
 - **Renderer:** Vite + React 19, **Mantine** UI, **Framer Motion** for intro/menu motion.
-- **Routes:** Intro (`/`) → main menu (`/menu`) → club floor (`/bar`, table buy-ins) → **Oubliette No. 9** (`/minigames/oubliette-no9` after `startSession`), return to **`/bar`** with optional flash state on settle; dev-only UI playground (`/__playground` in development).
+- **Routes:** Intro (`/`) → main menu (`/menu`) → club floor (`/bar`, table buy-ins) → **Oubliette No. 9** (`/minigames/oubliette-no9`) or **7 Year Itch** (`/minigames/seven-year-itch` after `startSession`), return to **`/bar`** with optional flash state on settle; dev-only UI playground (`/__playground` in development).
 - **Theme:** Club palette in `src/theme/`; typography loads via **Google Fonts** in `src/styles/fonts.css` (add self-hosted files under `assets/fonts/` later if you want fully offline dev).
-- **Economy:** `src/game/money.ts` + persisted **`clubWalletStore`** — buy-in leaves the club; **return settlement** uses `src/game/sessionSettlement.ts` (base cap = `buyIn × maxReturnMultiple × oubliette_cap_mult × all_minigames_cap_mult`, plus tiered overachievement bonuses). Defaults in **`src/config/villainsGameDefaults.ts`**; cap keys on specials rows in **`content/specials.json`** (`oubliette_cap_mult`, `all_minigames_cap_mult`) resolved in **`src/game/specialsResolver.ts`** (separate from `payout_mult`).
+- **Economy:** `src/game/money.ts` + persisted **`clubWalletStore`** — buy-in leaves the club; **return settlement** uses `src/game/sessionSettlement.ts` (same cap / tier shape for Oubliette and 7 Year Itch; product uses `oubliette_cap_mult` vs `seven_year_itch_cap_mult` × `all_minigames_cap_mult` per game). Defaults in **`src/config/villainsGameDefaults.ts`**; cap keys on specials rows in **`content/specials.json`** resolved in **`src/game/specialsResolver.ts`** (separate from `payout_mult`).
 - **Oubliette port:** First-party copy under **`src/minigames/oubliette-no9/`**; table rules config at **`src/config/minigames/oublietteNo9GameRules.ts`**; Tailwind + theme SCSS loaded from **`OublietteNo9Page`**. **`TO_PORT/OublietteNo9`** remains the upstream reference submodule.
+- **7 Year Itch:** Crapless craps minigame under **`src/minigames/seven-year-itch/`**; NV paytables in **`src/config/minigames/sevenYearItchRules.ts`**; agent plan **`7YI_plan.md`**. Favors / Devil’s Deals from the narrative spec are **not** in this sprint (base table only).
 - **Audio:** **`src/audio/clubAudioStore.ts`** (persisted) is the single settings source for **music and SFX** (main menu Settings). Oubliette plays **table/UI SFX only** via `useThemeAudio` reading that store; it does not duplicate audio controls or start its own background music.
-- **Tests / CI:** **Vitest** + **ESLint** + **Playwright** smoke (`npm run test:e2e` after a build); Oubliette tests live under `src/minigames/oubliette-no9/**`; shell/table helpers under `src/components/club/` and `src/game/`.
+- **Tests / CI:** **Vitest** + **ESLint** + **Playwright** smoke (`npm run test:e2e` after a build); Oubliette tests live under `src/minigames/oubliette-no9/**`; 7 Year Itch engine tests under `src/minigames/seven-year-itch/engine/__tests__/`; shell/table helpers under `src/components/club/` and `src/game/`.
 
 **Immediate next steps (suggested order):**
 

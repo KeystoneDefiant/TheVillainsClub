@@ -1,8 +1,8 @@
 export type MotionPreset = {
   introTitleDuration: number;
-  /** Per grey letter stroke in the VC intro mark; zoom spans `7 * introLogoLetterDrawSec`. */
+  /** Per grey letter bottom→top fill reveal in the VC intro mark; zoom duration matches the sum of these steps (see IntroPage). */
   introLogoLetterDrawSec: number;
-  /** Pause after the last grey stroke before the intro moves to the “hold” phase. */
+  /** Pause after the last grey letter finishes revealing before the intro moves to the “hold” phase. */
   introLogoSettleSec: number;
   /** How long the full title block stays readable before auto-advancing to exit. */
   introHoldSec: number;

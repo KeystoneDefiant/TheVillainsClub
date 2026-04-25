@@ -672,7 +672,7 @@ export function UiPlayground() {
                   onChange={(v) => setPartial({ introTitleDuration: v })}
                 />
                 <Slider
-                  label="Intro logo grey letter draw (s each)"
+                  label="Intro logo grey letter reveal (s each, bottom→top)"
                   min={0.12}
                   max={0.55}
                   step={0.01}

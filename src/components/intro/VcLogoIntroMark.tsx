@@ -2,12 +2,14 @@ import { useId } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { VC_LOGO_INTRO_VIEWBOX, vcLogoGreyPaths, vcLogoRedPaths } from "./vcLogoIntroPaths";
 
-const RED_FILL = "#c41e2a";
-const GREY_STROKE = "#7a6f78";
-const STROKE_W = 3.2;
+/** Match `VC Logo - Color.svg` (.cls-1 / .cls-2). */
+const RED_FILL = "#c0272d";
+const GREY_STROKE = "#808080";
+const GREY_FILL = "#808080";
+const STROKE_W = 2;
 
 const BASE_W = 420;
-const ASPECT = 132 / 520;
+const ASPECT = 165.6 / 241.3;
 
 type VcLogoIntroMarkProps = {
   /** Scales base width (420px). */
@@ -49,7 +51,13 @@ export function VcLogoIntroMark({ scale = 1, zoomDurationSec, letterDrawSec, eas
           <path key={p.id} d={p.d} />
         ))}
       </g>
-      <g fill="none" stroke={GREY_STROKE} strokeWidth={STROKE_W} strokeLinecap="round" strokeLinejoin="round">
+      <g
+        fill={reduceMotion ? GREY_FILL : "none"}
+        stroke={reduceMotion ? "none" : GREY_STROKE}
+        strokeWidth={reduceMotion ? 0 : STROKE_W}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         {reduceMotion
           ? vcLogoGreyPaths.map((p) => <path key={p.id} d={p.d} />)
           : vcLogoGreyPaths.map((p, i) => {

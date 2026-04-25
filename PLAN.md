@@ -12,7 +12,7 @@ This document describes **how** the project is built and operated. Overarching o
 
 **What exists today (milestone: club shell + Oubliette No. 9 host):**
 
-- **Renderer:** Vite + React 19, **Mantine** UI, **Framer Motion** for intro/menu motion.
+- **Renderer:** Vite + React 19, **Mantine** UI, **Framer Motion** for intro/menu motion. **Intro (`/`):** animated VC wordmark (red **VILLAINS** fills, grey **THE** / **CLUB** stroke-draw, slow zoom-out) driven by motion preset keys `introLogoLetterDrawSec`, `introLogoSettleSec`, `introHoldSec`; static export at **`public/images/logos/vc-logo-color-intro.svg`** mirrors the in-app paths.
 - **Routes:** Intro (`/`) → main menu (`/menu`) → club floor (`/bar`, table buy-ins) → **Oubliette No. 9** (`/minigames/oubliette-no9` after `startSession`), return to **`/bar`** with optional flash state on settle; dev-only UI playground (`/__playground` in development).
 - **Theme:** Club palette in `src/theme/`; typography loads via **Google Fonts** in `src/styles/fonts.css` (add self-hosted files under `assets/fonts/` later if you want fully offline dev).
 - **Economy:** `src/game/money.ts` + persisted **`clubWalletStore`** — buy-in leaves the club; **return settlement** uses `src/game/sessionSettlement.ts` (base cap = `buyIn × maxReturnMultiple × oubliette_cap_mult × all_minigames_cap_mult`, plus tiered overachievement bonuses). Defaults in **`src/config/villainsGameDefaults.ts`**; cap keys on specials rows in **`content/specials.json`** (`oubliette_cap_mult`, `all_minigames_cap_mult`) resolved in **`src/game/specialsResolver.ts`** (separate from `payout_mult`).

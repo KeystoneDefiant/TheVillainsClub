@@ -672,7 +672,31 @@ export function UiPlayground() {
                   onChange={(v) => setPartial({ introTitleDuration: v })}
                 />
                 <Slider
-                  label="Intro tagline delay (s)"
+                  label="Intro logo grey letter draw (s each)"
+                  min={0.12}
+                  max={0.55}
+                  step={0.01}
+                  value={preset.introLogoLetterDrawSec}
+                  onChange={(v) => setPartial({ introLogoLetterDrawSec: v })}
+                />
+                <Slider
+                  label="Intro logo settle after letters (s)"
+                  min={0}
+                  max={1.2}
+                  step={0.02}
+                  value={preset.introLogoSettleSec}
+                  onChange={(v) => setPartial({ introLogoSettleSec: v })}
+                />
+                <Slider
+                  label="Intro hold before exit (s)"
+                  min={0.5}
+                  max={4}
+                  step={0.05}
+                  value={preset.introHoldSec}
+                  onChange={(v) => setPartial({ introHoldSec: v })}
+                />
+                <Slider
+                  label="Intro tagline delay after logo (s)"
                   min={0}
                   max={1.5}
                   step={0.05}

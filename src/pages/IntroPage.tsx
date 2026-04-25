@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import { Box, Stack, Text } from "@mantine/core";
 import { AnimatePresence, motion } from "framer-motion";
+import { VcLogoIntroMark } from "@/components/intro/VcLogoIntroMark";
+import { VC_LOGO_GREY_LETTER_COUNT } from "@/components/intro/vcLogoIntroPaths";
 import { MenuHazeBackground } from "@/components/layout/MenuHazeBackground";
-import { ClubHeading } from "@/components/ui/ClubHeading";
 import { clubTokens } from "@/theme/clubTokens";
 import { useMotionPresetStore } from "@/motion/motionPresetStore";
 import { usePrefersReducedMotion } from "@/motion/usePrefersReducedMotion";
@@ -15,18 +16,29 @@ export function IntroPage() {
   const [phase, setPhase] = useState<"enter" | "hold" | "exit">("enter");
   const [skipped, setSkipped] = useState(false);
 
+  const greyCount = VC_LOGO_GREY_LETTER_COUNT;
+  const logoZoomSec = useMemo(
+    () => greyCount * preset.introLogoLetterDrawSec,
+    [greyCount, preset.introLogoLetterDrawSec],
+  );
+  const logoSequenceSec = logoZoomSec + preset.introLogoSettleSec;
+  const enterToHoldMs = useMemo(
+    () => Math.round(logoSequenceSec * 1000) + (reduceMotion ? 0 : 80),
+    [logoSequenceSec, reduceMotion],
+  );
+
   useEffect(() => {
     if (reduceMotion) return;
-    const t = window.setTimeout(() => setPhase("hold"), 1200);
+    const t = window.setTimeout(() => setPhase("hold"), enterToHoldMs);
     return () => window.clearTimeout(t);
-  }, [reduceMotion]);
+  }, [enterToHoldMs, reduceMotion]);
 
   useEffect(() => {
     if (reduceMotion) return;
     if (phase !== "hold" || skipped) return;
-    const t = window.setTimeout(() => setPhase("exit"), 2200);
+    const t = window.setTimeout(() => setPhase("exit"), preset.introHoldSec * 1000);
     return () => window.clearTimeout(t);
-  }, [phase, skipped, reduceMotion]);
+  }, [phase, skipped, reduceMotion, preset.introHoldSec]);
 
   useEffect(() => {
     if (reduceMotion) return;
@@ -52,6 +64,9 @@ export function IntroPage() {
   const easing = preset.easing;
   const instant = reduceMotion;
 
+  const taglineDelaySec = logoSequenceSec + preset.introTaglineDelay;
+  const hintDelaySec = taglineDelaySec + preset.introTaglineDuration * 0.45;
+
   const introShellStyle: CSSProperties = instant
     ? { textAlign: "center", maxWidth: 920, backfaceVisibility: "hidden" }
     : {
@@ -59,9 +74,9 @@ export function IntroPage() {
         maxWidth: 920,
         backfaceVisibility: "hidden",
         ["--shell-intro-tag-dur" as string]: `${preset.introTaglineDuration}s`,
-        ["--shell-intro-tag-delay" as string]: `${preset.introTaglineDelay}s`,
+        ["--shell-intro-tag-delay" as string]: `${taglineDelaySec}s`,
         ["--shell-intro-hint-dur" as string]: "0.6s",
-        ["--shell-intro-hint-delay" as string]: "1.1s",
+        ["--shell-intro-hint-delay" as string]: `${hintDelaySec}s`,
         ["--shell-intro-ease" as string]: `cubic-bezier(${preset.easing.join(",")})`,
       };
 
@@ -107,9 +122,14 @@ export function IntroPage() {
               transition={instant ? { duration: 0 } : { duration: preset.introTitleDuration, ease: easing }}
               style={introShellStyle}
             >
-              <ClubHeading order={1} size="h1" c={clubTokens.text.primary}>
-                The Villains Club
-              </ClubHeading>
+              <Box mb="sm" style={{ display: "flex", justifyContent: "center" }}>
+                <VcLogoIntroMark
+                  scale={1}
+                  zoomDurationSec={logoZoomSec}
+                  letterDrawSec={preset.introLogoLetterDrawSec}
+                  easing={easing}
+                />
+              </Box>
               <Box className={instant ? undefined : "shell-intro-tagline"}>
                 <Text mt="md" size="lg" c={clubTokens.text.secondary} style={{ fontStyle: "italic" }}>
                   A quiet room. A loaded deck. A tab that never forgets.

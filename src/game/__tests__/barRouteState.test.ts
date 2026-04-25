@@ -62,4 +62,17 @@ describe("barRouteState", () => {
       }),
     ).toMatch(/went deep/i);
   });
+
+  it("tableReturnTagline uses 7 Year Itch copy when gameId matches", () => {
+    const buyIn = villainsGameDefaults.sevenYearItch.defaultBuyIn;
+    expect(
+      tableReturnTagline({
+        gameId: "seven_year_itch",
+        buyIn,
+        totalReturn: 0,
+        tableRound: 0,
+        tiers: 0,
+      }),
+    ).toMatch(/feds took the layout/i);
+  });
 });

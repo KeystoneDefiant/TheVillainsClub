@@ -13,7 +13,7 @@ export type TableSession = {
   drinkId: string;
   buyIn: number;
   sessionWallet: number;
-  /** Game-specific settlement snapshot (Oubliette profile when `gameId` is oubliette). */
+  /** Game-specific settlement snapshot (same cap shape for Oubliette and 7 Year Itch; see `sessionSettlement.ts`). */
   settlement: OublietteSettlementProfile;
 };
 

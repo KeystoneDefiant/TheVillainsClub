@@ -1,32 +1,26 @@
 {
+  "interlude_chance_between_tracks": 0.38,
   "bands": [
     {
       "id": "velvet_rats",
       "display_name": "The Velvet Rats",
-      "track_clips": [
-        "res://content/audio/placeholder_a.ogg",
-        "res://content/audio/placeholder_b.ogg",
-        "res://content/audio/placeholder_c.ogg",
-        "res://content/audio/placeholder_d.ogg"
-      ],
-      "track_duration_if_missing_sec": 3.5,
-      "interlude_every_n_tracks": 3,
-      "interlude_duration_sec": 2.0,
-      "full_break_every_n_tracks": 6,
-      "break_duration_sec": 5.0
+      "asset_root": "audio/bands/velvet_rats",
+      "music_files": ["music/track_01.ogg", "music/track_02.ogg", "music/track_03.ogg"],
+      "interlude_files": ["interludes/crowd_soft.ogg", "interludes/banter_a.ogg"]
     },
     {
       "id": "smoke_hex",
       "display_name": "Smoke & Hex",
-      "track_clips": [
-        "res://content/audio/placeholder_a.ogg",
-        "res://content/audio/placeholder_b.ogg"
-      ],
-      "track_duration_if_missing_sec": 4.0,
-      "interlude_every_n_tracks": 2,
-      "interlude_duration_sec": 2.5,
-      "full_break_every_n_tracks": 4,
-      "break_duration_sec": 6.0
+      "asset_root": "audio/bands/smoke_hex",
+      "music_files": ["music/track_01.ogg", "music/track_02.ogg", "music/track_03.ogg"],
+      "interlude_files": ["interludes/crowd_soft.ogg", "interludes/banter_a.ogg"]
+    },
+    {
+      "id": "midnight_wire",
+      "display_name": "Midnight Wire",
+      "asset_root": "audio/bands/midnight_wire",
+      "music_files": ["music/track_01.ogg", "music/track_02.ogg", "music/track_03.ogg"],
+      "interlude_files": ["interludes/crowd_soft.ogg", "interludes/banter_a.ogg"]
     }
   ]
 }

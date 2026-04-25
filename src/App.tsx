@@ -8,7 +8,9 @@ import { IntroPage } from "@/pages/IntroPage";
 import { MainMenuPage } from "@/pages/MainMenuPage";
 import { BarStubPage } from "@/pages/BarStubPage";
 import { OublietteNo9Page } from "@/pages/OublietteNo9Page";
+import { SevenYearItchPage } from "@/pages/SevenYearItchPage";
 import { UiPlayground } from "@/dev/UiPlayground";
+import { ShellBandMusicHost } from "@/audio/useShellBandMusic";
 
 export default function App() {
   const themeOverride = useThemeLab((s) => s.override);
@@ -18,11 +20,13 @@ export default function App() {
   return (
     <MantineProvider theme={theme} defaultColorScheme="dark" forceColorScheme="dark">
       <BrowserRouter basename={routerBasename}>
+        <ShellBandMusicHost />
         <Routes>
           <Route path="/" element={<IntroPage />} />
           <Route path="/menu" element={<MainMenuPage />} />
           <Route path="/bar" element={<BarStubPage />} />
           <Route path="/minigames/oubliette-no9" element={<OublietteNo9Page />} />
+          <Route path="/minigames/seven-year-itch" element={<SevenYearItchPage />} />
           {import.meta.env.DEV ? <Route path="/__playground" element={<UiPlayground />} /> : null}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

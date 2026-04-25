@@ -1,0 +1,505 @@
+.seven-year-itch-root {
+  --7yi-amber: #c4782d;
+  --7yi-amber-dim: #8a5220;
+  --7yi-bg: #14100c;
+  --7yi-paper: rgba(32, 24, 18, 0.92);
+  --7yi-felt: #1e2a22;
+  --7yi-felt-dark: #141c18;
+  --7yi-felt-line: rgba(196, 120, 45, 0.45);
+  --7yi-felt-glow: rgba(196, 120, 45, 0.12);
+  min-height: 100%;
+  background: radial-gradient(ellipse at 50% 0%, rgba(196, 120, 45, 0.12), transparent 55%), var(--7yi-bg);
+  color: #e8dfd4;
+}
+
+.seven-year-itch-dice {
+  font-family: "Georgia", "Times New Roman", serif;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+/* --- Felt layout --- */
+.yi-felt {
+  border-radius: 12px;
+  padding: 14px 12px 16px;
+  background: linear-gradient(165deg, var(--7yi-felt) 0%, var(--7yi-felt-dark) 100%);
+  border: 2px solid var(--7yi-felt-line);
+  box-shadow:
+    inset 0 0 60px rgba(0, 0, 0, 0.35),
+    0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+.yi-felt-propRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.yi-felt-field,
+.yi-felt-horn {
+  border-radius: 8px;
+  border: 1px solid var(--7yi-felt-line);
+  background: rgba(0, 0, 0, 0.22);
+  color: #e8dfd4;
+  cursor: pointer;
+  padding: 10px 10px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: border-color 0.15s ease;
+}
+
+.yi-felt-field:hover,
+.yi-felt-horn:hover {
+  border-color: var(--7yi-amber);
+}
+
+.yi-felt-prop-label {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: rgba(232, 223, 212, 0.55);
+}
+
+.yi-felt-prop-meta {
+  font-size: 0.62rem;
+  color: rgba(232, 223, 212, 0.45);
+}
+
+.yi-felt-prop-amt {
+  font-size: 1.1rem;
+  font-weight: 700;
+  font-family: Georgia, serif;
+  color: var(--7yi-amber);
+}
+
+.yi-felt-hopBlock,
+.yi-felt-hardBlock {
+  margin-bottom: 12px;
+}
+
+.yi-felt-sectionLabel {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.yi-felt-hopGrid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 4px;
+}
+
+@media (max-width: 640px) {
+  .yi-felt-hopGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.yi-felt-hop {
+  min-height: 44px;
+  border-radius: 4px;
+  border: 1px solid rgba(196, 120, 45, 0.25);
+  background: rgba(0, 0, 0, 0.2);
+  color: #e8dfd4;
+  cursor: pointer;
+  padding: 4px 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 0.65rem;
+}
+
+.yi-felt-hop:hover {
+  border-color: var(--7yi-amber);
+}
+
+.yi-felt-hop-key {
+  font-weight: 700;
+  color: var(--7yi-amber);
+  font-family: ui-monospace, monospace;
+}
+
+.yi-felt-hop-amt {
+  font-size: 0.62rem;
+  color: #c9c2b8;
+  min-height: 0.9em;
+}
+
+.yi-felt-hardRow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.yi-felt-hard {
+  min-height: 52px;
+  border-radius: 6px;
+  border: 1px solid var(--7yi-felt-line);
+  background: rgba(0, 0, 0, 0.22);
+  color: #e8dfd4;
+  cursor: pointer;
+  padding: 6px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.yi-felt-hard:hover {
+  border-color: var(--7yi-amber);
+}
+
+.yi-felt-hard-label {
+  font-size: 0.58rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(232, 223, 212, 0.55);
+}
+
+.yi-felt-hard-amt {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--7yi-amber);
+}
+
+.yi-felt-placeArc {
+  margin-bottom: 10px;
+}
+
+.yi-felt-placeRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.yi-felt-place {
+  flex: 1 1 52px;
+  min-width: 48px;
+  max-width: 72px;
+  min-height: 64px;
+  border-radius: 6px;
+  border: 1px solid var(--7yi-felt-line);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.2), rgba(255, 255, 255, 0.03));
+  color: #e8dfd4;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 6px 4px;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.12s ease;
+}
+
+.yi-felt-place:hover:not(:disabled) {
+  border-color: var(--7yi-amber);
+  box-shadow: 0 0 0 1px var(--7yi-felt-glow);
+}
+
+.yi-felt-place:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.yi-felt-place--point {
+  border-color: var(--7yi-amber);
+  box-shadow:
+    0 0 16px var(--7yi-felt-glow),
+    inset 0 0 20px rgba(196, 120, 45, 0.08);
+}
+
+.yi-felt-place--off {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+.yi-felt-place-num {
+  font-size: 1.15rem;
+  font-weight: 800;
+  font-family: Georgia, serif;
+  color: var(--7yi-amber);
+}
+
+.yi-felt-place-amt {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #c9c2b8;
+  min-height: 1em;
+}
+
+.yi-felt-no7 {
+  flex: 0 0 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+}
+
+.yi-felt-no7-inner {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: rgba(232, 223, 212, 0.22);
+  border: 1px dashed rgba(196, 120, 45, 0.25);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.yi-felt-diceDock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0 14px;
+}
+
+.yi-felt-rollBtn {
+  appearance: none;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 36px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  cursor: pointer;
+  color: #1a120c;
+  background: linear-gradient(180deg, #e8a24d, var(--7yi-amber));
+  box-shadow: 0 4px 0 #5c3a14;
+  transition: transform 0.1s ease;
+}
+
+.yi-felt-rollBtn:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+.yi-felt-rollBtn:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #5c3a14;
+}
+
+.yi-felt-rollBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.yi-felt-oddsPassStack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.yi-felt-odds,
+.yi-felt-pass {
+  width: 100%;
+  text-align: left;
+  border-radius: 8px;
+  border: 1px solid var(--7yi-felt-line);
+  background: rgba(0, 0, 0, 0.25);
+  color: #e8dfd4;
+  cursor: pointer;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.yi-felt-odds:hover:not(:disabled),
+.yi-felt-pass:hover:not(:disabled) {
+  border-color: var(--7yi-amber);
+}
+
+.yi-felt-odds--off,
+.yi-felt-pass--locked {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.yi-felt-odds-label,
+.yi-felt-pass-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: rgba(232, 223, 212, 0.65);
+}
+
+.yi-felt-odds-meta,
+.yi-felt-pass-amount {
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-family: Georgia, serif;
+  color: var(--7yi-amber);
+}
+
+.yi-felt-pass-lock {
+  font-size: 0.7rem;
+  color: rgba(232, 223, 212, 0.55);
+}
+
+.yi-felt-chipHint,
+.yi-felt-chipHintSm {
+  font-size: 0.62rem;
+  color: rgba(232, 223, 212, 0.45);
+}
+
+.yi-felt-chipHintSm {
+  margin-top: 2px;
+}
+
+/* --- 3D dice --- */
+.yi-dice-pair {
+  perspective: 900px;
+}
+
+.yi-die-scene {
+  width: 56px;
+  height: 56px;
+  perspective: 420px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.yi-die-cube {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  transform-style: preserve-3d;
+  transform-origin: center center;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.yi-die-cube--rolling {
+  animation: yi-die-tumble 0.82s ease-in-out forwards;
+}
+
+@keyframes yi-die-tumble {
+  0% {
+    transform: rotateX(0deg) rotateY(0deg);
+  }
+  30% {
+    transform: rotateX(180deg) rotateY(120deg) rotateZ(25deg);
+  }
+  60% {
+    transform: rotateX(420deg) rotateY(300deg) rotateZ(-15deg);
+  }
+  100% {
+    transform: rotateX(540deg) rotateY(480deg) rotateZ(0deg);
+  }
+}
+
+.yi-die-faceWrap {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-style: preserve-3d;
+  width: 44px;
+  height: 44px;
+}
+
+.yi-die-faceWrap--front {
+  transform: rotateY(0deg) translateZ(22px);
+}
+.yi-die-faceWrap--back {
+  transform: rotateY(180deg) translateZ(22px);
+}
+.yi-die-faceWrap--right {
+  transform: rotateY(90deg) translateZ(22px);
+}
+.yi-die-faceWrap--left {
+  transform: rotateY(-90deg) translateZ(22px);
+}
+.yi-die-faceWrap--top {
+  transform: rotateX(90deg) translateZ(22px);
+}
+.yi-die-faceWrap--bottom {
+  transform: rotateX(-90deg) translateZ(22px);
+}
+
+.yi-die-face {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background: linear-gradient(145deg, #f4e8dc 0%, #d8c4b0 40%, #b89b82 100%);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  padding: 6px;
+  box-sizing: border-box;
+}
+
+.yi-die-pip {
+  border-radius: 50%;
+  margin: auto;
+  width: 7px;
+  height: 7px;
+  background: transparent;
+}
+
+.yi-die-pip--on {
+  background: radial-gradient(circle at 30% 30%, #2a2a2a, #0a0a0a);
+  box-shadow: 0 1px 1px rgba(255, 255, 255, 0.25);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .yi-die-cube--rolling {
+    animation: none !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .yi-felt-place {
+    min-width: 40px;
+    flex: 1 1 40px;
+  }
+  .yi-die-scene {
+    width: 48px;
+    height: 48px;
+  }
+  .yi-die-cube,
+  .yi-die-faceWrap,
+  .yi-die-face {
+    width: 38px;
+    height: 38px;
+  }
+  .yi-die-faceWrap--front {
+    transform: rotateY(0deg) translateZ(19px);
+  }
+  .yi-die-faceWrap--back {
+    transform: rotateY(180deg) translateZ(19px);
+  }
+  .yi-die-faceWrap--right {
+    transform: rotateY(90deg) translateZ(19px);
+  }
+  .yi-die-faceWrap--left {
+    transform: rotateY(-90deg) translateZ(19px);
+  }
+  .yi-die-faceWrap--top {
+    transform: rotateX(90deg) translateZ(19px);
+  }
+  .yi-die-faceWrap--bottom {
+    transform: rotateX(-90deg) translateZ(19px);
+  }
+}

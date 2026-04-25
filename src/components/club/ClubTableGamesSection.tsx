@@ -3,7 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { Alert, Stack, Text } from "@mantine/core";
 import { ClubButton } from "@/components/ui/ClubButton";
 import { villainsGameDefaults } from "@/config/villainsGameDefaults";
-import { buildOublietteSettlementProfile, getOublietteBaseReturnCeiling } from "@/game/sessionSettlement";
+import {
+  buildOublietteSettlementProfile,
+  buildSevenYearItchSettlementProfile,
+  getOublietteBaseReturnCeiling,
+  getSevenYearItchBaseReturnCeiling,
+} from "@/game/sessionSettlement";
 import { useClubWallet } from "@/game/clubWalletStore";
 import { clubTokens } from "@/theme/clubTokens";
 
@@ -26,7 +31,8 @@ export function ClubTableGamesSection() {
   const clubBalance = useClubWallet((s) => s.clubBalance);
   const activeSession = useClubWallet((s) => s.activeSession);
   const startSession = useClubWallet((s) => s.startSession);
-  const [starting, setStarting] = useState(false);
+  const [startingOubliette, setStartingOubliette] = useState(false);
+  const [starting7yi, setStarting7yi] = useState(false);
   const [sessionError, setSessionError] = useState<string | null>(null);
 
   const oublietteBuyIn = villainsGameDefaults.oublietteNo9.defaultBuyIn;
@@ -39,6 +45,16 @@ export function ClubTableGamesSection() {
     [oublietteSettlementPreview],
   );
 
+  const sevenYearItchBuyIn = villainsGameDefaults.sevenYearItch.defaultBuyIn;
+  const sevenYearItchSettlementPreview = useMemo(
+    () => buildSevenYearItchSettlementProfile(sevenYearItchBuyIn),
+    [sevenYearItchBuyIn],
+  );
+  const sevenYearItchReturnCeiling = useMemo(
+    () => getSevenYearItchBaseReturnCeiling(sevenYearItchSettlementPreview),
+    [sevenYearItchSettlementPreview],
+  );
+
   const startOubliette = () => {
     setSessionError(null);
     if (clubBalance < oublietteBuyIn) {
@@ -49,7 +65,7 @@ export function ClubTableGamesSection() {
       setSessionError(startSessionErrorMessage("session_active"));
       return;
     }
-    setStarting(true);
+    setStartingOubliette(true);
     const settlement = buildOublietteSettlementProfile(oublietteBuyIn);
     const result = startSession({
       gameId: "oubliette_no9",
@@ -59,14 +75,43 @@ export function ClubTableGamesSection() {
     });
     if (!result.ok) {
       setSessionError(startSessionErrorMessage(result.reason));
-      setStarting(false);
+      setStartingOubliette(false);
       return;
     }
     navigate("/minigames/oubliette-no9");
   };
 
-  const canAfford = clubBalance >= oublietteBuyIn;
+  const startSevenYearItch = () => {
+    setSessionError(null);
+    if (clubBalance < sevenYearItchBuyIn) {
+      setSessionError(startSessionErrorMessage("insufficient_funds"));
+      return;
+    }
+    if (activeSession) {
+      setSessionError(startSessionErrorMessage("session_active"));
+      return;
+    }
+    setStarting7yi(true);
+    const settlement = buildSevenYearItchSettlementProfile(sevenYearItchBuyIn);
+    const result = startSession({
+      gameId: "seven_year_itch",
+      drinkId: "seven_year_itch",
+      buyIn: sevenYearItchBuyIn,
+      settlement,
+    });
+    if (!result.ok) {
+      setSessionError(startSessionErrorMessage(result.reason));
+      setStarting7yi(false);
+      return;
+    }
+    navigate("/minigames/seven-year-itch");
+  };
+
+  const canAffordOubliette = clubBalance >= oublietteBuyIn;
+  const canAfford7yi = clubBalance >= sevenYearItchBuyIn;
   const oublietteSessionOpen = activeSession?.gameId === "oubliette_no9";
+  const sevenYearItchSessionOpen = activeSession?.gameId === "seven_year_itch";
+  const anyTableOpen = Boolean(activeSession);
 
   return (
     <Stack gap="sm">
@@ -95,6 +140,15 @@ export function ClubTableGamesSection() {
         </Alert>
       ) : null}
 
+      {sevenYearItchSessionOpen ? (
+        <Alert color="orange" variant="light" title="Table still open">
+          You have an active 7 Year Itch session. The dice are still warm.
+          <ClubButton fullWidth mt="sm" variant="filled" onClick={() => navigate("/minigames/seven-year-itch")}>
+            Resume 7 Year Itch
+          </ClubButton>
+        </Alert>
+      ) : null}
+
       {sessionError ? (
         <Alert color="red" variant="light" title="Cannot start table" onClose={() => setSessionError(null)} withCloseButton>
           {sessionError}
@@ -104,8 +158,8 @@ export function ClubTableGamesSection() {
       <ClubButton
         fullWidth
         variant="light"
-        disabled={!canAfford || oublietteSessionOpen || starting}
-        loading={starting}
+        disabled={!canAffordOubliette || anyTableOpen || startingOubliette}
+        loading={startingOubliette}
         onClick={startOubliette}
       >
         Oubliette No. 9 (table)
@@ -113,6 +167,21 @@ export function ClubTableGamesSection() {
       <Text size="xs" c={clubTokens.text.muted} style={{ lineHeight: 1.45 }}>
         Buy-in {oublietteBuyIn.toLocaleString()} credits from club balance. Main return to the club is capped near{" "}
         {oublietteReturnCeiling.toLocaleString()} credits before overachievement (active specials can change the cap).
+      </Text>
+
+      <ClubButton
+        fullWidth
+        variant="light"
+        color="orange"
+        disabled={!canAfford7yi || anyTableOpen || starting7yi}
+        loading={starting7yi}
+        onClick={startSevenYearItch}
+      >
+        7 Year Itch (crapless)
+      </ClubButton>
+      <Text size="xs" c={clubTokens.text.muted} style={{ lineHeight: 1.45 }}>
+        Buy-in {sevenYearItchBuyIn.toLocaleString()} credits. Crapless layout — return to the club capped near{" "}
+        {sevenYearItchReturnCeiling.toLocaleString()} credits before overachievement.
       </Text>
     </Stack>
   );

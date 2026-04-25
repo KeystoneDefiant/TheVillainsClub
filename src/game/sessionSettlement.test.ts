@@ -3,7 +3,9 @@ import { villainsGameDefaults } from "@/config/villainsGameDefaults";
 import * as specials from "./specialsResolver";
 import {
   buildOublietteSettlementProfile,
+  buildSevenYearItchSettlementProfile,
   computeOublietteReturn,
+  computeSevenYearItchReturn,
   getOublietteBaseReturnCeiling,
 } from "./sessionSettlement";
 
@@ -66,5 +68,36 @@ describe("buildOublietteSettlementProfile", () => {
     });
     const p = buildOublietteSettlementProfile(villainsGameDefaults.oublietteNo9.defaultBuyIn);
     expect(p.capModifierProduct).toBeCloseTo(1.32);
+  });
+});
+
+describe("buildSevenYearItchSettlementProfile", () => {
+  it("merges seven year itch and global cap mults from special definition row", () => {
+    vi.spyOn(specials, "resolveActiveClubSpecial").mockReturnValue({
+      id: "test",
+      title: "Test",
+      modifier: { type: "payout_mult", value: 1 },
+    });
+    vi.spyOn(specials, "resolveSpecialDefinitionRow").mockReturnValue({
+      title: "Test",
+      modifier: { type: "payout_mult", value: 1 },
+      seven_year_itch_cap_mult: 1.15,
+      all_minigames_cap_mult: 1.1,
+    });
+    const p = buildSevenYearItchSettlementProfile(villainsGameDefaults.sevenYearItch.defaultBuyIn);
+    expect(p.capModifierProduct).toBeCloseTo(1.265);
+  });
+
+  it("computeSevenYearItchReturn matches Oubliette cap math", () => {
+    const cfg = villainsGameDefaults.sevenYearItch;
+    const profile = {
+      buyIn: cfg.defaultBuyIn,
+      maxReturnMultipleOfBuyIn: cfg.maxReturnMultipleOfBuyIn,
+      capModifierProduct: 1,
+      overachievement: { ...cfg.overachievement },
+    };
+    expect(computeSevenYearItchReturn(5000, profile).totalReturn).toBe(
+      computeOublietteReturn(5000, profile).totalReturn,
+    );
   });
 });

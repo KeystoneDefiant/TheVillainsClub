@@ -1,33 +1,27 @@
-import { useCallback, useMemo, useState } from "react";
-import {
-  Box,
-  Button,
-  Group,
-  Modal,
-  Paper,
-  Progress,
-  Slider,
-  Stack,
-  Text,
-  Title,
-} from "@mantine/core";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Box, Button, Group, Modal, Paper, Progress, Stack, Text, Title } from "@mantine/core";
 import type { SevenYearItchShellBinding } from "@/game/sessionSettlement";
 import { computeSevenYearItchReturn } from "@/game/sessionSettlement";
 import {
-  POINT_NUMBERS,
   sevenYearItchTableConfig,
+  type HardwayNumber,
+  type HopKey,
   type PointNumber,
 } from "@/config/minigames/sevenYearItchRules";
+import { usePrefersReducedMotion } from "@/motion/usePrefersReducedMotion";
 import {
-  clampFreeOdds,
   initialBets,
   initialTableState,
   resolveRoll,
   rollDice,
   totalOnLayout,
+  type DiceRoll,
   type RollLine,
 } from "./engine/craplessEngine";
+import { CraplessTableFelt } from "./components/CraplessTableFelt";
 import "./sevenYearItch.css";
+
+const CHIP = sevenYearItchTableConfig.chipIncrement;
 
 function lineColor(kind: RollLine["kind"]): string {
   switch (kind) {
@@ -44,93 +38,231 @@ function lineColor(kind: RollLine["kind"]): string {
 
 export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
   const buyIn = props.settlement.buyIn;
+  const reduceMotion = usePrefersReducedMotion();
   const [balance, setBalance] = useState(props.sessionCredits);
   const [table, setTable] = useState(initialTableState);
   const [bets, setBets] = useState(initialBets);
   const [feed, setFeed] = useState<RollLine[]>([]);
   const [rollCount, setRollCount] = useState(0);
-  const [lastRoll, setLastRoll] = useState<string>("—");
+  const [lastRollText, setLastRollText] = useState("—");
+  const [lastD1, setLastD1] = useState(1);
+  const [lastD2, setLastD2] = useState(1);
+  const [diceRolling, setDiceRolling] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
+
+  const tableRef = useRef(table);
+  const betsRef = useRef(bets);
+  useEffect(() => {
+    tableRef.current = table;
+    betsRef.current = bets;
+  }, [table, bets]);
 
   const wealth = balance + totalOnLayout(bets);
   const capPassHouse = Math.floor(buyIn * sevenYearItchTableConfig.maxPassBetFractionOfBuyIn);
-  const maxPassWallet = balance + bets.passLine;
-  const passSliderMax = Math.max(0, Math.min(capPassHouse, maxPassWallet));
-  const passSliderCeil = Math.max(bets.passLine, passSliderMax);
   const passLocked = table.phase === "point" && bets.passLine > 0;
 
-  const maxOddsCap = clampFreeOdds(bets.passLine, 1e9);
+  const maxOddsCap = useMemo(() => {
+    const p = Math.max(0, Math.floor(bets.passLine));
+    if (p <= 0) return 0;
+    return Math.floor(p * sevenYearItchTableConfig.maxFreeOddsMultipleOfPass);
+  }, [bets.passLine]);
+
   const maxOddsWallet = balance + bets.freeOdds;
-  const oddsSliderCeil = Math.max(bets.freeOdds, Math.min(maxOddsCap, maxOddsWallet));
+  const maxOddsDisplay = Math.min(maxOddsCap, maxOddsWallet);
 
   const heat = table.phase === "point" ? Math.min(100, table.rollsSincePoint * 14) : 0;
 
-  const setPassLine = useCallback(
-    (next: number) => {
-      if (passLocked) return;
-      let v = Math.floor(next);
-      v = Math.max(0, Math.min(v, capPassHouse, maxPassWallet));
-      if (v > 0 && v < sevenYearItchTableConfig.minPassBet) {
-        v = sevenYearItchTableConfig.minPassBet;
-        v = Math.min(v, capPassHouse, maxPassWallet);
-      }
-      const d = v - bets.passLine;
-      setBalance((b) => b - d);
-      setBets((prev) => ({ ...prev, passLine: v }));
-    },
-    [bets.passLine, capPassHouse, maxPassWallet, passLocked],
-  );
+  const addPassChip = useCallback(() => {
+    if (passLocked) return;
+    const maxPass = Math.min(capPassHouse, bets.passLine + balance);
+    const next = Math.min(bets.passLine + CHIP, maxPass);
+    if (next <= bets.passLine) return;
+    const d = next - bets.passLine;
+    setBalance((b) => b - d);
+    setBets((prev) => ({ ...prev, passLine: next }));
+  }, [balance, bets.passLine, capPassHouse, passLocked]);
 
-  const setFreeOddsAmt = useCallback(
-    (nextRaw: number) => {
-      if (table.phase !== "point") return;
-      let v = Math.max(0, Math.floor(nextRaw));
-      v = Math.min(v, maxOddsCap, maxOddsWallet);
-      const d = v - bets.freeOdds;
-      setBalance((b) => b - d);
-      setBets((prev) => ({ ...prev, freeOdds: v }));
-    },
-    [bets.freeOdds, maxOddsCap, maxOddsWallet, table.phase],
-  );
+  const removePassChip = useCallback(() => {
+    if (passLocked) return;
+    if (bets.passLine <= 0) return;
+    const next = Math.max(0, bets.passLine - CHIP);
+    const d = bets.passLine - next;
+    setBalance((b) => b + d);
+    setBets((prev) => ({ ...prev, passLine: next }));
+  }, [bets.passLine, passLocked]);
 
-  const setPlaceAmt = useCallback(
-    (pk: PointNumber, nextRaw: number) => {
+  const addOddsChip = useCallback(() => {
+    if (table.phase !== "point") return;
+    const cap = Math.min(maxOddsCap, maxOddsWallet);
+    const next = Math.min(bets.freeOdds + CHIP, cap);
+    if (next <= bets.freeOdds) return;
+    const d = next - bets.freeOdds;
+    setBalance((b) => b - d);
+    setBets((prev) => ({ ...prev, freeOdds: next }));
+  }, [bets.freeOdds, maxOddsCap, maxOddsWallet, table.phase]);
+
+  const removeOddsChip = useCallback(() => {
+    if (table.phase !== "point") return;
+    if (bets.freeOdds <= 0) return;
+    const next = Math.max(0, bets.freeOdds - CHIP);
+    const d = bets.freeOdds - next;
+    setBalance((b) => b + d);
+    setBets((prev) => ({ ...prev, freeOdds: next }));
+  }, [bets.freeOdds, table.phase]);
+
+  const addPlaceChip = useCallback(
+    (pk: PointNumber) => {
       if (table.phase !== "point") return;
       const old = bets.place[pk] ?? 0;
-      let v = Math.max(0, Math.floor(nextRaw));
-      v = Math.min(v, balance + old);
-      if (v > 0 && v < sevenYearItchTableConfig.minPlaceBet) {
-        v = sevenYearItchTableConfig.minPlaceBet;
-        v = Math.min(v, balance + old);
-      }
-      const d = v - old;
+      const cap = old + balance;
+      const next = Math.min(old + CHIP, cap);
+      if (next <= old) return;
+      const d = next - old;
       setBalance((b) => b - d);
       setBets((prev) => {
         const place = { ...prev.place };
-        if (v <= 0) delete place[pk];
-        else place[pk] = v;
+        place[pk] = next;
         return { ...prev, place };
       });
     },
     [balance, bets.place, table.phase],
   );
 
+  const removePlaceChip = useCallback(
+    (pk: PointNumber) => {
+      if (table.phase !== "point") return;
+      const old = bets.place[pk] ?? 0;
+      if (old <= 0) return;
+      let next = Math.max(0, old - CHIP);
+      if (next > 0 && next < sevenYearItchTableConfig.minPlaceBet) {
+        next = 0;
+      }
+      const d = old - next;
+      setBalance((b) => b + d);
+      setBets((prev) => {
+        const place = { ...prev.place };
+        if (next <= 0) delete place[pk];
+        else place[pk] = next;
+        return { ...prev, place };
+      });
+    },
+    [bets.place, table.phase],
+  );
+
+  const addFieldChip = useCallback(() => {
+    const next = bets.field + CHIP;
+    if (balance < CHIP) return;
+    setBalance((b) => b - CHIP);
+    setBets((prev) => ({ ...prev, field: next }));
+  }, [balance, bets.field]);
+
+  const removeFieldChip = useCallback(() => {
+    if (bets.field <= 0) return;
+    const next = Math.max(0, bets.field - CHIP);
+    const d = bets.field - next;
+    setBalance((b) => b + d);
+    setBets((prev) => ({ ...prev, field: next }));
+  }, [bets.field]);
+
+  const addHornChip = useCallback(() => {
+    const cost = CHIP * 4;
+    if (balance < cost) return;
+    setBalance((b) => b - cost);
+    setBets((prev) => ({ ...prev, hornUnit: prev.hornUnit + CHIP }));
+  }, [balance]);
+
+  const removeHornChip = useCallback(() => {
+    if (bets.hornUnit <= 0) return;
+    const next = Math.max(0, bets.hornUnit - CHIP);
+    const d = bets.hornUnit - next;
+    setBalance((b) => b + d * 4);
+    setBets((prev) => ({ ...prev, hornUnit: next }));
+  }, [bets.hornUnit]);
+
+  const addHopChip = useCallback(
+    (key: HopKey) => {
+      if (balance < CHIP) return;
+      const old = bets.hops[key] ?? 0;
+      setBalance((b) => b - CHIP);
+      setBets((prev) => ({
+        ...prev,
+        hops: { ...prev.hops, [key]: old + CHIP },
+      }));
+    },
+    [balance, bets.hops],
+  );
+
+  const removeHopChip = useCallback((key: HopKey) => {
+    const old = bets.hops[key] ?? 0;
+    if (old <= 0) return;
+    const next = Math.max(0, old - CHIP);
+    const d = old - next;
+    setBalance((b) => b + d);
+    setBets((prev) => {
+      const hops = { ...prev.hops };
+      if (next <= 0) delete hops[key];
+      else hops[key] = next;
+      return { ...prev, hops };
+    });
+  }, [bets.hops]);
+
+  const addHardwayChip = useCallback(
+    (hw: HardwayNumber) => {
+      if (balance < CHIP) return;
+      const old = bets.hardways[hw] ?? 0;
+      setBalance((b) => b - CHIP);
+      setBets((prev) => ({
+        ...prev,
+        hardways: { ...prev.hardways, [hw]: old + CHIP },
+      }));
+    },
+    [balance, bets.hardways],
+  );
+
+  const removeHardwayChip = useCallback((hw: HardwayNumber) => {
+    const old = bets.hardways[hw] ?? 0;
+    if (old <= 0) return;
+    const next = Math.max(0, old - CHIP);
+    const d = old - next;
+    setBalance((b) => b + d);
+    setBets((prev) => {
+      const hardways = { ...prev.hardways };
+      if (next <= 0) delete hardways[hw];
+      else hardways[hw] = next;
+      return { ...prev, hardways };
+    });
+  }, [bets.hardways]);
+
   const canRoll =
     table.phase === "comeOut"
       ? bets.passLine >= sevenYearItchTableConfig.minPassBet
       : bets.passLine > 0;
 
-  const handleRoll = useCallback(() => {
-    if (!canRoll) return;
-    const r = rollDice();
-    const res = resolveRoll(table, bets, r);
+  const applyRollResult = useCallback((r: DiceRoll) => {
+    const res = resolveRoll(tableRef.current, betsRef.current, r);
     setBalance((b) => b + res.walletDelta);
     setTable(res.nextTable);
     setBets(res.nextBets);
-    setLastRoll(`${r.d1} + ${r.d2} = ${r.total}`);
+    setLastRollText(`${r.d1} + ${r.d2} = ${r.total}`);
+    setLastD1(r.d1);
+    setLastD2(r.d2);
     setFeed((f) => [...res.lines, ...f].slice(0, 28));
     setRollCount((n) => n + 1);
-  }, [bets, canRoll, table]);
+  }, []);
+
+  const handleRoll = useCallback(() => {
+    if (!canRoll || diceRolling) return;
+    const r = rollDice();
+    if (reduceMotion) {
+      applyRollResult(r);
+      return;
+    }
+    setDiceRolling(true);
+    window.setTimeout(() => {
+      applyRollResult(r);
+      setDiceRolling(false);
+    }, 780);
+  }, [applyRollResult, canRoll, diceRolling, reduceMotion]);
 
   const confirmLeave = useCallback(() => {
     const uncapped = balance + totalOnLayout(bets);
@@ -139,21 +271,20 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
     setLeaveOpen(false);
   }, [balance, bets, props, rollCount]);
 
-  const caseLabel = useMemo(() => {
-    if (table.phase !== "point" || table.point == null) return "NO OPEN CASE";
-    return `CASE FILE — ${table.point}`;
-  }, [table.phase, table.point]);
+  const caseLabel =
+    table.phase !== "point" || table.point == null ? "NO OPEN CASE" : `CASE FILE — ${table.point}`;
 
   return (
     <Box className="seven-year-itch-root" p="md" data-testid="seven-year-itch-root">
-      <Stack gap="md" maw={520} mx="auto">
+      <Stack gap="md" maw={920} mx="auto">
         <Group justify="space-between" align="flex-start" wrap="nowrap">
           <div>
             <Title order={2} c="var(--7yi-amber)" size="h3" style={{ fontFamily: "Georgia, serif" }}>
               7 Year Itch
             </Title>
             <Text size="xs" c="dimmed" mt={4}>
-              Crapless layout — NV rules. Session buy-in {buyIn.toLocaleString()} credits.
+              Crapless layout — NV rules. Session buy-in {buyIn.toLocaleString()} credits. Click felt +{CHIP} ·
+              right-click −{CHIP}.
             </Text>
           </div>
           <Button variant="subtle" color="gray" size="xs" onClick={() => setLeaveOpen(true)}>
@@ -161,7 +292,12 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
           </Button>
         </Group>
 
-        <Paper radius="md" p="md" withBorder style={{ borderColor: "var(--7yi-amber-dim)", background: "var(--7yi-paper)" }}>
+        <Paper
+          radius="md"
+          p="md"
+          withBorder
+          style={{ borderColor: "var(--7yi-amber-dim)", background: "var(--7yi-paper)" }}
+        >
           <Stack gap="sm">
             <Text size="xs" tt="uppercase" c="dimmed" fw={700}>
               Bank
@@ -175,7 +311,12 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
           </Stack>
         </Paper>
 
-        <Paper radius="md" p="md" withBorder style={{ borderColor: "var(--7yi-amber-dim)", background: "var(--7yi-paper)" }}>
+        <Paper
+          radius="md"
+          p="md"
+          withBorder
+          style={{ borderColor: "var(--7yi-amber-dim)", background: "var(--7yi-paper)" }}
+        >
           <Stack gap="xs">
             <Text size="sm" fw={600} c="var(--7yi-amber)" tt="uppercase">
               {caseLabel}
@@ -195,113 +336,56 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
           </Stack>
         </Paper>
 
-        <Paper radius="md" p="md" withBorder style={{ borderColor: "var(--7yi-amber-dim)", background: "var(--7yi-paper)" }}>
-          <Stack gap="md">
-            <Group justify="space-between">
-              <Text fw={600} className="seven-year-itch-dice" c="var(--7yi-amber)">
-                Last roll
-              </Text>
-              <Text fw={700} className="seven-year-itch-dice" size="lg">
-                {lastRoll}
-              </Text>
-            </Group>
-            <Button
-              fullWidth
-              size="md"
-              color="orange"
-              variant="filled"
-              disabled={!canRoll}
-              onClick={handleRoll}
-            >
-              Roll
-            </Button>
-            <Text size="xs" c="dimmed" ta="center">
-              {table.phase === "comeOut"
-                ? `Pass line ${sevenYearItchTableConfig.minPassBet}+ credits to shoot.`
-                : "Point is live — seven busts the layout."}
+        <CraplessTableFelt
+          table={table}
+          bets={bets}
+          lastD1={lastD1}
+          lastD2={lastD2}
+          diceRolling={diceRolling}
+          reduceMotion={reduceMotion}
+          chip={CHIP}
+          canRoll={canRoll}
+          passLocked={passLocked}
+          onPassPrimary={addPassChip}
+          onPassSecondary={removePassChip}
+          onOddsPrimary={addOddsChip}
+          onOddsSecondary={removeOddsChip}
+          onPlacePrimary={addPlaceChip}
+          onPlaceSecondary={removePlaceChip}
+          onFieldPrimary={addFieldChip}
+          onFieldSecondary={removeFieldChip}
+          onHornPrimary={addHornChip}
+          onHornSecondary={removeHornChip}
+          onHopPrimary={addHopChip}
+          onHopSecondary={removeHopChip}
+          onHardwayPrimary={addHardwayChip}
+          onHardwaySecondary={removeHardwayChip}
+          onRoll={handleRoll}
+          maxOddsDisplay={maxOddsDisplay}
+        />
+
+        <Paper
+          radius="md"
+          p="sm"
+          withBorder
+          style={{ borderColor: "var(--7yi-amber-dim)", background: "var(--7yi-paper)" }}
+        >
+          <Group justify="space-between" wrap="nowrap">
+            <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
+              Last result
             </Text>
-          </Stack>
+            <Text size="sm" fw={600} className="seven-year-itch-dice" c="var(--7yi-amber)">
+              {lastRollText}
+            </Text>
+          </Group>
         </Paper>
 
-        <Paper radius="md" p="md" withBorder style={{ borderColor: "var(--7yi-amber-dim)", background: "var(--7yi-paper)" }}>
-          <Stack gap="lg">
-            <Box>
-              <Group justify="space-between" mb={6}>
-                <Text size="sm" fw={600}>
-                  Pass line
-                </Text>
-                <Text size="sm" c="dimmed">
-                  {bets.passLine} / max {passSliderCeil}
-                </Text>
-              </Group>
-              <Slider
-                min={0}
-                max={passSliderCeil}
-                step={10}
-                value={bets.passLine}
-                onChange={setPassLine}
-                disabled={passLocked}
-                color="orange"
-              />
-              {passLocked ? (
-                <Text size="xs" c="dimmed" mt={6}>
-                  Pass is locked until this point resolves.
-                </Text>
-              ) : null}
-            </Box>
-
-            <Box>
-              <Group justify="space-between" mb={6}>
-                <Text size="sm" fw={600}>
-                  Free odds
-                </Text>
-                <Text size="sm" c="dimmed">
-                  {bets.freeOdds} / cap {Math.min(maxOddsCap, maxOddsWallet)}
-                </Text>
-              </Group>
-              <Slider
-                min={0}
-                max={oddsSliderCeil}
-                step={10}
-                value={bets.freeOdds}
-                onChange={setFreeOddsAmt}
-                disabled={table.phase !== "point"}
-                color="orange"
-              />
-            </Box>
-
-            {table.phase === "point" ? (
-              <Stack gap="xs">
-                <Text size="sm" fw={600}>
-                  Place bets
-                </Text>
-                {POINT_NUMBERS.map((pk) => (
-                  <Group key={pk} gap="xs" wrap="nowrap">
-                    <Text size="xs" w={24}>
-                      {pk}
-                    </Text>
-                    <Slider
-                      style={{ flex: 1 }}
-                      min={0}
-                      max={Math.max(balance + (bets.place[pk] ?? 0), sevenYearItchTableConfig.minPlaceBet)}
-                      step={5}
-                      value={bets.place[pk] ?? 0}
-                      onChange={(v) => setPlaceAmt(pk, v)}
-                      color="orange"
-                      size="sm"
-                    />
-                  </Group>
-                ))}
-              </Stack>
-            ) : (
-              <Text size="xs" c="dimmed">
-                Place bets unlock once a point is set.
-              </Text>
-            )}
-          </Stack>
-        </Paper>
-
-        <Paper radius="md" p="md" withBorder style={{ borderColor: "var(--7yi-amber-dim)", background: "var(--7yi-paper)" }}>
+        <Paper
+          radius="md"
+          p="md"
+          withBorder
+          style={{ borderColor: "var(--7yi-amber-dim)", background: "var(--7yi-paper)" }}
+        >
           <Text size="xs" tt="uppercase" c="dimmed" fw={700} mb="sm">
             Wire
           </Text>

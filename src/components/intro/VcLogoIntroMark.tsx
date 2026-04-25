@@ -1,27 +1,88 @@
-import { useId } from "react";
+import { animate } from "framer-motion";
+import { useId, useEffect, useRef } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { VC_LOGO_INTRO_VIEWBOX, vcLogoGreyPaths, vcLogoRedPaths } from "./vcLogoIntroPaths";
 
 /** Match `VC Logo - Color.svg` (.cls-1 / .cls-2). */
 const RED_FILL = "#c0272d";
-const GREY_STROKE = "#808080";
 const GREY_FILL = "#808080";
-const STROKE_W = 2;
 
 const BASE_W = 420;
 const ASPECT = 165.6 / 241.3;
 
 type VcLogoIntroMarkProps = {
-  /** Scales base width (420px). */
   scale?: number;
-  /** Zoom-out duration; grey letters draw sequentially inside this window. */
   zoomDurationSec: number;
   letterDrawSec: number;
   easing: readonly [number, number, number, number];
 };
 
+type GreyBottomToTopGradientProps = {
+  gradientId: string;
+  clipY0: number;
+  clipY1: number;
+  delaySec: number;
+  durationSec: number;
+  easing: readonly [number, number, number, number];
+};
+
+/**
+ * Linear gradient along letter height: opaque at bottom, transparent at top.
+ * Animates the boundary between opaque and transparent bottom → top.
+ */
+function GreyBottomToTopGradient({
+  gradientId,
+  clipY0,
+  clipY1,
+  delaySec,
+  durationSec,
+  easing,
+}: GreyBottomToTopGradientProps) {
+  const boundaryLo = useRef<SVGStopElement>(null);
+  const boundaryHi = useRef<SVGStopElement>(null);
+
+  useEffect(() => {
+    const lo = boundaryLo.current;
+    const hi = boundaryHi.current;
+    if (!lo || !hi) return;
+
+    const apply = (t: number) => {
+      const pct = Math.min(100, Math.max(0, t * 100));
+      const p = `${pct.toFixed(2)}%`;
+      lo.setAttribute("offset", p);
+      hi.setAttribute("offset", p);
+    };
+    apply(0);
+
+    const controls = animate(0, 1, {
+      delay: delaySec,
+      duration: durationSec,
+      ease: easing,
+      onUpdate: apply,
+    });
+    return () => controls.stop();
+  }, [delaySec, durationSec, easing]);
+
+  return (
+    <linearGradient
+      id={gradientId}
+      gradientUnits="userSpaceOnUse"
+      x1={0}
+      x2={0}
+      y1={clipY1}
+      y2={clipY0}
+    >
+      <stop offset="0%" stopColor={GREY_FILL} stopOpacity={1} />
+      <stop ref={boundaryLo} offset="0%" stopColor={GREY_FILL} stopOpacity={1} />
+      <stop ref={boundaryHi} offset="0%" stopColor={GREY_FILL} stopOpacity={0} />
+      <stop offset="100%" stopColor={GREY_FILL} stopOpacity={0} />
+    </linearGradient>
+  );
+}
+
 export function VcLogoIntroMark({ scale = 1, zoomDurationSec, letterDrawSec, easing }: VcLogoIntroMarkProps) {
-  const filterId = useId().replace(/:/g, "");
+  const uid = useId().replace(/:/g, "");
+  const filterId = `vcred-${uid}`;
   const reduceMotion = useReducedMotion();
   const zoomFrom = 2.35;
   const zoomTo = 1;
@@ -45,38 +106,32 @@ export function VcLogoIntroMark({ scale = 1, zoomDurationSec, letterDrawSec, eas
             <feMergeNode in="SourceGraphic" />
           </feMerge>
         </filter>
+        {!reduceMotion &&
+          vcLogoGreyPaths.map((p, i) => (
+            <GreyBottomToTopGradient
+              key={p.id}
+              gradientId={`${uid}-grey-grad-${i}`}
+              clipY0={p.clipY0}
+              clipY1={p.clipY1}
+              delaySec={i * letterDrawSec}
+              durationSec={letterDrawSec}
+              easing={easing}
+            />
+          ))}
       </defs>
       <g fill={RED_FILL} filter={reduceMotion ? undefined : `url(#${filterId})`}>
         {vcLogoRedPaths.map((p) => (
           <path key={p.id} d={p.d} />
         ))}
       </g>
-      <g
-        fill={reduceMotion ? GREY_FILL : "none"}
-        stroke={reduceMotion ? "none" : GREY_STROKE}
-        strokeWidth={reduceMotion ? 0 : STROKE_W}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        {reduceMotion
-          ? vcLogoGreyPaths.map((p) => <path key={p.id} d={p.d} />)
-          : vcLogoGreyPaths.map((p, i) => {
-              const dash = p.strokeLen;
-              const startDelay = i * letterDrawSec;
-              return (
-                <motion.path
-                  key={p.id}
-                  d={p.d}
-                  strokeDasharray={dash}
-                  initial={{ strokeDashoffset: dash, opacity: 0.75 }}
-                  animate={{ strokeDashoffset: 0, opacity: 1 }}
-                  transition={{
-                    strokeDashoffset: { duration: letterDrawSec, ease: easing, delay: startDelay },
-                    opacity: { duration: 0.2, delay: startDelay },
-                  }}
-                />
-              );
-            })}
+      <g>
+        {vcLogoGreyPaths.map((p, i) => (
+          <path
+            key={p.id}
+            d={p.d}
+            fill={reduceMotion ? GREY_FILL : `url(#${uid}-grey-grad-${i})`}
+          />
+        ))}
       </g>
     </svg>
   );

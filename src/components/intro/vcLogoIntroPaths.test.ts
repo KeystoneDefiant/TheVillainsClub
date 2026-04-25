@@ -12,9 +12,9 @@ describe("vcLogoIntroPaths", () => {
     expect(VC_LOGO_GREY_LETTER_COUNT).toBe(vcLogoGreyPaths.length);
   });
 
-  it("uses positive stroke lengths for dash animation", () => {
+  it("has valid clip band for bottom-to-top grey reveal", () => {
     for (const p of vcLogoGreyPaths) {
-      expect(p.strokeLen).toBeGreaterThan(4);
+      expect(p.clipY1).toBeGreaterThan(p.clipY0);
     }
   });
 });

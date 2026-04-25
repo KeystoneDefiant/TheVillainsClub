@@ -9,6 +9,7 @@ import { MainMenuPage } from "@/pages/MainMenuPage";
 import { BarStubPage } from "@/pages/BarStubPage";
 import { OublietteNo9Page } from "@/pages/OublietteNo9Page";
 import { UiPlayground } from "@/dev/UiPlayground";
+import { ShellBandMusicHost } from "@/audio/useShellBandMusic";
 
 export default function App() {
   const themeOverride = useThemeLab((s) => s.override);
@@ -18,6 +19,7 @@ export default function App() {
   return (
     <MantineProvider theme={theme} defaultColorScheme="dark" forceColorScheme="dark">
       <BrowserRouter basename={routerBasename}>
+        <ShellBandMusicHost />
         <Routes>
           <Route path="/" element={<IntroPage />} />
           <Route path="/menu" element={<MainMenuPage />} />

@@ -5,8 +5,6 @@ import { useGameState } from '../useGameState';
 vi.mock('../useThemeAudio', () => ({
   useThemeAudio: () => ({
     playSound: vi.fn(),
-    playMusic: vi.fn(),
-    stopMusic: vi.fn(),
     resetRoundSoundCounts: vi.fn(),
   }),
 }));

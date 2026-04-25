@@ -4,6 +4,8 @@ import { useShopActions } from '../useShopActions';
 import { GameState } from '../../types';
 import { getCurrentGameMode } from '@/config/minigames/oublietteNo9GameRules';
 
+const mode = getCurrentGameMode();
+
 vi.mock('../useThemeAudio', () => ({
   useThemeAudio: () => ({ playSound: vi.fn() }),
 }));
@@ -50,7 +52,6 @@ function createMockState(overrides: Partial<GameState> = {}): GameState {
     extraCardsInHand: 0,
     streakCounter: 0,
     currentStreakMultiplier: 1.0,
-    audioSettings: { musicEnabled: true, soundEffectsEnabled: true, musicVolume: 0.7, soundEffectsVolume: 1.0, handScoringMinVolumePercent: 0 },
     animationSpeedMode: 1,
     cardTheme: 'dark',
     ...overrides,
@@ -77,7 +78,7 @@ describe('useShopActions', () => {
   });
 
   it('should add dead card and credit reward when addDeadCard is called', () => {
-    const state = createMockState({ credits: 5000 });
+    const state = createMockState({ credits: mode.startingCredits });
     const { result } = renderHook(() => useShopActions(state, setState));
 
     act(() => {
@@ -92,7 +93,10 @@ describe('useShopActions', () => {
   });
 
   it('should add wild card when addWildCard is called with sufficient credits', () => {
-    const state = createMockState({ credits: 10000, wildCardCount: 0 });
+    const state = createMockState({
+      credits: mode.shop.wildCard.baseCost * 2,
+      wildCardCount: 0,
+    });
     const { result } = renderHook(() => useShopActions(state, setState));
 
     act(() => {
@@ -107,9 +111,11 @@ describe('useShopActions', () => {
   });
 
   it('should not add wild card when at max count', () => {
-    const mode = getCurrentGameMode();
     const maxCount = mode.shop?.wildCard?.maxCount ?? 3;
-    const state = createMockState({ credits: 100000, wildCardCount: maxCount });
+    const state = createMockState({
+      credits: mode.shop.wildCard.baseCost * 20,
+      wildCardCount: maxCount,
+    });
     const { result } = renderHook(() => useShopActions(state, setState));
 
     act(() => {
@@ -122,7 +128,7 @@ describe('useShopActions', () => {
   });
 
   it('should add parallel hands bundle when addParallelHandsBundle is called', () => {
-    const state = createMockState({ credits: 10000, handCount: 10 });
+    const state = createMockState({ credits: mode.startingCredits * 2, handCount: 10 });
     const { result } = renderHook(() => useShopActions(state, setState));
 
     act(() => {

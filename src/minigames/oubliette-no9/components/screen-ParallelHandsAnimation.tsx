@@ -29,7 +29,6 @@ interface ParallelHandsAnimationProps {
     highestCombo: number;
     highestMultiplier: number;
   }) => void;
-  audioSettings?: { musicEnabled: boolean; soundEffectsEnabled: boolean };
   animationSpeedMode?: number | 'skip';
   onShowSettings?: () => void;
 }
@@ -406,11 +405,10 @@ export function ParallelHandsAnimation({
   betAmount,
   initialStreakCounter,
   onAnimationComplete,
-  audioSettings,
   animationSpeedMode = 1,
   onShowSettings,
 }: ParallelHandsAnimationProps) {
-  const { playSound } = useThemeAudio(audioSettings);
+  const { playSound } = useThemeAudio();
   const [totalRevealedCount, setTotalRevealedCount] = useState(0);
   const [committedRevealedCount, setCommittedRevealedCount] = useState(0);
   const [committedStreakCounter, setCommittedStreakCounter] = useState(initialStreakCounter);

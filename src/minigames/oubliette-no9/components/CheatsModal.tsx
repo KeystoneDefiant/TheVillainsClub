@@ -1,4 +1,5 @@
 import { Modal, Stack } from "@mantine/core";
+import { gameConfig } from "@/config/minigames/oublietteNo9GameRules";
 import { clubTokens } from "@/theme/clubTokens";
 import { GameButton } from "./GameButton";
 
@@ -10,6 +11,7 @@ interface CheatsModalProps {
 }
 
 export function CheatsModal({ onClose, onAddCredits, onAddHands, onSetDevilsDealCheat }: CheatsModalProps) {
+  const { creditTopUps, parallelHandTopUps } = gameConfig.cheatsModal;
   return (
     <Modal
       opened
@@ -27,50 +29,34 @@ export function CheatsModal({ onClose, onAddCredits, onAddHands, onSetDevilsDeal
       }}
     >
       <Stack gap="md">
-        <GameButton
-          onClick={() => {
-            onAddCredits(1000);
-            onClose();
-          }}
-          variant="secondary"
-          size="md"
-          fullWidth
-        >
-          Add 1000 Credits
-        </GameButton>
-        <GameButton
-          onClick={() => {
-            onAddCredits(10000);
-            onClose();
-          }}
-          variant="secondary"
-          size="md"
-          fullWidth
-        >
-          Add 10000 Credits
-        </GameButton>
-        <GameButton
-          onClick={() => {
-            onAddHands(10);
-            onClose();
-          }}
-          variant="secondary"
-          size="md"
-          fullWidth
-        >
-          Add 10 Parallel Hands
-        </GameButton>
-        <GameButton
-          onClick={() => {
-            onAddHands(50);
-            onClose();
-          }}
-          variant="secondary"
-          size="md"
-          fullWidth
-        >
-          Add 50 Parallel Hands
-        </GameButton>
+        {creditTopUps.map((amount) => (
+          <GameButton
+            key={`credits-${amount}`}
+            onClick={() => {
+              onAddCredits(amount);
+              onClose();
+            }}
+            variant="secondary"
+            size="md"
+            fullWidth
+          >
+            Add {amount.toLocaleString()} Credits
+          </GameButton>
+        ))}
+        {parallelHandTopUps.map((amount) => (
+          <GameButton
+            key={`hands-${amount}`}
+            onClick={() => {
+              onAddHands(amount);
+              onClose();
+            }}
+            variant="secondary"
+            size="md"
+            fullWidth
+          >
+            Add {amount} Parallel Hands
+          </GameButton>
+        ))}
         {onSetDevilsDealCheat ? (
           <GameButton
             onClick={() => {

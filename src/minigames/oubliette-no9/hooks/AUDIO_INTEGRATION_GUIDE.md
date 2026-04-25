@@ -1,33 +1,28 @@
 # Oubliette audio (club shell)
 
-Oubliette no longer loads a “theme” for sound. Playback uses the **club audio store** plus a static file manifest.
+Oubliette **does not** host background music or duplicate the main menu audio controls. **Music** is owned by the shell; **SFX** for table/UI events use `useThemeAudio`, which reads mute and gain from the persisted **`useClubAudioStore`** (`src/audio/clubAudioStore.ts`).
 
 ## Files
 
-- **Hook:** `src/minigames/oubliette-no9/hooks/useThemeAudio.ts` — `playSound`, `playMusic`, `stopMusic`, `stopAll`, `resetRoundSoundCounts`.
-- **Teardown:** `disposeOublietteAudio()` in the same module — pauses/clears cached `HTMLAudioElement`s; the minigame route calls this on unmount.
-- **Manifest:** `src/config/minigames/oublietteAudioAssets.ts` — filenames and `public/sounds/Classic/` pack folder.
-- **Volumes / toggles:** `src/audio/clubAudioStore.ts` (persisted).
+- **Hook:** `src/minigames/oubliette-no9/hooks/useThemeAudio.ts` — `playSound`, `resetRoundSoundCounts` only.
+- **Teardown:** `disposeOublietteAudio()` — clears cached one-shot `HTMLAudioElement`s; the minigame route calls this on unmount (`OublietteNo9Page`).
+- **Manifest:** `src/config/minigames/oublietteAudioAssets.ts` — UI and hand-scoring filenames under `public/sounds/Classic/`.
 
 ## Usage
 
 ```ts
-const { playSound, playMusic, stopMusic } = useThemeAudio(state.audioSettings);
+const { playSound, resetRoundSoundCounts } = useThemeAudio();
 
 playSound("buttonClick");
 playSound("handScoring", "full-house");
-playMusic();
-stopMusic();
 ```
 
-Missing files fail silently (`play()` rejected or no-op).
+Toggles and volumes come from **Settings on the main menu** (`MainMenuPage`), not from Oubliette’s in-game Settings modal.
 
 ## Adding a sound
 
-1. Drop the file under `public/sounds/Classic/` (or change `OUBLIETTE_SOUND_PACK_DIR` and paths in `oublietteAudioAssets.ts`).
-2. Wire the filename in `oublietteUiSoundFiles` or `oublietteHandScoringFiles`.
-3. Call `playSound` with the matching event (and `HandRank` for scoring lines).
+1. Add the file under `public/sounds/Classic/` (or adjust `OUBLIETTE_SOUND_PACK_DIR` / manifest).
+2. Wire the path in `oublietteUiSoundFiles` or `oublietteHandScoringFiles`.
+3. Call `playSound` with the matching event (and `HandRank` for scoring).
 
-## Adding BGM tracks
-
-Extend `oublietteBackgroundTracks` in `oublietteAudioAssets.ts`. Multiple tracks rotate randomly without immediate repeats; a single track loops.
+Missing files fail silently (`play()` rejected or no-op).

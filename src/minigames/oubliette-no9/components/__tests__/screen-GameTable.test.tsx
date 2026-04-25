@@ -1,8 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, within } from '../../test/testingLibrary';
+import { getCurrentGameMode } from '@/config/minigames/oublietteNo9GameRules';
 import { GameTable } from '../screen-GameTable';
 import { Card as CardType, GameState } from '../../types';
 import { getTestRewardTable } from '../../test/testHelpers';
+
+const mode = getCurrentGameMode();
 
 describe('GameTable Component', () => {
   const createMockCard = (rank: string, suit: string, id: string): CardType => ({
@@ -26,7 +29,7 @@ describe('GameTable Component', () => {
     heldIndices: [],
     parallelHands: [],
     rewardTable: getTestRewardTable(),
-    credits: 5000,
+    credits: mode.startingCredits,
     selectedHandCount: 10,
     round: 1,
     totalEarnings: 500,

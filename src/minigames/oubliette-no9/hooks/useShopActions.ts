@@ -31,10 +31,10 @@ const currentMode = getCurrentGameMode();
  * ```
  */
 export function useShopActions(
-  state: GameState,
+  _state: GameState,
   setState: React.Dispatch<React.SetStateAction<GameState>>,
 ) {
-  const { playSound } = useThemeAudio(state.audioSettings);
+  const { playSound } = useThemeAudio();
   /**
    * Add a dead card to the deck for credits
    * Dead cards are drawn but don't count toward hand evaluation

@@ -10,12 +10,16 @@ Each agent session that does more than a trivial typo-only pass should **before 
 2. **Documentation** — When behavior, milestones, or contracts shift: **`PLAN.md` → Current status** (and other `PLAN.md` sections as needed); **`docs/architecture.md`** when module boundaries or data flow change; any other doc the work makes wrong or obsolete. Do not add new markdown files unless the user asked for them.
 3. **Tests** — Add or adjust **Vitest** for deterministic logic you change; add or extend **Playwright** when shell routing, menu/bar flows, or other CI-critical journeys change. Run **`npm run lint`**, **`npm run test`**, and **`npm run typecheck`** when you touched code; run **`npm run test:e2e`** when the production build or those journeys may be affected.
 
+### Tests and tunable values
+
+When a number or string is defined in app **settings / config** (for example `src/config/villainsGameDefaults.ts`, `src/config/minigames/oublietteNo9GameRules.ts`, or other exported defaults), **tests should import and use that value** instead of duplicating a magic number, **when the test is asserting or driving behavior tied to that setting**. Pure math fixtures (synthetic profiles, edge-case shapes) may still use small literals if they are not meant to track production defaults—prefer deriving expected results from the same config object when the assertion would otherwise drift.
+
 The **Agent cycle checklist** below is the same bar, itemized.
 
 ## Current status (read first)
 
 - **Shell:** **Electron + Vite + React + TypeScript** (`electron/`, `src/`). There is **no Godot project** in this tree anymore.
-- **What works:** Intro (`/`), main menu (`/menu`), club floor / bar (`/bar` — **table buy-ins and minigame starts live here**, not on `/menu`), Mantine + Club theme, Framer Motion presets (honors **`prefers-reduced-motion`** on shell routes), dev-only **`/__playground`**, economy contract stubs in `src/game/` (club balance vs session buy-in — see `money.ts`). Settling Oubliette returns you to **`/bar`** with a short recap when the shell passes router state.
+- **What works:** Intro (`/`), main menu (`/menu`), club floor / bar (`/bar` — **table buy-ins and minigame starts live here**, not on `/menu`), Mantine + Club theme, Framer Motion presets (honors **`prefers-reduced-motion`** on shell routes), dev-only **`/__playground`**, economy contract stubs in `src/game/` (club balance vs session buy-in — see `money.ts`). Settling Oubliette returns you to **`/bar`** with a short recap when the shell passes router state. **Audio:** main menu Settings + **`clubAudioStore`** own music/SFX toggles and volumes; Oubliette reads that store for **SFX only** (no in-minigame audio panel, no Oubliette BGM player).
 - **Data / reference on disk:** **`content/`** catalogs (JSON/JSONC) are kept for future wiring; **`TO_PORT/`** is the **git submodule** legacy JS tree (Oubliette source of truth was copied into `src/minigames/oubliette-no9/` — treat `TO_PORT/` as reference only unless syncing upstream).
 - **Where to look next:** `PLAN.md` → **Current status** → **Immediate next steps** (persistence, bar flow, first minigame host, audio, architecture doc refresh).
 

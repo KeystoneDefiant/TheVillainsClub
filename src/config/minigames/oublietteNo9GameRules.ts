@@ -62,6 +62,15 @@ export const gameConfig = {
     },
   },
 
+  /**
+   * Dev / QA cheat credit and parallel-hand top-ups (used by `CheatsModal`, `Settings`, and tests).
+   * Order is display order; amounts are literal values passed to callbacks.
+   */
+  cheatsModal: {
+    creditTopUps: [1000, 10000, 100_000],
+    parallelHandTopUps: [10, 50, 250],
+  },
+
   // Animation timing configuration (in milliseconds)
   animation: {
     cardFlip: 500, // Card flip animation delay
@@ -105,11 +114,6 @@ export const gameConfig = {
     contentMaxWidth: 'max-w-7xl', // Main content area
     defaultPadding: 'p-6',
     cardPadding: 'p-8',
-  },
-
-  // Audio configuration
-  audio: {
-    musicVolume: 0.7, // Background music volume multiplier (0.0 to 1.0)
   },
 
   // Streak multiplier configuration

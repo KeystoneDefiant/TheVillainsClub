@@ -24,7 +24,7 @@ function renderSection() {
 describe("ClubTableGamesSection", () => {
   beforeEach(() => {
     useClubWallet.setState({
-      clubBalance: 500,
+      clubBalance: villainsGameDefaults.defaultClubBalance,
       activeSession: null,
       hasSave: false,
     });
@@ -33,7 +33,9 @@ describe("ClubTableGamesSection", () => {
   it("shows club balance and tables label", () => {
     renderSection();
     expect(screen.getByText("Club balance", { exact: true })).toBeInTheDocument();
-    expect(screen.getByText("500 credits")).toBeInTheDocument();
+    expect(
+      screen.getByText(`${villainsGameDefaults.defaultClubBalance.toLocaleString()} credits`),
+    ).toBeInTheDocument();
     expect(screen.getByText("Tables", { exact: true })).toBeInTheDocument();
   });
 
@@ -46,7 +48,7 @@ describe("ClubTableGamesSection", () => {
   it("shows resume when an Oubliette session is already open", () => {
     const buyIn = villainsGameDefaults.oublietteNo9.defaultBuyIn;
     useClubWallet.setState({
-      clubBalance: 500,
+      clubBalance: villainsGameDefaults.defaultClubBalance,
       activeSession: {
         gameId: "oubliette_no9",
         drinkId: "club_table",
@@ -62,7 +64,10 @@ describe("ClubTableGamesSection", () => {
   });
 
   it("disables start when balance is below buy-in", () => {
-    useClubWallet.setState({ clubBalance: 10, activeSession: null });
+    useClubWallet.setState({
+      clubBalance: villainsGameDefaults.oublietteNo9.defaultBuyIn - 1,
+      activeSession: null,
+    });
     renderSection();
     expect(screen.getByRole("button", { name: /oubliette no\. 9 \(table\)/i })).toBeDisabled();
   });

@@ -53,9 +53,32 @@ function parseCatalog(raw: unknown): BandsCatalog {
 /** Validated house band manifest (`content/bands.json`). */
 export const bandsCatalog: BandsCatalog = parseCatalog(bandsJson);
 
-export function bandPublicUrl(band: BandCatalogEntry, relativePath: string): string {
-  const base = import.meta.env.BASE_URL;
+/**
+ * Path prefix for static assets (matches Vite `base` / `import.meta.env.BASE_URL`).
+ * Uses a root-absolute path so URLs stay correct on nested routes (e.g. GitHub Pages `/repo/menu`).
+ */
+export function siteAssetPathPrefixFromViteBase(viteBaseUrl: string): string {
+  const raw = viteBaseUrl.trim();
+  if (!raw || raw === "/" || raw === "./") return "";
+  const trimmed = raw.replace(/\/+$/, "");
+  if (trimmed === "." || trimmed === "") return "";
+  return trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+}
+
+/** Public URL path for a file under the band's `asset_root` (leading slash, Vite `base`-aware). */
+export function bandAssetPublicPath(
+  band: BandCatalogEntry,
+  relativePath: string,
+  viteBaseUrl: string,
+): string {
+  const prefix = siteAssetPathPrefixFromViteBase(viteBaseUrl);
   const root = band.asset_root.replace(/^\/+|\/+$/g, "");
   const rel = relativePath.replace(/^\/+/, "");
-  return `${base}${root}/${rel}`;
+  const joined = `${prefix}/${root}/${rel}`.replace(/\/{2,}/g, "/");
+  return joined.startsWith("/") ? joined : `/${joined}`;
 }
+
+export function bandPublicUrl(band: BandCatalogEntry, relativePath: string): string {
+  return bandAssetPublicPath(band, relativePath, import.meta.env.BASE_URL);
+}
+

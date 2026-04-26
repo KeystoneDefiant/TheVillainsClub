@@ -1,11 +1,8 @@
 import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { bandPublicUrl, bandsCatalog } from "@/config/bandsCatalog";
-import {
-  activeBandIndexForBarDate,
-  barDateKey,
-  msUntilNextBarBoundary,
-} from "@/audio/barBandSchedule";
+import { barDateKey, msUntilNextBarBoundary } from "@/audio/barBandSchedule";
+import { effectiveBandIndexForBarDate, useBarBandOverrideStore } from "@/audio/barBandOverrideStore";
 import { useClubAudioStore } from "@/audio/clubAudioStore";
 
 function shellHouseMusicRoute(pathname: string): boolean {
@@ -41,7 +38,7 @@ export function useShellBandMusic(): void {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const remainingMusicRef = useRef<string[]>([]);
   const barKeyRef = useRef(barDateKey(new Date()));
-  const bandIndexRef = useRef(activeBandIndexForBarDate(barKeyRef.current, bandsCatalog));
+  const bandIndexRef = useRef(effectiveBandIndexForBarDate(barKeyRef.current));
   const lastClipRef = useRef<"music" | "interlude" | null>(null);
   const boundaryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -121,7 +118,7 @@ export function useShellBandMusic(): void {
       const key = barDateKey(new Date());
       if (key === barKeyRef.current) return;
       barKeyRef.current = key;
-      const nextIdx = activeBandIndexForBarDate(key, bandsCatalog);
+      const nextIdx = effectiveBandIndexForBarDate(key);
       if (nextIdx !== bandIndexRef.current) {
         bandIndexRef.current = nextIdx;
         remainingMusicRef.current = [];
@@ -177,6 +174,25 @@ export function useShellBandMusic(): void {
       }
     });
 
+    const applyEffectiveBandIndex = (key: string) => {
+      const nextIdx = effectiveBandIndexForBarDate(key);
+      if (nextIdx === bandIndexRef.current) return;
+      bandIndexRef.current = nextIdx;
+      remainingMusicRef.current = [];
+      lastClipRef.current = null;
+      audio.pause();
+      audio.removeAttribute("src");
+      audio.load();
+    };
+
+    const unsubBandOverride = useBarBandOverrideStore.subscribe(() => {
+      applyEffectiveBandIndex(barKeyRef.current);
+      const { musicEnabled } = useClubAudioStore.getState();
+      if (musicEnabled && isShell()) {
+        maybeStartOrResume();
+      }
+    });
+
     const onFirstGesture = () => {
       maybeStartOrResume();
     };
@@ -187,6 +203,7 @@ export function useShellBandMusic(): void {
       audio.removeEventListener("ended", onEnded);
       unsubVol();
       unsubMusic();
+      unsubBandOverride();
       if (boundaryTimerRef.current !== null) {
         clearTimeout(boundaryTimerRef.current);
       }
@@ -216,7 +233,12 @@ export function useShellBandMusic(): void {
     const key = barDateKey(new Date());
     if (key !== barKeyRef.current) {
       barKeyRef.current = key;
-      bandIndexRef.current = activeBandIndexForBarDate(key, bandsCatalog);
+      remainingMusicRef.current = [];
+      lastClipRef.current = null;
+    }
+    const nextIdx = effectiveBandIndexForBarDate(barKeyRef.current);
+    if (nextIdx !== bandIndexRef.current) {
+      bandIndexRef.current = nextIdx;
       remainingMusicRef.current = [];
       lastClipRef.current = null;
     }

@@ -53,9 +53,50 @@ function parseCatalog(raw: unknown): BandsCatalog {
 /** Validated house band manifest (`content/bands.json`). */
 export const bandsCatalog: BandsCatalog = parseCatalog(bandsJson);
 
-export function bandPublicUrl(band: BandCatalogEntry, relativePath: string): string {
-  const base = import.meta.env.BASE_URL;
+/**
+ * Path prefix for static assets (matches Vite `base` / `import.meta.env.BASE_URL`).
+ * Uses a root-absolute path so URLs stay correct on nested routes (e.g. GitHub Pages `/repo/menu`).
+ */
+export function siteAssetPathPrefixFromViteBase(viteBaseUrl: string): string {
+  const raw = viteBaseUrl.trim();
+  if (!raw || raw === "/" || raw === "./") return "";
+  const trimmed = raw.replace(/\/+$/, "");
+  if (trimmed === "." || trimmed === "") return "";
+  return trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+}
+
+/**
+ * Public URL for a file under the band's `asset_root`.
+ *
+ * - **http(s):** root-absolute path so nested SPA routes (e.g. GitHub Pages `/repo/menu`) still hit
+ *   `/repo/audio/bands/...` instead of losing the repo segment.
+ * - **file:** (Electron `loadFile` dist): use a path **relative to `index.html`** so `audio/...` resolves
+ *   under `dist/`; a leading `/` would map to the filesystem root on Windows.
+ */
+export function bandAssetPublicPath(
+  band: BandCatalogEntry,
+  relativePath: string,
+  viteBaseUrl: string,
+  pageProtocol?: string,
+): string {
   const root = band.asset_root.replace(/^\/+|\/+$/g, "");
   const rel = relativePath.replace(/^\/+/, "");
-  return `${base}${root}/${rel}`;
+  const pathFromDist = `${root}/${rel}`;
+
+  if (pageProtocol === "file:") {
+    return pathFromDist;
+  }
+
+  const prefix = siteAssetPathPrefixFromViteBase(viteBaseUrl);
+  const joined = `${prefix}/${pathFromDist}`.replace(/\/{2,}/g, "/");
+  return joined.startsWith("/") ? joined : `/${joined}`;
 }
+
+export function bandPublicUrl(band: BandCatalogEntry, relativePath: string): string {
+  const protocol =
+    typeof globalThis !== "undefined" && "location" in globalThis && globalThis.location
+      ? globalThis.location.protocol
+      : undefined;
+  return bandAssetPublicPath(band, relativePath, import.meta.env.BASE_URL, protocol);
+}
+

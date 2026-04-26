@@ -29,6 +29,9 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { AnimatePresence, motion } from "framer-motion";
 import { useClubAudioStore } from "@/audio/clubAudioStore";
+import { activeBandIndexForBarDate, barDateKey } from "@/audio/barBandSchedule";
+import { useBarBandOverrideStore } from "@/audio/barBandOverrideStore";
+import { bandPublicUrl, bandsCatalog } from "@/config/bandsCatalog";
 import { ClubButton } from "@/components/ui/ClubButton";
 import { ClubHeading } from "@/components/ui/ClubHeading";
 import { ClubPanel } from "@/components/ui/ClubPanel";
@@ -73,6 +76,57 @@ export function UiPlayground() {
   const setMusicVolume = useClubAudioStore((s) => s.setMusicVolume);
   const setSfxVolume = useClubAudioStore((s) => s.setSfxVolume);
   const setRepeatSfxAttenuationPercent = useClubAudioStore((s) => s.setRepeatSfxAttenuationPercent);
+
+  const eveningBandOverride = useBarBandOverrideStore((s) => s.eveningBandIndexOverride);
+  const setEveningBandIndexOverride = useBarBandOverrideStore((s) => s.setEveningBandIndexOverride);
+  const barKey = barDateKey(new Date());
+  const scheduledBandIndex = activeBandIndexForBarDate(barKey, bandsCatalog);
+  const previewBandIndex = eveningBandOverride ?? scheduledBandIndex;
+  const previewBand = bandsCatalog.bands[previewBandIndex] ?? bandsCatalog.bands[0];
+
+  const bandPreviewRef = useRef<HTMLAudioElement | null>(null);
+  const [bandPreviewLabel, setBandPreviewLabel] = useState<string | null>(null);
+
+  const stopBandPreview = useCallback(() => {
+    const a = bandPreviewRef.current;
+    if (a) {
+      a.pause();
+      a.currentTime = 0;
+    }
+    bandPreviewRef.current = null;
+    setBandPreviewLabel(null);
+  }, []);
+
+  const playBandClip = useCallback(
+    (relativePath: string, label: string) => {
+      stopBandPreview();
+      if (!musicEnabled) {
+        pushSfxLog("Music toggle is off — enable “Music” in Audio lab.");
+        return;
+      }
+      const url = bandPublicUrl(previewBand, relativePath);
+      const a = new Audio(url);
+      a.volume = musicVolume;
+      bandPreviewRef.current = a;
+      setBandPreviewLabel(label);
+      void a.play().catch((e: unknown) => {
+        setBandPreviewLabel(null);
+        pushSfxLog(`${label} failed: ${e instanceof Error ? e.message : String(e)} (${url})`);
+      });
+      a.addEventListener(
+        "ended",
+        () => {
+          setBandPreviewLabel((cur) => (cur === label ? null : cur));
+        },
+        { once: true },
+      );
+    },
+    [musicEnabled, musicVolume, previewBand, pushSfxLog, stopBandPreview],
+  );
+
+  useEffect(() => {
+    return () => stopBandPreview();
+  }, [stopBandPreview]);
 
   const stopPreviewMusic = useCallback(() => {
     const a = musicRef.current;
@@ -243,6 +297,7 @@ export function UiPlayground() {
             <Tabs.Tab value="components">Components</Tabs.Tab>
             <Tabs.Tab value="overlays">Overlays &amp; chrome</Tabs.Tab>
             <Tabs.Tab value="audio">Audio lab</Tabs.Tab>
+            <Tabs.Tab value="bands">House bands</Tabs.Tab>
             <Tabs.Tab value="animation">Animation</Tabs.Tab>
             <Tabs.Tab value="motion">Motion tuning</Tabs.Tab>
           </Tabs.List>
@@ -542,6 +597,111 @@ export function UiPlayground() {
                     ))
                   )}
                 </Stack>
+              </ClubPanel>
+            </Stack>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="bands" pt="md">
+            <Stack gap="md">
+              <ClubPanel>
+                <ClubHeading order={4} mb="sm">
+                  Tonight’s band (menu / bar)
+                </ClubHeading>
+                <Text size="sm" c={clubTokens.text.secondary} mb="md">
+                  The shell picks one catalog band per local bar night (4:00 boundary). Override here to hear a
+                  specific lineup on <code style={{ color: clubTokens.text.brass }}>/menu</code> and{" "}
+                  <code style={{ color: clubTokens.text.brass }}>/bar</code>. URLs use a root-absolute path so tracks
+                  load on nested routes (e.g. GitHub Pages).
+                </Text>
+                <Stack gap="sm">
+                  <Text size="sm" c={clubTokens.text.muted}>
+                    Bar day key: <span style={{ color: clubTokens.text.brass }}>{barKey}</span> — scheduled band:{" "}
+                    <strong>{bandsCatalog.bands[scheduledBandIndex]?.display_name}</strong>
+                    {eveningBandOverride !== null ? (
+                      <>
+                        {" "}
+                        — override: <strong>{bandsCatalog.bands[eveningBandOverride]?.display_name}</strong>
+                      </>
+                    ) : null}
+                  </Text>
+                  <Select
+                    label="Band for this session"
+                    description="Preview clips use this band; override also drives shell house music when enabled."
+                    data={bandsCatalog.bands.map((b, i) => ({ value: String(i), label: b.display_name }))}
+                    value={String(previewBandIndex)}
+                    onChange={(v) => {
+                      if (!v) return;
+                      setEveningBandIndexOverride(Number(v));
+                    }}
+                  />
+                  <Group>
+                    <ClubButton
+                      variant="light"
+                      onClick={() => {
+                        setEveningBandIndexOverride(null);
+                        pushSfxLog("Cleared evening band override — shell uses scheduled band.");
+                      }}
+                    >
+                      Use scheduled band
+                    </ClubButton>
+                    {bandPreviewLabel ? (
+                      <Text size="xs" c={clubTokens.text.muted}>
+                        Playing: {bandPreviewLabel}
+                      </Text>
+                    ) : null}
+                  </Group>
+                </Stack>
+              </ClubPanel>
+
+              <ClubPanel>
+                <ClubHeading order={4} mb="sm">
+                  Music tracks ({previewBand.display_name})
+                </ClubHeading>
+                <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="xs">
+                  {previewBand.music_files.map((rel) => (
+                    <ClubButton
+                      key={rel}
+                      variant="light"
+                      size="sm"
+                      onClick={() => playBandClip(rel, rel)}
+                    >
+                      Play {rel.replace(/^music\//, "")}
+                    </ClubButton>
+                  ))}
+                </SimpleGrid>
+              </ClubPanel>
+
+              <ClubPanel>
+                <ClubHeading order={4} mb="sm">
+                  Interludes ({previewBand.display_name})
+                </ClubHeading>
+                {previewBand.interlude_files.length === 0 ? (
+                  <Text size="sm" c={clubTokens.text.muted}>
+                    No interludes listed for this band.
+                  </Text>
+                ) : (
+                  <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="xs">
+                    {previewBand.interlude_files.map((rel) => (
+                      <ClubButton
+                        key={rel}
+                        variant="light"
+                        size="sm"
+                        onClick={() => playBandClip(rel, rel)}
+                      >
+                        Play {rel.replace(/^interludes\//, "")}
+                      </ClubButton>
+                    ))}
+                  </SimpleGrid>
+                )}
+              </ClubPanel>
+
+              <ClubPanel>
+                <ClubHeading order={4} mb="sm">
+                  Resolved URLs (first track)
+                </ClubHeading>
+                <Text size="xs" c={clubTokens.text.secondary} ff="monospace" style={{ wordBreak: "break-all" }}>
+                  {bandPublicUrl(previewBand, previewBand.music_files[0] ?? "")}
+                </Text>
               </ClubPanel>
             </Stack>
           </Tabs.Panel>

@@ -2,25 +2,59 @@
   "interlude_chance_between_tracks": 0.38,
   "bands": [
     {
-      "id": "velvet_rats",
-      "display_name": "The Velvet Rats",
-      "asset_root": "audio/bands/velvet_rats",
-      "music_files": ["music/track_01.ogg", "music/track_02.ogg", "music/track_03.ogg"],
-      "interlude_files": ["interludes/crowd_soft.ogg", "interludes/banter_a.ogg"]
+      "id": "buckmiller",
+      "display_name": "Buckmiller",
+      "asset_root": "audio/bands/buckmiller",
+      "music_files": [
+        "buckmiller_00001_.mp3",
+        "buckmiller_00002_.mp3",
+        "buckmiller_00006_.mp3",
+        "buckmiller_00007_.mp3",
+        "buckmiller_00008_.mp3",
+        "buckmiller_00009_.mp3"
+      ],
+      "interlude_files": []
     },
     {
-      "id": "smoke_hex",
-      "display_name": "Smoke & Hex",
-      "asset_root": "audio/bands/smoke_hex",
-      "music_files": ["music/track_01.ogg", "music/track_02.ogg", "music/track_03.ogg"],
-      "interlude_files": ["interludes/crowd_soft.ogg", "interludes/banter_a.ogg"]
+      "id": "comebacker",
+      "display_name": "Comebacker",
+      "asset_root": "audio/bands/comebacker",
+      "music_files": [
+        "comebacker_00001_.mp3",
+        "comebacker_00002_.mp3",
+        "comebacker_00003_.mp3",
+        "comebacker_00004_.mp3",
+        "comebacker_00006_.mp3",
+        "comebacker_00008_.mp3",
+        "comebacker_00010_.mp3",
+        "comebacker_00013_.mp3",
+        "comebacker_00015_.mp3",
+        "comebacker_00017_.mp3",
+        "comebacker_00019_.mp3",
+        "comebacker_00022_.mp3",
+        "comebacker_00023_.mp3",
+        "comebacker_00024_.mp3"
+      ],
+      "interlude_files": []
     },
     {
-      "id": "midnight_wire",
-      "display_name": "Midnight Wire",
-      "asset_root": "audio/bands/midnight_wire",
-      "music_files": ["music/track_01.ogg", "music/track_02.ogg", "music/track_03.ogg"],
-      "interlude_files": ["interludes/crowd_soft.ogg", "interludes/banter_a.ogg"]
+      "id": "feints",
+      "display_name": "Feints",
+      "asset_root": "audio/bands/feints",
+      "music_files": [
+        "feints_00004_.mp3",
+        "feints_00006_.mp3",
+        "feints_00007_.mp3",
+        "feints_00008_.mp3",
+        "feints_00010_.mp3",
+        "feints_00012_.mp3",
+        "feints_00013_.mp3",
+        "feints_00014_.mp3",
+        "feints_00015_.mp3",
+        "feints_00016_.mp3",
+        "feints_00018_.mp3"
+      ],
+      "interlude_files": []
     }
   ]
 }

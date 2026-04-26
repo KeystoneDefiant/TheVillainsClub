@@ -22,15 +22,21 @@ describe("siteAssetPathPrefixFromViteBase", () => {
 });
 
 describe("bandAssetPublicPath", () => {
-  it("uses root-absolute path when base is empty", () => {
-    expect(bandAssetPublicPath(sampleBand, "music/track_01.ogg", "./")).toBe(
+  it("uses root-absolute path when base is empty (http)", () => {
+    expect(bandAssetPublicPath(sampleBand, "music/track_01.ogg", "./", "http:")).toBe(
       "/audio/bands/velvet_rats/music/track_01.ogg",
     );
   });
 
-  it("prefixes GitHub Pages-style base once", () => {
-    expect(bandAssetPublicPath(sampleBand, "music/track_01.ogg", "/villains-club/")).toBe(
+  it("prefixes GitHub Pages-style base once (https)", () => {
+    expect(bandAssetPublicPath(sampleBand, "music/track_01.ogg", "/villains-club/", "https:")).toBe(
       "/villains-club/audio/bands/velvet_rats/music/track_01.ogg",
+    );
+  });
+
+  it("uses path relative to index.html under file: (Electron dist)", () => {
+    expect(bandAssetPublicPath(sampleBand, "music/track_01.ogg", "./", "file:")).toBe(
+      "audio/bands/velvet_rats/music/track_01.ogg",
     );
   });
 });

@@ -65,20 +65,38 @@ export function siteAssetPathPrefixFromViteBase(viteBaseUrl: string): string {
   return trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
 }
 
-/** Public URL path for a file under the band's `asset_root` (leading slash, Vite `base`-aware). */
+/**
+ * Public URL for a file under the band's `asset_root`.
+ *
+ * - **http(s):** root-absolute path so nested SPA routes (e.g. GitHub Pages `/repo/menu`) still hit
+ *   `/repo/audio/bands/...` instead of losing the repo segment.
+ * - **file:** (Electron `loadFile` dist): use a path **relative to `index.html`** so `audio/...` resolves
+ *   under `dist/`; a leading `/` would map to the filesystem root on Windows.
+ */
 export function bandAssetPublicPath(
   band: BandCatalogEntry,
   relativePath: string,
   viteBaseUrl: string,
+  pageProtocol?: string,
 ): string {
-  const prefix = siteAssetPathPrefixFromViteBase(viteBaseUrl);
   const root = band.asset_root.replace(/^\/+|\/+$/g, "");
   const rel = relativePath.replace(/^\/+/, "");
-  const joined = `${prefix}/${root}/${rel}`.replace(/\/{2,}/g, "/");
+  const pathFromDist = `${root}/${rel}`;
+
+  if (pageProtocol === "file:") {
+    return pathFromDist;
+  }
+
+  const prefix = siteAssetPathPrefixFromViteBase(viteBaseUrl);
+  const joined = `${prefix}/${pathFromDist}`.replace(/\/{2,}/g, "/");
   return joined.startsWith("/") ? joined : `/${joined}`;
 }
 
 export function bandPublicUrl(band: BandCatalogEntry, relativePath: string): string {
-  return bandAssetPublicPath(band, relativePath, import.meta.env.BASE_URL);
+  const protocol =
+    typeof globalThis !== "undefined" && "location" in globalThis && globalThis.location
+      ? globalThis.location.protocol
+      : undefined;
+  return bandAssetPublicPath(band, relativePath, import.meta.env.BASE_URL, protocol);
 }
 

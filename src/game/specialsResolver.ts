@@ -2,11 +2,14 @@ import specialsCatalog from "../../content/specials.json";
 
 export type ClubSpecialModifier =
   | { type: "payout_mult"; value: number }
+  | { type: "first_buy_in_credit"; value: number }
   | { type: string; value?: unknown };
 
 export type SpecialDefinitionRow = {
   title: string;
   modifier: ClubSpecialModifier;
+  /** Optional: shell can comp the first buy-in of a bar day. Runtime tracking is save-system work. */
+  first_buy_in_credit?: number;
   /** Optional: scales max **return** cap for Oubliette only (multiplicative, e.g. 1.1). */
   oubliette_cap_mult?: number;
   /** Optional: scales max **return** cap for 7 Year Itch only (multiplicative). */
@@ -58,6 +61,12 @@ export function payoutModifierFromSpecial(special: ResolvedClubSpecial | null): 
   if (!special || special.modifier.type !== "payout_mult") return 1;
   const v = special.modifier.value;
   return typeof v === "number" && Number.isFinite(v) && v > 0 ? v : 1;
+}
+
+export function firstBuyInCreditFromSpecial(special: ResolvedClubSpecial | null): number {
+  if (!special || special.modifier.type !== "first_buy_in_credit") return 0;
+  const v = special.modifier.value;
+  return typeof v === "number" && Number.isFinite(v) && v > 0 ? v : 0;
 }
 
 export function capModifiersFromSpecialDefinition(row: SpecialDefinitionRow | null): {

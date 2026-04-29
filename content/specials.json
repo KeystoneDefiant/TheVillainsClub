@@ -4,8 +4,11 @@
   },
   "fallback_cycle": [
     "lucky_streak",
+    "covered_first_buy_in",
+    "high_ceiling",
     "house_cut",
     "double_rum",
+    "velvet_multiplier",
     "quiet_night"
   ],
   "definitions": {
@@ -25,6 +28,22 @@
         "value": 1.15
       }
     },
+    "covered_first_buy_in": {
+      "title": "House Covers the First Buy-In",
+      "modifier": {
+        "type": "payout_mult",
+        "value": 1
+      },
+      "first_buy_in_credit": 1
+    },
+    "high_ceiling": {
+      "title": "High Ceiling Night",
+      "modifier": {
+        "type": "payout_mult",
+        "value": 1
+      },
+      "all_minigames_cap_mult": 1.35
+    },
     "house_cut": {
       "title": "House Cut",
       "modifier": {
@@ -37,6 +56,13 @@
       "modifier": {
         "type": "payout_mult",
         "value": 1.25
+      }
+    },
+    "velvet_multiplier": {
+      "title": "Velvet Multiplier",
+      "modifier": {
+        "type": "payout_mult",
+        "value": 1.05
       }
     },
     "quiet_night": {

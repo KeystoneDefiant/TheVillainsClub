@@ -4,9 +4,9 @@ test("main menu to club floor", async ({ page }) => {
   await page.goto("/menu");
   await page.getByRole("button", { name: /enter the club/i }).click();
   await expect(page).toHaveURL(/\/bar$/);
-  await expect(page.getByText("Tables", { exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: /oubliette no\. 9 \(table\)/i })).toBeVisible();
-  await expect(page.getByRole("button", { name: /7 year itch \(crapless\)/i })).toBeVisible();
+  await expect(page.getByText("Tonight’s menu", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: /oubliette no\. 9/i })).toBeVisible();
+  await expect(page.getByRole("button", { name: /7 year itch/i })).toBeVisible();
 });
 
 test("club table buy-in opens Oubliette No. 9", async ({ page }) => {
@@ -14,7 +14,9 @@ test("club table buy-in opens Oubliette No. 9", async ({ page }) => {
   await page.getByRole("button", { name: /enter the club/i }).click();
   await expect(page).toHaveURL(/\/bar$/);
 
-  await page.getByRole("button", { name: /oubliette no\. 9 \(table\)/i }).click();
+  await page.getByRole("button", { name: /oubliette no\. 9/i }).click();
+  await expect(page.getByRole("heading", { name: /oubliette no\. 9/i })).toBeVisible();
+  await page.getByRole("button", { name: /start game/i }).click();
   await expect(page).toHaveURL(/\/minigames\/oubliette-no9$/);
 
   await expect(page.locator("#mainMenu-screen")).toBeVisible({ timeout: 30_000 });
@@ -27,7 +29,9 @@ test("club table buy-in opens 7 Year Itch", async ({ page }) => {
   await page.getByRole("button", { name: /enter the club/i }).click();
   await expect(page).toHaveURL(/\/bar$/);
 
-  await page.getByRole("button", { name: /7 year itch \(crapless\)/i }).click();
+  await page.getByRole("button", { name: /7 year itch/i }).click();
+  await expect(page.getByRole("heading", { name: /7 year itch/i })).toBeVisible();
+  await page.getByRole("button", { name: /start game/i }).click();
   await expect(page).toHaveURL(/\/minigames\/seven-year-itch$/);
 
   await expect(page.getByTestId("seven-year-itch-root")).toBeVisible({ timeout: 30_000 });
@@ -35,5 +39,5 @@ test("club table buy-in opens 7 Year Itch", async ({ page }) => {
   await pass.click();
   await pass.click();
   await expect(page.getByRole("button", { name: /^roll$/i })).toBeEnabled();
-  await expect(page.getByRole("button", { name: /return to the bar/i })).toBeVisible();
+  await expect(page.getByRole("button", { name: /save and return later/i })).toBeVisible();
 });

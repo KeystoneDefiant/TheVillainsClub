@@ -4,10 +4,11 @@ import { bandPublicUrl, bandsCatalog } from "@/config/bandsCatalog";
 import { barDateKey, msUntilNextBarBoundary } from "@/audio/barBandSchedule";
 import { effectiveBandIndexForBarDate, useBarBandOverrideStore } from "@/audio/barBandOverrideStore";
 import { useClubAudioStore } from "@/audio/clubAudioStore";
+import { useClubFlowStore } from "@/game/clubFlowStore";
 
 /** House band plays on shell screens and continues uninterrupted into minigames. */
 function shellHouseMusicRoute(pathname: string): boolean {
-  return pathname === "/menu" || pathname === "/bar" || pathname.startsWith("/minigames/");
+  return pathname === "/" || pathname === "/menu" || pathname === "/bar" || pathname.startsWith("/minigames/");
 }
 
 function mulberry32(seed: number) {
@@ -42,6 +43,7 @@ export function useShellBandMusic(): void {
   const bandIndexRef = useRef(effectiveBandIndexForBarDate(barKeyRef.current));
   const lastClipRef = useRef<"music" | "interlude" | null>(null);
   const boundaryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fadeTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     const audio = new Audio();
@@ -51,12 +53,40 @@ export function useShellBandMusic(): void {
 
     const isShell = () => shellHouseMusicRoute(pathnameRef.current);
 
-    const applyVolume = () => {
-      audio.volume = useClubAudioStore.getState().musicVolume;
+    const clearFadeTimer = () => {
+      if (fadeTimerRef.current !== null) {
+        clearInterval(fadeTimerRef.current);
+        fadeTimerRef.current = null;
+      }
+    };
+
+    const targetVolume = () => {
+      const { musicEnabled, musicVolume } = useClubAudioStore.getState();
+      if (!musicEnabled) return 0;
+      return musicVolume * (useClubFlowStore.getState().hasEnteredClub ? 1 : 0.3);
+    };
+
+    const applyVolume = (mode: "instant" | "fade" = "instant") => {
+      const next = targetVolume();
+      if (mode === "instant") {
+        clearFadeTimer();
+        audio.volume = next;
+        return;
+      }
+      clearFadeTimer();
+      const start = audio.volume;
+      const durationMs = 1400;
+      const started = performance.now();
+      fadeTimerRef.current = setInterval(() => {
+        const t = Math.min(1, (performance.now() - started) / durationMs);
+        audio.volume = start + (next - start) * t;
+        if (t >= 1) {
+          clearFadeTimer();
+        }
+      }, 50);
     };
 
     applyVolume();
-    const unsubVol = useClubAudioStore.subscribe(applyVolume);
 
     const refillMusicQueue = () => {
       const band = bandsCatalog.bands[bandIndexRef.current];
@@ -68,7 +98,7 @@ export function useShellBandMusic(): void {
 
     const playUrl = (url: string, kind: "music" | "interlude") => {
       lastClipRef.current = kind;
-      applyVolume();
+      applyVolume("instant");
       audio.src = url;
       void audio.play().catch(() => {});
     };
@@ -164,7 +194,7 @@ export function useShellBandMusic(): void {
 
     const unsubMusic = useClubAudioStore.subscribe((s, prev) => {
       if (s.musicVolume !== prev.musicVolume) {
-        applyVolume();
+        applyVolume("fade");
       }
       if (s.musicEnabled !== prev.musicEnabled) {
         if (!s.musicEnabled) {
@@ -194,6 +224,12 @@ export function useShellBandMusic(): void {
       }
     });
 
+    const unsubClubFlow = useClubFlowStore.subscribe((s, prev) => {
+      if (s.hasEnteredClub !== prev.hasEnteredClub) {
+        applyVolume(s.hasEnteredClub ? "fade" : "instant");
+      }
+    });
+
     const onFirstGesture = () => {
       maybeStartOrResume();
     };
@@ -202,9 +238,10 @@ export function useShellBandMusic(): void {
     return () => {
       document.removeEventListener("pointerdown", onFirstGesture);
       audio.removeEventListener("ended", onEnded);
-      unsubVol();
       unsubMusic();
       unsubBandOverride();
+      unsubClubFlow();
+      clearFadeTimer();
       if (boundaryTimerRef.current !== null) {
         clearTimeout(boundaryTimerRef.current);
       }
@@ -255,7 +292,8 @@ export function useShellBandMusic(): void {
       const next = remainingMusicRef.current.shift();
       if (next) {
         lastClipRef.current = "music";
-        audio.volume = useClubAudioStore.getState().musicVolume;
+        const { musicEnabled: enabled, musicVolume } = useClubAudioStore.getState();
+        audio.volume = enabled ? musicVolume * (useClubFlowStore.getState().hasEnteredClub ? 1 : 0.3) : 0;
         audio.src = next;
         void audio.play().catch(() => {});
       }

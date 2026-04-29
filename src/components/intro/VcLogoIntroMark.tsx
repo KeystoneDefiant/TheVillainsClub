@@ -47,7 +47,7 @@ function GreyBottomToTopGradient({
     if (!lo || !hi) return;
 
     const apply = (t: number) => {
-      const pct = Math.min(100, Math.max(0, t * 100));
+      const pct = Math.min(100, Math.max(-3, t * 103 - 3));
       const p = `${pct.toFixed(2)}%`;
       lo.setAttribute("offset", p);
       hi.setAttribute("offset", p);
@@ -72,7 +72,7 @@ function GreyBottomToTopGradient({
       y1={clipY1}
       y2={clipY0}
     >
-      <stop offset="0%" stopColor={GREY_FILL} stopOpacity={1} />
+      <stop offset="-3%" stopColor={GREY_FILL} stopOpacity={1} />
       <stop ref={boundaryLo} offset="0%" stopColor={GREY_FILL} stopOpacity={1} />
       <stop ref={boundaryHi} offset="0%" stopColor={GREY_FILL} stopOpacity={0} />
       <stop offset="100%" stopColor={GREY_FILL} stopOpacity={0} />
@@ -88,6 +88,7 @@ export function VcLogoIntroMark({ scale = 1, zoomDurationSec, letterDrawSec, eas
   const zoomTo = 1;
   const w = BASE_W * scale;
   const h = Math.round(ASPECT * BASE_W * scale);
+  const letterStepSec = letterDrawSec * 0.78;
 
   const svg = (
     <svg
@@ -113,7 +114,7 @@ export function VcLogoIntroMark({ scale = 1, zoomDurationSec, letterDrawSec, eas
               gradientId={`${uid}-grey-grad-${i}`}
               clipY0={p.clipY0}
               clipY1={p.clipY1}
-              delaySec={i * letterDrawSec}
+              delaySec={i * letterStepSec}
               durationSec={letterDrawSec}
               easing={easing}
             />
@@ -126,10 +127,21 @@ export function VcLogoIntroMark({ scale = 1, zoomDurationSec, letterDrawSec, eas
       </g>
       <g>
         {vcLogoGreyPaths.map((p, i) => (
-          <path
+          <motion.path
             key={p.id}
             d={p.d}
             fill={reduceMotion ? GREY_FILL : `url(#${uid}-grey-grad-${i})`}
+            initial={reduceMotion ? false : { opacity: 0, y: 3, filter: "blur(1.2px)" }}
+            animate={reduceMotion ? undefined : { opacity: 1, y: 0, filter: "blur(0px)" }}
+            transition={
+              reduceMotion
+                ? undefined
+                : {
+                    delay: i * letterStepSec,
+                    duration: letterDrawSec * 0.85,
+                    ease: easing,
+                  }
+            }
           />
         ))}
       </g>

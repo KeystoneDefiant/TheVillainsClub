@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
-import { Box, Stack, Text } from "@mantine/core";
+import { Box, Stack } from "@mantine/core";
 import { AnimatePresence, motion } from "framer-motion";
 import { VcLogoIntroMark } from "@/components/intro/VcLogoIntroMark";
 import { VC_LOGO_GREY_LETTER_COUNT } from "@/components/intro/vcLogoIntroPaths";
 import { MenuHazeBackground } from "@/components/layout/MenuHazeBackground";
-import { clubTokens } from "@/theme/clubTokens";
 import { useMotionPresetStore } from "@/motion/motionPresetStore";
 import { usePrefersReducedMotion } from "@/motion/usePrefersReducedMotion";
 
@@ -64,27 +63,20 @@ export function IntroPage() {
   const easing = preset.easing;
   const instant = reduceMotion;
 
-  const taglineDelaySec = logoSequenceSec + preset.introTaglineDelay;
-  const hintDelaySec = taglineDelaySec + preset.introTaglineDuration * 0.45;
-
   const introShellStyle: CSSProperties = instant
     ? { textAlign: "center", maxWidth: 920, backfaceVisibility: "hidden" }
     : {
         textAlign: "center",
         maxWidth: 920,
         backfaceVisibility: "hidden",
-        ["--shell-intro-tag-dur" as string]: `${preset.introTaglineDuration}s`,
-        ["--shell-intro-tag-delay" as string]: `${taglineDelaySec}s`,
-        ["--shell-intro-hint-dur" as string]: "0.6s",
-        ["--shell-intro-hint-delay" as string]: `${hintDelaySec}s`,
         ["--shell-intro-ease" as string]: `cubic-bezier(${preset.easing.join(",")})`,
       };
 
   return (
     <Box
-      onPointerDown={skip}
+      onPointerDown={phase === "hold" ? skip : undefined}
       onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") skip();
+        if (phase === "hold" && (e.key === "Enter" || e.key === " ")) skip();
       }}
       tabIndex={0}
       role="button"
@@ -129,16 +121,6 @@ export function IntroPage() {
                   letterDrawSec={preset.introLogoLetterDrawSec}
                   easing={easing}
                 />
-              </Box>
-              <Box className={instant ? undefined : "shell-intro-tagline"}>
-                <Text mt="md" size="lg" c={clubTokens.text.secondary} style={{ fontStyle: "italic" }}>
-                  A quiet room. A loaded deck. A tab that never forgets.
-                </Text>
-              </Box>
-              <Box className={instant ? undefined : "shell-intro-hint"}>
-                <Text mt="xl" size="sm" c={clubTokens.text.muted}>
-                  {reduceMotion ? "Continuing…" : "Press anywhere to continue"}
-                </Text>
               </Box>
             </motion.div>
           ) : null}

@@ -16,9 +16,9 @@ export type MotionPreset = {
 
 export const defaultMotionPreset: MotionPreset = {
   introTitleDuration: 0.9,
-  introLogoLetterDrawSec: 0.22,
+  introLogoLetterDrawSec: 0.2,
   introLogoSettleSec: 0.38,
-  introHoldSec: 2.15,
+  introHoldSec: 0.45,
   introTaglineDelay: 0.35,
   introTaglineDuration: 0.65,
   introFadeOut: 0.45,

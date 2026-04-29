@@ -141,25 +141,31 @@ export function MainMenuPage() {
                 </Stack>
               </motion.div>
 
-              {import.meta.env.DEV ? (
-                <Text size="xs" c={clubTokens.text.muted}>
-                  Dev:{" "}
+              <Text size="xs" c={clubTokens.text.muted}>
+                {import.meta.env.DEV ? (
+                  <>
+                    Dev:{" "}
+                    <Link to="/__playground" style={{ color: clubTokens.text.brass }}>
+                      UI playground
+                    </Link>
+                    {" · "}
+                    <Text
+                      component="button"
+                      type="button"
+                      c="brass"
+                      td="underline"
+                      style={{ background: "none", border: 0, padding: 0, cursor: "pointer" }}
+                      onClick={() => setHasSave(!hasSave)}
+                    >
+                      Toggle save stub
+                    </Text>
+                  </>
+                ) : (
                   <Link to="/__playground" style={{ color: clubTokens.text.brass }}>
                     UI playground
                   </Link>
-                  {" · "}
-                  <Text
-                    component="button"
-                    type="button"
-                    c="brass"
-                    td="underline"
-                    style={{ background: "none", border: 0, padding: 0, cursor: "pointer" }}
-                    onClick={() => setHasSave(!hasSave)}
-                  >
-                    Toggle save stub
-                  </Text>
-                </Text>
-              ) : null}
+                )}
+              </Text>
             </Stack>
           </motion.div>
         </ClubPanel>

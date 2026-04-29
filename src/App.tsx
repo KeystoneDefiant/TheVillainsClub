@@ -27,7 +27,7 @@ export default function App() {
           <Route path="/bar" element={<BarStubPage />} />
           <Route path="/minigames/oubliette-no9" element={<OublietteNo9Page />} />
           <Route path="/minigames/seven-year-itch" element={<SevenYearItchPage />} />
-          {import.meta.env.DEV ? <Route path="/__playground" element={<UiPlayground />} /> : null}
+          <Route path="/__playground" element={<UiPlayground />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

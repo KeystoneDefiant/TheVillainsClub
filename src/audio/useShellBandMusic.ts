@@ -5,8 +5,9 @@ import { barDateKey, msUntilNextBarBoundary } from "@/audio/barBandSchedule";
 import { effectiveBandIndexForBarDate, useBarBandOverrideStore } from "@/audio/barBandOverrideStore";
 import { useClubAudioStore } from "@/audio/clubAudioStore";
 
+/** House band plays on shell screens and continues uninterrupted into minigames. */
 function shellHouseMusicRoute(pathname: string): boolean {
-  return pathname === "/menu" || pathname === "/bar";
+  return pathname === "/menu" || pathname === "/bar" || pathname.startsWith("/minigames/");
 }
 
 function mulberry32(seed: number) {

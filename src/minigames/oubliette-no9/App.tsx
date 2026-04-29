@@ -281,6 +281,8 @@ export function OublietteNo9Root(props?: OublietteShellBinding) {
               betAmount={state.betAmount}
               selectedHandCount={state.selectedHandCount}
               shopDisplayBetAmount={state.shopDisplayBetAmount}
+              nextRoundNumber={state.round}
+              prevRoundMinimumBetForNextRoundCost={state.prevRoundMinimumBet}
               deadCards={state.deckModifications.deadCards}
               deadCardRemovalCount={state.deckModifications.deadCardRemovalCount}
               wildCards={state.deckModifications.wildCards}

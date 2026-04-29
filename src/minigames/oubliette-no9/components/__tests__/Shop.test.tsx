@@ -72,6 +72,21 @@ describe('Shop Component', () => {
       expect(screen.getByText(/Credits needed for next round/i).closest('div')?.textContent).toMatch(/80/);
     });
 
+    it('should reflect minimum-bet increase for the upcoming round when preview props are set', () => {
+      // Round 6 triggers an increase every 3 rounds (see oublietteNo9GameRules); prev table min was 10.
+      render(
+        <Shop
+          {...mockProps}
+          betAmount={15}
+          selectedHandCount={8}
+          shopDisplayBetAmount={10}
+          nextRoundNumber={6}
+          prevRoundMinimumBetForNextRoundCost={10}
+        />,
+      );
+      expect(screen.getByText(/Credits needed for next round/i).closest('div')?.textContent).toMatch(/152/);
+    });
+
     it('should display all shop options', () => {
       render(<Shop {...mockProps} />);
       

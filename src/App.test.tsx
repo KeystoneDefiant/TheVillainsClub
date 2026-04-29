@@ -25,6 +25,20 @@ describe("MainMenuPage", () => {
     expect(screen.getByRole("button", { name: /^continue$/i })).toBeDisabled();
   });
 
+  it("links to the UI playground", () => {
+    render(
+      <MantineProvider theme={buildClubTheme()} defaultColorScheme="dark">
+        <MemoryRouter initialEntries={["/menu"]}>
+          <Routes>
+            <Route path="/menu" element={<MainMenuPage />} />
+          </Routes>
+        </MemoryRouter>
+      </MantineProvider>,
+    );
+
+    expect(screen.getByRole("link", { name: /ui playground/i })).toHaveAttribute("href", "/__playground");
+  });
+
   it("settings modal includes reset game progress", async () => {
     render(
       <MantineProvider theme={buildClubTheme()} defaultColorScheme="dark">
@@ -59,5 +73,6 @@ describe("BarStubPage (club menu)", () => {
     expect(screen.getByText("Tables", { exact: true })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /oubliette no\. 9 \(table\)/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /back to main menu/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /ui playground/i })).toHaveAttribute("href", "/__playground");
   });
 });

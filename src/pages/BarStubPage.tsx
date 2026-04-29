@@ -107,6 +107,11 @@ export function BarStubPage() {
                 <Text size="xs" c={clubTokens.text.muted} ta="center" mt="xs" fs="italic">
                   The velvet closes behind you—carry the smoke in your coat, not the grudge.
                 </Text>
+                <Text size="xs" c={clubTokens.text.muted} ta="center" mt="xs">
+                  <Link to="/__playground" style={{ color: clubTokens.text.brass }}>
+                    UI playground
+                  </Link>
+                </Text>
               </motion.div>
             </Stack>
           </motion.div>

@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Box, Button, Group, Modal, Paper, Progress, Stack, Text, Title } from "@mantine/core";
+import { Box, Button, Group, Modal, Paper, Progress, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 import type { SevenYearItchShellBinding } from "@/game/sessionSettlement";
-import { computeSevenYearItchReturn } from "@/game/sessionSettlement";
 import {
   sevenYearItchTableConfig,
+  sevenYearItchHeatBonuses,
+  sevenYearItchRackets,
+  type SevenYearItchHeatBonus,
   type HardwayNumber,
   type HopKey,
   type PointNumber,
@@ -22,6 +24,7 @@ import { CraplessTableFelt } from "./components/CraplessTableFelt";
 import "./sevenYearItch.css";
 
 const CHIP = sevenYearItchTableConfig.chipIncrement;
+const HEAT_ROLLS = 4;
 
 function lineColor(kind: RollLine["kind"]): string {
   switch (kind) {
@@ -44,6 +47,15 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
   const [bets, setBets] = useState(initialBets);
   const [feed, setFeed] = useState<RollLine[]>([]);
   const [rollCount, setRollCount] = useState(0);
+  const [heatRolls, setHeatRolls] = useState(0);
+  const [activeBonus, setActiveBonus] = useState<SevenYearItchHeatBonus | null>(null);
+  const [bonusChoices, setBonusChoices] = useState<SevenYearItchHeatBonus[]>([]);
+  const [loreOpen, setLoreOpen] = useState(false);
+  const [logOpen, setLogOpen] = useState(false);
+  const [loreState, setLoreState] = useState({
+    title: "The Investigation",
+    body: "Put money on the pass line and roll to see which racket draws police attention.",
+  });
   const [lastRollText, setLastRollText] = useState("—");
   const [lastD1, setLastD1] = useState(1);
   const [lastD2, setLastD2] = useState(1);
@@ -70,7 +82,13 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
   const maxOddsWallet = balance + bets.freeOdds;
   const maxOddsDisplay = Math.min(maxOddsCap, maxOddsWallet);
 
-  const heat = table.phase === "point" ? Math.min(100, table.rollsSincePoint * 14) : 0;
+  const heat = Math.min(100, (heatRolls / HEAT_ROLLS) * 100);
+
+  const pickHeatChoices = useCallback(() => {
+    const weighted = [...sevenYearItchHeatBonuses].sort((a, b) => b.pullWeight - a.pullWeight);
+    const offset = rollCount % weighted.length;
+    setBonusChoices([weighted[offset], weighted[(offset + 1) % weighted.length], weighted[(offset + 2) % weighted.length]].filter(Boolean));
+  }, [rollCount]);
 
   const addPassChip = useCallback(() => {
     if (passLocked) return;
@@ -239,16 +257,62 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
       : bets.passLine > 0;
 
   const applyRollResult = useCallback((r: DiceRoll) => {
-    const res = resolveRoll(tableRef.current, betsRef.current, r);
-    setBalance((b) => b + res.walletDelta);
-    setTable(res.nextTable);
-    setBets(res.nextBets);
+    const currentTable = tableRef.current;
+    const currentBets = betsRef.current;
+    const res = resolveRoll(currentTable, currentBets, r);
+    const bonus = activeBonus;
+    let walletDelta = res.walletDelta;
+    const bonusLines: RollLine[] = [];
+    let nextTable = res.nextTable;
+    let nextBets = res.nextBets;
+    if (bonus && r.total !== 7 && walletDelta > 0) {
+      if (bonus.effect.type === "next_non_seven_multiplier" || bonus.effect.type === "risk_reward_multiplier") {
+        const extra = Math.floor(walletDelta * (bonus.effect.value - 1));
+        walletDelta += extra;
+        bonusLines.push({ kind: "win", text: `${bonus.title} adds ${extra.toLocaleString()} credits.` });
+        setActiveBonus(null);
+      } else if (bonus.effect.type === "place_hit_multiplier" && res.lines.some((line) => line.text.includes("Place on"))) {
+        const extra = Math.floor(walletDelta * (bonus.effect.value - 1));
+        walletDelta += extra;
+        bonusLines.push({ kind: "win", text: `${bonus.title} doubles the take by ${extra.toLocaleString()} credits.` });
+        setActiveBonus(null);
+      }
+    }
+    if (bonus?.effect.type === "shield_next_seven" && r.total === 7 && currentTable.phase === "point") {
+      nextTable = { ...currentTable, rollsSincePoint: currentTable.rollsSincePoint + 1 };
+      nextBets = currentBets;
+      bonusLines.push({ kind: "win", text: `${bonus.title} burns the warrant. The felt survives.` });
+      setActiveBonus(null);
+    }
+    setBalance((b) => b + walletDelta);
+    setTable(nextTable);
+    setBets(nextBets);
     setLastRollText(`${r.d1} + ${r.d2} = ${r.total}`);
     setLastD1(r.d1);
     setLastD2(r.d2);
-    setFeed((f) => [...res.lines, ...f].slice(0, 28));
+    setFeed((f) => [...bonusLines, ...res.lines, ...f].slice(0, 28));
     setRollCount((n) => n + 1);
-  }, []);
+
+    const racket = r.total === 7 ? null : sevenYearItchRackets[r.total as PointNumber];
+    setLoreState({
+      title: r.total === 7 ? "The Bust" : `${r.total}: ${racket?.name ?? "Street Business"}`,
+      body:
+        r.total === 7
+          ? "Sirens rake the alley. The authorities kick the door in and every exposed investment gets seized."
+          : (racket?.story ?? "The street keeps moving, and the books keep bleeding ink."),
+    });
+    setLoreOpen(true);
+
+    setHeatRolls((prev) => {
+      if (r.total === 7) return 0;
+      const next = prev + 1;
+      if (next >= HEAT_ROLLS) {
+        pickHeatChoices();
+        return 0;
+      }
+      return next;
+    });
+  }, [activeBonus, pickHeatChoices]);
 
   const handleRoll = useCallback(() => {
     if (!canRoll || diceRolling) return;
@@ -264,76 +328,59 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
     }, 780);
   }, [applyRollResult, canRoll, diceRolling, reduceMotion]);
 
-  const confirmLeave = useCallback(() => {
-    const uncapped = balance + totalOnLayout(bets);
-    const detail = computeSevenYearItchReturn(uncapped, props.settlement);
-    props.onReturnToClubMenu?.({ ...detail, tableRound: rollCount });
-    setLeaveOpen(false);
-  }, [balance, bets, props, rollCount]);
-
   const caseLabel =
-    table.phase !== "point" || table.point == null ? "NO OPEN CASE" : `CASE FILE — ${table.point}`;
+    table.phase !== "point" || table.point == null
+      ? "NO OPEN CASE"
+      : `CASE FILE — ${table.point} ${sevenYearItchRackets[table.point].name}`;
 
   return (
-    <Box className="seven-year-itch-root" p="md" data-testid="seven-year-itch-root">
-      <Stack gap="md" maw={920} mx="auto">
-        <Group justify="space-between" align="flex-start" wrap="nowrap">
-          <div>
-            <Title order={2} c="var(--7yi-amber)" size="h3" style={{ fontFamily: "Georgia, serif" }}>
+    <Box className="seven-year-itch-root" data-testid="seven-year-itch-root">
+      <Stack gap="xs" className="seven-year-itch-frame">
+        <Group justify="space-between" align="center" wrap="nowrap" className="seven-year-itch-topbar">
+          <Stack gap={0}>
+            <Title order={2} c="var(--7yi-amber)" size="h4" style={{ fontFamily: "Georgia, serif" }}>
               7 Year Itch
             </Title>
-            <Text size="xs" c="dimmed" mt={4}>
-              Crapless layout — NV rules. Session buy-in {buyIn.toLocaleString()} credits. Click felt +{CHIP} ·
-              right-click −{CHIP}.
-            </Text>
-          </div>
-          <Button variant="subtle" color="gray" size="xs" onClick={() => setLeaveOpen(true)}>
-            Return to the bar
-          </Button>
-        </Group>
-
-        <Paper
-          radius="md"
-          p="md"
-          withBorder
-          style={{ borderColor: "var(--7yi-amber-dim)", background: "var(--7yi-paper)" }}
-        >
-          <Stack gap="sm">
-            <Text size="xs" tt="uppercase" c="dimmed" fw={700}>
-              Bank
-            </Text>
-            <Text size="xl" fw={700} c="var(--7yi-amber)">
-              {balance.toLocaleString()} credits in hand
-            </Text>
-            <Text size="sm" c="dimmed">
-              On layout {totalOnLayout(bets).toLocaleString()} · Session total {wealth.toLocaleString()}
-            </Text>
-          </Stack>
-        </Paper>
-
-        <Paper
-          radius="md"
-          p="md"
-          withBorder
-          style={{ borderColor: "var(--7yi-amber-dim)", background: "var(--7yi-paper)" }}
-        >
-          <Stack gap="xs">
-            <Text size="sm" fw={600} c="var(--7yi-amber)" tt="uppercase">
+            <Text size="xs" c="dimmed">
               {caseLabel}
             </Text>
-            {table.phase === "point" ? (
-              <>
-                <Text size="xs" c="dimmed">
-                  Heat on the investigation
-                </Text>
-                <Progress value={heat} color="orange" size="sm" radius="xs" />
-              </>
-            ) : (
-              <Text size="xs" c="dimmed">
-                Come-out — seven clears the board with a pass win; anything else opens a case.
-              </Text>
-            )}
           </Stack>
+          <div className="seven-year-itch-rollBadge" aria-label="Last roll">
+            {lastRollText === "—" ? "—" : lastRollText.split(" = ")[1]}
+          </div>
+        </Group>
+
+        <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="xs">
+          <Paper radius="md" p="xs" withBorder style={{ borderColor: "var(--7yi-amber-dim)", background: "var(--7yi-paper)" }}>
+            <Text size="xs" c="dimmed">In hand</Text>
+            <Text fw={700} c="var(--7yi-amber)">{balance.toLocaleString()}</Text>
+          </Paper>
+          <Paper radius="md" p="xs" withBorder style={{ borderColor: "var(--7yi-amber-dim)", background: "var(--7yi-paper)" }}>
+            <Text size="xs" c="dimmed">On felt</Text>
+            <Text fw={700}>{totalOnLayout(bets).toLocaleString()}</Text>
+          </Paper>
+          <Paper radius="md" p="xs" withBorder style={{ borderColor: "var(--7yi-amber-dim)", background: "var(--7yi-paper)" }}>
+            <Text size="xs" c="dimmed">Net vs buy-in</Text>
+            <Text fw={700}>{(wealth - buyIn).toLocaleString()}</Text>
+          </Paper>
+          <Paper radius="md" p="xs" withBorder style={{ borderColor: "var(--7yi-amber-dim)", background: "var(--7yi-paper)" }}>
+            <Group justify="space-between" wrap="nowrap">
+              <Text size="xs" c="dimmed">Heat</Text>
+              <Text size="xs" c="var(--7yi-amber)">{heatRolls}/{HEAT_ROLLS}</Text>
+            </Group>
+            <Progress value={heat} color="orange" size="sm" radius="xs" />
+          </Paper>
+        </SimpleGrid>
+
+        <Paper radius="md" p="xs" withBorder style={{ borderColor: "var(--7yi-amber-dim)", background: "var(--7yi-paper)" }}>
+          <Group justify="space-between" wrap="nowrap">
+            <Text size="xs" c="dimmed" lineClamp={2}>
+              {loreState.body}
+            </Text>
+            <Button variant="subtle" color="orange" size="xs" onClick={() => setLoreOpen(true)}>
+              Story
+            </Button>
+          </Group>
         </Paper>
 
         <CraplessTableFelt
@@ -364,61 +411,87 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
           maxOddsDisplay={maxOddsDisplay}
         />
 
-        <Paper
-          radius="md"
-          p="sm"
-          withBorder
-          style={{ borderColor: "var(--7yi-amber-dim)", background: "var(--7yi-paper)" }}
-        >
-          <Group justify="space-between" wrap="nowrap">
-            <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
-              Last result
-            </Text>
-            <Text size="sm" fw={600} className="seven-year-itch-dice" c="var(--7yi-amber)">
-              {lastRollText}
-            </Text>
-          </Group>
-        </Paper>
-
-        <Paper
-          radius="md"
-          p="md"
-          withBorder
-          style={{ borderColor: "var(--7yi-amber-dim)", background: "var(--7yi-paper)" }}
-        >
-          <Text size="xs" tt="uppercase" c="dimmed" fw={700} mb="sm">
-            Wire
-          </Text>
-          <Stack gap={6}>
-            {feed.length === 0 ? (
-              <Text size="sm" c="dimmed" fs="italic">
-                Quiet as a closed grand jury…
-              </Text>
-            ) : (
-              feed.map((ln, i) => (
-                <Text key={`${i}-${ln.text}`} size="sm" c={lineColor(ln.kind)}>
-                  {ln.text}
-                </Text>
-              ))
-            )}
-          </Stack>
-        </Paper>
+        <Group justify="space-between" wrap="nowrap">
+          <Button variant="subtle" color="gray" size="xs" onClick={() => setLogOpen(true)}>
+            Rolls / results
+          </Button>
+          <Button variant="subtle" color="gray" size="xs" onClick={() => setLeaveOpen(true)}>
+            Save and return later
+          </Button>
+        </Group>
       </Stack>
 
-      <Modal opened={leaveOpen} onClose={() => setLeaveOpen(false)} title="Leave the table?">
+      <Modal opened={loreOpen} onClose={() => setLoreOpen(false)} title={loreState.title} centered>
+        <Stack gap="sm">
+          <Text size="sm">{loreState.body}</Text>
+          <SimpleGrid cols={3} spacing="xs">
+            <Paper p="xs" withBorder>
+              <Text size="xs" c="dimmed">On felt</Text>
+              <Text fw={700}>{totalOnLayout(bets).toLocaleString()}</Text>
+            </Paper>
+            <Paper p="xs" withBorder>
+              <Text size="xs" c="dimmed">Net</Text>
+              <Text fw={700}>{(wealth - buyIn).toLocaleString()}</Text>
+            </Paper>
+            <Paper p="xs" withBorder>
+              <Text size="xs" c="dimmed">Heat</Text>
+              <Text fw={700}>{heatRolls}/{HEAT_ROLLS}</Text>
+            </Paper>
+          </SimpleGrid>
+          {activeBonus ? (
+            <Text size="sm" c="var(--7yi-amber)">
+              Active favor: {activeBonus.title}
+            </Text>
+          ) : null}
+        </Stack>
+      </Modal>
+
+      <Modal opened={bonusChoices.length > 0} onClose={() => setBonusChoices([])} title="The heat boils over" centered>
+        <Stack gap="sm">
+          <Text size="sm" c="dimmed">
+            Pick one favor before the cops cool down.
+          </Text>
+          {bonusChoices.map((bonus) => (
+            <Button
+              key={bonus.id}
+              variant="light"
+              color="orange"
+              onClick={() => {
+                setActiveBonus(bonus);
+                setBonusChoices([]);
+              }}
+            >
+              {bonus.title} — {bonus.description}
+            </Button>
+          ))}
+        </Stack>
+      </Modal>
+
+      <Modal opened={logOpen} onClose={() => setLogOpen(false)} title="Roll wire" centered>
+        <Stack gap={6}>
+          {feed.length === 0 ? (
+            <Text size="sm" c="dimmed" fs="italic">
+              Quiet as a closed grand jury…
+            </Text>
+          ) : (
+            feed.map((ln, i) => (
+              <Text key={`${i}-${ln.text}`} size="sm" c={lineColor(ln.kind)}>
+                {ln.text}
+              </Text>
+            ))
+          )}
+        </Stack>
+      </Modal>
+
+      <Modal opened={leaveOpen} onClose={() => setLeaveOpen(false)} title="Game saved">
         <Stack gap="md">
           <Text size="sm">
-            Cash out <strong>{wealth.toLocaleString()}</strong> credits back to the club (subject to table caps and
-            specials).
+            The club will keep this table warm. Come back through the menu to resume this session; early cash-out is
+            disabled.
           </Text>
-          <Group justify="flex-end">
-            <Button variant="default" onClick={() => setLeaveOpen(false)}>
-              Stay
-            </Button>
-            <Button color="orange" onClick={confirmLeave}>
-              Settle up
-            </Button>
-          </Group>
+          <Button color="orange" onClick={props.onPauseToClub}>
+            Back to the bar
+          </Button>
         </Stack>
       </Modal>
     </Box>

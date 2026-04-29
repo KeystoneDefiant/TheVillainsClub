@@ -4,6 +4,8 @@ import {
   ALL_HOP_KEYS,
   HARDWAY_NUMBERS,
   POINT_NUMBERS,
+  placeBetTotalReturn,
+  sevenYearItchRackets,
   type HardwayNumber,
   type HopKey,
   type PointNumber,
@@ -69,8 +71,8 @@ export function CraplessTableFelt({
   onRoll,
   maxOddsDisplay,
 }: CraplessTableFeltProps) {
-  const leftPlaces = POINT_NUMBERS.filter((n) => n <= 6);
-  const rightPlaces = POINT_NUMBERS.filter((n) => n >= 8);
+  const topPlaces = POINT_NUMBERS.filter((n) => n <= 6);
+  const bottomPlaces = POINT_NUMBERS.filter((n) => n >= 8);
   const hornOnLayout = bets.hornUnit * 4;
 
   return (
@@ -108,57 +110,9 @@ export function CraplessTableFelt({
         </button>
       </div>
 
-      <div className="yi-felt-hopBlock" aria-label="Hopping bets">
-        <Text className="yi-felt-sectionLabel" size="xs" tt="uppercase" c="dimmed" fw={600}>
-          Hop (one roll)
-        </Text>
-        <div className="yi-felt-hopGrid">
-          {ALL_HOP_KEYS.map((key) => (
-            <button
-              type="button"
-              key={key}
-              className="yi-felt-hop"
-              data-testid={`felt-hop-${key}`}
-              onClick={() => onHopPrimary(key)}
-              onContextMenu={(e) => {
-                preventCtx(e);
-                onHopSecondary(key);
-              }}
-            >
-              <span className="yi-felt-hop-key">{key}</span>
-              <span className="yi-felt-hop-amt">{(bets.hops[key] ?? 0) > 0 ? bets.hops[key] : ""}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="yi-felt-hardBlock" aria-label="Hardways">
-        <Text className="yi-felt-sectionLabel" size="xs" tt="uppercase" c="dimmed" fw={600}>
-          Hardways
-        </Text>
-        <div className="yi-felt-hardRow">
-          {HARDWAY_NUMBERS.map((hw) => (
-            <button
-              type="button"
-              key={hw}
-              className="yi-felt-hard"
-              data-testid={`felt-hard-${hw}`}
-              onClick={() => onHardwayPrimary(hw)}
-              onContextMenu={(e) => {
-                preventCtx(e);
-                onHardwaySecondary(hw);
-              }}
-            >
-              <span className="yi-felt-hard-label">Hard {hw}</span>
-              <span className="yi-felt-hard-amt">{(bets.hardways[hw] ?? 0) > 0 ? bets.hardways[hw] : ""}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
       <div className="yi-felt-placeArc" aria-label="Place bets">
         <div className="yi-felt-placeRow">
-          {leftPlaces.map((pk) => (
+          {topPlaces.map((pk) => (
             <PlaceCell
               key={pk}
               pk={pk}
@@ -170,10 +124,12 @@ export function CraplessTableFelt({
               onSecondary={() => onPlaceSecondary(pk)}
             />
           ))}
-          <div className="yi-felt-no7" aria-hidden="true">
-            <span className="yi-felt-no7-inner">7</span>
-          </div>
-          {rightPlaces.map((pk) => (
+        </div>
+        <div className="yi-felt-no7" aria-hidden="true">
+          <span className="yi-felt-no7-inner">7 · The Bust</span>
+        </div>
+        <div className="yi-felt-placeRow">
+          {bottomPlaces.map((pk) => (
             <PlaceCell
               key={pk}
               pk={pk}
@@ -231,6 +187,57 @@ export function CraplessTableFelt({
           {passLocked ? <span className="yi-felt-pass-lock">Locked — point in play</span> : null}
         </button>
       </div>
+
+      <details className="yi-felt-oneRoll">
+        <summary>More one-roll bets</summary>
+        <div className="yi-felt-hopBlock" aria-label="Hopping bets">
+          <Text className="yi-felt-sectionLabel" size="xs" tt="uppercase" c="dimmed" fw={600}>
+            Hop
+          </Text>
+          <div className="yi-felt-hopGrid">
+            {ALL_HOP_KEYS.map((key) => (
+              <button
+                type="button"
+                key={key}
+                className="yi-felt-hop"
+                data-testid={`felt-hop-${key}`}
+                onClick={() => onHopPrimary(key)}
+                onContextMenu={(e) => {
+                  preventCtx(e);
+                  onHopSecondary(key);
+                }}
+              >
+                <span className="yi-felt-hop-key">{key}</span>
+                <span className="yi-felt-hop-amt">{(bets.hops[key] ?? 0) > 0 ? bets.hops[key] : ""}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="yi-felt-hardBlock" aria-label="Hardways">
+          <Text className="yi-felt-sectionLabel" size="xs" tt="uppercase" c="dimmed" fw={600}>
+            Hardways
+          </Text>
+          <div className="yi-felt-hardRow">
+            {HARDWAY_NUMBERS.map((hw) => (
+              <button
+                type="button"
+                key={hw}
+                className="yi-felt-hard"
+                data-testid={`felt-hard-${hw}`}
+                onClick={() => onHardwayPrimary(hw)}
+                onContextMenu={(e) => {
+                  preventCtx(e);
+                  onHardwaySecondary(hw);
+                }}
+              >
+                <span className="yi-felt-hard-label">Hard {hw}</span>
+                <span className="yi-felt-hard-amt">{(bets.hardways[hw] ?? 0) > 0 ? bets.hardways[hw] : ""}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </details>
     </div>
   );
 }
@@ -265,7 +272,10 @@ function PlaceCell({
       }}
     >
       <span className="yi-felt-place-num">{pk}</span>
-      <span className="yi-felt-place-amt">{amount > 0 ? amount : ""}</span>
+      <span className="yi-felt-place-name">{sevenYearItchRackets[pk].name}</span>
+      <span className="yi-felt-place-amt">
+        {amount > 0 ? `${placeBetTotalReturn(pk, amount).toLocaleString()} return` : `${placeBetTotalReturn(pk, 5)} on 5`}
+      </span>
       {!disabled ? <span className="yi-felt-chipHintSm">+{chip}</span> : null}
     </button>
   );

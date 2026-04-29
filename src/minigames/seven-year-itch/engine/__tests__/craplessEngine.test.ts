@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { sevenYearItchHeatBonuses, sevenYearItchRackets } from "@/config/minigames/sevenYearItchRules";
 import {
   clampFreeOdds,
   initialBets,
@@ -135,5 +136,19 @@ describe("totalOnLayout", () => {
         hardways: { 6: 10 },
       }),
     ).toBe(10 + 20 + 10 + 15 + 8 + 5 + 10);
+  });
+});
+
+describe("7 Year Itch lore and heat config", () => {
+  it("defines every crapless point as a named business racket", () => {
+    expect(sevenYearItchRackets[2].name).toBe("Political Graft");
+    expect(sevenYearItchRackets[8].name).toBe("Numbers Games");
+    expect(Object.keys(sevenYearItchRackets)).toHaveLength(10);
+  });
+
+  it("keeps heat powerups data-driven with odds weights and effects", () => {
+    expect(sevenYearItchHeatBonuses.length).toBeGreaterThanOrEqual(3);
+    expect(sevenYearItchHeatBonuses.every((bonus) => bonus.pullWeight > 0)).toBe(true);
+    expect(sevenYearItchHeatBonuses.map((bonus) => bonus.effect.type)).toContain("shield_next_seven");
   });
 });

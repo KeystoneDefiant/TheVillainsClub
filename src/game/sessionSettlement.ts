@@ -40,6 +40,7 @@ export type SevenYearItchShellBinding = {
   sessionCredits: number;
   settlement: OublietteSettlementProfile;
   onReturnToClubMenu?: (detail: ClubTableReturnDetail) => void;
+  onPauseToClub?: () => void;
 };
 
 export function buildOublietteSettlementProfile(buyIn: number, now: Date = new Date()): OublietteSettlementProfile {

@@ -25,6 +25,68 @@ export const sevenYearItchTableConfig = {
   maxPassBetFractionOfBuyIn: 0.25 as number,
 } as const;
 
+export const sevenYearItchRackets = {
+  2: { name: "Political Graft", risk: "Extreme", story: "City Hall opens a side door and the councilmen start taking envelopes." },
+  3: { name: "Diamond Smuggling", risk: "High", story: "A velvet pouch crosses the border under a customs man's hat." },
+  4: { name: "Union Extortion", risk: "Mid", story: "The loading dock votes your way after one quiet conversation." },
+  5: { name: "Speakeasies", risk: "Stable", story: "The back room fills, the glasses sweat, and the till starts singing." },
+  6: { name: "Protection Rackets", risk: "Low", story: "Every storefront on the block remembers who keeps the windows intact." },
+  8: { name: "Numbers Games", risk: "Low", story: "Policy slips flutter through the neighborhood like confetti with a price." },
+  9: { name: "Underground Casinos", risk: "Stable", story: "The roulette wheel is honest enough to keep the suckers comfortable." },
+  10: { name: "Dockside Smuggling", risk: "Mid", story: "A crate loses its manifest and gains a police escort." },
+  11: { name: "Luxury Heists", risk: "High", story: "The penthouse safe coughs up diamonds before dessert is cleared." },
+  12: { name: "High Commission", risk: "Extreme", story: "The boardroom signs a deal so dirty even the ink wants a lawyer." },
+} as const satisfies Record<PointNumber, { name: string; risk: string; story: string }>;
+
+export type SevenYearItchHeatBonusId =
+  | "look_the_other_way"
+  | "inside_man"
+  | "kingpins_cut"
+  | "aggressive_expansion";
+
+export type SevenYearItchHeatBonus = {
+  id: SevenYearItchHeatBonusId;
+  title: string;
+  description: string;
+  pullWeight: number;
+  effect: {
+    type: "shield_next_seven" | "next_non_seven_multiplier" | "place_hit_multiplier" | "risk_reward_multiplier";
+    value: number;
+    risk?: "seven_forfeits_table";
+  };
+};
+
+export const sevenYearItchHeatBonuses: readonly SevenYearItchHeatBonus[] = [
+  {
+    id: "look_the_other_way",
+    title: "The Look the Other Way",
+    description: "Ignore the next 7. Heat drops and the investigation keeps breathing.",
+    pullWeight: 38,
+    effect: { type: "shield_next_seven", value: 1 },
+  },
+  {
+    id: "inside_man",
+    title: "The Inside Man",
+    description: "Next non-7 roll pays an extra 25% as a crooked clerk tips the ledger.",
+    pullWeight: 28,
+    effect: { type: "next_non_seven_multiplier", value: 1.25 },
+  },
+  {
+    id: "kingpins_cut",
+    title: "The Kingpin's Cut",
+    description: "The next place hit pays double. Miss it and the boss still wants his name on the door.",
+    pullWeight: 22,
+    effect: { type: "place_hit_multiplier", value: 2 },
+  },
+  {
+    id: "aggressive_expansion",
+    title: "Aggressive Expansion",
+    description: "Double the next non-7 payout, but a 7 forfeits everything still on the felt.",
+    pullWeight: 12,
+    effect: { type: "risk_reward_multiplier", value: 2, risk: "seven_forfeits_table" },
+  },
+] as const;
+
 export function isPointNumber(n: number): n is PointNumber {
   return n !== 7 && n >= 2 && n <= 12;
 }

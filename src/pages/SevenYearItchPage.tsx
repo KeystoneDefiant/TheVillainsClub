@@ -48,8 +48,9 @@ export function SevenYearItchPage() {
       sessionCredits: activeSession.sessionWallet,
       settlement: activeSession.settlement,
       onReturnToClubMenu: handleReturnToClub,
+      onPauseToClub: () => navigate("/bar", { replace: true }),
     };
-  }, [activeSession, handleReturnToClub]);
+  }, [activeSession, handleReturnToClub, navigate]);
 
   if (!shellProps) {
     return null;
@@ -60,7 +61,7 @@ export function SevenYearItchPage() {
       className={reduceMotion ? undefined : "shell-route-fade-in"}
       style={{
         height: "100%",
-        overflow: "auto",
+        overflow: "hidden",
         transform: "translate3d(0, 0, 0)",
         backfaceVisibility: "hidden",
         opacity: reduceMotion ? 1 : undefined,

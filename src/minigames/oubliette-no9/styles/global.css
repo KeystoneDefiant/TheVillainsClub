@@ -42,6 +42,26 @@ code {
   min-height: 100dvh;
 }
 
+.oubliette-mobile-fit {
+  height: 100%;
+  overflow: hidden;
+}
+
+.oubliette-mobile-fit .game-panel {
+  max-height: calc(100dvh - 1.25rem);
+}
+
+@media (max-width: 640px), (max-height: 760px) {
+  .oubliette-mobile-fit {
+    font-size: clamp(0.78rem, 2.9vw, 0.92rem);
+  }
+
+  .oubliette-mobile-fit .game-panel {
+    transform: scale(0.94);
+    transform-origin: top center;
+  }
+}
+
 /* Hide scrollbars globally - prevents always-visible scrollbar; scrolling still works via mouse/touch */
 * {
   scrollbar-width: none; /* Firefox */

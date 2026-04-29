@@ -35,6 +35,16 @@
   }
 }
 
+@keyframes club-bottle-glow {
+  0%,
+  100% {
+    opacity: 0.56;
+  }
+  50% {
+    opacity: 0.86;
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .shell-intro-tagline {
     opacity: 0;
@@ -66,6 +76,138 @@
     backface-visibility: hidden;
     will-change: opacity, transform;
     animation: shell-route-fade-in var(--shell-route-fade-dur, 0.35s) ease-out forwards;
+  }
+}
+
+.club-landing {
+  position: relative;
+  min-height: 100%;
+  height: 100%;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.club-landing__threshold,
+.club-landing__menu,
+.club-landing__game {
+  position: relative;
+  z-index: 4;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: clamp(1rem, 3vw, 2rem);
+}
+
+.club-landing__threshold {
+  justify-content: center;
+}
+
+.club-landing__menu,
+.club-landing__game {
+  justify-content: flex-start;
+}
+
+.club-landing__shelves {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.75s ease;
+  background:
+    radial-gradient(circle at 18% 22%, rgba(211, 149, 70, 0.26) 0 8px, transparent 9px 100%),
+    radial-gradient(circle at 36% 20%, rgba(118, 38, 46, 0.34) 0 7px, transparent 8px 100%),
+    radial-gradient(circle at 58% 24%, rgba(211, 149, 70, 0.2) 0 9px, transparent 10px 100%),
+    radial-gradient(circle at 78% 19%, rgba(62, 104, 72, 0.28) 0 8px, transparent 9px 100%),
+    linear-gradient(90deg, transparent 0 10%, rgba(127, 75, 31, 0.18) 10% 11%, transparent 11% 26%, rgba(127, 75, 31, 0.18) 26% 27%, transparent 27% 44%, rgba(127, 75, 31, 0.18) 44% 45%, transparent 45% 65%, rgba(127, 75, 31, 0.18) 65% 66%, transparent 66%),
+    repeating-linear-gradient(0deg, transparent 0 76px, rgba(141, 87, 39, 0.42) 77px 82px, transparent 83px 150px);
+}
+
+.club-landing--entered .club-landing__shelves {
+  opacity: 1;
+  animation: club-bottle-glow 6s ease-in-out infinite;
+}
+
+.club-landing__bar {
+  position: absolute;
+  z-index: 2;
+  left: -4vw;
+  right: -4vw;
+  bottom: -4px;
+  height: clamp(128px, 25vh, 260px);
+  background:
+    linear-gradient(180deg, rgba(255, 211, 128, 0.18), transparent 30%),
+    repeating-linear-gradient(90deg, rgba(92, 45, 20, 0.95) 0 44px, rgba(115, 61, 28, 0.95) 45px 88px),
+    linear-gradient(180deg, #6d3a1d, #32170d);
+  border-top: 5px solid rgba(216, 161, 81, 0.52);
+  box-shadow: 0 -22px 50px rgba(0, 0, 0, 0.46);
+}
+
+.club-menu-card {
+  position: relative;
+}
+
+.club-menu-card::before {
+  content: "";
+  position: absolute;
+  inset: 10px;
+  border: 1px solid rgba(214, 166, 92, 0.28);
+  border-radius: 12px;
+  pointer-events: none;
+}
+
+.club-menu-card__entry {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.72rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid rgba(214, 166, 92, 0.2);
+  background: rgba(20, 13, 9, 0.46);
+  color: #f2e7d5;
+  cursor: pointer;
+  text-align: left;
+}
+
+.club-menu-card__entry:hover:not(:disabled) {
+  border-color: rgba(214, 166, 92, 0.56);
+  background: rgba(76, 42, 20, 0.38);
+}
+
+.club-menu-card__entry:disabled,
+.club-menu-card__entry[aria-disabled="true"] {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
+
+.club-menu-card__entry span {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.club-menu-card__entry small,
+.club-menu-card__entry em {
+  color: rgba(242, 231, 213, 0.62);
+  font-style: normal;
+  font-size: 0.78rem;
+}
+
+@media (max-width: 640px) {
+  .club-landing__menu,
+  .club-landing__game {
+    align-items: flex-start;
+    padding-top: max(0.75rem, env(safe-area-inset-top, 0px));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .club-landing__shelves {
+    transition: none;
+  }
+
+  .club-landing--entered .club-landing__shelves {
+    animation: none;
   }
 }
 

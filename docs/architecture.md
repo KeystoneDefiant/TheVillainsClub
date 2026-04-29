@@ -1,32 +1,28 @@
-# Architecture (Phases 0–2)
+# Architecture (current React/Electron shell)
 
-## Autoload order
+## Shell flow
 
-Defined in `project.godot`:
+- `src/App.tsx` mounts `ShellBandMusicHost` once inside `BrowserRouter`.
+- `/` plays the VC logo intro, pauses briefly, then routes to `/menu`.
+- `/menu` is the unified landing screen: before entry it shows “Enter the Club” + Settings; after entry it becomes the bar menu.
+- `/bar` renders the same unified menu in entered mode so return-state links and older deep links still work.
+- Minigame entries open a game landing panel first; starting a table creates a `clubWalletStore` session and navigates to `/minigames/*`.
 
-1. **DayCycle** → `core/day_cycle.gd` — effective local date string; `debug_calendar_offset_days` for QA.
-2. **SaveService** → `core/save_service.gd` — `user://villains_club_save.json`, version + migration.
-3. **GameState** → `core/game_state.gd` — credits, daily stipend, `content/specials.json`, `content/loans.json`, loan expiry (real-time unix).
-4. **House band (shell)** → React `ShellBandMusicHost` in `src/audio/useShellBandMusic.ts` — reads **`content/bands.json`** + files under **`public/audio/bands/`**; **one band** active per local **“bar day”** (period **[4:00, next 4:00)**); shuffled full play-through of that band’s `music_files`, then refill; **random short interludes** between tracks per `interlude_chance_between_tracks`. **Keeps playing on `/minigames/*`** (same stream as menu/bar); respects **`clubAudioStore`** music mute/volume.
+## State and audio
 
-## Data flow (simplified)
+- `clubAudioStore` persists music/SFX settings.
+- `clubFlowStore` tracks whether the user entered the club for the current app session.
+- `useShellBandMusic` uses the same house-band stream on shell and minigame routes; volume is 30% of the user setting before entry and fades to the setting after entry.
+- Active band and specials use the local 4AM bar-day boundary.
 
-```mermaid
-flowchart LR
-  subgraph persist [Persistence]
-    SaveService
-  end
-  DayCycle --> GameState
-  SaveService --> GameState
-  GameState --> SaveService
-  DayCycle --> MusicDirector
-  GameState -->|"get_* modifiers"| MinigamesLater[Minigames later]
-```
+## Economy and specials
 
-## Minigame contract (next phases)
+- `clubWalletStore` owns club balance and active table session.
+- `sessionSettlement.ts` applies per-game and all-minigame cap multipliers from `content/specials.json`.
+- Specials resolve through `specialsResolver.ts`; config rows may express payout multipliers, cap multipliers, or a first-buy-in-credit marker for future persisted daily redemption.
 
-Minigames will read **payout** and **max wager** multipliers from `GameState` (`get_special_modifier_product()`, `get_max_wager_multiplier()`) and report outcomes back for credit updates.
+## Minigame contract
 
-## Web notes
-
-Saves use `user://` (browser storage on HTML5). House music should start after a **user gesture** (“Enter bar” in the dev UI).
+- Minigames receive session credits, settlement profile, and shell callbacks from their page wrapper.
+- 7 Year Itch supports `onPauseToClub` so players can leave a live session without cashing out; the wallet session remains active for resume.
+- Settlement still happens only through the minigame’s resolved end state.

@@ -1,8 +1,8 @@
 import type { CSSProperties } from "react";
 
 /**
- * Outer wrapper for in-run Oubliette screens: fixed viewport height, safe-area padding,
- * and clipped overflow so mobile play never requires page scrolling.
+ * Outer wrapper for in-run Oubliette screens: viewport-sized with safe-area padding.
+ * Content should fit when practical, but mobile must be able to scroll when it cannot.
  */
 export const oubliettePlayAreaStyle: CSSProperties = {
   height: "100dvh",
@@ -14,6 +14,7 @@ export const oubliettePlayAreaStyle: CSSProperties = {
   paddingRight: "max(0.75rem, env(safe-area-inset-right, 0px))",
   position: "relative",
   overflowX: "hidden",
-  overflowY: "hidden",
+  overflowY: "auto",
+  overscrollBehavior: "contain",
   userSelect: "none",
 };

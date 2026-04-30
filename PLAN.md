@@ -25,7 +25,7 @@ This document describes **how** the project is built and operated. Overarching o
 
 1. Wire **save persistence** (e.g. `localStorage` or Electron `userData`) to **`clubWalletStore`** (beyond audio).
 2. **Bar flow:** drink catalog from `content/drinks.json`, richer host UI; buy-in already starts from **`/bar`** via `ClubTableGamesSection` + `clubWalletStore.startSession`.
-3. **Oubliette UI pass:** progressively replace Tailwind surfaces with **Mantine** + club primitives where product priority dictates.
+3. **Oubliette UI pass:** mobile play screens now scroll when needed and use tighter small-screen spacing; continue replacing Tailwind surfaces with **Mantine** + club primitives where product priority dictates.
 4. **Content audio manifests:** optional `content/*_sfx.json` mapping into the club audio layer.
 5. Refresh **`docs/architecture.md`** for minigame host boundaries.
 

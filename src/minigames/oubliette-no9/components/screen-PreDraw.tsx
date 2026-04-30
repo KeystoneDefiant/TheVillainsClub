@@ -100,8 +100,8 @@ export function PreDraw({
   }, [canPlayRound, onDealHand, showEndRunConfirm]);
 
   return (
-    <Box component="main" id="preDraw-screen" style={oubliettePlayAreaStyle}>
-      <Stack maw={896} w="100%" mx="auto" gap="md" pb="md">
+    <Box component="main" id="preDraw-screen" className="oubliette-play-area" style={oubliettePlayAreaStyle}>
+      <Stack className="oubliette-play-stack" maw={896} w="100%" mx="auto" gap="md" pb="md">
         <GameHeader
           credits={credits}
           round={round}
@@ -112,8 +112,8 @@ export function PreDraw({
           onShowSettings={onShowSettings}
         />
 
-        <Paper p={{ base: "md", sm: "lg" }} radius="lg" {...panelPaper} style={{ flex: 1, display: "flex" }}>
-          <Stack gap="lg" style={{ flex: 1 }}>
+        <Paper p={{ base: "sm", sm: "lg" }} radius="lg" {...panelPaper} style={{ flex: 1, display: "flex" }}>
+          <Stack className="oubliette-compact-stack" gap="lg" style={{ flex: 1 }}>
             <Title order={2} ta="center" c={clubTokens.text.brass} fz={{ base: "1.35rem", sm: "1.75rem" }}>
               {gameOver ? "Game Over" : "Ready to Play?"}
             </Title>
@@ -171,27 +171,27 @@ export function PreDraw({
 
             <Stack gap="md" style={{ flex: 1 }}>
               <SimpleGrid cols={{ base: 1, xs: 3 }} spacing="sm">
-                <Paper p="sm" radius="md" ta="center" className="game-panel-muted">
+                <Paper p={{ base: 6, sm: "sm" }} radius="md" ta="center" className="game-panel-muted">
                   <Text size="xs" c={clubTokens.text.muted} tt="uppercase" fw={600}>
                     Bet
                   </Text>
-                  <Text size="lg" fw={700} c={clubTokens.text.primary}>
+                  <Text fz={{ base: "0.95rem", sm: "1.125rem" }} fw={700} c={clubTokens.text.primary}>
                     {formatCredits(minimumBet)}
                   </Text>
                 </Paper>
-                <Paper p="sm" radius="md" ta="center" className="game-panel-muted">
+                <Paper p={{ base: 6, sm: "sm" }} radius="md" ta="center" className="game-panel-muted">
                   <Text size="xs" c={clubTokens.text.muted} tt="uppercase" fw={600}>
                     Hands
                   </Text>
-                  <Text size="lg" fw={700} c={clubTokens.text.primary}>
+                  <Text fz={{ base: "0.95rem", sm: "1.125rem" }} fw={700} c={clubTokens.text.primary}>
                     {handCount}
                   </Text>
                 </Paper>
-                <Paper p="sm" radius="md" ta="center" className="game-panel-muted">
+                <Paper p={{ base: 6, sm: "sm" }} radius="md" ta="center" className="game-panel-muted">
                   <Text size="xs" c={clubTokens.text.muted} tt="uppercase" fw={600}>
                     Cost
                   </Text>
-                  <Text size="lg" fw={700} c={clubTokens.text.brass}>
+                  <Text fz={{ base: "0.95rem", sm: "1.125rem" }} fw={700} c={clubTokens.text.brass}>
                     {formatCredits(totalBetCost)}
                   </Text>
                 </Paper>
@@ -201,7 +201,7 @@ export function PreDraw({
                 onClick={onDealHand}
                 disabled={!canPlayRound}
                 variant="primary"
-                size="lg"
+                size="md"
                 fullWidth
                 aria-label={
                   gameOver
@@ -216,7 +216,7 @@ export function PreDraw({
               <GameButton
                 onClick={() => setShowEndRunConfirm(true)}
                 variant="ghost"
-                size="lg"
+                size="md"
                 fullWidth
                 aria-label="End current run and return to main menu"
               >

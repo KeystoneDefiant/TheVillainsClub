@@ -111,6 +111,7 @@ export function Results({
     <Box
       component="main"
       id="results-screen"
+      className="oubliette-play-area"
       onPointerUp={handleSummaryTap}
       style={{
         ...oubliettePlayAreaStyle,
@@ -118,7 +119,7 @@ export function Results({
         touchAction: "manipulation",
       }}
     >
-      <Stack maw={896} w="100%" mx="auto" gap="md">
+      <Stack className="oubliette-play-stack" maw={896} w="100%" mx="auto" gap="md">
         <GameHeader
           credits={credits}
           round={round}
@@ -128,9 +129,9 @@ export function Results({
           onShowSettings={onShowSettings}
         />
 
-        <Stack gap="md" style={{ flex: 1, overflowY: "auto" }}>
+        <Stack className="oubliette-scroll-section" gap="md" style={{ flex: 1 }}>
           <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-            <Paper {...panelBase}>
+            <Paper {...panelBase} className="oubliette-compact-panel">
               <Title order={3} mb="md" c={clubTokens.text.brass} fz={{ base: "1.15rem", sm: "1.35rem" }}>
                 Hand summary
               </Title>
@@ -148,7 +149,7 @@ export function Results({
               ) : null}
             </Paper>
 
-            <Paper {...panelBase}>
+            <Paper {...panelBase} className="oubliette-compact-panel">
               <Title order={3} mb="md" c={clubTokens.text.brass} fz={{ base: "1.15rem", sm: "1.35rem" }}>
                 Win stats
               </Title>
@@ -185,7 +186,7 @@ export function Results({
             <Paper
               radius="lg"
               p={{ base: "md", sm: "lg" }}
-              className="animate-fadeIn"
+              className="animate-fadeIn oubliette-compact-panel"
               style={{
                 ...panelBase.style,
                 borderColor: clubTokens.text.brass,
@@ -214,7 +215,7 @@ export function Results({
               </Stack>
             </Paper>
 
-            <Paper className="game-panel-muted animate-fadeIn" radius="lg" p={{ base: "md", sm: "lg" }}>
+            <Paper className="game-panel-muted animate-fadeIn oubliette-compact-panel" radius="lg" p={{ base: "md", sm: "lg" }}>
               <Stack gap="md">
                 <Group justify="space-between" wrap="wrap">
                   <Text size="md" fw={600} c={clubTokens.text.primary}>
@@ -334,6 +335,7 @@ export function Results({
             variant={showShopNextRound ? "secondary" : "primary"}
             size="lg"
             fullWidth
+            className="oubliette-action-button"
           >
             {continueLabel}
           </GameButton>

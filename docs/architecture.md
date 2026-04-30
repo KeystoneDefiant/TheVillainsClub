@@ -15,6 +15,7 @@
 - `clubFlowStore` tracks whether the user entered the club for the current app session.
 - `useShellBandMusic` uses the same house-band stream on shell and minigame routes; volume is 30% of the user setting before entry and fades to the setting after entry.
 - Active band and specials use the local 4AM bar-day boundary.
+- Oubliette in-run screens own their viewport scrolling because the shell body is fixed; layouts still compact on mobile to avoid unnecessary scroll where possible.
 
 ## Economy and specials
 

@@ -99,20 +99,23 @@
   transform: translate3d(0, 0, 0);
 }
 
+.shell-intro-logo svg {
+  width: min(420px, 82vw);
+  height: auto;
+}
+
 .shell-intro-logo--raised {
-  transform: translate3d(0, clamp(-64px, -9vh, -32px), 0);
+  transform: translate3d(0, clamp(-42px, -7vh, -18px), 0);
 }
 
 .shell-intro-entry {
-  position: absolute;
-  left: 50%;
-  top: calc(50% + clamp(72px, 15vh, 138px));
-  z-index: 2;
-  transform: translate3d(-50%, 0, 0);
+  position: relative;
+  z-index: 3;
   display: grid;
   justify-items: center;
   gap: 0.55rem;
   width: min(360px, calc(100vw - 2rem));
+  margin: clamp(-0.25rem, 1vh, 0.75rem) auto 0;
   padding: 0;
   color: #f8e7b7;
   background: transparent;
@@ -121,6 +124,12 @@
   text-transform: uppercase;
   letter-spacing: 0.22em;
   font-weight: 800;
+}
+
+.shell-intro-entry:focus-visible {
+  outline: 2px solid rgba(248, 231, 183, 0.82);
+  outline-offset: 8px;
+  border-radius: 999px;
 }
 
 .shell-intro-entry span:first-child {
@@ -278,6 +287,20 @@
 }
 
 @media (max-width: 640px) {
+  .shell-intro-logo svg {
+    width: min(82vw, 340px);
+    height: auto;
+  }
+
+  .shell-intro-logo--raised {
+    transform: translate3d(0, clamp(-28px, -5vh, -12px), 0);
+  }
+
+  .shell-intro-entry {
+    width: min(320px, calc(100vw - 2rem));
+    letter-spacing: 0.16em;
+  }
+
   .club-landing__menu,
   .club-landing__game {
     align-items: flex-start;

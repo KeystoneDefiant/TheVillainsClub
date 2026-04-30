@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, type PointerEvent } from "react";
 import { Box, Group, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 import { clubTokens } from "@/theme/clubTokens";
 import type { Card as CardType, Hand, FailureStateType, GameState } from "../types";
@@ -88,6 +88,12 @@ export function Results({
     return summarizeRoundCombos(parallelHands, rewardTable, betAmount);
   }, [parallelHands, rewardTable, betAmount]);
 
+  const continueLabel = showShopNextRound ? "Continue to Shop" : "Continue";
+  const handleContinue = () => onReturnToPreDraw(totalPayout);
+  const handleSummaryTap = (event: PointerEvent<HTMLElement>) => {
+    if (event.pointerType !== "touch") return;
+    handleContinue();
+  };
   const profit =
     totalPayout -
     betAmount * selectedHandCount -
@@ -102,7 +108,16 @@ export function Results({
   void _totalEarnings;
 
   return (
-    <Box component="main" id="results-screen" style={oubliettePlayAreaStyle}>
+    <Box
+      component="main"
+      id="results-screen"
+      onPointerUp={handleSummaryTap}
+      style={{
+        ...oubliettePlayAreaStyle,
+        cursor: "pointer",
+        touchAction: "manipulation",
+      }}
+    >
       <Stack maw={896} w="100%" mx="auto" gap="md">
         <GameHeader
           credits={credits}
@@ -314,12 +329,13 @@ export function Results({
           </SimpleGrid>
 
           <GameButton
-            onClick={() => onReturnToPreDraw(totalPayout)}
+            onClick={handleContinue}
+            onPointerUp={(event) => event.stopPropagation()}
             variant={showShopNextRound ? "secondary" : "primary"}
             size="lg"
             fullWidth
           >
-            {showShopNextRound ? "Continue to Shop" : "Continue"}
+            {continueLabel}
           </GameButton>
         </Stack>
       </Stack>

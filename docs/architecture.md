@@ -3,10 +3,11 @@
 ## Shell flow
 
 - `src/App.tsx` mounts `ShellBandMusicHost` once inside `BrowserRouter`.
-- `/` plays the VC logo intro, pauses briefly, then routes to `/menu`.
+- `/` plays the VC logo intro, keeps the mark on screen, then exposes an “Enter the Club” prompt that moves into `/bar`.
 - `/menu` is the unified landing screen: before entry it shows “Enter the Club” + Settings; after entry it becomes the bar menu.
 - `/bar` renders the same unified menu in entered mode so return-state links and older deep links still work.
 - Minigame entries open a game landing panel first; starting a table creates a `clubWalletStore` session and navigates to `/minigames/*`.
+- `/oubliette-no9` is a configurable standalone landing for Oubliette No. 9; disable it with `VITE_OUBLIETTE_NO9_STANDALONE=false`.
 
 ## State and audio
 
@@ -23,6 +24,6 @@
 
 ## Minigame contract
 
-- Minigames receive session credits, settlement profile, and shell callbacks from their page wrapper.
+- Minigames receive session credits, settlement profile, and shell callbacks from their page wrapper; Oubliette can also run standalone without shell settlement callbacks when launched outside a wallet session.
 - 7 Year Itch supports `onPauseToClub` so players can leave a live session without cashing out; the wallet session remains active for resume.
 - Settlement still happens only through the minigame’s resolved end state.

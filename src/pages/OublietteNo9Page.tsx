@@ -1,6 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo } from "react";
 import { Box, Loader, Text } from "@mantine/core";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { MinigameLazyErrorBoundary } from "@/components/errors/MinigameLazyErrorBoundary";
 import { buildBarRouteStateFromReturn } from "@/game/barRouteState";
 import type { ClubTableReturnDetail, OublietteShellBinding } from "@/game/sessionSettlement";
@@ -8,15 +8,27 @@ import { useClubWallet } from "@/game/clubWalletStore";
 import { disposeOublietteAudio } from "@/minigames/oubliette-no9/hooks/useThemeAudio";
 import { usePrefersReducedMotion } from "@/motion/usePrefersReducedMotion";
 import { clubTokens } from "@/theme/clubTokens";
+import { OUBLIETTE_STANDALONE_ROUTE } from "@/config/standaloneLanding";
 
 import "@/minigames/oubliette-no9/styles/global.css";
 
 const OublietteNo9Root = lazy(() => import("@/minigames/oubliette-no9/App"));
 
-export function OublietteNo9Page() {
+type OublietteNo9PageProps = {
+  standalone?: boolean;
+};
+
+export function OublietteNo9Page({ standalone = false }: OublietteNo9PageProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const reduceMotion = usePrefersReducedMotion();
   const activeSession = useClubWallet((s) => s.activeSession);
+  const launchedStandalone =
+    standalone ||
+    (typeof location.state === "object" &&
+      location.state !== null &&
+      "fromStandaloneOubliette" in location.state &&
+      location.state.fromStandaloneOubliette === true);
 
   useEffect(() => {
     document.title = "Oubliette No. 9 — The Villains Club";
@@ -24,9 +36,9 @@ export function OublietteNo9Page() {
 
   useEffect(() => {
     if (!activeSession || activeSession.gameId !== "oubliette_no9") {
-      navigate("/menu", { replace: true });
+      navigate(launchedStandalone ? OUBLIETTE_STANDALONE_ROUTE : "/menu", { replace: true });
     }
-  }, [activeSession, navigate]);
+  }, [activeSession, launchedStandalone, navigate]);
 
   const endSession = useClubWallet((s) => s.endSession);
 
@@ -36,9 +48,13 @@ export function OublietteNo9Page() {
       const buyIn = snap?.buyIn ?? 0;
       const gameId = snap?.gameId ?? "oubliette_no9";
       endSession(detail);
+      if (launchedStandalone) {
+        navigate(OUBLIETTE_STANDALONE_ROUTE, { replace: true });
+        return;
+      }
       navigate("/bar", { replace: true, state: buildBarRouteStateFromReturn(gameId, buyIn, detail) });
     },
-    [endSession, navigate],
+    [endSession, launchedStandalone, navigate],
   );
 
   const shellProps = useMemo((): OublietteShellBinding | null => {
@@ -72,7 +88,7 @@ export function OublietteNo9Page() {
         ...(reduceMotion ? {} : { ["--shell-route-fade-dur" as string]: "0.35s" }),
       }}
     >
-      <MinigameLazyErrorBoundary onLeave={() => navigate("/bar", { replace: true })}>
+      <MinigameLazyErrorBoundary onLeave={() => navigate(launchedStandalone ? OUBLIETTE_STANDALONE_ROUTE : "/bar", { replace: true })}>
         <Suspense
           fallback={
             <Box

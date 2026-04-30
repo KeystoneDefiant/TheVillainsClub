@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
-import { Box, Stack } from "@mantine/core";
+import { Box, Stack, Text } from "@mantine/core";
 import { AnimatePresence, motion } from "framer-motion";
 import { VcLogoIntroMark } from "@/components/intro/VcLogoIntroMark";
 import { VC_LOGO_GREY_LETTER_COUNT } from "@/components/intro/vcLogoIntroPaths";
 import { MenuHazeBackground } from "@/components/layout/MenuHazeBackground";
+import { useClubFlowStore } from "@/game/clubFlowStore";
 import { useMotionPresetStore } from "@/motion/motionPresetStore";
 import { usePrefersReducedMotion } from "@/motion/usePrefersReducedMotion";
 
@@ -12,7 +13,8 @@ export function IntroPage() {
   const navigate = useNavigate();
   const preset = useMotionPresetStore((s) => s.preset);
   const reduceMotion = usePrefersReducedMotion();
-  const [phase, setPhase] = useState<"enter" | "hold" | "exit">("enter");
+  const setHasEnteredClub = useClubFlowStore((s) => s.setHasEnteredClub);
+  const [phase, setPhase] = useState<"enter" | "hold" | "prompt" | "exit">("enter");
   const [skipped, setSkipped] = useState(false);
 
   const greyCount = VC_LOGO_GREY_LETTER_COUNT;
@@ -35,30 +37,36 @@ export function IntroPage() {
   useEffect(() => {
     if (reduceMotion) return;
     if (phase !== "hold" || skipped) return;
-    const t = window.setTimeout(() => setPhase("exit"), preset.introHoldSec * 1000);
+    const t = window.setTimeout(() => setPhase("prompt"), preset.introHoldSec * 1000);
     return () => window.clearTimeout(t);
   }, [phase, skipped, reduceMotion, preset.introHoldSec]);
 
   useEffect(() => {
     if (reduceMotion) return;
     if (phase !== "exit") return;
-    const t = window.setTimeout(() => navigate("/menu", { replace: true }), preset.introFadeOut * 1000 + 120);
+    const t = window.setTimeout(() => navigate("/bar", { replace: true }), preset.introFadeOut * 1000 + 120);
     return () => window.clearTimeout(t);
   }, [phase, navigate, preset.introFadeOut, reduceMotion]);
 
   useEffect(() => {
     if (!reduceMotion) return;
-    const t = window.setTimeout(() => navigate("/menu", { replace: true }), 650);
+    const t = window.setTimeout(() => setPhase("prompt"), 650);
     return () => window.clearTimeout(t);
-  }, [reduceMotion, navigate]);
+  }, [reduceMotion]);
 
   const skip = useCallback(() => {
     setSkipped(true);
-    setPhase("exit");
+    setPhase("prompt");
+  }, []);
+
+  const enterClub = useCallback(() => {
+    setHasEnteredClub(true);
     if (reduceMotion) {
-      navigate("/menu", { replace: true });
+      navigate("/bar", { replace: true });
+      return;
     }
-  }, [navigate, reduceMotion]);
+    setPhase("exit");
+  }, [navigate, reduceMotion, setHasEnteredClub]);
 
   const easing = preset.easing;
   const instant = reduceMotion;
@@ -78,14 +86,15 @@ export function IntroPage() {
       onKeyDown={(e) => {
         if (phase === "hold" && (e.key === "Enter" || e.key === " ")) skip();
       }}
-      tabIndex={0}
-      role="button"
-      aria-label="Continue"
+      tabIndex={phase === "hold" ? 0 : undefined}
+      role={phase === "hold" ? "button" : undefined}
+      aria-label={phase === "hold" ? "Continue" : undefined}
       style={{
         position: "relative",
         height: "100%",
         outline: "none",
-        cursor: "pointer",
+        cursor: phase === "hold" ? "pointer" : "default",
+        ["--shell-intro-ease" as string]: `cubic-bezier(${preset.easing.join(",")})`,
       }}
     >
       <MenuHazeBackground />
@@ -114,7 +123,7 @@ export function IntroPage() {
               transition={instant ? { duration: 0 } : { duration: preset.introTitleDuration, ease: easing }}
               style={introShellStyle}
             >
-              <Box mb="sm" style={{ display: "flex", justifyContent: "center" }}>
+              <Box mb="sm" className={`shell-intro-logo ${phase === "prompt" ? "shell-intro-logo--raised" : ""}`}>
                 <VcLogoIntroMark
                   scale={1}
                   zoomDurationSec={logoZoomSec}
@@ -122,6 +131,21 @@ export function IntroPage() {
                   easing={easing}
                 />
               </Box>
+              {phase === "prompt" ? (
+                <motion.button
+                  type="button"
+                  className="shell-intro-entry"
+                  onClick={enterClub}
+                  initial={instant ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={instant ? { duration: 0 } : { duration: 0.55, ease: easing }}
+                >
+                  <Text component="span" fz={{ base: "1rem", sm: "1.15rem" }}>
+                    Enter the Club
+                  </Text>
+                  <span className="shell-intro-entry__hint">Tap to step inside</span>
+                </motion.button>
+              ) : null}
             </motion.div>
           ) : null}
         </AnimatePresence>

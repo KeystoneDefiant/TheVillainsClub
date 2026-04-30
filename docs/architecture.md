@@ -6,7 +6,7 @@
 - `/` plays the VC logo intro, keeps the mark on screen, then exposes an “Enter the Club” prompt that moves into `/bar`.
 - `/menu` is the unified landing screen: before entry it shows “Enter the Club” + Settings; after entry it becomes the bar menu.
 - `/bar` renders the same unified menu in entered mode so return-state links and older deep links still work.
-- Minigame entries open a game landing panel first; starting a table creates a `clubWalletStore` session and navigates to `/minigames/*`.
+- Minigame entries open a game landing panel first; starting a table creates a `clubWalletStore` session and navigates to `/minigames/*`. Shell-bound Oubliette sessions skip its legacy in-minigame menu and open at pre-draw.
 - `/oubliette-no9` is a configurable standalone landing for Oubliette No. 9; disable it with `VITE_OUBLIETTE_NO9_STANDALONE=false`.
 
 ## State and audio

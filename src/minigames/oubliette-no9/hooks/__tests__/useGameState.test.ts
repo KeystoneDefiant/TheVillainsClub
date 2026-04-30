@@ -32,6 +32,29 @@ describe('useGameState', () => {
     expect(result.current.addWildCard).toBeTypeOf('function');
   });
 
+  it('should start shell-bound games directly at pre-draw', () => {
+    const { result } = renderHook(() =>
+      useGameState({
+        sessionCredits: 2000,
+        settlement: {
+          buyIn: 2000,
+          maxReturnMultipleOfBuyIn: 50,
+          capModifierProduct: 1,
+          overachievement: {
+            capMultiple: 50,
+            buyInSlab: 1,
+            tierStepMultiple: 5,
+            bonusMultipleOfBuyInPerTier: 5,
+          },
+        },
+        onReturnToClubMenu: vi.fn(),
+      }),
+    );
+
+    expect(result.current.state.screen).toBe('game');
+    expect(result.current.state.gamePhase).toBe('preDraw');
+  });
+
   it('should start with menu screen', () => {
     const { result } = renderHook(() => useGameState());
     expect(result.current.state.screen).toBe('menu');

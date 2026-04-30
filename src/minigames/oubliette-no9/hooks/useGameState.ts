@@ -29,7 +29,7 @@ function loadAnimationSettings(): GameState['animationSpeedMode'] {
 
 function createInitialState(shell?: OublietteShellBinding | null): GameState {
   return {
-    screen: "menu",
+    screen: shell ? "game" : "menu",
     gamePhase: "preDraw",
     isGeneratingHands: false,
     playerHand: [],

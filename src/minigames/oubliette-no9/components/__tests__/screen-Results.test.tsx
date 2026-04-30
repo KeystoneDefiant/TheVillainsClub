@@ -265,6 +265,18 @@ describe('Results Component', () => {
       expect(mockProps.onReturnToPreDraw).toHaveBeenCalledTimes(1);
     });
 
+    it('should advance when the mobile summary screen is tapped', () => {
+      const { container } = render(<Results {...mockProps} />);
+      fireEvent.pointerUp(container.querySelector('#results-screen')!, { pointerType: 'touch' });
+      expect(mockProps.onReturnToPreDraw).toHaveBeenCalledTimes(1);
+    });
+
+    it('should ignore mouse pointer taps on the summary screen', () => {
+      const { container } = render(<Results {...mockProps} />);
+      fireEvent.pointerUp(container.querySelector('#results-screen')!, { pointerType: 'mouse' });
+      expect(mockProps.onReturnToPreDraw).not.toHaveBeenCalled();
+    });
+
     it('should be enabled', () => {
       render(<Results {...mockProps} />);
       const continueButton = screen.getByRole('button', { name: /Continue/i });

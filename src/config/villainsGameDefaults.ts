@@ -12,6 +12,8 @@ export const villainsGameDefaults = {
   oublietteNo9: {
     /** Default stake when starting a table (static for now; specials may vary later). */
     defaultBuyIn: 2000,
+    /** Enables the standalone `/oubliette-no9` landing outside the club menu. */
+    standaloneLandingEnabled: true,
     /**
      * Max credits **returned to the club** from the session before overachievement bonuses.
      * Effective ceiling: `floor(buyIn * maxReturnMultipleOfBuyIn * oubliette_cap_mult * all_minigames_cap_mult)`.

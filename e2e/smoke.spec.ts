@@ -24,6 +24,17 @@ test("club table buy-in opens Oubliette No. 9", async ({ page }) => {
   await expect(page.getByRole("button", { name: /^start run$/i })).toBeVisible();
 });
 
+test("standalone Oubliette landing starts the table", async ({ page }) => {
+  await page.goto("/oubliette-no9");
+  await expect(page.getByRole("heading", { name: /oubliette no\. 9/i })).toBeVisible();
+  await expect(page.getByText(/standalone table/i)).toBeVisible();
+
+  await page.getByRole("button", { name: /start oubliette/i }).click();
+  await expect(page).toHaveURL(/\/minigames\/oubliette-no9$/);
+  await expect(page.locator("#mainMenu-screen")).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("button", { name: /^start run$/i })).toBeVisible();
+});
+
 test("club table buy-in opens 7 Year Itch", async ({ page }) => {
   await page.goto("/menu");
   await page.getByRole("button", { name: /enter the club/i }).click();

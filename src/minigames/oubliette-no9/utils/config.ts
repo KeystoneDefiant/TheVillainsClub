@@ -101,6 +101,18 @@ export function getCreditsNeededForNextRound(
   return effectiveBet * effectiveHandCount;
 }
 
+/** Returns the next-round cost from the already-advanced round state. */
+export function getCreditsNeededForUpcomingRound(
+  nextRoundMinimumBet: number,
+  betAmount: number,
+  selectedHandCount: number,
+  handCount: number
+): number {
+  const effectiveBet = Math.max(nextRoundMinimumBet, betAmount);
+  const effectiveHandCount = Math.min(selectedHandCount, handCount);
+  return effectiveBet * effectiveHandCount;
+}
+
 /** Returns the displayed round cost for the current bet snapshot and selected hands. */
 export function getCreditsNeededForDisplayedRound(
   displayBetAmount: number,

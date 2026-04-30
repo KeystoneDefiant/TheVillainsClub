@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { getCreditsNeededForDisplayedRound, getCreditsNeededForNextRound } from '../config';
+import {
+  getCreditsNeededForDisplayedRound,
+  getCreditsNeededForNextRound,
+  getCreditsNeededForUpcomingRound,
+} from '../config';
 import { getCurrentGameMode } from '@/config/minigames/oublietteNo9GameRules';
 
 describe('getCreditsNeededForNextRound', () => {
@@ -21,5 +25,13 @@ describe('getCreditsNeededForNextRound', () => {
 
   it('should calculate displayed round cost from the completed-round bet snapshot', () => {
     expect(getCreditsNeededForDisplayedRound(12, 5, 50)).toBe(60);
+  });
+
+  it('should calculate upcoming round cost from already-advanced state', () => {
+    const upcomingMinimumBet = Math.floor(82 * (1 + mode.minimumBetIncreasePercent / 100));
+
+    expect(getCreditsNeededForUpcomingRound(upcomingMinimumBet, upcomingMinimumBet, 10, 10)).toBe(
+      upcomingMinimumBet * 10,
+    );
   });
 });

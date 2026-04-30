@@ -73,7 +73,7 @@ describe('Shop Component', () => {
       expect(screen.getByText(/Credits needed for next round/i).closest('div')?.textContent).toMatch(/80/);
     });
 
-    it('should reflect the already-advanced upcoming minimum bet in the round 18 to 19 shop', () => {
+    it('should reflect the already-advanced upcoming minimum bet in the round 18 shop', () => {
       const selectedHandCount = mode.startingHandCount;
       let currentRoundBet = mode.startingBet;
       for (let round = mode.minimumBetIncreaseInterval; round <= 18; round += mode.minimumBetIncreaseInterval) {

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef } from "react";
 import { Box, Loader, Text } from "@mantine/core";
 import { useLocation, useNavigate } from "react-router-dom";
 import { MinigameLazyErrorBoundary } from "@/components/errors/MinigameLazyErrorBoundary";
@@ -23,6 +23,7 @@ export function OublietteNo9Page({ standalone = false }: OublietteNo9PageProps) 
   const location = useLocation();
   const reduceMotion = usePrefersReducedMotion();
   const activeSession = useClubWallet((s) => s.activeSession);
+  const isReturningToClubRef = useRef(false);
   const launchedStandalone =
     standalone ||
     (typeof location.state === "object" &&
@@ -35,6 +36,7 @@ export function OublietteNo9Page({ standalone = false }: OublietteNo9PageProps) 
   }, []);
 
   useEffect(() => {
+    if (isReturningToClubRef.current) return;
     if (!activeSession || activeSession.gameId !== "oubliette_no9") {
       navigate(launchedStandalone ? OUBLIETTE_STANDALONE_ROUTE : "/menu", { replace: true });
     }
@@ -44,6 +46,7 @@ export function OublietteNo9Page({ standalone = false }: OublietteNo9PageProps) 
 
   const handleReturnToClub = useCallback(
     (detail: ClubTableReturnDetail) => {
+      isReturningToClubRef.current = true;
       const snap = useClubWallet.getState().activeSession;
       const buyIn = snap?.buyIn ?? 0;
       const gameId = snap?.gameId ?? "oubliette_no9";

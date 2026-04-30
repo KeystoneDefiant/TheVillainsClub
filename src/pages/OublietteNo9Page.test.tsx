@@ -42,7 +42,7 @@ describe("OublietteNo9Page", () => {
     renderGameRoute();
 
     fireEvent.click(await screen.findByRole("button", { name: /end current run and return to main menu/i }));
-    fireEvent.click(screen.getByRole("button", { name: /confirm end run/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /confirm end run/i }));
     fireEvent.click(await screen.findByRole("button", { name: /return to main menu/i }));
 
     expect(await screen.findByText("Bar route")).toBeInTheDocument();

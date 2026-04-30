@@ -82,6 +82,7 @@ export const useClubWallet = create<ClubWalletState>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (s) => ({
         clubBalance: s.clubBalance,
+        activeSession: s.activeSession,
         hasSave: s.hasSave,
       }),
     },

@@ -375,11 +375,11 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
         </SimpleGrid>
 
         <Paper radius="md" p="xs" withBorder style={{ borderColor: "var(--7yi-amber-dim)", background: "var(--7yi-paper)" }}>
-          <Group justify="space-between" wrap="nowrap">
-            <Text size="xs" c="dimmed" lineClamp={2}>
+          <Group justify="space-between" wrap="wrap" gap="xs">
+            <Text size="xs" c="dimmed" lineClamp={2} style={{ flex: "1 1 180px", minWidth: 0 }}>
               {loreState.body}
             </Text>
-            <Button variant="subtle" color="orange" size="xs" onClick={() => setLoreOpen(true)}>
+            <Button variant="subtle" color="orange" size="xs" onClick={() => setLoreOpen(true)} style={{ flexShrink: 0 }}>
               Story
             </Button>
           </Group>
@@ -413,27 +413,29 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
           maxOddsDisplay={maxOddsDisplay}
         />
 
-        <Group justify="space-between" wrap="nowrap">
-          <Button variant="subtle" color="gray" size="xs" onClick={() => setLogOpen(true)}>
-            Rolls / results
-          </Button>
-          <Group gap="xs" wrap="nowrap">
-            <Button variant="subtle" color="gray" size="xs" onClick={() => setLeaveOpen(true)}>
-              Save and return later
+        <Paper radius="md" p="xs" withBorder style={{ borderColor: "var(--7yi-amber-dim)", background: "var(--7yi-paper)" }}>
+          <Group justify="space-between" wrap="wrap" gap="xs">
+            <Button variant="subtle" color="gray" size="xs" onClick={() => setLogOpen(true)}>
+              Rolls / results
             </Button>
-            <Button
-              variant={canCashOut ? "light" : "subtle"}
-              color="orange"
-              size="xs"
-              disabled={!canCashOut}
-              onClick={() => setCashOutOpen(true)}
-              aria-label="Cash out to club"
-              title={canCashOut ? "Cash out and settle this table" : "Cash out unlocks when no point is active"}
-            >
-              Cash out
-            </Button>
+            <Group gap="xs" wrap="wrap" justify="flex-end">
+              <Button variant="subtle" color="gray" size="xs" onClick={() => setLeaveOpen(true)}>
+                Save and return later
+              </Button>
+              <Button
+                variant={canCashOut ? "light" : "subtle"}
+                color="orange"
+                size="xs"
+                disabled={!canCashOut}
+                onClick={() => setCashOutOpen(true)}
+                aria-label="Cash out to club"
+                title={canCashOut ? "Cash out and settle this table" : "Cash out unlocks when no point is active"}
+              >
+                Cash out
+              </Button>
+            </Group>
           </Group>
-        </Group>
+        </Paper>
       </Stack>
 
       <Modal opened={loreOpen} onClose={() => setLoreOpen(false)} title={loreState.title} centered>

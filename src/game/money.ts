@@ -3,9 +3,11 @@
  *
  * - `clubBalance` is the persisted global wallet.
  * - `sessionWallet` is the stake isolated for the active minigame session.
+ * - `oublietteState` stores the current table snapshot so resuming does not create a new buy-in.
  * - Minigames never read or write `clubBalance` directly; the shell settles using `settlement` snapshots.
  */
 
+import type { GameState as OublietteGameState } from "@/minigames/oubliette-no9/types";
 import type { OublietteSettlementProfile } from "./sessionSettlement";
 
 export type TableSession = {
@@ -13,6 +15,10 @@ export type TableSession = {
   drinkId: string;
   buyIn: number;
   sessionWallet: number;
+  /** Last resumable round / roll marker reported by a minigame. */
+  progressRound?: number;
+  /** Oubliette state snapshot for resuming without another buy-in. */
+  oublietteState?: OublietteGameState;
   /** Game-specific settlement snapshot (same cap shape for Oubliette and 7 Year Itch; see `sessionSettlement.ts`). */
   settlement: OublietteSettlementProfile;
 };

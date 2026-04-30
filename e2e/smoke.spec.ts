@@ -24,30 +24,25 @@ test("club table buy-in opens Oubliette No. 9", async ({ page }) => {
   await expect(page.locator("#mainMenu-screen")).toHaveCount(0);
 });
 
-test("mobile Oubliette game over can return to the bar", async ({ page }) => {
+test("mobile Oubliette resume returns without another buy-in", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 520 });
   await page.goto("/menu");
   await page.getByRole("button", { name: /enter the club/i }).click();
   await expect(page).toHaveURL(/\/bar$/);
+  const initialBalance = await page.getByText(/credits$/).first().textContent();
 
   await page.getByRole("button", { name: /oubliette no\. 9/i }).click();
   await page.getByRole("button", { name: /start game/i }).click();
   await expect(page).toHaveURL(/\/minigames\/oubliette-no9$/);
 
   await expect(page.locator("#preDraw-screen")).toBeVisible({ timeout: 30_000 });
-  await page.getByRole("button", { name: /end current run and return to main menu/i }).click();
-  await page.getByRole("button", { name: /confirm end run/i }).click();
-
-  const gameOver = page.locator(".game-over-screen");
-  const returnButton = page.getByRole("button", { name: /return to main menu/i });
-  await expect(gameOver).toBeVisible();
-  await expect(returnButton).toBeAttached();
-  await returnButton.scrollIntoViewIfNeeded();
-  await expect(returnButton).toBeInViewport();
-  await returnButton.click();
-
-  await expect(page).toHaveURL(/\/bar$/);
+  await page.goto("/bar");
   await expect(page.getByText("Tonight’s menu", { exact: true })).toBeVisible();
+  await expect(page.getByText(initialBalance ?? "")).toBeVisible();
+  await page.getByRole("button", { name: /oubliette no\. 9/i }).click();
+  await page.getByRole("button", { name: /resume game/i }).click();
+  await expect(page).toHaveURL(/\/minigames\/oubliette-no9$/);
+  await expect(page.locator("#preDraw-screen")).toBeVisible({ timeout: 30_000 });
 });
 
 test("standalone Oubliette landing starts the table", async ({ page }) => {

@@ -57,12 +57,16 @@ export function ClubTableGamesSection() {
 
   const startOubliette = () => {
     setSessionError(null);
-    if (clubBalance < oublietteBuyIn) {
-      setSessionError(startSessionErrorMessage("insufficient_funds"));
+    if (activeSession?.gameId === "oubliette_no9") {
+      navigate("/minigames/oubliette-no9");
       return;
     }
     if (activeSession) {
       setSessionError(startSessionErrorMessage("session_active"));
+      return;
+    }
+    if (clubBalance < oublietteBuyIn) {
+      setSessionError(startSessionErrorMessage("insufficient_funds"));
       return;
     }
     setStartingOubliette(true);
@@ -83,12 +87,16 @@ export function ClubTableGamesSection() {
 
   const startSevenYearItch = () => {
     setSessionError(null);
-    if (clubBalance < sevenYearItchBuyIn) {
-      setSessionError(startSessionErrorMessage("insufficient_funds"));
+    if (activeSession?.gameId === "seven_year_itch") {
+      navigate("/minigames/seven-year-itch");
       return;
     }
     if (activeSession) {
       setSessionError(startSessionErrorMessage("session_active"));
+      return;
+    }
+    if (clubBalance < sevenYearItchBuyIn) {
+      setSessionError(startSessionErrorMessage("insufficient_funds"));
       return;
     }
     setStarting7yi(true);

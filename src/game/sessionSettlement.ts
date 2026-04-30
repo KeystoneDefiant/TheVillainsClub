@@ -4,6 +4,7 @@ import {
   resolveActiveClubSpecial,
   resolveSpecialDefinitionRow,
 } from "./specialsResolver";
+import type { GameState as OublietteGameState } from "@/minigames/oubliette-no9/types";
 
 /** Snapshot at table open; used when settling the session. */
 export type OublietteSettlementProfile = {
@@ -32,6 +33,7 @@ export type ClubTableReturnDetail = {
 export type OublietteShellBinding = {
   sessionCredits: number;
   settlement: OublietteSettlementProfile;
+  savedState?: Partial<OublietteGameState>;
   onReturnToClubMenu?: (detail: ClubTableReturnDetail) => void;
 };
 

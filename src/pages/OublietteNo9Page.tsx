@@ -5,6 +5,7 @@ import { MinigameLazyErrorBoundary } from "@/components/errors/MinigameLazyError
 import { buildBarRouteStateFromReturn } from "@/game/barRouteState";
 import type { ClubTableReturnDetail, OublietteShellBinding } from "@/game/sessionSettlement";
 import { useClubWallet } from "@/game/clubWalletStore";
+import type { GameState as OublietteGameState } from "@/minigames/oubliette-no9/types";
 import { disposeOublietteAudio } from "@/minigames/oubliette-no9/hooks/useThemeAudio";
 import { usePrefersReducedMotion } from "@/motion/usePrefersReducedMotion";
 import { clubTokens } from "@/theme/clubTokens";
@@ -62,9 +63,13 @@ export function OublietteNo9Page({ standalone = false }: OublietteNo9PageProps) 
 
   const shellProps = useMemo((): OublietteShellBinding | null => {
     if (!activeSession || activeSession.gameId !== "oubliette_no9") return null;
+    const savedState =
+      activeSession.oublietteState ??
+      (activeSession.progressRound != null ? ({ round: activeSession.progressRound } satisfies Partial<OublietteGameState>) : undefined);
     return {
       sessionCredits: activeSession.sessionWallet,
       settlement: activeSession.settlement,
+      savedState,
       onReturnToClubMenu: handleReturnToClub,
     };
   }, [activeSession, handleReturnToClub]);

@@ -37,6 +37,8 @@ interface PreDrawProps {
   onShowSettings?: () => void;
 }
 
+const EARLY_CASH_OUT_ROUND = 31;
+
 const panelPaper = {
   styles: {
     root: {
@@ -83,6 +85,7 @@ export function PreDraw({
   const totalBetCost = useMemo(() => minimumBet * handCount, [minimumBet, handCount]);
   const canAffordBet = useMemo(() => credits >= totalBetCost, [credits, totalBetCost]);
   const canPlayRound = useMemo(() => !gameOver && canAffordBet, [gameOver, canAffordBet]);
+  const canCashOutEarly = round >= EARLY_CASH_OUT_ROUND;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -213,15 +216,21 @@ export function PreDraw({
                 {gameOver ? "Cannot Play - Game Over" : "Run Round"}
               </GameButton>
 
-              <GameButton
-                onClick={() => setShowEndRunConfirm(true)}
-                variant="ghost"
-                size="md"
-                fullWidth
-                aria-label="End current run and return to main menu"
-              >
-                End Run
-              </GameButton>
+              {canCashOutEarly ? (
+                <GameButton
+                  onClick={() => setShowEndRunConfirm(true)}
+                  variant="ghost"
+                  size="md"
+                  fullWidth
+                  aria-label="Cash out and return to the club"
+                >
+                  Cash Out
+                </GameButton>
+              ) : (
+                <Text size="xs" c={clubTokens.text.muted} ta="center">
+                  Voluntary cash-out opens at round {EARLY_CASH_OUT_ROUND}.
+                </Text>
+              )}
             </Stack>
           </Stack>
         </Paper>
@@ -230,7 +239,7 @@ export function PreDraw({
       <Modal
         opened={showEndRunConfirm}
         onClose={() => setShowEndRunConfirm(false)}
-        title="End run?"
+        title="Cash out?"
         centered
         overlayProps={{ backgroundOpacity: 0.55 }}
         styles={{
@@ -243,7 +252,7 @@ export function PreDraw({
       >
         <Stack gap="md">
           <Text size="sm" c={clubTokens.text.muted}>
-            Are you sure you want to end your run? You will return to the main menu.
+            Are you sure you want to cash out this run and return to the club?
           </Text>
           <SimpleGrid cols={2} spacing="sm">
             <GameButton onClick={() => setShowEndRunConfirm(false)} variant="ghost" size="md" fullWidth>
@@ -258,7 +267,7 @@ export function PreDraw({
               size="md"
               fullWidth
             >
-              Confirm End Run
+              Confirm Cash Out
             </GameButton>
           </SimpleGrid>
         </Stack>

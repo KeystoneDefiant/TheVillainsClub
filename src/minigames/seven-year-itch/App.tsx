@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Box, Button, Group, Modal, Paper, Progress, SimpleGrid, Stack, Text, Title } from "@mantine/core";
-import type { SevenYearItchShellBinding } from "@/game/sessionSettlement";
+import { computeSevenYearItchReturn, type SevenYearItchShellBinding } from "@/game/sessionSettlement";
 import {
   sevenYearItchTableConfig,
   sevenYearItchHeatBonuses,
@@ -61,6 +61,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
   const [lastD2, setLastD2] = useState(1);
   const [diceRolling, setDiceRolling] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
+  const [cashOutOpen, setCashOutOpen] = useState(false);
 
   const tableRef = useRef(table);
   const betsRef = useRef(bets);
@@ -83,6 +84,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
   const maxOddsDisplay = Math.min(maxOddsCap, maxOddsWallet);
 
   const heat = Math.min(100, (heatRolls / HEAT_ROLLS) * 100);
+  const canCashOut = table.phase === "comeOut" && table.point == null && !diceRolling;
 
   const pickHeatChoices = useCallback(() => {
     const weighted = [...sevenYearItchHeatBonuses].sort((a, b) => b.pullWeight - a.pullWeight);
@@ -415,9 +417,22 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
           <Button variant="subtle" color="gray" size="xs" onClick={() => setLogOpen(true)}>
             Rolls / results
           </Button>
-          <Button variant="subtle" color="gray" size="xs" onClick={() => setLeaveOpen(true)}>
-            Save and return later
-          </Button>
+          <Group gap="xs" wrap="nowrap">
+            <Button variant="subtle" color="gray" size="xs" onClick={() => setLeaveOpen(true)}>
+              Save and return later
+            </Button>
+            <Button
+              variant={canCashOut ? "light" : "subtle"}
+              color="orange"
+              size="xs"
+              disabled={!canCashOut}
+              onClick={() => setCashOutOpen(true)}
+              aria-label="Cash out to club"
+              title={canCashOut ? "Cash out and settle this table" : "Cash out unlocks when no point is active"}
+            >
+              Cash out
+            </Button>
+          </Group>
         </Group>
       </Stack>
 
@@ -486,12 +501,36 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
       <Modal opened={leaveOpen} onClose={() => setLeaveOpen(false)} title="Game saved">
         <Stack gap="md">
           <Text size="sm">
-            The club will keep this table warm. Come back through the menu to resume this session; early cash-out is
-            disabled.
+            The club will keep this table warm. Come back through the menu to resume this session without another buy-in.
           </Text>
           <Button color="orange" onClick={props.onPauseToClub}>
             Back to the bar
           </Button>
+        </Stack>
+      </Modal>
+
+      <Modal opened={cashOutOpen} onClose={() => setCashOutOpen(false)} title="Cash out?" withinPortal={false}>
+        <Stack gap="md">
+          <Text size="sm">
+            There is no active point. Settle this table and return your eligible credits to the club wallet?
+          </Text>
+          <SimpleGrid cols={2} spacing="sm">
+            <Button variant="subtle" color="gray" onClick={() => setCashOutOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              color="orange"
+              onClick={() => {
+                setCashOutOpen(false);
+                props.onReturnToClubMenu?.({
+                  ...computeSevenYearItchReturn(wealth, props.settlement),
+                  tableRound: rollCount,
+                });
+              }}
+            >
+              Confirm cash out
+            </Button>
+          </SimpleGrid>
         </Stack>
       </Modal>
     </Box>

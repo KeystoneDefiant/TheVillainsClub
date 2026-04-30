@@ -37,12 +37,13 @@ describe("OublietteNo9Page", () => {
         buyIn,
         settlement: buildOublietteSettlementProfile(buyIn),
       });
+      useClubWallet.getState().updateActiveSessionProgress({ progressRound: 31 });
     });
 
     renderGameRoute();
 
-    fireEvent.click(await screen.findByRole("button", { name: /end current run and return to main menu/i }));
-    fireEvent.click(await screen.findByRole("button", { name: /confirm end run/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /cash out and return to the club/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /confirm cash out/i }));
     fireEvent.click(await screen.findByRole("button", { name: /return to main menu/i }));
 
     expect(await screen.findByText("Bar route")).toBeInTheDocument();

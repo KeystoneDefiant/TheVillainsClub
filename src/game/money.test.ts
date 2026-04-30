@@ -23,7 +23,10 @@ describe("startTableSession", () => {
       settlement,
     });
     expect(r.ok).toBe(true);
-    if (r.ok) expect(r.session.settlement).toEqual(settlement);
+    if (r.ok) {
+      expect(r.session.settlement).toEqual(settlement);
+      expect(r.session.progressRound).toBeUndefined();
+    }
   });
 
   it("rejects settlement buy-in mismatch", () => {

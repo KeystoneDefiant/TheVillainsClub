@@ -11,7 +11,7 @@ import {
   applyShopCostMultiplier,
   getParallelHandsBundleBaseCost,
   getCreditsNeededForDisplayedRound,
-  getCreditsNeededForNextRound,
+  getCreditsNeededForUpcomingRound,
 } from '../utils/config';
 import { gameConfig, getCurrentGameMode, getShopDisplayName } from '@/config/minigames/oublietteNo9GameRules';
 import './Shop.css';
@@ -36,12 +36,10 @@ interface ShopProps {
   betAmount: number;
   /** Selected hand count for next round (used to show cost for next round) */
   selectedHandCount: number;
+  /** Minimum bet for the upcoming round after round-advance increases have been applied. */
+  nextRoundMinimumBet?: number | null;
   /** Bet size from the round just completed; used for round-cost display in shop. */
   shopDisplayBetAmount?: number | null;
-  /** Round number you will play after leaving the shop (already advanced from results). */
-  nextRoundNumber?: number;
-  /** Minimum bet from the round before `nextRoundNumber`; used when the next round bumps the table minimum. */
-  prevRoundMinimumBetForNextRoundCost?: number | null;
   /** Array of dead cards currently in deck */
   deadCards: { id: string }[];
   /** Number of times dead cards have been removed */
@@ -109,9 +107,8 @@ export function Shop({
   handCount,
   betAmount,
   selectedHandCount,
+  nextRoundMinimumBet = null,
   shopDisplayBetAmount = null,
-  nextRoundNumber,
-  prevRoundMinimumBetForNextRoundCost = null,
   deadCards,
   deadCardRemovalCount,
   wildCards,
@@ -220,10 +217,9 @@ export function Shop({
 
   const displayedRoundBetAmount = shopDisplayBetAmount ?? betAmount;
   const creditsNeededForNextRound =
-    nextRoundNumber != null && prevRoundMinimumBetForNextRoundCost != null
-      ? getCreditsNeededForNextRound(
-          nextRoundNumber,
-          prevRoundMinimumBetForNextRoundCost,
+    nextRoundMinimumBet != null
+      ? getCreditsNeededForUpcomingRound(
+          nextRoundMinimumBet,
           betAmount,
           selectedHandCount,
           handCount,
@@ -231,10 +227,9 @@ export function Shop({
       : getCreditsNeededForDisplayedRound(displayedRoundBetAmount, selectedHandCount, handCount);
 
   const getRoundCostAfterPurchase = (newHandCount: number) =>
-    nextRoundNumber != null && prevRoundMinimumBetForNextRoundCost != null
-      ? getCreditsNeededForNextRound(
-          nextRoundNumber,
-          prevRoundMinimumBetForNextRoundCost,
+    nextRoundMinimumBet != null
+      ? getCreditsNeededForUpcomingRound(
+          nextRoundMinimumBet,
           betAmount,
           newHandCount,
           newHandCount,

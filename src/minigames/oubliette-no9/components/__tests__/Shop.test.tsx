@@ -7,6 +7,7 @@ import {
   applyShopCostMultiplier,
   calculateWildCardCost,
   getCreditsNeededForDisplayedRound,
+  getCreditsNeededForUpcomingRound,
   getParallelHandsBundleBaseCost,
 } from '../../utils/config';
 
@@ -67,24 +68,41 @@ describe('Shop Component', () => {
       expect(label.closest('div')?.textContent).toMatch(new RegExp(String(expectedCost)));
     });
 
-    it('should use the completed-round bet snapshot for next-round cost display', () => {
+    it('should use the completed-round bet snapshot when upcoming minimum is unavailable', () => {
       render(<Shop {...mockProps} betAmount={15} selectedHandCount={8} shopDisplayBetAmount={10} />);
       expect(screen.getByText(/Credits needed for next round/i).closest('div')?.textContent).toMatch(/80/);
     });
 
-    it('should reflect minimum-bet increase for the upcoming round when preview props are set', () => {
-      // Round 6 triggers an increase every 3 rounds (see oublietteNo9GameRules); prev table min was 10.
+    it('should reflect the already-advanced upcoming minimum bet in the round 18 shop', () => {
+      const selectedHandCount = mode.startingHandCount;
+      let currentRoundBet = mode.startingBet;
+      for (let round = mode.minimumBetIncreaseInterval; round <= 18; round += mode.minimumBetIncreaseInterval) {
+        currentRoundBet = Math.floor(currentRoundBet * (1 + mode.minimumBetIncreasePercent / 100));
+      }
+      const upcomingMinimumBet = currentRoundBet;
+      const completedRoundBet = Math.floor(currentRoundBet / (1 + mode.minimumBetIncreasePercent / 100));
+      const expectedCost = getCreditsNeededForUpcomingRound(
+        upcomingMinimumBet,
+        upcomingMinimumBet,
+        selectedHandCount,
+        selectedHandCount,
+      );
+
       render(
         <Shop
           {...mockProps}
-          betAmount={15}
-          selectedHandCount={8}
-          shopDisplayBetAmount={10}
-          nextRoundNumber={6}
-          prevRoundMinimumBetForNextRoundCost={10}
+          betAmount={upcomingMinimumBet}
+          handCount={selectedHandCount}
+          selectedHandCount={selectedHandCount}
+          nextRoundMinimumBet={upcomingMinimumBet}
+          shopDisplayBetAmount={completedRoundBet}
         />,
       );
-      expect(screen.getByText(/Credits needed for next round/i).closest('div')?.textContent).toMatch(/152/);
+      const label = screen.getByText(/Credits needed for next round/i);
+      expect(label.closest('div')?.textContent).toContain(expectedCost.toLocaleString());
+      expect(label.closest('div')?.textContent).not.toContain(
+        (completedRoundBet * selectedHandCount).toLocaleString(),
+      );
     });
 
     it('should display all shop options', () => {

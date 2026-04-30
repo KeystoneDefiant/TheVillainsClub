@@ -18,6 +18,9 @@ type ClubWalletState = {
     buyIn: number;
     settlement: TableSession["settlement"];
   }) => StartClubSessionResult;
+  updateActiveSessionProgress: (
+    patch: Partial<Pick<TableSession, "progressRound" | "oublietteState">>,
+  ) => void;
   endSession: (returned: number | ClubTableReturnDetail) => void;
   creditClub: (amount: number) => void;
   setHasSave: (value: boolean) => void;
@@ -49,6 +52,11 @@ export const useClubWallet = create<ClubWalletState>()(
         });
         return { ok: true };
       },
+      updateActiveSessionProgress: (patch) => {
+        const { activeSession } = get();
+        if (!activeSession) return;
+        set({ activeSession: { ...activeSession, ...patch } });
+      },
       endSession: (returned) => {
         const { clubBalance, activeSession } = get();
         if (!activeSession) return;
@@ -74,6 +82,7 @@ export const useClubWallet = create<ClubWalletState>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (s) => ({
         clubBalance: s.clubBalance,
+        activeSession: s.activeSession,
         hasSave: s.hasSave,
       }),
     },

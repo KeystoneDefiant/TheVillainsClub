@@ -179,16 +179,16 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
   const startGame = useCallback(
     (game: GameMenuEntry) => {
       setSessionError(null);
-      if (clubBalance < game.buyIn) {
-        setSessionError(startSessionErrorMessage("insufficient_funds"));
-        return;
-      }
       if (activeSession) {
         if (activeSession.gameId === game.id) {
           navigate(game.route);
           return;
         }
         setSessionError(startSessionErrorMessage("session_active"));
+        return;
+      }
+      if (clubBalance < game.buyIn) {
+        setSessionError(startSessionErrorMessage("insufficient_funds"));
         return;
       }
       setStartingGame(game.id);

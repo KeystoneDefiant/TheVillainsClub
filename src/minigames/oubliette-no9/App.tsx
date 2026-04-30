@@ -1,6 +1,7 @@
 import { useState, useEffect, lazy, Suspense, useCallback, useMemo } from "react";
 import { Box, CloseButton, Group, Paper, Title } from "@mantine/core";
 import type { OublietteShellBinding } from "@/game/sessionSettlement";
+import { useClubWallet } from "@/game/clubWalletStore";
 import { OUBLIETTE_SCREEN_TRANSITION_MS } from "@/config/minigames/oublietteAudioAssets";
 import { PLAYING_CARD_SURFACE_CLASS } from "@/ui/cards";
 import { clubTokens } from "@/theme/clubTokens";
@@ -30,9 +31,10 @@ export function OublietteNo9Root(props?: OublietteShellBinding) {
     return {
       sessionCredits: props.sessionCredits,
       settlement: props.settlement,
+      savedState: props.savedState,
       onReturnToClubMenu: props.onReturnToClubMenu,
     };
-  }, [props?.sessionCredits, props?.settlement, props?.onReturnToClubMenu]);
+  }, [props?.sessionCredits, props?.settlement, props?.savedState, props?.onReturnToClubMenu]);
   /* eslint-enable react-hooks/exhaustive-deps */
   const [showCredits, setShowCredits] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
@@ -120,6 +122,16 @@ export function OublietteNo9Root(props?: OublietteShellBinding) {
     setAnimationSpeed,
     setCardTheme,
   } = useGameState(shellBinding ?? null);
+
+  const updateActiveSessionProgress = useClubWallet((s) => s.updateActiveSessionProgress);
+
+  useEffect(() => {
+    if (!shellBinding) return;
+    updateActiveSessionProgress({
+      progressRound: state.round,
+      oublietteState: state,
+    });
+  }, [shellBinding, state, updateActiveSessionProgress]);
 
   return (
     <Box

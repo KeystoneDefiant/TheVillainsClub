@@ -111,37 +111,44 @@ describe('PreDraw Component', () => {
     });
   });
 
-  describe("End Run Confirmation", () => {
-    function clickEndRun() {
-      const btn = screen.getByText("End Run").closest("button");
+  describe("Cash Out Confirmation", () => {
+    function clickCashOut() {
+      const btn = screen.getByText("Cash Out").closest("button");
       expect(btn).toBeTruthy();
       fireEvent.click(btn as HTMLButtonElement);
     }
 
-    it("should show confirmation dialog when End Run clicked", async () => {
-      render(<PreDraw {...mockProps} />);
-      clickEndRun();
+    it("should show confirmation dialog when Cash Out clicked at round 31", async () => {
+      render(<PreDraw {...mockProps} round={31} />);
+      clickCashOut();
       expect(await screen.findByText(/Are you sure/i)).toBeInTheDocument();
     });
 
     it("should call onEndRun when confirmed", async () => {
-      render(<PreDraw {...mockProps} />);
-      clickEndRun();
-      const confirmButton = await screen.findByRole("button", { name: /Confirm End Run/i });
+      render(<PreDraw {...mockProps} round={31} />);
+      clickCashOut();
+      const confirmButton = await screen.findByRole("button", { name: /Confirm Cash Out/i });
       fireEvent.click(confirmButton);
       expect(mockProps.onEndRun).toHaveBeenCalledTimes(1);
     });
 
     it("should not call onEndRun when cancelled", async () => {
-      render(<PreDraw {...mockProps} />);
-      clickEndRun();
-      const dialog = (await screen.findByText(/Are you sure you want to end your run/i)).closest(
+      render(<PreDraw {...mockProps} round={31} />);
+      clickCashOut();
+      const dialog = (await screen.findByText(/Are you sure you want to cash out this run/i)).closest(
         '[role="dialog"]',
       );
       expect(dialog).toBeTruthy();
       const cancelButton = within(dialog as HTMLElement).getByRole("button", { name: /^Cancel$/i });
       fireEvent.click(cancelButton);
       expect(mockProps.onEndRun).not.toHaveBeenCalled();
+    });
+
+    it("should hide voluntary cash-out before round 31", () => {
+      render(<PreDraw {...mockProps} round={30} />);
+
+      expect(screen.queryByRole("button", { name: /cash out and return to the club/i })).not.toBeInTheDocument();
+      expect(screen.getByText(/Voluntary cash-out opens at round 31/i)).toBeInTheDocument();
     });
   });
 

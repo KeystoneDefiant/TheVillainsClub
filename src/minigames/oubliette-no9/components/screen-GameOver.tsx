@@ -83,9 +83,14 @@ export function GameOver({
 
   return (
     <Box
-      className="game-over-screen min-h-[100dvh] flex items-center justify-center"
+      className="game-over-screen"
       style={{
         background: `linear-gradient(180deg, ${clubTokens.surface.deepWalnut} 0%, #0d0a0c 50%, #120e10 100%)`,
+        height: "100dvh",
+        minHeight: 0,
+        display: "flex",
+        alignItems: "flex-start",
+        justifyContent: "center",
         overflowX: "hidden",
         overflowY: "auto",
         WebkitOverflowScrolling: "touch",
@@ -104,6 +109,8 @@ export function GameOver({
           boxShadow: "0 20px 60px rgba(0,0,0,0.55), 0 0 0 1px rgba(201, 162, 39, 0.08)",
           background:
             "radial-gradient(circle at top, rgba(201,162,39,0.12), transparent 30%), linear-gradient(180deg, rgba(19,14,16,0.96) 0%, rgba(10,8,10,0.98) 100%)",
+          flexShrink: 0,
+          marginBlock: "auto",
         }}
       >
         <Box className="absolute inset-0 pointer-events-none opacity-60" style={{ zIndex: 0 }}>

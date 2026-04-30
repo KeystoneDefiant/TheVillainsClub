@@ -343,6 +343,21 @@
   .seven-year-itch-frame {
     padding: 0.35rem;
   }
+  .seven-year-itch-storyCard .mantine-Group-root,
+  .seven-year-itch-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .seven-year-itch-actions {
+    background: rgba(20, 16, 12, 0.86);
+    border: 1px solid var(--7yi-amber-dim);
+    border-radius: 10px;
+    padding: 6px;
+  }
+  .seven-year-itch-actions .mantine-Group-root,
+  .seven-year-itch-actions .mantine-Button-root {
+    width: 100%;
+  }
   .yi-felt-place-name {
     display: none;
   }

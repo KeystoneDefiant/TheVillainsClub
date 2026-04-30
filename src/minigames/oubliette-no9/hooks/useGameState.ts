@@ -28,7 +28,8 @@ function loadAnimationSettings(): GameState['animationSpeedMode'] {
 }
 
 function createInitialState(shell?: OublietteShellBinding | null): GameState {
-  return {
+  const savedState = shell?.savedState;
+  const initialState: GameState = {
     screen: shell ? "game" : "menu",
     gamePhase: "preDraw",
     isGeneratingHands: false,
@@ -78,6 +79,21 @@ function createInitialState(shell?: OublietteShellBinding | null): GameState {
     runHighestMultiplier: 1.0,
     animationSpeedMode: loadAnimationSettings(),
     cardTheme: getStoredCardTheme(),
+  };
+  return {
+    ...initialState,
+    ...savedState,
+    screen: shell ? "game" : "menu",
+    gamePhase: "preDraw",
+    showShopNextRound: false,
+    playerHand: [],
+    heldIndices: [],
+    parallelHands: [],
+    isGeneratingHands: false,
+    gameOver: false,
+    gameOverReason: null,
+    animationSpeedMode: savedState?.animationSpeedMode ?? initialState.animationSpeedMode,
+    cardTheme: savedState?.cardTheme ?? initialState.cardTheme,
   };
 }
 

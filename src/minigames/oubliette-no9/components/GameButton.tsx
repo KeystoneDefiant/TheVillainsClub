@@ -39,7 +39,8 @@ export function GameButton({
         ${variantClasses[variant]}
         ${sizeClasses[size]}
         ${fullWidth ? 'w-full' : ''}
-        ${className}
+        oubliette-action-button
+        ${className ?? ''}
       `}
       disabled={disabled}
       {...props}

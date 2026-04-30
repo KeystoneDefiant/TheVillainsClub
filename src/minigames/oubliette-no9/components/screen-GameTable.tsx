@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Box, Group, Paper, Stack, Text, Title } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
+import type { PlayingCardSize } from "@/ui/cards";
 import { clubTokens } from "@/theme/clubTokens";
 import type { Card as CardType, Hand, FailureStateType, GameState } from "../types";
 import { Card } from "./Card";
@@ -47,7 +48,9 @@ export function GameTable({
   onShowSettings,
 }: GameTableProps) {
   void _totalEarnings;
-  const useLargeCards = useMediaQuery("(min-width: 36em)");
+  const useLargeCards = useMediaQuery("(min-width: 48em)");
+  const useSmallCards = useMediaQuery("(max-width: 30em)");
+  const cardSize: PlayingCardSize = useLargeCards ? "large" : useSmallCards ? "small" : "medium";
   const canDraw = parallelHands.length === 0 && playerHand.length >= 5;
 
   const [focusedIndex, setFocusedIndex] = useState<number>(0);
@@ -108,7 +111,7 @@ export function GameTable({
 
   return (
     <Box id="gameTable-screen" style={oubliettePlayAreaStyle}>
-      <Stack maw={896} w="100%" mx="auto" gap="md" pb="md">
+      <Stack className="oubliette-play-stack" maw={896} w="100%" mx="auto" gap="md" pb="sm">
         <GameHeader
           credits={credits}
           round={round}
@@ -119,7 +122,7 @@ export function GameTable({
         />
 
         <Paper
-          p={{ base: "md", sm: "lg" }}
+          p={{ base: "sm", sm: "lg" }}
           radius="lg"
           style={{
             flex: 1,
@@ -129,8 +132,8 @@ export function GameTable({
             backdropFilter: "blur(6px)",
           }}
         >
-          <Stack gap="md" style={{ flex: 1, width: "100%" }}>
-            <Title order={3} c={clubTokens.text.brass} fz={{ base: "1.05rem", sm: "1.25rem" }}>
+          <Stack className="oubliette-scroll-section" gap="md" style={{ flex: 1, width: "100%" }}>
+            <Title order={3} c={clubTokens.text.brass} fz={{ base: "1rem", sm: "1.25rem" }}>
               Your hand
             </Title>
 
@@ -138,7 +141,7 @@ export function GameTable({
               justify="center"
               gap="md"
               wrap="wrap"
-              style={{ minHeight: 140, position: "relative" }}
+              style={{ minHeight: useLargeCards ? 140 : useSmallCards ? 68 : 100, position: "relative" }}
               role="group"
               aria-label="Your hand - use arrow keys to select, Enter or Space to hold"
             >
@@ -151,7 +154,7 @@ export function GameTable({
                     setFocusedIndex(index);
                     onToggleHold(index);
                   }}
-                  size={useLargeCards ? "large" : "medium"}
+                  size={cardSize}
                   showBack={!firstDrawComplete}
                   flipDelay={index * 100}
                   tabIndex={index === focusedIndex ? 0 : -1}
@@ -160,10 +163,10 @@ export function GameTable({
               ))}
             </Group>
 
-            <Stack gap="sm" align="center">
+            <Stack className="oubliette-scroll-section" gap="sm" align="center">
               {drawsLeft > 0 ? (
                 <>
-                  <Text size="sm" c={clubTokens.text.muted} ta="center">
+                  <Text size="xs" c={clubTokens.text.muted} ta="center">
                     Hold the cards you want to keep, then draw. Draws left: {drawsLeft}
                   </Text>
                   <GameButton
@@ -171,7 +174,7 @@ export function GameTable({
                     disabled={!canDraw}
                     tabIndex={focusedIndex === cardCount ? 0 : -1}
                     variant={canDraw ? "primary" : "ghost"}
-                    size="lg"
+                    size={useSmallCards ? "md" : "lg"}
                     className={
                       focusedIndex === cardCount
                         ? "ring-2 ring-[var(--game-accent-gold)] ring-offset-2 ring-offset-[var(--game-bg-card)]"
@@ -183,7 +186,7 @@ export function GameTable({
                 </>
               ) : (
                 <>
-                  <Text size="sm" c={clubTokens.text.muted} ta="center">
+                  <Text size="xs" c={clubTokens.text.muted} ta="center">
                     Hold the cards you want to keep, then play parallel hands.
                   </Text>
                   <GameButton
@@ -191,7 +194,7 @@ export function GameTable({
                     disabled={!canDraw}
                     tabIndex={focusedIndex === cardCount ? 0 : -1}
                     variant={canDraw ? "secondary" : "ghost"}
-                    size="lg"
+                    size={useSmallCards ? "md" : "lg"}
                     className={
                       focusedIndex === cardCount
                         ? "ring-2 ring-[var(--game-accent-gold)] ring-offset-2 ring-offset-[var(--game-bg-card)]"
@@ -205,7 +208,7 @@ export function GameTable({
             </Stack>
 
             {gameState?.devilsDealCard ? (
-              <Group justify="center" mt="md">
+              <Group justify="center" mt={{ base: 4, sm: "md" }}>
                 <DevilsDealCard
                   card={gameState.devilsDealCard}
                   cost={gameState.devilsDealCost}

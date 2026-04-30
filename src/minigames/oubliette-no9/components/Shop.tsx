@@ -804,12 +804,23 @@ export function Shop({
     <Box
       className={isVipShop ? "shop-vip-sheen" : undefined}
       style={{
-        minHeight: "100dvh",
-        padding: "clamp(1rem, 3vw, 1.5rem)",
+        height: "100dvh",
+        boxSizing: "border-box",
+        padding:
+          "max(0.6rem, env(safe-area-inset-top, 0px)) max(0.6rem, env(safe-area-inset-right, 0px)) max(0.8rem, env(safe-area-inset-bottom, 0px)) max(0.6rem, env(safe-area-inset-left, 0px))",
+        overflowX: "hidden",
+        overflowY: "auto",
+        WebkitOverflowScrolling: "touch",
       }}
     >
-      <Stack maw={896} mx="auto" gap="md" style={{ minHeight: "calc(100dvh - 2rem)" }}>
-        <Group justify="space-between" align="flex-start" wrap="wrap" gap="md">
+      <Stack
+        maw={896}
+        mx="auto"
+        gap="md"
+        className="oubliette-play-stack"
+        style={{ minHeight: "calc(100dvh - 1.4rem)" }}
+      >
+        <Group justify="space-between" align="flex-start" wrap="wrap" gap="xs">
           <Title order={2} c={clubTokens.text.brass} fz={{ base: "1.35rem", sm: "1.65rem", md: "1.85rem" }}>
             {getShopDisplayName(creditsForPricing)}
           </Title>
@@ -835,13 +846,13 @@ export function Shop({
                 ⚙️
               </Button>
             ) : null}
-            <GameButton onClick={onClose} variant="primary" size="md">
+            <GameButton onClick={onClose} variant="primary" size="sm">
               Close Shop
             </GameButton>
           </Group>
         </Group>
 
-        <Paper className="game-panel-muted" p="md" radius="md" withBorder>
+        <Paper className="game-panel-muted" p={{ base: "xs", sm: "md" }} radius="md" withBorder>
           <Group justify="space-between" wrap="wrap" gap="sm">
             <Text size="md" fw={600} c={clubTokens.text.primary}>
               Credits:{" "}
@@ -874,9 +885,9 @@ export function Shop({
             </GameButton>
           </Stack>
         ) : (
-          <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="md" style={{ flex: 1 }}>
+          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing={{ base: "xs", sm: "md" }} style={{ flex: 1 }}>
             {selectedShopOptions.map((optionType, index) => (
-              <Box key={`shop-slot-${index}`} className={isVipShop ? "shop-vip-card h-full" : "h-full"}>
+              <Box key={`shop-slot-${index}`} className={`${isVipShop ? "shop-vip-card " : ""}oubliette-shop-card-wrap h-full`}>
                 {renderShopCard(optionType)}
               </Box>
             ))}

@@ -5,19 +5,11 @@ import { barDateKey, msUntilNextBarBoundary } from "@/audio/barBandSchedule";
 import { effectiveBandIndexForBarDate, useBarBandOverrideStore } from "@/audio/barBandOverrideStore";
 import { useClubAudioStore } from "@/audio/clubAudioStore";
 import { useClubFlowStore } from "@/game/clubFlowStore";
+import type { BandCatalogEntry } from "@/config/bandsCatalog";
 
 /** House band plays on shell screens and continues uninterrupted into minigames. */
 function shellHouseMusicRoute(pathname: string): boolean {
   return pathname === "/" || pathname === "/menu" || pathname === "/bar" || pathname.startsWith("/minigames/");
-}
-
-function mulberry32(seed: number) {
-  return () => {
-    let t = (seed += 0x6d2b79f5);
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
 }
 
 function shuffleInPlace<T>(arr: T[], rng: () => number): T[] {
@@ -26,6 +18,11 @@ function shuffleInPlace<T>(arr: T[], rng: () => number): T[] {
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
   return arr;
+}
+
+export function shuffledBandMusicUrls(band: BandCatalogEntry, rng: () => number = Math.random): string[] {
+  const urls = band.music_files.map((f) => bandPublicUrl(band, f));
+  return shuffleInPlace(urls, rng);
 }
 
 /**
@@ -90,10 +87,7 @@ export function useShellBandMusic(): void {
 
     const refillMusicQueue = () => {
       const band = bandsCatalog.bands[bandIndexRef.current];
-      const seed = barKeyRef.current.split("").reduce((a, c) => a + c.charCodeAt(0), 0) + band.id.length * 997;
-      const urls = band.music_files.map((f) => bandPublicUrl(band, f));
-      shuffleInPlace(urls, mulberry32(seed));
-      remainingMusicRef.current = urls;
+      remainingMusicRef.current = shuffledBandMusicUrls(band);
     };
 
     const playUrl = (url: string, kind: "music" | "interlude") => {
@@ -284,10 +278,7 @@ export function useShellBandMusic(): void {
     if (!audio.src || audio.ended) {
       if (remainingMusicRef.current.length === 0) {
         const band = bandsCatalog.bands[bandIndexRef.current];
-        const seed = barKeyRef.current.split("").reduce((a, c) => a + c.charCodeAt(0), 0) + band.id.length * 997;
-        const urls = band.music_files.map((f) => bandPublicUrl(band, f));
-        shuffleInPlace(urls, mulberry32(seed));
-        remainingMusicRef.current = urls;
+        remainingMusicRef.current = shuffledBandMusicUrls(band);
       }
       const next = remainingMusicRef.current.shift();
       if (next) {

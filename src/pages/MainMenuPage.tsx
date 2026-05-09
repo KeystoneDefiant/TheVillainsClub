@@ -31,8 +31,10 @@ import { useClubWallet } from "@/game/clubWalletStore";
 import { resetShellGameProgress } from "@/game/resetShellGameProgress";
 import { resolveActiveClubSpecial, resolveSpecialDefinitionRow } from "@/game/specialsResolver";
 import {
+  buildFatesealSettlementProfile,
   buildOublietteSettlementProfile,
   buildSevenYearItchSettlementProfile,
+  getFatesealBaseReturnCeiling,
   getOublietteBaseReturnCeiling,
   getSevenYearItchBaseReturnCeiling,
 } from "@/game/sessionSettlement";
@@ -40,7 +42,7 @@ import { useMotionPresetStore } from "@/motion/motionPresetStore";
 import { usePrefersReducedMotion } from "@/motion/usePrefersReducedMotion";
 import { clubTokens } from "@/theme/clubTokens";
 
-type GameKey = "oubliette_no9" | "seven_year_itch";
+type GameKey = "oubliette_no9" | "seven_year_itch" | "fateseal_silver";
 
 type GameMenuEntry = {
   id: GameKey;
@@ -68,11 +70,22 @@ const GAME_ENTRIES: GameMenuEntry[] = [
     buyIn: villainsGameDefaults.sevenYearItch.defaultBuyIn,
     rulesets: [{ value: "nv-crapless", label: "NV crapless" }],
   },
+  {
+    id: "fateseal_silver",
+    title: "Fateseal Silver",
+    subtitle: "Occult cascading grid",
+    route: "/minigames/fateseal-silver",
+    buyIn: villainsGameDefaults.fatesealSilver.defaultBuyIn,
+    rulesets: [{ value: "silver", label: "House Fateseal" }],
+  },
 ];
 
 function gameReturnCeiling(game: GameMenuEntry): number {
   if (game.id === "oubliette_no9") {
     return getOublietteBaseReturnCeiling(buildOublietteSettlementProfile(game.buyIn));
+  }
+  if (game.id === "fateseal_silver") {
+    return getFatesealBaseReturnCeiling(buildFatesealSettlementProfile(game.buyIn));
   }
   return getSevenYearItchBaseReturnCeiling(buildSevenYearItchSettlementProfile(game.buyIn));
 }
@@ -160,6 +173,7 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
     if (specialRow?.all_minigames_cap_mult) lines.push(`All table cap x${specialRow.all_minigames_cap_mult}`);
     if (specialRow?.oubliette_cap_mult) lines.push(`Oubliette cap x${specialRow.oubliette_cap_mult}`);
     if (specialRow?.seven_year_itch_cap_mult) lines.push(`7 Year Itch cap x${specialRow.seven_year_itch_cap_mult}`);
+    if (specialRow?.fateseal_cap_mult) lines.push(`Fateseal cap x${specialRow.fateseal_cap_mult}`);
     return lines.length > 0 ? lines : ["No club modifiers tonight"];
   }, [activeSpecial, specialRow]);
 
@@ -195,10 +209,18 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
       const settlement =
         game.id === "oubliette_no9"
           ? buildOublietteSettlementProfile(game.buyIn)
-          : buildSevenYearItchSettlementProfile(game.buyIn);
+          : game.id === "fateseal_silver"
+            ? buildFatesealSettlementProfile(game.buyIn)
+            : buildSevenYearItchSettlementProfile(game.buyIn);
+      const drinkId =
+        game.id === "oubliette_no9"
+          ? "club_table"
+          : game.id === "fateseal_silver"
+            ? "fateseal_silver"
+            : "seven_year_itch";
       const result = startSession({
         gameId: game.id,
-        drinkId: game.id === "oubliette_no9" ? "club_table" : "seven_year_itch",
+        drinkId,
         buyIn: game.buyIn,
         settlement,
       });
@@ -437,7 +459,9 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
           <Text size="sm">
             {activeGame.id === "seven_year_itch"
               ? "7 Year Itch uses crapless rules: 7 wins on come-out, any other total opens the case, and heat builds every four rolls."
-              : "Oubliette No. 9 is the club’s poker roguelike table: build hands, survive rounds, and cash out when the run resolves."}
+              : activeGame.id === "fateseal_silver"
+                ? "Fateseal Silver is a 5×5 cascading slot: seal a prophecy, watch the stone tablet shatter and refill, and bargain at the Crossroads every third spin."
+                : "Oubliette No. 9 is the club’s poker roguelike table: build hands, survive rounds, and cash out when the run resolves."}
           </Text>
         </Stack>
       </Modal>

@@ -14,6 +14,8 @@ export type SpecialDefinitionRow = {
   oubliette_cap_mult?: number;
   /** Optional: scales max **return** cap for 7 Year Itch only (multiplicative). */
   seven_year_itch_cap_mult?: number;
+  /** Optional: scales max **return** cap for Fateseal Silver only (multiplicative). */
+  fateseal_cap_mult?: number;
   /** Optional: scales max **return** cap for all minigames (multiplicative). */
   all_minigames_cap_mult?: number;
 };
@@ -72,14 +74,17 @@ export function firstBuyInCreditFromSpecial(special: ResolvedClubSpecial | null)
 export function capModifiersFromSpecialDefinition(row: SpecialDefinitionRow | null): {
   oublietteCapMult: number;
   sevenYearItchCapMult: number;
+  fatesealCapMult: number;
   allMinigamesCapMult: number;
 } {
   const oub = row?.oubliette_cap_mult;
   const syi = row?.seven_year_itch_cap_mult;
+  const fs = row?.fateseal_cap_mult;
   const all = row?.all_minigames_cap_mult;
   return {
     oublietteCapMult: typeof oub === "number" && Number.isFinite(oub) && oub > 0 ? oub : 1,
     sevenYearItchCapMult: typeof syi === "number" && Number.isFinite(syi) && syi > 0 ? syi : 1,
+    fatesealCapMult: typeof fs === "number" && Number.isFinite(fs) && fs > 0 ? fs : 1,
     allMinigamesCapMult: typeof all === "number" && Number.isFinite(all) && all > 0 ? all : 1,
   };
 }

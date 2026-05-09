@@ -47,4 +47,16 @@ export const villainsGameDefaults = {
       bonusMultipleOfBuyInPerTier: 5,
     },
   },
+
+  /** Fateseal Silver — occult cascading grid slot. */
+  fatesealSilver: {
+    defaultBuyIn: 2000,
+    maxReturnMultipleOfBuyIn: 50,
+    overachievement: {
+      capMultiple: 50,
+      buyInSlab: 1,
+      tierStepMultiple: 5,
+      bonusMultipleOfBuyInPerTier: 5,
+    },
+  },
 } as const;

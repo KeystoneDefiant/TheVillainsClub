@@ -4,8 +4,10 @@ import { Alert, Stack, Text } from "@mantine/core";
 import { ClubButton } from "@/components/ui/ClubButton";
 import { villainsGameDefaults } from "@/config/villainsGameDefaults";
 import {
+  buildFatesealSettlementProfile,
   buildOublietteSettlementProfile,
   buildSevenYearItchSettlementProfile,
+  getFatesealBaseReturnCeiling,
   getOublietteBaseReturnCeiling,
   getSevenYearItchBaseReturnCeiling,
 } from "@/game/sessionSettlement";
@@ -33,6 +35,7 @@ export function ClubTableGamesSection() {
   const startSession = useClubWallet((s) => s.startSession);
   const [startingOubliette, setStartingOubliette] = useState(false);
   const [starting7yi, setStarting7yi] = useState(false);
+  const [startingFateseal, setStartingFateseal] = useState(false);
   const [sessionError, setSessionError] = useState<string | null>(null);
 
   const oublietteBuyIn = villainsGameDefaults.oublietteNo9.defaultBuyIn;
@@ -53,6 +56,13 @@ export function ClubTableGamesSection() {
   const sevenYearItchReturnCeiling = useMemo(
     () => getSevenYearItchBaseReturnCeiling(sevenYearItchSettlementPreview),
     [sevenYearItchSettlementPreview],
+  );
+
+  const fatesealBuyIn = villainsGameDefaults.fatesealSilver.defaultBuyIn;
+  const fatesealSettlementPreview = useMemo(() => buildFatesealSettlementProfile(fatesealBuyIn), [fatesealBuyIn]);
+  const fatesealReturnCeiling = useMemo(
+    () => getFatesealBaseReturnCeiling(fatesealSettlementPreview),
+    [fatesealSettlementPreview],
   );
 
   const startOubliette = () => {
@@ -115,10 +125,42 @@ export function ClubTableGamesSection() {
     navigate("/minigames/seven-year-itch");
   };
 
+  const startFateseal = () => {
+    setSessionError(null);
+    if (activeSession?.gameId === "fateseal_silver") {
+      navigate("/minigames/fateseal-silver");
+      return;
+    }
+    if (activeSession) {
+      setSessionError(startSessionErrorMessage("session_active"));
+      return;
+    }
+    if (clubBalance < fatesealBuyIn) {
+      setSessionError(startSessionErrorMessage("insufficient_funds"));
+      return;
+    }
+    setStartingFateseal(true);
+    const settlement = buildFatesealSettlementProfile(fatesealBuyIn);
+    const result = startSession({
+      gameId: "fateseal_silver",
+      drinkId: "fateseal_silver",
+      buyIn: fatesealBuyIn,
+      settlement,
+    });
+    if (!result.ok) {
+      setSessionError(startSessionErrorMessage(result.reason));
+      setStartingFateseal(false);
+      return;
+    }
+    navigate("/minigames/fateseal-silver");
+  };
+
   const canAffordOubliette = clubBalance >= oublietteBuyIn;
   const canAfford7yi = clubBalance >= sevenYearItchBuyIn;
+  const canAffordFateseal = clubBalance >= fatesealBuyIn;
   const oublietteSessionOpen = activeSession?.gameId === "oubliette_no9";
   const sevenYearItchSessionOpen = activeSession?.gameId === "seven_year_itch";
+  const fatesealSessionOpen = activeSession?.gameId === "fateseal_silver";
   const anyTableOpen = Boolean(activeSession);
 
   return (
@@ -157,6 +199,15 @@ export function ClubTableGamesSection() {
         </Alert>
       ) : null}
 
+      {fatesealSessionOpen ? (
+        <Alert color="grape" variant="light" title="Table still open">
+          The seal still hungers. Resume Fateseal Silver?
+          <ClubButton fullWidth mt="sm" variant="filled" color="grape" onClick={() => navigate("/minigames/fateseal-silver")}>
+            Resume Fateseal Silver
+          </ClubButton>
+        </Alert>
+      ) : null}
+
       {sessionError ? (
         <Alert color="red" variant="light" title="Cannot start table" onClose={() => setSessionError(null)} withCloseButton>
           {sessionError}
@@ -190,6 +241,21 @@ export function ClubTableGamesSection() {
       <Text size="xs" c={clubTokens.text.muted} style={{ lineHeight: 1.45 }}>
         Buy-in {sevenYearItchBuyIn.toLocaleString()} credits. Crapless layout — return to the club capped near{" "}
         {sevenYearItchReturnCeiling.toLocaleString()} credits before overachievement.
+      </Text>
+
+      <ClubButton
+        fullWidth
+        variant="light"
+        color="grape"
+        disabled={!canAffordFateseal || anyTableOpen || startingFateseal}
+        loading={startingFateseal}
+        onClick={startFateseal}
+      >
+        Fateseal Silver (cascading slot)
+      </ClubButton>
+      <Text size="xs" c={clubTokens.text.muted} style={{ lineHeight: 1.45 }}>
+        Buy-in {fatesealBuyIn.toLocaleString()} credits. Cascading ritual grid — return to the club capped near{" "}
+        {fatesealReturnCeiling.toLocaleString()} credits before overachievement.
       </Text>
     </Stack>
   );

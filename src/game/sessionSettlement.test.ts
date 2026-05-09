@@ -2,9 +2,11 @@ import { describe, expect, it, vi, afterEach } from "vitest";
 import { villainsGameDefaults } from "@/config/villainsGameDefaults";
 import * as specials from "./specialsResolver";
 import {
+  buildFatesealSettlementProfile,
   buildOublietteSettlementProfile,
   buildSevenYearItchSettlementProfile,
   computeOublietteReturn,
+  computeFatesealReturn,
   computeSevenYearItchReturn,
   getOublietteBaseReturnCeiling,
 } from "./sessionSettlement";
@@ -99,5 +101,34 @@ describe("buildSevenYearItchSettlementProfile", () => {
     expect(computeSevenYearItchReturn(5000, profile).totalReturn).toBe(
       computeOublietteReturn(5000, profile).totalReturn,
     );
+  });
+});
+
+describe("buildFatesealSettlementProfile", () => {
+  it("merges fateseal and global cap mults from special definition row", () => {
+    vi.spyOn(specials, "resolveActiveClubSpecial").mockReturnValue({
+      id: "test",
+      title: "Test",
+      modifier: { type: "payout_mult", value: 1 },
+    });
+    vi.spyOn(specials, "resolveSpecialDefinitionRow").mockReturnValue({
+      title: "Test",
+      modifier: { type: "payout_mult", value: 1 },
+      fateseal_cap_mult: 1.1,
+      all_minigames_cap_mult: 1.05,
+    });
+    const p = buildFatesealSettlementProfile(villainsGameDefaults.fatesealSilver.defaultBuyIn);
+    expect(p.capModifierProduct).toBeCloseTo(1.155);
+  });
+
+  it("computeFatesealReturn matches Oubliette cap math", () => {
+    const cfg = villainsGameDefaults.fatesealSilver;
+    const profile = {
+      buyIn: cfg.defaultBuyIn,
+      maxReturnMultipleOfBuyIn: cfg.maxReturnMultipleOfBuyIn,
+      capModifierProduct: 1,
+      overachievement: { ...cfg.overachievement },
+    };
+    expect(computeFatesealReturn(8000, profile).totalReturn).toBe(computeOublietteReturn(8000, profile).totalReturn);
   });
 });

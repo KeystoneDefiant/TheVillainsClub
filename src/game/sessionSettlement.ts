@@ -45,6 +45,14 @@ export type SevenYearItchShellBinding = {
   onPauseToClub?: () => void;
 };
 
+/** Props for Fateseal Silver — settlement shape matches {@link OublietteSettlementProfile}. */
+export type FatesealShellBinding = {
+  sessionCredits: number;
+  settlement: OublietteSettlementProfile;
+  onReturnToClubMenu?: (detail: ClubTableReturnDetail) => void;
+  onPauseToClub?: () => void;
+};
+
 export function buildOublietteSettlementProfile(buyIn: number, now: Date = new Date()): OublietteSettlementProfile {
   const b = Math.floor(buyIn);
   const special = resolveActiveClubSpecial(now);
@@ -73,6 +81,20 @@ export function buildSevenYearItchSettlementProfile(buyIn: number, now: Date = n
   };
 }
 
+export function buildFatesealSettlementProfile(buyIn: number, now: Date = new Date()): OublietteSettlementProfile {
+  const b = Math.floor(buyIn);
+  const special = resolveActiveClubSpecial(now);
+  const row = resolveSpecialDefinitionRow(special);
+  const { fatesealCapMult, allMinigamesCapMult } = capModifiersFromSpecialDefinition(row);
+  const cfg = villainsGameDefaults.fatesealSilver;
+  return {
+    buyIn: b,
+    maxReturnMultipleOfBuyIn: cfg.maxReturnMultipleOfBuyIn,
+    capModifierProduct: fatesealCapMult * allMinigamesCapMult,
+    overachievement: { ...cfg.overachievement },
+  };
+}
+
 /** Max credits paid back from the **capped** portion of the table (before overachievement tiers). */
 export function getOublietteBaseReturnCeiling(profile: OublietteSettlementProfile): number {
   const b = Math.max(1, Math.floor(profile.buyIn));
@@ -83,11 +105,20 @@ export function getSevenYearItchBaseReturnCeiling(profile: OublietteSettlementPr
   return getOublietteBaseReturnCeiling(profile);
 }
 
+export function getFatesealBaseReturnCeiling(profile: OublietteSettlementProfile): number {
+  return getOublietteBaseReturnCeiling(profile);
+}
+
 /** Same cap / tier math as Oubliette; profile comes from {@link buildSevenYearItchSettlementProfile}. */
 export function computeSevenYearItchReturn(
   uncappedCredits: number,
   profile: OublietteSettlementProfile,
 ): ClubTableReturnDetail {
+  return computeOublietteReturn(uncappedCredits, profile);
+}
+
+/** Same cap / tier math as Oubliette; profile comes from {@link buildFatesealSettlementProfile}. */
+export function computeFatesealReturn(uncappedCredits: number, profile: OublietteSettlementProfile): ClubTableReturnDetail {
   return computeOublietteReturn(uncappedCredits, profile);
 }
 

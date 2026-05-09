@@ -27,5 +27,5 @@
 
 - Minigames receive session credits, settlement profile, and shell callbacks from their page wrapper; Oubliette can also run standalone without shell settlement callbacks when launched outside a wallet session.
 - 7 Year Itch and **Fateseal Silver** support `onPauseToClub` so players can leave a live session without cashing out; the wallet session remains active for resume.
-- **Fateseal Silver** (`/minigames/fateseal-silver`, `gameId` **`fateseal_silver`**) uses the same `OublietteSettlementProfile` / `computeFatesealReturn` cap math; specials may set **`fateseal_cap_mult`** on a definition row.
+- **Fateseal Silver** (`/minigames/fateseal-silver`, `gameId` **`fateseal_silver`**) uses the same `OublietteSettlementProfile` / `computeFatesealReturn` cap math; specials may set **`fateseal_cap_mult`** on a definition row. Product/design notes and RTP discussion: repo root **`Fateseal_Specs.md`**; weights and **cascade payout scale** in **`src/config/minigames/fatesealRules.ts`** (see **`npm run sim:fateseal`**, optional **`FATESEAL_SIM_BASE_ONLY=1`** for base-game payout tuning).
 - Settlement still happens only through the minigame’s resolved end state.

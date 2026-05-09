@@ -3,6 +3,7 @@ import {
   clonePool,
   fatesealAdjacentMinRun,
   fatesealCascadeMultipliers,
+  fatesealCascadePayoutScale,
   fatesealDefaultSymbolPool,
   fatesealProphecyMode,
   fatesealScatterRitual,
@@ -262,7 +263,9 @@ function runCascadeStep(
   }
   const mult = cascadeMultAt(depth);
   const base = modeMult(state.prophecyMode);
-  const stepPayout = Math.floor(prophecy.size * base * state.baseBet * mult);
+  const stepPayout = Math.floor(
+    prophecy.size * base * state.baseBet * mult * fatesealCascadePayoutScale,
+  );
   let g = applyRemovalMask(grid, remove);
   g = applyGravity(g);
   const filled = fillNullsFromPool(g, pool, rng);

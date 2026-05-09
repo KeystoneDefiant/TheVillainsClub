@@ -1,8 +1,15 @@
 /**
- * Monte Carlo harness for Fateseal Silver default weights (see `src/config/minigames/fatesealRules.ts`).
+ * Monte Carlo harness for Fateseal Silver (see `src/config/minigames/fatesealRules.ts`, `Fateseal_Specs.md`).
  * Run: `npm run sim:fateseal`
+ *
+ * Environment:
+ * - `FATESEAL_SIM_BASE_ONLY=1` — reset scatter meter and free ritual each spin (**base ritual RTP**; use to tune scale).
+ * - unset — **full model** (scatter meter + Free Ritual spins accumulate).
+ *
+ * Primary tuning target: **Payout / paid base bet** in the **base-only** run ≈ **88%–95%**.
  */
-import { createInitialFatesealState, runSpin } from "../src/minigames/fateseal-silver/engine/cascadeEngine";
+import { fatesealCascadePayoutScale, fatesealScatterRitual } from "../src/config/minigames/fatesealRules";
+import { createInitialFatesealState, runSpin, type FatesealEngineState } from "../src/minigames/fateseal-silver/engine/cascadeEngine";
 
 function mulberry32(seed: number) {
   let t = seed;
@@ -15,25 +22,52 @@ function mulberry32(seed: number) {
   };
 }
 
-const SPINS = 15_000;
+const SPINS = 30_000;
 const seed = 0xface1234;
 const rng = mulberry32(seed);
+const baseOnly = process.env.FATESEAL_SIM_BASE_ONLY === "1";
 
-let state = createInitialFatesealState(5_000_000, 2000, Math.random);
-state.activeProphecy = ["moon"];
-state.prophecyMode = "single";
-state.baseBet = 50;
+const state0 = createInitialFatesealState(100_000_000, 2000, Math.random);
+let state: FatesealEngineState = {
+  ...state0,
+  activeProphecy: ["moon"],
+  prophecyMode: "single",
+  baseBet: 50,
+};
 
-let net = 0;
-for (let i = 0; i < SPINS; i++) {
-  const before = state.sessionWallet;
-  const r = runSpin(state, rng);
-  state = r.nextState;
-  net += state.sessionWallet - before;
+if (baseOnly) {
+  state = { ...state, scatterMeter: 0, freeRitualSpinsLeft: 0 };
 }
 
-const avg = net / SPINS;
+let sumBet = 0;
+let sumPayout = 0;
+
+for (let i = 0; i < SPINS; i++) {
+  if (baseOnly) {
+    state = {
+      ...state,
+      scatterMeter: 0,
+      freeRitualSpinsLeft: 0,
+    };
+  }
+  const paid = state.freeRitualSpinsLeft <= 0;
+  if (paid) sumBet += state.baseBet;
+  const r = runSpin(state, rng);
+  sumPayout += r.totalPayout;
+  state = r.nextState;
+}
+
+const pct = sumBet > 0 ? (sumPayout / sumBet) * 100 : 0;
+
 // eslint-disable-next-line no-console -- CLI report
 console.log(`Fateseal Monte Carlo seed=${seed.toString(16)} spins=${SPINS}`);
 // eslint-disable-next-line no-console -- CLI report
-console.log(`Avg net change per spin (session credits): ${avg.toFixed(3)}`);
+console.log(`Mode: ${baseOnly ? "FATESEAL_SIM_BASE_ONLY=1 (strip scatter & free ritual each spin)" : "full (scatter + Free Ritual)"}`);
+// eslint-disable-next-line no-console -- CLI report
+console.log(`Cascade payout scale: ${fatesealCascadePayoutScale}`);
+if (!baseOnly) {
+  // eslint-disable-next-line no-console -- CLI report
+  console.log(`Scatter ritual (config): meter ${fatesealScatterRitual.meterToTrigger}, +${fatesealScatterRitual.freeSpinsGranted} spins`);
+}
+// eslint-disable-next-line no-console -- CLI report
+console.log(`Payout / paid base bets (%): ${pct.toFixed(2)}%  (base-only target ~88–95)`);

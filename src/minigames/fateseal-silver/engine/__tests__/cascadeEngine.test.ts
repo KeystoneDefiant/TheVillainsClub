@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { fatesealScatterRitual, fatesealAdjacentMinRun } from "@/config/minigames/fatesealRules";
+import {
+  fatesealCascadePayoutScale,
+  fatesealScatterRitual,
+  fatesealAdjacentMinRun,
+} from "@/config/minigames/fatesealRules";
 import {
   createInitialFatesealState,
   findClusterRemovalCells,
@@ -42,7 +46,7 @@ describe("fateseal cascadeEngine", () => {
     const result = runSpin(s, rng, { skipInitialFill: true });
     expect(result.log.some((l) => l.kind === "cascade")).toBe(true);
     const first = result.log.find((l) => l.kind === "cascade");
-    expect(first?.payout).toBe(25 * 10 * 10);
+    expect(first?.payout).toBe(Math.floor(25 * 10 * 10 * 1 * fatesealCascadePayoutScale));
     expect(result.nextState.sessionWallet).toBeGreaterThan(s.sessionWallet - 10);
   });
 
@@ -58,7 +62,7 @@ describe("fateseal cascadeEngine", () => {
     }
     const result = runSpin(s, () => 0.5, { skipInitialFill: true });
     const first = result.log.find((l) => l.kind === "cascade");
-    expect(first?.payout).toBe(25 * 1 * 10);
+    expect(first?.payout).toBe(Math.floor(25 * 1 * 10 * 1 * fatesealCascadePayoutScale));
   });
 
   it("accumulates scatter meter and can award Free Ritual spins", () => {

@@ -3,6 +3,10 @@
  *
  * Tunables live here; Vitest and the Monte Carlo sim import this module so defaults
  * cannot drift from production behavior.
+ *
+ * **RTP / house edge:** The design doc fixes symbolic multipliers (§3B–§3C). This module adds a
+ * **cascade payout scale** (`fatesealCascadePayoutScale`) and softer cascade ramp / scatter cadence
+ * so average session wallet drift over long runs stays negative vs. base bet under `npm run sim:fateseal`.
  */
 
 /** Standard occult icons (§3A — 8 unique). */
@@ -50,10 +54,18 @@ export const fatesealProphecyMode = {
 export type FatesealProphecyModeKey = keyof typeof fatesealProphecyMode;
 
 /**
+ * Applied to every cascade step payout after §3B × §3C math (floor). Tightens long-run RTP vs. raw
+ * symbolic multipliers alone. Re-tune with `npm run sim:fateseal`.
+ */
+/** Monte Carlo (see `npm run sim:fateseal` with `FATESEAL_SIM_BASE_ONLY=1`) targets ~88–95% payout/paid bet. */
+export const fatesealCascadePayoutScale = 0.0125 as const;
+
+/**
  * §3C step 3 — payout uses a per-cascade multiplier that rises with chain depth.
  * Index 0 = first evaluation after a spin / inflow; further cascades use successive entries (clamped).
+ * Softer ramp than early prototypes — pairs with {@link fatesealCascadePayoutScale}.
  */
-export const fatesealCascadeMultipliers = [1, 2, 3, 5, 8, 13] as const;
+export const fatesealCascadeMultipliers = [1, 1, 2, 3, 4, 6] as const;
 
 /** Adjacent (orthogonal) clusters of this many matching standards (+ wild) clear per §3C step 4. */
 export const fatesealAdjacentMinRun = 3;
@@ -64,11 +76,11 @@ export const fatesealCrossroadsEveryNSpins = 3;
 /** §3A / §5 — Scatter collected across spins until the Free Ritual fires. */
 export const fatesealScatterRitual = {
   /** Scatters on the board added to the meter after each spin settles. */
-  meterToTrigger: 5,
+  meterToTrigger: 12,
   /** Bonus spins granted — no base bet deducted while active. */
-  freeSpinsGranted: 8,
+  freeSpinsGranted: 2,
   /** During Free Ritual fills, extra wild weight is applied in generation (soft guarantee). */
-  freeRitualWildWeightBoost: 4,
+  freeRitualWildWeightBoost: 1,
 } as const;
 
 /** Table stakes — session wallet debited each spin unless Free Ritual is active. */
@@ -87,7 +99,7 @@ export const fatesealTableConfig = {
 export const fatesealCrossroadsOffers = {
   faustianBargain: {
     /** Credits granted immediately (floor of buy-in × ratio). */
-    creditRatioOfBuyIn: 0.15,
+    creditRatioOfBuyIn: 0.12,
     /** Voids permanently appended to the symbol pool weight list. */
     voidsAdded: 3,
   },
@@ -109,19 +121,19 @@ export type FatesealPoolEntry = {
 };
 
 /**
- * Starting symbol pool — weights are tuned for ~medium volatility at default buy-in.
- * Standards dominate; wild/scatter are spice; void starts at 0 (Faustian adds it).
+ * Starting symbol pool — weights tuned with the payout scale and cascade ramp for controlled
+ * volatility at default buy-in. Void starts at 0 (Faustian adds it).
  */
 export const fatesealDefaultSymbolPool: readonly FatesealPoolEntry[] = [
-  { symbol: "dagger", weight: 10 },
-  { symbol: "chalice", weight: 10 },
-  { symbol: "goat", weight: 10 },
-  { symbol: "eye", weight: 10 },
-  { symbol: "serpent", weight: 10 },
-  { symbol: "moon", weight: 10 },
-  { symbol: "flame", weight: 10 },
-  { symbol: "key", weight: 10 },
-  { symbol: "wild", weight: 3 },
+  { symbol: "dagger", weight: 9 },
+  { symbol: "chalice", weight: 9 },
+  { symbol: "goat", weight: 9 },
+  { symbol: "eye", weight: 9 },
+  { symbol: "serpent", weight: 9 },
+  { symbol: "moon", weight: 9 },
+  { symbol: "flame", weight: 9 },
+  { symbol: "key", weight: 9 },
+  { symbol: "wild", weight: 2 },
   { symbol: "scatter", weight: 2 },
 ];
 

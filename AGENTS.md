@@ -44,7 +44,7 @@ The **Agent cycle checklist** below is the same bar, itemized.
 
 - **`src/`** — React app: `pages/`, `components/`, `theme/`, `motion/`, `game/`, `dev/` (playground).
 - **`electron/`** — `main.cjs`, `preload.cjs` (extend `contextBridge` deliberately).
-- **`content/`** — JSON/JSONC catalogs (drinks, bands, sfx, modes, etc.); validate before relying on them at runtime (JSONC needs stripping or conversion in the browser).
+- **`content/`** — JSON/JSONC catalogs (drinks, bands, sfx, modes, etc.); **house band MP3s** live only under **`content/audio/bands/`** (bundled by Vite into `dist`, not duplicated in `public/`). Validate before relying on them at runtime (JSONC needs stripping or conversion in the browser).
 - **`TO_PORT/`** — git submodule; JS reference ports (see `TO_PORT/README.md`).
 - **`.devcontainer/`**, **`compose.yaml`** — containerized dev environment.
 

@@ -13,7 +13,7 @@
 
 - `clubAudioStore` persists music/SFX settings.
 - `clubFlowStore` tracks whether the user entered the club for the current app session.
-- `useShellBandMusic` uses the same house-band stream on shell and minigame routes; volume is 30% of the user setting before entry and fades to the setting after entry.
+- `useShellBandMusic` uses the same house-band stream on shell and minigame routes; volume is 30% of the user setting before entry and fades to the setting after entry. House band PCM lives under **`content/audio/bands`**; **`vite.config.ts`** serves it in dev and copies it into **`dist/audio/bands`** when building (URLs stay **`/audio/bands/…`** modulo Vite **`base`**).
 - Active band and specials use the local 4AM bar-day boundary.
 - Oubliette in-run screens own their viewport scrolling because the shell body is fixed; layouts still compact on mobile to avoid unnecessary scroll where possible.
 

@@ -68,6 +68,8 @@ export function siteAssetPathPrefixFromViteBase(viteBaseUrl: string): string {
 /**
  * Public URL for a file under the band's `asset_root`.
  *
+ * - **Filesystem:** Tracks live under **`content/audio/bands`**; `vite build` copies them into
+ *   **`dist/audio/bands`**; `vite dev` serves the same URLs from **`content`** via middleware.
  * - **http(s):** root-absolute path so nested SPA routes (e.g. GitHub Pages `/repo/menu`) still hit
  *   `/repo/audio/bands/...` instead of losing the repo segment.
  * - **file:** (Electron `loadFile` dist): use a path **relative to `index.html`** so `audio/...` resolves

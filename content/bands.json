@@ -6,12 +6,19 @@
       "display_name": "Buckmiller",
       "asset_root": "audio/bands/buckmiller",
       "music_files": [
-        "buckmiller_00001_.mp3",
-        "buckmiller_00002_.mp3",
-        "buckmiller_00006_.mp3",
-        "buckmiller_00007_.mp3",
-        "buckmiller_00008_.mp3",
-        "buckmiller_00009_.mp3"
+        "1.mp3",
+        "2.mp3",
+        "3.mp3",
+        "4.mp3",
+        "5.mp3",
+        "6.mp3",
+        "7.mp3",
+        "8.mp3",
+        "9.mp3",
+        "10.mp3",
+        "11.mp3",
+        "12.mp3",
+        "13.mp3"
       ],
       "interlude_files": []
     },
@@ -20,20 +27,22 @@
       "display_name": "Comebacker",
       "asset_root": "audio/bands/comebacker",
       "music_files": [
-        "comebacker_00001_.mp3",
-        "comebacker_00002_.mp3",
-        "comebacker_00003_.mp3",
-        "comebacker_00004_.mp3",
-        "comebacker_00006_.mp3",
-        "comebacker_00008_.mp3",
-        "comebacker_00010_.mp3",
-        "comebacker_00013_.mp3",
-        "comebacker_00015_.mp3",
-        "comebacker_00017_.mp3",
-        "comebacker_00019_.mp3",
-        "comebacker_00022_.mp3",
-        "comebacker_00023_.mp3",
-        "comebacker_00024_.mp3"
+        "1.mp3",
+        "2.mp3",
+        "3.mp3",
+        "4.mp3",
+        "5.mp3",
+        "6.mp3",
+        "7.mp3",
+        "8.mp3",
+        "9.mp3",
+        "10.mp3",
+        "11.mp3",
+        "12.mp3",
+        "13.mp3",
+        "14.mp3",
+        "15.mp3",
+        "16.mp3"
       ],
       "interlude_files": []
     },
@@ -57,6 +66,26 @@
       "interlude_files": []
     },
     {
+      "id": "pillowcase",
+      "display_name": "Pillowcase",
+      "asset_root": "audio/bands/pillowcase",
+      "music_files": [
+        "1.mp3",
+        "2.mp3",
+        "3.mp3",
+        "4.mp3",
+        "5.mp3",
+        "6.mp3",
+        "7.mp3",
+        "8.mp3",
+        "9.mp3",
+        "10.mp3",
+        "11.mp3",
+        "12.mp3"
+      ],
+      "interlude_files": []
+    },
+    {
       "id": "times_new_roman",
       "display_name": "Times New Roman",
       "asset_root": "audio/bands/times_new_roman",
@@ -75,10 +104,9 @@
       "display_name": "Velvet and Dust",
       "asset_root": "audio/bands/velvet",
       "music_files": [
-        "Portrait_of_an_Afternoon.mp3",
+        "Keys_Under_Glass.mp3",
         "Last_Light_in_the_Foyer.mp3",
-        "Keys_Under_Glass.mp3"
-
+        "Portrait_of_an_Afternoon.mp3"
       ],
       "interlude_files": []
     }

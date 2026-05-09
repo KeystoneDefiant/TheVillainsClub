@@ -4,7 +4,7 @@ import {
   ALL_HOP_KEYS,
   HARDWAY_NUMBERS,
   POINT_NUMBERS,
-  placeBetTotalReturn,
+  placeBetScaledReturn,
   sevenYearItchRackets,
   type HardwayNumber,
   type HopKey,
@@ -20,8 +20,15 @@ export type CraplessTableFeltProps = {
   diceRolling: boolean;
   reduceMotion: boolean;
   chip: number;
+  /** Come-out with no point: only pass + roll. */
+  passOnlyLayout: boolean;
+  showFieldAndHorn: boolean;
+  placePayoutScale: number;
+  activeFavorTitle: string | null;
   canRoll: boolean;
   passLocked: boolean;
+  canDivest: boolean;
+  onDivest: () => void;
   onPassPrimary: () => void;
   onPassSecondary: () => void;
   onOddsPrimary: () => void;
@@ -38,6 +45,8 @@ export type CraplessTableFeltProps = {
   onHardwaySecondary: (hw: HardwayNumber) => void;
   onRoll: () => void;
   maxOddsDisplay: number;
+  /** Hide in-table dice during overlay roll animation. */
+  hideInlineDice: boolean;
 };
 
 function preventCtx(e: React.MouseEvent) {
@@ -52,8 +61,14 @@ export function CraplessTableFelt({
   diceRolling,
   reduceMotion,
   chip,
+  passOnlyLayout,
+  showFieldAndHorn,
+  placePayoutScale,
+  activeFavorTitle,
   canRoll,
   passLocked,
+  canDivest,
+  onDivest,
   onPassPrimary,
   onPassSecondary,
   onOddsPrimary,
@@ -70,105 +85,99 @@ export function CraplessTableFelt({
   onHardwaySecondary,
   onRoll,
   maxOddsDisplay,
+  hideInlineDice,
 }: CraplessTableFeltProps) {
   const topPlaces = POINT_NUMBERS.filter((n) => n <= 6);
   const bottomPlaces = POINT_NUMBERS.filter((n) => n >= 8);
   const hornOnLayout = bets.hornUnit * 4;
+  const showGrid = !passOnlyLayout;
 
   return (
     <div className="yi-felt">
-      <div className="yi-felt-propRow" aria-label="One-roll propositions">
-        <button
-          type="button"
-          className="yi-felt-field"
-          data-testid="felt-field"
-          onClick={onFieldPrimary}
-          onContextMenu={(e) => {
-            preventCtx(e);
-            onFieldSecondary();
-          }}
-        >
-          <span className="yi-felt-prop-label">Field</span>
-          <span className="yi-felt-prop-meta">2·3·4·9·10·11·12</span>
-          <span className="yi-felt-prop-amt">{bets.field > 0 ? bets.field : "—"}</span>
-          <span className="yi-felt-chipHint">+{chip}</span>
-        </button>
-        <button
-          type="button"
-          className="yi-felt-horn"
-          data-testid="felt-horn"
-          onClick={onHornPrimary}
-          onContextMenu={(e) => {
-            preventCtx(e);
-            onHornSecondary();
-          }}
-        >
-          <span className="yi-felt-prop-label">Horn</span>
-          <span className="yi-felt-prop-meta">2·3·11·12 · {hornOnLayout > 0 ? `${hornOnLayout} out` : "—"}</span>
-          <span className="yi-felt-prop-amt">{bets.hornUnit > 0 ? `${bets.hornUnit} ea` : "—"}</span>
-          <span className="yi-felt-chipHint">+{chip} each leg (×4)</span>
-        </button>
-      </div>
+      {activeFavorTitle ? (
+        <div className="yi-felt-favorBanner" data-testid="felt-active-favor">
+          <span className="yi-felt-favorBanner-label">Active favor</span>
+          <span className="yi-felt-favorBanner-title">{activeFavorTitle}</span>
+        </div>
+      ) : null}
 
-      <div className="yi-felt-placeArc" aria-label="Place bets">
-        <div className="yi-felt-placeRow">
-          {topPlaces.map((pk) => (
-            <PlaceCell
-              key={pk}
-              pk={pk}
-              amount={bets.place[pk] ?? 0}
-              isPoint={table.phase === "point" && table.point === pk}
-              disabled={table.phase !== "point"}
-              chip={chip}
-              onPrimary={() => onPlacePrimary(pk)}
-              onSecondary={() => onPlaceSecondary(pk)}
-            />
-          ))}
+      {placePayoutScale < 1 && showGrid ? (
+        <Text size="xs" c="orange" mb={6} data-testid="felt-divest-skim">
+          Post-divest skim: place hits pay half profit until this hand ends.
+        </Text>
+      ) : null}
+
+      {showGrid ? (
+        <div className="yi-felt-placeArc" aria-label="Place bets">
+          <div className="yi-felt-placeRow">
+            {topPlaces.map((pk) => (
+              <PlaceCell
+                key={pk}
+                pk={pk}
+                amount={bets.place[pk] ?? 0}
+                isPoint={table.phase === "point" && table.point === pk}
+                disabled={table.phase !== "point"}
+                chip={chip}
+                placePayoutScale={placePayoutScale}
+                onPrimary={() => onPlacePrimary(pk)}
+                onSecondary={() => onPlaceSecondary(pk)}
+              />
+            ))}
+          </div>
+          <div className="yi-felt-no7" aria-hidden="true">
+            <span className="yi-felt-no7-inner">7 · The Bust</span>
+          </div>
+          <div className="yi-felt-placeRow">
+            {bottomPlaces.map((pk) => (
+              <PlaceCell
+                key={pk}
+                pk={pk}
+                amount={bets.place[pk] ?? 0}
+                isPoint={table.phase === "point" && table.point === pk}
+                disabled={table.phase !== "point"}
+                chip={chip}
+                placePayoutScale={placePayoutScale}
+                onPrimary={() => onPlacePrimary(pk)}
+                onSecondary={() => onPlaceSecondary(pk)}
+              />
+            ))}
+          </div>
         </div>
-        <div className="yi-felt-no7" aria-hidden="true">
-          <span className="yi-felt-no7-inner">7 · The Bust</span>
-        </div>
-        <div className="yi-felt-placeRow">
-          {bottomPlaces.map((pk) => (
-            <PlaceCell
-              key={pk}
-              pk={pk}
-              amount={bets.place[pk] ?? 0}
-              isPoint={table.phase === "point" && table.point === pk}
-              disabled={table.phase !== "point"}
-              chip={chip}
-              onPrimary={() => onPlacePrimary(pk)}
-              onSecondary={() => onPlaceSecondary(pk)}
-            />
-          ))}
-        </div>
-      </div>
+      ) : null}
 
       <div className="yi-felt-diceDock">
-        <DicePair3D d1={lastD1} d2={lastD2} rolling={diceRolling} reduceMotion={reduceMotion} />
+        {hideInlineDice ? (
+          <div className="yi-felt-dicePlaceholder" aria-hidden />
+        ) : (
+          <DicePair3D d1={lastD1} d2={lastD2} rolling={diceRolling} reduceMotion={reduceMotion} />
+        )}
         <button type="button" className="yi-felt-rollBtn" disabled={!canRoll || diceRolling} onClick={onRoll}>
           Roll
         </button>
       </div>
 
       <div className="yi-felt-oddsPassStack">
-        <button
-          type="button"
-          className={`yi-felt-odds ${table.phase !== "point" ? "yi-felt-odds--off" : ""}`}
-          data-testid="felt-odds"
-          disabled={table.phase !== "point"}
-          onClick={onOddsPrimary}
-          onContextMenu={(e) => {
-            preventCtx(e);
-            onOddsSecondary();
-          }}
-        >
-          <span className="yi-felt-odds-label">Free odds</span>
-          <span className="yi-felt-odds-meta">
-            {bets.freeOdds > 0 ? `${bets.freeOdds}` : "—"} / cap {maxOddsDisplay}
-          </span>
-          <span className="yi-felt-chipHint">+{chip} · right-click −{chip}</span>
-        </button>
+        {showGrid ? (
+          <button
+            type="button"
+            className={`yi-felt-odds ${table.phase !== "point" ? "yi-felt-odds--off" : ""}`}
+            data-testid="felt-odds"
+            disabled={table.phase !== "point"}
+            onClick={onOddsPrimary}
+            onContextMenu={(e) => {
+              preventCtx(e);
+              onOddsSecondary();
+            }}
+          >
+            <span className="yi-felt-odds-label">Free odds</span>
+            <span className="yi-felt-odds-meta">
+              {bets.freeOdds > 0 ? `${bets.freeOdds}` : "—"} / cap {maxOddsDisplay}
+            </span>
+            <span className="yi-felt-chipHint">+{chip} · right-click −{chip}</span>
+          </button>
+        ) : (
+          <div aria-hidden />
+        )}
 
         <button
           type="button"
@@ -186,58 +195,109 @@ export function CraplessTableFelt({
           <span className="yi-felt-chipHint">+{chip} · right-click −{chip}</span>
           {passLocked ? <span className="yi-felt-pass-lock">Locked — point in play</span> : null}
         </button>
+
+        {showGrid ? (
+          <button
+            type="button"
+            className="yi-felt-divest"
+            data-testid="felt-divest"
+            disabled={!canDivest}
+            onClick={onDivest}
+            title={canDivest ? "Return all bets except pass (once per hand)" : "Already divested this hand"}
+          >
+            <span className="yi-felt-divest-label">Divest</span>
+            <span className="yi-felt-divest-meta">Pull back non-pass</span>
+          </button>
+        ) : null}
       </div>
 
-      <details className="yi-felt-oneRoll">
-        <summary>More one-roll bets</summary>
-        <div className="yi-felt-hopBlock" aria-label="Hopping bets">
-          <Text className="yi-felt-sectionLabel" size="xs" tt="uppercase" c="dimmed" fw={600}>
-            Hop
-          </Text>
-          <div className="yi-felt-hopGrid">
-            {ALL_HOP_KEYS.map((key) => (
-              <button
-                type="button"
-                key={key}
-                className="yi-felt-hop"
-                data-testid={`felt-hop-${key}`}
-                onClick={() => onHopPrimary(key)}
-                onContextMenu={(e) => {
-                  preventCtx(e);
-                  onHopSecondary(key);
-                }}
-              >
-                <span className="yi-felt-hop-key">{key}</span>
-                <span className="yi-felt-hop-amt">{(bets.hops[key] ?? 0) > 0 ? bets.hops[key] : ""}</span>
-              </button>
-            ))}
+      {showGrid ? (
+        <details className="yi-felt-oneRoll">
+          <summary>One-roll bets</summary>
+          <div className="yi-felt-hopBlock" aria-label="Hopping bets">
+            <Text className="yi-felt-sectionLabel" size="xs" tt="uppercase" c="dimmed" fw={600}>
+              Hop
+            </Text>
+            <div className="yi-felt-hopGrid">
+              {ALL_HOP_KEYS.map((key) => (
+                <button
+                  type="button"
+                  key={key}
+                  className="yi-felt-hop"
+                  data-testid={`felt-hop-${key}`}
+                  onClick={() => onHopPrimary(key)}
+                  onContextMenu={(e) => {
+                    preventCtx(e);
+                    onHopSecondary(key);
+                  }}
+                >
+                  <span className="yi-felt-hop-key">{key}</span>
+                  <span className="yi-felt-hop-amt">{(bets.hops[key] ?? 0) > 0 ? bets.hops[key] : ""}</span>
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
 
-        <div className="yi-felt-hardBlock" aria-label="Hardways">
-          <Text className="yi-felt-sectionLabel" size="xs" tt="uppercase" c="dimmed" fw={600}>
-            Hardways
-          </Text>
-          <div className="yi-felt-hardRow">
-            {HARDWAY_NUMBERS.map((hw) => (
+          <div className="yi-felt-hardBlock" aria-label="Hardways">
+            <Text className="yi-felt-sectionLabel" size="xs" tt="uppercase" c="dimmed" fw={600}>
+              Hardways
+            </Text>
+            <div className="yi-felt-hardRow">
+              {HARDWAY_NUMBERS.map((hw) => (
+                <button
+                  type="button"
+                  key={hw}
+                  className="yi-felt-hard"
+                  data-testid={`felt-hard-${hw}`}
+                  onClick={() => onHardwayPrimary(hw)}
+                  onContextMenu={(e) => {
+                    preventCtx(e);
+                    onHardwaySecondary(hw);
+                  }}
+                >
+                  <span className="yi-felt-hard-label">Hard {hw}</span>
+                  <span className="yi-felt-hard-amt">{(bets.hardways[hw] ?? 0) > 0 ? bets.hardways[hw] : ""}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {showFieldAndHorn ? (
+            <div className="yi-felt-propRow yi-felt-propRow--afterOneRoll" aria-label="Field and horn">
               <button
                 type="button"
-                key={hw}
-                className="yi-felt-hard"
-                data-testid={`felt-hard-${hw}`}
-                onClick={() => onHardwayPrimary(hw)}
+                className="yi-felt-field"
+                data-testid="felt-field"
+                onClick={onFieldPrimary}
                 onContextMenu={(e) => {
                   preventCtx(e);
-                  onHardwaySecondary(hw);
+                  onFieldSecondary();
                 }}
               >
-                <span className="yi-felt-hard-label">Hard {hw}</span>
-                <span className="yi-felt-hard-amt">{(bets.hardways[hw] ?? 0) > 0 ? bets.hardways[hw] : ""}</span>
+                <span className="yi-felt-prop-label">Field</span>
+                <span className="yi-felt-prop-meta">2·3·4·9·10·11·12</span>
+                <span className="yi-felt-prop-amt">{bets.field > 0 ? bets.field : "—"}</span>
+                <span className="yi-felt-chipHint">+{chip}</span>
               </button>
-            ))}
-          </div>
-        </div>
-      </details>
+              <button
+                type="button"
+                className="yi-felt-horn"
+                data-testid="felt-horn"
+                onClick={onHornPrimary}
+                onContextMenu={(e) => {
+                  preventCtx(e);
+                  onHornSecondary();
+                }}
+              >
+                <span className="yi-felt-prop-label">Horn</span>
+                <span className="yi-felt-prop-meta">2·3·11·12 · {hornOnLayout > 0 ? `${hornOnLayout} out` : "—"}</span>
+                <span className="yi-felt-prop-amt">{bets.hornUnit > 0 ? `${bets.hornUnit} ea` : "—"}</span>
+                <span className="yi-felt-chipHint">+{chip} each leg (×4)</span>
+              </button>
+            </div>
+          ) : null}
+        </details>
+      ) : null}
     </div>
   );
 }
@@ -248,6 +308,7 @@ function PlaceCell({
   isPoint,
   disabled,
   chip,
+  placePayoutScale,
   onPrimary,
   onSecondary,
 }: {
@@ -256,9 +317,12 @@ function PlaceCell({
   isPoint: boolean;
   disabled: boolean;
   chip: number;
+  placePayoutScale: number;
   onPrimary: () => void;
   onSecondary: () => void;
 }) {
+  const previewStake = amount > 0 ? amount : chip;
+  const retPreview = placeBetScaledReturn(pk, previewStake, placePayoutScale);
   return (
     <button
       type="button"
@@ -267,14 +331,14 @@ function PlaceCell({
       disabled={disabled}
       onClick={onPrimary}
       onContextMenu={(e) => {
-        preventCtx(e);
+        e.preventDefault();
         onSecondary();
       }}
     >
       <span className="yi-felt-place-num">{pk}</span>
       <span className="yi-felt-place-name">{sevenYearItchRackets[pk].name}</span>
       <span className="yi-felt-place-amt">
-        {amount > 0 ? `${placeBetTotalReturn(pk, amount).toLocaleString()} return` : `${placeBetTotalReturn(pk, 5)} on 5`}
+        {amount > 0 ? `${retPreview.toLocaleString()} return` : `${retPreview.toLocaleString()} on ${chip}`}
       </span>
       {!disabled ? <span className="yi-felt-chipHintSm">+{chip}</span> : null}
     </button>

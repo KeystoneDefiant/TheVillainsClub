@@ -27,3 +27,7 @@ node_modules/
 *.tsbuildinfo
 npm-debug.log*
 .npm
+
+# Playwright
+test-results/
+playwright-report/

@@ -15,13 +15,25 @@ export type PointNumber = 2 | 3 | 4 | 5 | 6 | 8 | 9 | 10 | 11 | 12;
 
 export const POINT_NUMBERS: readonly PointNumber[] = [2, 3, 4, 5, 6, 8, 9, 10, 11, 12];
 
-export const sevenYearItchTableConfig = {
+/**
+ * Tunables for a ruleset / “game mode”. Swap this object (or import from JSON later)
+ * to change chip size, visibility, and heat cadence without touching engine math.
+ */
+export const sevenYearItchGameplayConfig = {
   /** Table clicks add/remove this many credits per tap (primary / context). */
-  chipIncrement: 5,
+  chipIncrement: 50,
+  minPassBet: 50,
+  minPlaceBet: 50,
+  /** Field + Horn row (shown behind one-roll props when true). */
+  showFieldAndHornSection: true,
+  /** Rolls without a 7 before the favors shop offers new heat bonuses. */
+  heatRollsPerFavorOffer: 4,
+} as const;
+
+export const sevenYearItchTableConfig = {
+  ...sevenYearItchGameplayConfig,
   /** Max free-odds stake as a multiple of the current pass line stake (simplified table rule). */
   maxFreeOddsMultipleOfPass: 2,
-  minPassBet: 10,
-  minPlaceBet: 5,
   maxPassBetFractionOfBuyIn: 0.25 as number,
 } as const;
 
@@ -42,7 +54,8 @@ export type SevenYearItchHeatBonusId =
   | "look_the_other_way"
   | "inside_man"
   | "kingpins_cut"
-  | "aggressive_expansion";
+  | "aggressive_expansion"
+  | "clean_getaway";
 
 export type SevenYearItchHeatBonus = {
   id: SevenYearItchHeatBonusId;
@@ -50,7 +63,12 @@ export type SevenYearItchHeatBonus = {
   description: string;
   pullWeight: number;
   effect: {
-    type: "shield_next_seven" | "next_non_seven_multiplier" | "place_hit_multiplier" | "risk_reward_multiplier";
+    type:
+      | "shield_next_seven"
+      | "next_non_seven_multiplier"
+      | "place_hit_multiplier"
+      | "risk_reward_multiplier"
+      | "free_divest";
     value: number;
     risk?: "seven_forfeits_table";
   };
@@ -84,6 +102,14 @@ export const sevenYearItchHeatBonuses: readonly SevenYearItchHeatBonus[] = [
     description: "Double the next non-7 payout, but a 7 forfeits everything still on the felt.",
     pullWeight: 12,
     effect: { type: "risk_reward_multiplier", value: 2, risk: "seven_forfeits_table" },
+  },
+  {
+    id: "clean_getaway",
+    title: "Clean Getaway",
+    description:
+      "The next time you Divest, you sweep the back-line bets with no skim — place numbers still pay full street odds for the rest of the hand.",
+    pullWeight: 18,
+    effect: { type: "free_divest", value: 1 },
   },
 ] as const;
 
@@ -120,6 +146,14 @@ export function maxFreeOddsStake(passStake: number, maxMultiple: number = sevenY
   const p = Math.max(0, Math.floor(passStake));
   if (p <= 0) return 0;
   return Math.floor(p * maxMultiple);
+}
+
+/** Apply post-divest skim: full return at scale 1; after Divest, scale is 0.5 on profit only. */
+export function placeBetScaledReturn(point: PointNumber, stake: number, profitScale: number): number {
+  const full = placeBetTotalReturn(point, stake);
+  if (profitScale >= 1 || stake <= 0) return full;
+  const profit = full - stake;
+  return stake + Math.floor(profit * profitScale);
 }
 
 /** Total return (stake + profit) for a winning place bet on `point`. */

@@ -63,7 +63,6 @@ Triggered every **3 spins**. The player is presented with a choice of "Bargains"
 ## 5. Technical Implementation Requirements for AI Agent
 
 ### Data Structures
-
 ```typescript
 interface GameState {
   grid: Symbol[][]; // 5x5 matrix

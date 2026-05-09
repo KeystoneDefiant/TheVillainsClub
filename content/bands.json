@@ -55,6 +55,32 @@
         "feints_00018_.mp3"
       ],
       "interlude_files": []
+    },
+    {
+      "id": "times_new_roman",
+      "display_name": "Times New Roman",
+      "asset_root": "audio/bands/times_new_roman",
+      "music_files": [
+        "Floorboard_Lament.mp3",
+        "Slow_Decay_of_Midnight.mp3",
+        "The_Architects_Watch.mp3",
+        "The_Unlocked_Door.mp3",
+        "Three_Notes_Before_Morning.mp3",
+        "Weight_of_Empty_Rooms.mp3"
+      ],
+      "interlude_files": []
+    },
+    {
+      "id": "velvet",
+      "display_name": "Velvet and Dust",
+      "asset_root": "audio/bands/velvet",
+      "music_files": [
+        "Portrait_of_an_Afternoon.mp3",
+        "Last_Light_in_the_Foyer.mp3",
+        "Keys_Under_Glass.mp3"
+
+      ],
+      "interlude_files": []
     }
   ]
 }

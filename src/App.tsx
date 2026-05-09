@@ -10,6 +10,7 @@ import { BarStubPage } from "@/pages/BarStubPage";
 import { OublietteNo9Page } from "@/pages/OublietteNo9Page";
 import { OublietteNo9LandingPage } from "@/pages/OublietteNo9LandingPage";
 import { SevenYearItchPage } from "@/pages/SevenYearItchPage";
+import { FatesealSilverPage } from "@/pages/FatesealSilverPage";
 import { UiPlayground } from "@/dev/UiPlayground";
 import { ShellBandMusicHost } from "@/audio/useShellBandMusic";
 import { isOublietteStandaloneLandingEnabled, OUBLIETTE_STANDALONE_ROUTE } from "@/config/standaloneLanding";
@@ -33,6 +34,7 @@ export default function App() {
           />
           <Route path="/minigames/oubliette-no9" element={<OublietteNo9Page />} />
           <Route path="/minigames/seven-year-itch" element={<SevenYearItchPage />} />
+          <Route path="/minigames/fateseal-silver" element={<FatesealSilverPage />} />
           <Route path="/__playground" element={<UiPlayground />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

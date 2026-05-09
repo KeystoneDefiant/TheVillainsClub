@@ -75,4 +75,17 @@ describe("barRouteState", () => {
       }),
     ).toMatch(/feds took the layout/i);
   });
+
+  it("tableReturnTagline uses Fateseal copy when gameId matches", () => {
+    const buyIn = villainsGameDefaults.fatesealSilver.defaultBuyIn;
+    expect(
+      tableReturnTagline({
+        gameId: "fateseal_silver",
+        buyIn,
+        totalReturn: 0,
+        tableRound: 3,
+        tiers: 0,
+      }),
+    ).toMatch(/seal stayed shut/i);
+  });
 });

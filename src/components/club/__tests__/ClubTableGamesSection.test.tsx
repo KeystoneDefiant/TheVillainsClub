@@ -16,6 +16,7 @@ function renderSection() {
           <Route path="/bar" element={<ClubTableGamesSection />} />
           <Route path="/minigames/oubliette-no9" element={<div data-testid="in-game">in game</div>} />
           <Route path="/minigames/seven-year-itch" element={<div data-testid="in-7yi">7yi</div>} />
+          <Route path="/minigames/fateseal-silver" element={<div data-testid="in-fateseal">fateseal</div>} />
         </Routes>
       </MemoryRouter>
     </MantineProvider>,
@@ -94,5 +95,11 @@ describe("ClubTableGamesSection", () => {
     renderSection();
     expect(screen.getByRole("button", { name: /resume 7 year itch/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /7 year itch \(crapless\)/i })).toBeDisabled();
+  });
+
+  it("navigates to Fateseal Silver when start succeeds", () => {
+    renderSection();
+    fireEvent.click(screen.getByRole("button", { name: /fateseal silver \(cascading slot\)/i }));
+    expect(screen.getByTestId("in-fateseal")).toBeInTheDocument();
   });
 });

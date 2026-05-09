@@ -7,6 +7,7 @@ test("main menu to club floor", async ({ page }) => {
   await expect(page.getByText("Tonight’s menu", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: /oubliette no\. 9/i })).toBeVisible();
   await expect(page.getByRole("button", { name: /7 year itch/i })).toBeVisible();
+  await expect(page.getByRole("button", { name: /fateseal silver/i })).toBeVisible();
 });
 
 test("club table buy-in opens Oubliette No. 9", async ({ page }) => {
@@ -76,6 +77,20 @@ test("club table buy-in opens 7 Year Itch", async ({ page }) => {
   await pass.click();
   await expect(page.getByRole("button", { name: /^roll$/i })).toBeEnabled();
   await expect(page.getByRole("button", { name: /save and return later/i })).toBeVisible();
+});
+
+test("club table buy-in opens Fateseal Silver", async ({ page }) => {
+  await page.goto("/menu");
+  await page.getByRole("button", { name: /enter the club/i }).click();
+  await expect(page).toHaveURL(/\/bar$/);
+
+  await page.getByRole("button", { name: /fateseal silver/i }).click();
+  await expect(page.getByRole("heading", { name: /fateseal silver/i })).toBeVisible();
+  await page.getByRole("button", { name: /start game/i }).click();
+  await expect(page).toHaveURL(/\/minigames\/fateseal-silver$/);
+
+  await expect(page.getByTestId("fateseal-root")).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("button", { name: /the ritual \(spin\)/i })).toBeDisabled();
 });
 
 test("7 Year Itch cash-out is disabled while a point is active", async ({ page }) => {

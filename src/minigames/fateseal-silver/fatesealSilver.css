@@ -1,0 +1,80 @@
+.fateseal-root {
+  --fs-silver: #c8d0da;
+  --fs-crimson: #8b1c1c;
+  --fs-void: #0a0a0c;
+  --fs-stone: #1c1e22;
+  height: 100%;
+  min-height: 0;
+  padding: 0.5rem;
+  background: linear-gradient(165deg, var(--fs-stone), #0e0f12 70%);
+  color: var(--fs-silver);
+}
+
+.fateseal-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 4px;
+  width: min(100%, 340px);
+  aspect-ratio: 1;
+  margin: 0 auto;
+}
+
+.fateseal-cell {
+  border-radius: 6px;
+  border: 1px solid rgba(200, 208, 218, 0.2);
+  background: rgba(10, 10, 12, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(10px, 2.5vw, 13px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  min-height: 0;
+}
+
+.fateseal-cell--void {
+  background: radial-gradient(circle at 50% 45%, #1a1528, #050306 72%);
+  border-color: rgba(120, 90, 160, 0.45);
+  color: #6a5a8a;
+  animation: fateseal-void-pull 2.8s ease-in-out infinite;
+}
+
+@keyframes fateseal-void-pull {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: inset 0 0 0 1px rgba(80, 60, 120, 0.2);
+  }
+  50% {
+    transform: scale(1.03);
+    box-shadow: inset 0 0 22px rgba(40, 20, 80, 0.35);
+  }
+}
+
+.fateseal-cell--voidNeighbor {
+  animation: fateseal-void-vibe 1.1s ease-in-out infinite;
+}
+
+@keyframes fateseal-void-vibe {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(0.5px, -0.5px);
+  }
+  75% {
+    transform: translate(-0.5px, 0.5px);
+  }
+}
+
+.fateseal-cell--scatter {
+  color: var(--fs-crimson);
+  border-color: rgba(139, 28, 28, 0.5);
+}
+
+.fateseal-cell--wild {
+  color: #e8eef5;
+  border-color: rgba(200, 208, 218, 0.45);
+}

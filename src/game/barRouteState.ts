@@ -43,6 +43,21 @@ export function tableReturnTagline(f: BarRouteState["lastTable"]): string {
     }
     return "Back from the felt — club balance squared.";
   }
+  if (f.gameId === "fateseal_silver") {
+    if (f.totalReturn === 0) {
+      return "The seal stayed shut — the void kept your stake and yawned.";
+    }
+    if (f.tableRound >= 18) {
+      return "That many rituals? The Crossroads will remember your name.";
+    }
+    if (f.tiers > 0) {
+      return "The house pays through gritted teeth on those tiers — burn silver before dawn.";
+    }
+    if (f.totalReturn >= f.buyIn * 6) {
+      return "The ledger closed in your favor. Don’t tempt the next eclipse.";
+    }
+    return "The bar takes your tithe — club balance squared.";
+  }
   if (f.tableRound >= 30) {
     return "You went deep. The bar will pretend it never saw the math.";
   }

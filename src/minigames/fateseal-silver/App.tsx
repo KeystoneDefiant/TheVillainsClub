@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import {
   Box,
   Button,
@@ -82,23 +82,78 @@ function splitCascadeStepPayout(payout: number, prophecyHits: number): number[] 
 
 const CASCADE_FOCUS_MS = 140;
 const CASCADE_EMIT_AFTER_MS = 100;
-/** Long enough for `.fateseal-payout-flyoff` (~480ms) to finish before the grid refills. */
-const CASCADE_FLOAT_MS = 520;
+/**
+ * Time the prophecy / payout overlay holds with the BEFORE grid before the
+ * post-cascade refill swaps in. Tuned so the payout flyoff (~480ms total) is
+ * mostly past its peak when the new tiles begin to drop.
+ */
+const CASCADE_FLOAT_MS = 360;
+/**
+ * Window during which the post-cascade grid is shown with `--dropIn` cells
+ * animating in. Must comfortably exceed the drop-in animation duration plus
+ * the per-row stagger (CSS: 320ms anim + 4 × 35ms stagger = 460ms).
+ */
+const CASCADE_REFILL_MS = 480;
 /** Final beat after tiles settle visually before next cascade depth. */
-const CASCADE_SETTLE_MS = 200;
+const CASCADE_SETTLE_MS = 80;
 
-/** Timings tuned so total per depth ≈ CASCADE_FOCUS_MS + CASCADE_EMIT_AFTER_MS + CASCADE_FLOAT_MS + CASCADE_SETTLE_MS. */
+/**
+ * Timings tuned so total per depth ≈
+ * CASCADE_FOCUS_MS + CASCADE_EMIT_AFTER_MS + CASCADE_FLOAT_MS + CASCADE_REFILL_MS + CASCADE_SETTLE_MS.
+ */
 const CASCADE_STEP_DURATION_MS =
-  CASCADE_FOCUS_MS + CASCADE_EMIT_AFTER_MS + CASCADE_FLOAT_MS + CASCADE_SETTLE_MS;
+  CASCADE_FOCUS_MS +
+  CASCADE_EMIT_AFTER_MS +
+  CASCADE_FLOAT_MS +
+  CASCADE_REFILL_MS +
+  CASCADE_SETTLE_MS;
+
+/**
+ * Window dedicated to the spin's initial tablet fill (after the prior round's
+ * grid is replaced by a fresh randomized roll). Holds the cascade-step gating
+ * back until the tiles have visibly "landed" on the tablet.
+ */
+const FILL_DURATION_MS = 460;
 
 type CascadeOverlay = {
-  /** Identifies cascade depth for payout flyoff remount animation. */
+  /**
+   * Identifies cascade depth for payout flyoff remount animation. Use `-1`
+   * for the synthetic initial-fill frame so its cell keys do not collide
+   * with cascade-depth flyoffs.
+   */
   depth: number;
   grid: FatesealSymbolId[][];
   removalKeys: ReadonlySet<string>;
   prophecyKeys: ReadonlySet<string>;
+  /** Cells that should play the drop-in CSS animation against the current grid. */
+  dropInKeys: ReadonlySet<string>;
   payouts: readonly { cellKey: string; text: string }[];
 };
+
+function diffDropInKeys(
+  before: FatesealSymbolId[][],
+  after: FatesealSymbolId[][],
+): Set<string> {
+  const out = new Set<string>();
+  for (let r = 0; r < after.length; r++) {
+    const row = after[r]!;
+    const prev = before[r] ?? [];
+    for (let c = 0; c < row.length; c++) {
+      if (prev[c] !== row[c]) out.add(`${r},${c}`);
+    }
+  }
+  return out;
+}
+
+function allCellKeys(grid: FatesealSymbolId[][]): Set<string> {
+  const out = new Set<string>();
+  for (let r = 0; r < grid.length; r++) {
+    for (let c = 0; c < grid[r]!.length; c++) {
+      out.add(`${r},${c}`);
+    }
+  }
+  return out;
+}
 
 function adjacentVoid(grid: FatesealSymbolId[][], row: number, col: number): boolean {
   const dirs = [
@@ -263,6 +318,12 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
     setBusy(true);
     clearCascadeTimers();
     const rng = rngFactory();
+    /**
+     * The grid that was visible to the player before this spin replaces it
+     * with a fresh randomized roll. Used to compute which cells appear "new"
+     * for the initial fill drop-in animation.
+     */
+    const preSpinGrid = engine.grid;
     const result = runSpin(engine, rng);
 
     const pushLedgerAndFinish = () => {
@@ -283,17 +344,46 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
     };
 
     const frames = result.cascadeKeyframes;
-    const noAnim = reduceMotion || frames.length === 0;
 
-    if (noAnim) {
+    if (reduceMotion) {
       pushLedgerAndFinish();
       return;
     }
 
-    let at = 0;
+    /**
+     * The post-fill grid the player sees once the tablet is full. When the
+     * spin produced cascade frames, frames[0].gridBeforeRemoval is that
+     * grid; otherwise the engine's resolved grid is the final visible one.
+     */
+    const postFillGrid =
+      frames.length > 0 ? frames[0]!.gridBeforeRemoval : result.nextState.grid;
+    const fillDropIns = diffDropInKeys(preSpinGrid, postFillGrid);
+    /**
+     * Even when no cell symbol changed (e.g. an empty initial grid scenario
+     * in tests), animate the whole tablet so the fill always reads as "new"
+     * to the player.
+     */
+    const fillKeys =
+      fillDropIns.size > 0 ? fillDropIns : allCellKeys(postFillGrid);
+
+    cascadeTimersRef.current.push(
+      window.setTimeout(() => {
+        setCascadeOverlay({
+          depth: -1,
+          grid: dupGrid(postFillGrid),
+          removalKeys: new Set<string>(),
+          prophecyKeys: new Set<string>(),
+          dropInKeys: fillKeys,
+          payouts: [],
+        });
+      }, 0),
+    );
+
+    let at = FILL_DURATION_MS;
     for (const fr of frames) {
       const removals = new Set(fr.removedKeys);
       const prophecies = new Set(fr.prophecyMatchKeys);
+      const refillDropIns = diffDropInKeys(fr.gridBeforeRemoval, fr.gridAfterCascade);
 
       cascadeTimersRef.current.push(
         window.setTimeout(() => {
@@ -302,6 +392,7 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
             grid: dupGrid(fr.gridBeforeRemoval),
             removalKeys: removals,
             prophecyKeys: prophecies,
+            dropInKeys: new Set<string>(),
             payouts: [],
           });
         }, at),
@@ -323,6 +414,7 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
             grid: dupGrid(fr.gridBeforeRemoval),
             removalKeys: removals,
             prophecyKeys: prophecies,
+            dropInKeys: new Set<string>(),
             payouts,
           });
         }, at + CASCADE_FOCUS_MS + CASCADE_EMIT_AFTER_MS),
@@ -335,6 +427,7 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
             grid: dupGrid(fr.gridAfterCascade),
             removalKeys: new Set<string>(),
             prophecyKeys: new Set<string>(),
+            dropInKeys: refillDropIns,
             payouts: [],
           });
         }, at + CASCADE_FOCUS_MS + CASCADE_EMIT_AFTER_MS + CASCADE_FLOAT_MS),
@@ -381,11 +474,23 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
             const voidNb = sym !== "void" && adjacentVoid(displayGrid, r, c);
             const removing = cascadeOverlay?.removalKeys.has(ck);
             const prophecyHit = cascadeOverlay?.prophecyKeys.has(ck);
+            const dropIn = cascadeOverlay?.dropInKeys.has(ck);
             const flyoffs =
               cascadeOverlay?.payouts.filter((p) => p.cellKey === ck && p.text) ?? [];
+            /**
+             * Re-keying drop-in cells per cascade depth restarts the CSS
+             * animation between consecutive frames where the same row/col
+             * receives a new tile (otherwise React keeps the existing DOM
+             * node and the animation is skipped).
+             */
+            const cellKey = dropIn ? `${ck}@${cascadeOverlay?.depth ?? 0}` : ck;
+            const dropInStyle =
+              dropIn && !reduceMotion
+                ? ({ ["--fs-drop-row" as string]: r } as CSSProperties)
+                : undefined;
             return (
               <div
-                key={ck}
+                key={cellKey}
                 className={[
                   "fateseal-cell",
                   sym === "void" ? "fateseal-cell--void" : "",
@@ -394,9 +499,11 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
                   voidNb && reduceMotion ? "" : voidNb ? "fateseal-cell--voidNeighbor" : "",
                   !reduceMotion && removing ? "fateseal-cell--cascadePulse" : "",
                   !reduceMotion && prophecyHit && cascadeOverlay?.payouts.length ? "fateseal-cell--prophecyBloom" : "",
+                  !reduceMotion && dropIn ? "fateseal-cell--dropIn" : "",
                 ]
                   .filter(Boolean)
                   .join(" ")}
+                style={dropInStyle}
               >
                 {SYMBOL_LABEL[sym]}
                 {flyoffs.map((p, fi) => (
@@ -633,8 +740,14 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
                         Complete a ritual spin to imprint the ledger.
                       </Text>
                     ) : (
-                      lastFeed.map((line) => (
-                        <Text key={line} size="xs" c={clubTokens.text.secondary}>
+                      /**
+                       * Two cascades from different spins can produce the
+                       * same human-readable line (e.g. "Cascade 3: +25
+                       * (prophecy 1)"); composing the key with the array
+                       * index keeps React happy without changing copy.
+                       */
+                      lastFeed.map((line, idx) => (
+                        <Text key={`${idx}:${line}`} size="xs" c={clubTokens.text.secondary}>
                           {line}
                         </Text>
                       ))

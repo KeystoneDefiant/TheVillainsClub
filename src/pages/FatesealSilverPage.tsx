@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef } from "react";
 import { Box, Loader, Text } from "@mantine/core";
 import { useNavigate } from "react-router-dom";
 import { MinigameLazyErrorBoundary } from "@/components/errors/MinigameLazyErrorBoundary";
@@ -18,12 +18,19 @@ export function FatesealSilverPage() {
   const navigate = useNavigate();
   const reduceMotion = usePrefersReducedMotion();
   const activeSession = useClubWallet((s) => s.activeSession);
+  /**
+   * Guards the "no active session → redirect to /menu" effect so that calling
+   * `endSession` during cash-out does not trample the immediate `navigate("/bar", { state })`
+   * with the settlement quip dock state.
+   */
+  const isReturningToClubRef = useRef(false);
 
   useEffect(() => {
     document.title = "Fateseal Silver — The Villains Club";
   }, []);
 
   useEffect(() => {
+    if (isReturningToClubRef.current) return;
     if (!activeSession || activeSession.gameId !== "fateseal_silver") {
       navigate("/menu", { replace: true });
     }
@@ -33,6 +40,7 @@ export function FatesealSilverPage() {
 
   const handleReturnToClub = useCallback(
     (detail: ClubTableReturnDetail) => {
+      isReturningToClubRef.current = true;
       const snap = useClubWallet.getState().activeSession;
       const buyIn = snap?.buyIn ?? 0;
       const gameId = snap?.gameId ?? "fateseal_silver";

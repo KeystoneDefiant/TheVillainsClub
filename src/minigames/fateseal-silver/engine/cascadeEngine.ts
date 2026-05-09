@@ -39,12 +39,24 @@ export type CascadeLogLine =
   | { kind: "scatter_ritual_started"; spins: number }
   | { kind: "insufficient_funds" };
 
+/** One cascades step for UI animation (cells before removals, payouts, settled grid after refill). */
+export type CascadeKeyframe = {
+  depth: number;
+  gridBeforeRemoval: FatesealSymbolId[][];
+  removedKeys: string[];
+  prophecyMatchKeys: string[];
+  payout: number;
+  gridAfterCascade: FatesealSymbolId[][];
+};
+
 export type SpinResult = {
   nextState: FatesealEngineState;
   log: CascadeLogLine[];
   totalPayout: number;
   /** True every 3 completed spins — open Crossroads before the next spin. */
   crossroadsGate: boolean;
+  /** Cascade steps keyed for shell animation — empty when the spin clears no tiles. */
+  cascadeKeyframes: CascadeKeyframe[];
 };
 
 const GRID = FATESEAL_GRID_SIZE;
@@ -254,12 +266,28 @@ function runCascadeStep(
   pool: readonly FatesealPoolEntry[],
   rng: Rng,
   depth: number,
-): { grid: FatesealSymbolId[][]; stepPayout: number; prophecyMatches: number; clusterTiles: number; removed: number } {
+): {
+  grid: FatesealSymbolId[][];
+  stepPayout: number;
+  prophecyMatches: number;
+  clusterTiles: number;
+  removed: number;
+  prophecyMatchKeys: string[];
+  removedKeys: string[];
+} {
   const prophecy = prophecyMatchCells(grid, state.activeProphecy);
   const clusters = findClusterRemovalCells(grid);
   const remove = new Set<string>([...prophecy, ...clusters]);
   if (remove.size === 0) {
-    return { grid, stepPayout: 0, prophecyMatches: 0, clusterTiles: 0, removed: 0 };
+    return {
+      grid,
+      stepPayout: 0,
+      prophecyMatches: 0,
+      clusterTiles: 0,
+      removed: 0,
+      prophecyMatchKeys: [],
+      removedKeys: [],
+    };
   }
   const mult = cascadeMultAt(depth);
   const base = modeMult(state.prophecyMode);
@@ -275,6 +303,8 @@ function runCascadeStep(
     prophecyMatches: prophecy.size,
     clusterTiles: [...clusters].filter((k) => !prophecy.has(k)).length,
     removed: remove.size,
+    prophecyMatchKeys: [...prophecy],
+    removedKeys: [...remove],
   };
 }
 
@@ -300,15 +330,22 @@ export function createInitialFatesealState(sessionWallet: number, buyIn: number,
 
 export function runSpin(state: FatesealEngineState, rng: Rng, options?: { skipInitialFill?: boolean }): SpinResult {
   const log: CascadeLogLine[] = [];
+  const emptyResult = (): SpinResult => ({
+    nextState: state,
+    log,
+    totalPayout: 0,
+    crossroadsGate: false,
+    cascadeKeyframes: [],
+  });
   if (state.activeProphecy.length === 0) {
-    return { nextState: state, log, totalPayout: 0, crossroadsGate: false };
+    return emptyResult();
   }
 
   const useFreeSpin = state.freeRitualSpinsLeft > 0;
   const bet = useFreeSpin ? 0 : state.baseBet;
   if (state.sessionWallet < bet) {
     log.push({ kind: "insufficient_funds" });
-    return { nextState: state, log, totalPayout: 0, crossroadsGate: false };
+    return emptyResult();
   }
 
   let wallet = state.sessionWallet - bet;
@@ -328,11 +365,21 @@ export function runSpin(state: FatesealEngineState, rng: Rng, options?: { skipIn
   let totalPayout = 0;
   let depth = 0;
   const maxCascadeSteps = 200;
+  const cascadeKeyframes: CascadeKeyframe[] = [];
   for (; depth < maxCascadeSteps; depth++) {
+    const gridBeforeRemoval = grid.map((row) => [...row]);
     const step = runCascadeStep(grid, state, effPool, rng, depth);
     grid = step.grid;
     if (step.removed === 0) break;
     totalPayout += step.stepPayout;
+    cascadeKeyframes.push({
+      depth,
+      gridBeforeRemoval,
+      removedKeys: step.removedKeys,
+      prophecyMatchKeys: step.prophecyMatchKeys,
+      payout: step.stepPayout,
+      gridAfterCascade: grid.map((row) => [...row]),
+    });
     log.push({
       kind: "cascade",
       depth,
@@ -378,5 +425,6 @@ export function runSpin(state: FatesealEngineState, rng: Rng, options?: { skipIn
     log,
     totalPayout,
     crossroadsGate: spinCount % 3 === 0,
+    cascadeKeyframes,
   };
 }

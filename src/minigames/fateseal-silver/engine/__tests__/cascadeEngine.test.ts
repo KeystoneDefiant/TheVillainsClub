@@ -45,8 +45,13 @@ describe("fateseal cascadeEngine", () => {
     const rng = () => 0.5;
     const result = runSpin(s, rng, { skipInitialFill: true });
     expect(result.log.some((l) => l.kind === "cascade")).toBe(true);
+    const cascadeLogs = result.log.filter((l) => l.kind === "cascade");
+    expect(result.cascadeKeyframes.length).toBe(cascadeLogs.length);
     const first = result.log.find((l) => l.kind === "cascade");
     expect(first?.payout).toBe(Math.floor(25 * 10 * 10 * 1 * fatesealCascadePayoutScale));
+    const kf0 = result.cascadeKeyframes[0];
+    expect(kf0?.prophecyMatchKeys.length).toBe(25);
+    expect(kf0?.removedKeys.length).toBe(25);
     expect(result.nextState.sessionWallet).toBeGreaterThan(s.sessionWallet - 10);
   });
 

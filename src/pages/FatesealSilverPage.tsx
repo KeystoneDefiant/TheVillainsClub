@@ -61,7 +61,7 @@ export function FatesealSilverPage() {
       className={reduceMotion ? undefined : "shell-route-fade-in"}
       style={{
         height: "100%",
-        overflow: "auto",
+        overflow: "hidden",
         transform: "translate3d(0, 0, 0)",
         backfaceVisibility: "hidden",
         opacity: reduceMotion ? 1 : undefined,

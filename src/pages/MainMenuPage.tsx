@@ -21,11 +21,12 @@ import { barDateKey } from "@/audio/barBandSchedule";
 import { effectiveBandIndexForBarDate } from "@/audio/barBandOverrideStore";
 import { bandsCatalog } from "@/config/bandsCatalog";
 import { villainsGameDefaults } from "@/config/villainsGameDefaults";
+import { ClubSettlementDock } from "@/components/club/ClubSettlementDock";
 import { MenuHazeBackground } from "@/components/layout/MenuHazeBackground";
 import { ClubButton } from "@/components/ui/ClubButton";
 import { ClubHeading } from "@/components/ui/ClubHeading";
 import { ClubPanel } from "@/components/ui/ClubPanel";
-import { isBarRouteState, tableReturnTagline } from "@/game/barRouteState";
+import { isBarRouteState } from "@/game/barRouteState";
 import { useClubFlowStore } from "@/game/clubFlowStore";
 import { useClubWallet } from "@/game/clubWalletStore";
 import { resetShellGameProgress } from "@/game/resetShellGameProgress";
@@ -348,8 +349,9 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
             exit={reduceMotion ? { opacity: 0 } : { y: 140, opacity: 0 }}
             transition={{ duration: 0.48, ease: preset.easing }}
           >
-            <ClubPanel maw={470} w="min(470px, calc(100vw - 2rem))" className="club-menu-card">
-              <Stack gap="md">
+            <div className="club-landing__menu-inner">
+              <ClubPanel maw={470} w="min(470px, calc(100vw - 2rem))" className="club-menu-card">
+                <Stack gap="md">
                 <Stack gap={3} ta="center">
                   <Text size="xs" tt="uppercase" c={clubTokens.text.muted} fw={700}>
                     Tonight’s menu
@@ -358,15 +360,6 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
                     The bar is open.
                   </ClubHeading>
                 </Stack>
-
-                {settlementFlash?.lastTable ? (
-                  <Alert color="teal" variant="light" title="Table settled">
-                    <Text size="sm">{tableReturnTagline(settlementFlash.lastTable)}</Text>
-                    <Text size="xs" mt={6} c="dimmed">
-                      Returned {settlementFlash.lastTable.totalReturn.toLocaleString()} credits.
-                    </Text>
-                  </Alert>
-                ) : null}
 
                 <Group justify="space-between">
                   <Text size="sm" c={clubTokens.text.secondary}>
@@ -446,7 +439,12 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
                   )}
                 </Text>
               </Stack>
-            </ClubPanel>
+              </ClubPanel>
+
+              {settlementFlash?.lastTable ? (
+                <ClubSettlementDock lastTable={settlementFlash.lastTable} reduceMotion={reduceMotion} />
+              ) : null}
+            </div>
           </motion.section>
         )}
       </AnimatePresence>

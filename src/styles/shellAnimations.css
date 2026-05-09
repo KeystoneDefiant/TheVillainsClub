@@ -177,6 +177,39 @@
   justify-content: flex-start;
 }
 
+.club-landing__menu-inner {
+  display: flex;
+  flex-flow: row wrap;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: clamp(1rem, 3vw, 2rem);
+  width: 100%;
+  max-width: min(1040px, calc(100vw - 4rem));
+  box-sizing: border-box;
+}
+
+.club-landing__menu-inner > .club-menu-card {
+  flex: 1 1 min(470px, 100%);
+  max-width: min(470px, 100%);
+}
+
+.club-settlement-dock {
+  flex: 0 1 min(360px, 100%);
+  margin-inline-start: auto;
+}
+
+@media (max-width: 840px) {
+  .club-settlement-dock {
+    margin-inline-start: 0;
+    width: 100%;
+    max-width: min(470px, 100%);
+  }
+}
+
+.club-settlement-dock__quip {
+  margin: 0;
+}
+
 .club-landing__shelves {
   position: absolute;
   inset: 0;

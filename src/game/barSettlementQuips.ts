@@ -2,15 +2,16 @@ import rawQuips from "../../content/quips.json";
 import type { BarRouteState } from "./barRouteState";
 
 /** Outcome buckets for bartender VO lines (see repo `content/quips.json`). */
-export type BarSettlementTone = "extreme_loss" | "loss" | "win" | "extreme_win";
+export type BarSettlementTone = "extreme_loss" | "loss" | "break_even" | "win" | "extreme_win";
 
-const TONES: readonly BarSettlementTone[] = ["extreme_loss", "loss", "win", "extreme_win"];
+const TONES: readonly BarSettlementTone[] = ["extreme_loss", "loss", "break_even", "win", "extreme_win"];
 
 export type ParsedSettlementQuips = Record<BarSettlementTone, readonly string[]>;
 
 const FALLBACK: ParsedSettlementQuips = {
   extreme_loss: ["The ledger kept most of tonight’s tithe—but the stools still owe you sympathy."],
   loss: ["Closer to even than oblivion—that’s adulthood with garnish."],
+  break_even: ["Net zero—the rail shook your hand and let you leave with the shirt you wore in."],
   win: ["The club balance crept upward. Don’t make eye contact with hubris ordering another round."],
   extreme_win: ["That printout looks exaggerated. Drink water and verify before bragging sideways."],
 };
@@ -73,8 +74,9 @@ export function barSettlementTone(lastTable: BarRouteState["lastTable"]): BarSet
 
   if (back <= 0 || fractionBack < 0.22) return "extreme_loss";
   if (fractionBack < 0.92) return "loss";
+  /** Exact return of buy-in with no tier stamp — net club delta zero. */
+  if (tiers === 0 && Math.round(back - buyIn) === 0) return "break_even";
   if (fractionBack >= 3 || tiers >= 2) return "extreme_win";
-  /** Break-even counts as win; modest profit or tier credit uses the same upbeat bucket. */
   if (fractionBack >= 1 || tiers >= 1) return "win";
   return "loss";
 }

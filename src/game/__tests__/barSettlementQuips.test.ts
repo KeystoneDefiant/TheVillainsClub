@@ -33,8 +33,13 @@ describe("barSettlementQuips", () => {
     expect(barSettlementTone(table({ totalReturn: 919, buyIn: 1000, tiers: 0 }))).toBe("loss");
   });
 
-  it("classifies win for break-even or better and light tier credit", () => {
-    expect(barSettlementTone(table({ totalReturn: 1000, buyIn: 1000, tiers: 0 }))).toBe("win");
+  it("classifies break_even for exact buy-in back with no tiers", () => {
+    expect(barSettlementTone(table({ totalReturn: 1000, buyIn: 1000, tiers: 0 }))).toBe("break_even");
+    expect(barSettlementTone(table({ totalReturn: 50, buyIn: 50, tiers: 0 }))).toBe("break_even");
+  });
+
+  it("classifies win for profit or tier credit without zero net edge case", () => {
+    expect(barSettlementTone(table({ totalReturn: 1001, buyIn: 1000, tiers: 0 }))).toBe("win");
     expect(barSettlementTone(table({ totalReturn: 950, buyIn: 1000, tiers: 1 }))).toBe("win");
   });
 

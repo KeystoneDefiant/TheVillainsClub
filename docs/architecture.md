@@ -20,7 +20,7 @@
 ## Economy and specials
 
 - `clubWalletStore` owns club balance and active table session.
-- Leaving a settled table pushes `ClubTableReturnDetail` → `BarRouteState` (`buildBarRouteStateFromReturn`) in router `location.state`; `MainMenuPage` consumes it once, replaces history with `state: null`, and shows **`ClubSettlementDock`** beside the club menu — net credits vs buy-in plus a deterministic random quip from **`content/quips.json`** via `src/game/barSettlementQuips.ts`.
+- Leaving a settled table pushes `ClubTableReturnDetail` → `BarRouteState` (`buildBarRouteStateFromReturn`) in router `location.state`; `MainMenuPage` consumes it once, replaces history with `state: null`, and shows **`ClubSettlementDock`** beside the club menu — net credits vs buy-in plus a deterministic random quip from **`content/quips.json`** (buckets include **break-even** when return equals buy-in with no tiers) via `src/game/barSettlementQuips.ts`.
 - `sessionSettlement.ts` applies per-game cap multipliers (`oubliette_cap_mult`, `seven_year_itch_cap_mult`, `fateseal_cap_mult`) and the shared `all_minigames_cap_mult` from `content/specials.json`.
 - Specials resolve through `specialsResolver.ts`; config rows may express payout multipliers, cap multipliers, or a first-buy-in-credit marker for future persisted daily redemption.
 

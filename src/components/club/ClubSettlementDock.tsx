@@ -17,10 +17,11 @@ const GAME_TITLE: Record<string, string> = {
   fateseal_silver: "Fateseal Silver",
 };
 
-function formatSignedCredits(n: number): string {
+function formatDeltaCredits(n: number): string {
+  if (n === 0) return "Even";
   const abs = Math.abs(Math.round(n));
   const s = abs.toLocaleString();
-  return n >= 0 ? `+${s}` : `−${s}`;
+  return n > 0 ? `+${s}` : `−${s}`;
 }
 
 type ClubSettlementDockProps = {
@@ -45,9 +46,11 @@ export function ClubSettlementDock({ lastTable, reduceMotion }: ClubSettlementDo
       ? "Rare air"
       : tone === "win"
         ? "House winced politely"
-        : tone === "extreme_loss"
-          ? "Bleeding varnish"
-          : "Honest abrasion";
+        : tone === "break_even"
+          ? "Stalemate poured neat"
+          : tone === "extreme_loss"
+            ? "Bleeding varnish"
+            : "Honest abrasion";
 
   return (
     <motion.aside
@@ -80,7 +83,7 @@ export function ClubSettlementDock({ lastTable, reduceMotion }: ClubSettlementDo
               Net vs buy-in (club wallet)
             </Text>
             <Text size="xl" fw={900} lh={1.2} style={{ letterSpacing: "0.02em", color: deltaColor }}>
-              {formatSignedCredits(delta)} credits
+              {formatDeltaCredits(delta)} credits
             </Text>
             <Text size="xs" mt={6} c="dimmed">
               Compared with what left your club balance at table open.

@@ -74,7 +74,6 @@ test("club table buy-in opens 7 Year Itch", async ({ page }) => {
   await expect(page.getByTestId("seven-year-itch-root")).toBeVisible({ timeout: 30_000 });
   const pass = page.getByTestId("felt-pass");
   await pass.click();
-  await pass.click();
   await expect(page.getByRole("button", { name: /^roll$/i })).toBeEnabled();
   await expect(page.getByRole("button", { name: /save and return later/i })).toBeVisible();
 });
@@ -114,9 +113,8 @@ test("7 Year Itch cash-out is disabled while a point is active", async ({ page }
 
   const pass = page.getByTestId("felt-pass");
   await pass.click();
-  await pass.click();
   await page.getByRole("button", { name: /^roll$/i }).click();
 
-  await expect(page.getByText(/case file/i)).toBeVisible();
+  await expect(page.getByText(/case file/i)).toBeVisible({ timeout: 5000 });
   await expect(page.getByRole("button", { name: /cash out/i })).toBeDisabled();
 });

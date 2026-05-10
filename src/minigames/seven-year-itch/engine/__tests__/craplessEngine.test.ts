@@ -34,7 +34,13 @@ describe("resolveRoll crapless", () => {
   });
 
   it("seven-out clears layout without wallet credit", () => {
-    const t0 = { phase: "point" as const, point: 8 as const, rollsSincePoint: 2 };
+    const t0 = {
+      phase: "point" as const,
+      point: 8 as const,
+      rollsSincePoint: 2,
+      placePayoutScale: 1,
+      hasUsedDivest: false,
+    };
     const b0 = { ...initialBets(), passLine: 100, freeOdds: 100, place: { 6: 30 } };
     const r = resolveRoll(t0, b0, roll(3, 4));
     expect(r.walletDelta).toBe(0);
@@ -45,7 +51,13 @@ describe("resolveRoll crapless", () => {
   });
 
   it("making the point pays pass, odds, and place on the point", () => {
-    const t0 = { phase: "point" as const, point: 6 as const, rollsSincePoint: 1 };
+    const t0 = {
+      phase: "point" as const,
+      point: 6 as const,
+      rollsSincePoint: 1,
+      placePayoutScale: 1,
+      hasUsedDivest: false,
+    };
     const b0 = { ...initialBets(), passLine: 100, freeOdds: 60, place: { 6: 30 } };
     const r = resolveRoll(t0, b0, roll(3, 3));
     expect(r.walletDelta).toBe(397);
@@ -54,7 +66,13 @@ describe("resolveRoll crapless", () => {
   });
 
   it("place hit (not point) pays profit only; stake rides", () => {
-    const t0 = { phase: "point" as const, point: 8 as const, rollsSincePoint: 0 };
+    const t0 = {
+      phase: "point" as const,
+      point: 8 as const,
+      rollsSincePoint: 0,
+      placePayoutScale: 1,
+      hasUsedDivest: false,
+    };
     const b0 = { ...initialBets(), passLine: 50, freeOdds: 0, place: { 5: 25 } };
     const r = resolveRoll(t0, b0, roll(2, 3));
     const profit = Math.floor((25 * 7) / 5);
@@ -63,7 +81,13 @@ describe("resolveRoll crapless", () => {
   });
 
   it("increments rollsSincePoint in point phase", () => {
-    const t0 = { phase: "point" as const, point: 9 as const, rollsSincePoint: 0 };
+    const t0 = {
+      phase: "point" as const,
+      point: 9 as const,
+      rollsSincePoint: 0,
+      placePayoutScale: 1,
+      hasUsedDivest: false,
+    };
     const b0 = { ...initialBets(), passLine: 10, freeOdds: 0, place: {} };
     const r = resolveRoll(t0, b0, roll(2, 2));
     expect(r.nextTable.rollsSincePoint).toBe(1);
@@ -97,7 +121,13 @@ describe("resolveRoll crapless", () => {
   });
 
   it("hardway wins on hard roll and carries through point resolution", () => {
-    const t0 = { phase: "point" as const, point: 8 as const, rollsSincePoint: 0 };
+    const t0 = {
+      phase: "point" as const,
+      point: 8 as const,
+      rollsSincePoint: 0,
+      placePayoutScale: 1,
+      hasUsedDivest: false,
+    };
     const b0 = { ...initialBets(), passLine: 50, hardways: { 8: 10 } };
     const r = resolveRoll(t0, b0, roll(4, 4));
     expect(r.walletDelta).toBe(100 + 10 + Math.floor(10 * 9));
@@ -106,12 +136,47 @@ describe("resolveRoll crapless", () => {
   });
 
   it("hardway loses on easy total", () => {
-    const t0 = { phase: "point" as const, point: 8 as const, rollsSincePoint: 0 };
+    const t0 = {
+      phase: "point" as const,
+      point: 8 as const,
+      rollsSincePoint: 0,
+      placePayoutScale: 1,
+      hasUsedDivest: false,
+    };
     const b0 = { ...initialBets(), passLine: 50, hardways: { 8: 10 } };
     const r = resolveRoll(t0, b0, roll(2, 6));
     expect(r.walletDelta).toBe(100);
     expect(r.nextBets.hardways[8]).toBeUndefined();
     expect(r.nextTable.phase).toBe("comeOut");
+  });
+
+  it("halves place profit after divest scale is 0.5", () => {
+    const t0 = {
+      phase: "point" as const,
+      point: 8 as const,
+      rollsSincePoint: 0,
+      placePayoutScale: 0.5,
+      hasUsedDivest: true,
+    };
+    const b0 = { ...initialBets(), passLine: 50, freeOdds: 0, place: { 5: 25 } };
+    const r = resolveRoll(t0, b0, roll(2, 3));
+    const fullProfit = Math.floor((25 * 7) / 5);
+    expect(r.walletDelta).toBe(Math.floor(fullProfit * 0.5));
+    expect(r.nextBets.place[5]).toBe(25);
+  });
+
+  it("resets divest skim when a new come-out begins after the point is made", () => {
+    const t0 = {
+      phase: "point" as const,
+      point: 6 as const,
+      rollsSincePoint: 1,
+      placePayoutScale: 0.5,
+      hasUsedDivest: true,
+    };
+    const b0 = { ...initialBets(), passLine: 100, freeOdds: 0, place: { 6: 30 } };
+    const r = resolveRoll(t0, b0, roll(3, 3));
+    expect(r.nextTable.placePayoutScale).toBe(1);
+    expect(r.nextTable.hasUsedDivest).toBe(false);
   });
 });
 
@@ -150,5 +215,6 @@ describe("7 Year Itch lore and heat config", () => {
     expect(sevenYearItchHeatBonuses.length).toBeGreaterThanOrEqual(3);
     expect(sevenYearItchHeatBonuses.every((bonus) => bonus.pullWeight > 0)).toBe(true);
     expect(sevenYearItchHeatBonuses.map((bonus) => bonus.effect.type)).toContain("shield_next_seven");
+    expect(sevenYearItchHeatBonuses.map((bonus) => bonus.effect.type)).toContain("free_divest");
   });
 });

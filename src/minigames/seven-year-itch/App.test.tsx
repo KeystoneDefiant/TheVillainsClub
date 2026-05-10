@@ -6,6 +6,10 @@ import { buildSevenYearItchSettlementProfile } from "@/game/sessionSettlement";
 import { buildClubTheme } from "@/theme/clubTheme";
 import { SevenYearItchRoot } from "./App";
 
+vi.mock("@/motion/usePrefersReducedMotion", () => ({
+  usePrefersReducedMotion: () => true,
+}));
+
 const buyIn = villainsGameDefaults.sevenYearItch.defaultBuyIn;
 
 function renderGame(onReturnToClubMenu = vi.fn()) {
@@ -46,7 +50,6 @@ describe("SevenYearItchRoot", () => {
     const { onReturnToClubMenu } = renderGame();
 
     const pass = screen.getByTestId("felt-pass");
-    fireEvent.click(pass);
     fireEvent.click(pass);
     fireEvent.click(screen.getByRole("button", { name: /^roll$/i }));
 

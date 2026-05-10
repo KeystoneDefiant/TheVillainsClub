@@ -56,6 +56,37 @@
   margin-bottom: 7px;
 }
 
+.yi-felt-propRow--afterOneRoll {
+  margin-top: 10px;
+  margin-bottom: 0;
+}
+
+.yi-felt-favorBanner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 10px;
+  margin-bottom: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--7yi-amber-dim);
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.yi-felt-favorBanner-label {
+  font-size: 0.58rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: rgba(232, 223, 212, 0.55);
+}
+
+.yi-felt-favorBanner-title {
+  font-family: Georgia, serif;
+  font-weight: 700;
+  color: var(--7yi-amber);
+  font-size: 0.85rem;
+}
+
 .yi-felt-field,
 .yi-felt-horn,
 .yi-felt-place,
@@ -183,6 +214,11 @@
   padding: 4px 0 6px;
 }
 
+.yi-felt-dicePlaceholder {
+  width: 120px;
+  height: 42px;
+}
+
 .yi-felt-rollBtn {
   appearance: none;
   border: none;
@@ -205,6 +241,40 @@
 
 .yi-felt-oddsPassStack {
   grid-template-columns: 1fr 1fr;
+}
+
+.yi-felt-divest {
+  grid-column: 1 / -1;
+  border-radius: 8px;
+  padding: 7px 9px;
+  border: 1px dashed var(--7yi-felt-line);
+  background: rgba(80, 40, 20, 0.2);
+  color: #e8dfd4;
+  cursor: pointer;
+  display: grid;
+  gap: 1px;
+  text-align: left;
+}
+
+.yi-felt-divest:hover:not(:disabled) {
+  border-color: var(--7yi-amber);
+}
+
+.yi-felt-divest:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.yi-felt-divest-label {
+  font-size: 0.58rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(232, 223, 212, 0.6);
+}
+
+.yi-felt-divest-meta {
+  font-size: 0.62rem;
+  color: rgba(232, 223, 212, 0.48);
 }
 
 .yi-felt-odds,
@@ -253,6 +323,53 @@
   color: var(--7yi-amber);
   font-family: ui-monospace, monospace;
   font-weight: 700;
+}
+
+/* Full-screen dice run → dock by roll badge */
+.yi-diceOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  pointer-events: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  padding: 0 0 min(8vh, 48px) 0;
+}
+
+.yi-diceOverlay-inner {
+  position: absolute;
+  left: var(--yi-roll-x0, 20%);
+  bottom: var(--yi-roll-y0, 8%);
+  will-change: transform, left, bottom;
+}
+
+.yi-diceOverlay-inner--roll {
+  animation: yi-dice-rollAcross 0.88s cubic-bezier(0.33, 0.9, 0.4, 1) forwards;
+}
+
+.yi-diceOverlay-inner--dock {
+  animation: yi-dice-dockToBadge 0.48s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes yi-dice-rollAcross {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+  }
+  100% {
+    transform: translate(var(--yi-roll-dx, 120px), var(--yi-roll-dy, -180px)) rotate(720deg) scale(1.05);
+  }
+}
+
+@keyframes yi-dice-dockToBadge {
+  0% {
+    transform: translate(var(--yi-dock-x0, 0), var(--yi-dock-y0, 0)) scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--yi-dock-x1, 0), var(--yi-dock-y1, -42vh)) scale(0.55);
+    opacity: 0.92;
+  }
 }
 
 .yi-dice-pair {
@@ -368,6 +485,11 @@
 
 @media (prefers-reduced-motion: reduce) {
   .yi-die-cube--rolling {
+    animation: none !important;
+  }
+
+  .yi-diceOverlay-inner--roll,
+  .yi-diceOverlay-inner--dock {
     animation: none !important;
   }
 }

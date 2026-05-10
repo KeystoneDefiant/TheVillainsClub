@@ -12,6 +12,7 @@ import {
   isHardRollForNumber,
   isPointNumber,
   maxFreeOddsStake,
+  placeBetScaledReturn,
   placeBetTotalReturn,
   rollTotal,
   sevenYearItchTableConfig,
@@ -25,6 +26,13 @@ export type CraplessTableState = {
   point: PointNumber | null;
   /** Rolls since point established (resets on new come-out or seven-out). */
   rollsSincePoint: number;
+  /**
+   * After Divest (without Clean Getaway), winning place payouts use this scale on profit (e.g. 0.5).
+   * Resets to 1 when the hand ends.
+   */
+  placePayoutScale: number;
+  /** At most one Divest per hand; resets when the hand ends. */
+  hasUsedDivest: boolean;
 };
 
 export type TableBets = {
@@ -56,7 +64,11 @@ export type RollResolution = {
 };
 
 export function initialTableState(): CraplessTableState {
-  return { phase: "comeOut", point: null, rollsSincePoint: 0 };
+  return { phase: "comeOut", point: null, rollsSincePoint: 0, placePayoutScale: 1, hasUsedDivest: false };
+}
+
+function newComeOutTable(): CraplessTableState {
+  return { phase: "comeOut", point: null, rollsSincePoint: 0, placePayoutScale: 1, hasUsedDivest: false };
 }
 
 export function initialBets(): TableBets {
@@ -214,7 +226,7 @@ export function resolveRoll(table: CraplessTableState, bets: TableBets, roll: Di
       lines.push({ kind: "win", text: "Seven on the come-out — pass pays even money. Fresh felt." });
       return {
         roll,
-        nextTable: { phase: "comeOut", point: null, rollsSincePoint: 0 },
+        nextTable: newComeOutTable(),
         walletDelta,
         nextBets: emptyAllBets(),
         lines,
@@ -232,7 +244,13 @@ export function resolveRoll(table: CraplessTableState, bets: TableBets, roll: Di
     });
     return {
       roll,
-      nextTable: { phase: "point", point: total, rollsSincePoint: 0 },
+      nextTable: {
+        phase: "point",
+        point: total,
+        rollsSincePoint: 0,
+        placePayoutScale: table.placePayoutScale,
+        hasUsedDivest: table.hasUsedDivest,
+      },
       walletDelta,
       nextBets: {
         ...nb,
@@ -257,7 +275,7 @@ export function resolveRoll(table: CraplessTableState, bets: TableBets, roll: Di
     lines.push({ kind: "loss", text: "Seven — the bust. Everything on the layout is gone." });
     return {
       roll,
-      nextTable: { phase: "comeOut", point: null, rollsSincePoint: 0 },
+      nextTable: newComeOutTable(),
       walletDelta,
       nextBets: emptyAllBets(),
       lines,
@@ -274,9 +292,15 @@ export function resolveRoll(table: CraplessTableState, bets: TableBets, roll: Di
     }
     const plOnPoint = bets.place[pt] ?? 0;
     if (plOnPoint > 0) {
-      const ret = placeBetTotalReturn(pt, plOnPoint);
+      const ret = placeBetScaledReturn(pt, plOnPoint, table.placePayoutScale);
       walletDelta += ret;
-      lines.push({ kind: "win", text: `Place on ${pt} returns ${ret.toLocaleString()} credits.` });
+      lines.push({
+        kind: "win",
+        text:
+          table.placePayoutScale < 1
+            ? `Place on ${pt} returns ${ret.toLocaleString()} credits (post-divest skim).`
+            : `Place on ${pt} returns ${ret.toLocaleString()} credits.`,
+      });
     }
     const newPlace = { ...bets.place };
     delete newPlace[pt];
@@ -284,7 +308,7 @@ export function resolveRoll(table: CraplessTableState, bets: TableBets, roll: Di
     const cleared = emptyAllBets();
     return {
       roll,
-      nextTable: { phase: "comeOut", point: null, rollsSincePoint: 0 },
+      nextTable: newComeOutTable(),
       walletDelta,
       nextBets: {
         ...cleared,
@@ -301,10 +325,14 @@ export function resolveRoll(table: CraplessTableState, bets: TableBets, roll: Di
     if (st > 0) {
       const ret = placeBetTotalReturn(pk, st);
       const profit = ret - st;
-      walletDelta += profit;
+      const profitPaid = table.placePayoutScale >= 1 ? profit : Math.floor(profit * table.placePayoutScale);
+      walletDelta += profitPaid;
       lines.push({
         kind: "win",
-        text: `Place on ${pk} — ${profit.toLocaleString()} credits profit (stake rides).`,
+        text:
+          table.placePayoutScale < 1
+            ? `Place on ${pk} — ${profitPaid.toLocaleString()} credits profit after skim (stake rides).`
+            : `Place on ${pk} — ${profitPaid.toLocaleString()} credits profit (stake rides).`,
       });
     } else {
       lines.push({ kind: "neutral", text: `${roll.total} — business as usual.` });

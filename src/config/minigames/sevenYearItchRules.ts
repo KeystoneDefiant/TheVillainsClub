@@ -15,15 +15,92 @@ export type PointNumber = 2 | 3 | 4 | 5 | 6 | 8 | 9 | 10 | 11 | 12;
 
 export const POINT_NUMBERS: readonly PointNumber[] = [2, 3, 4, 5, 6, 8, 9, 10, 11, 12];
 
-export const sevenYearItchTableConfig = {
-  /** Table clicks add/remove this many credits per tap (primary / context). */
-  chipIncrement: 5,
-  /** Max free-odds stake as a multiple of the current pass line stake (simplified table rule). */
-  maxFreeOddsMultipleOfPass: 2,
-  minPassBet: 10,
-  minPlaceBet: 5,
-  maxPassBetFractionOfBuyIn: 0.25 as number,
+/**
+ * Game mode container: **defaultGameMode** is the base profile; each **gameModes** entry
+ * deep-merges on top (same pattern as {@link ./oublietteNo9GameRules.ts} `gameConfig`).
+ * Shell wiring can later select `getSevenYearItchGameMode(modeId)`; the table currently
+ * uses {@link getCurrentSevenYearItchGameMode} (`normalGame` overrides).
+ */
+export const sevenYearItchGameConfig = {
+  defaultGameMode: {
+    displayName: "Normal table",
+    /** Table clicks add/remove this many credits per tap (primary / context). */
+    chipIncrement: 50,
+    minPassBet: 50,
+    minPlaceBet: 50,
+    /** Field + Horn row (shown behind one-roll props when true). */
+    showFieldAndHornSection: true,
+    /** Rolls without a 7 before the favors shop offers new heat bonuses. */
+    heatRollsPerFavorOffer: 4,
+    /** Max free-odds stake as a multiple of the current pass line stake (simplified table rule). */
+    maxFreeOddsMultipleOfPass: 2,
+    maxPassBetFractionOfBuyIn: 0.25 as number,
+  },
+  /** Mode overrides keyed by id. Empty object = use defaultGameMode as-is. */
+  gameModes: {
+    normalGame: {},
+    /**
+     * Example alternate profile (not shell-selected yet). Shows how modes override the base.
+     * Delete or replace when product adds real variants.
+     */
+    quickTable: {
+      chipIncrement: 25,
+      minPassBet: 25,
+      minPlaceBet: 25,
+      showFieldAndHornSection: false,
+      heatRollsPerFavorOffer: 3,
+    },
+  },
 } as const;
+
+export type SevenYearItchGameModeConfig = (typeof sevenYearItchGameConfig)["defaultGameMode"];
+
+function mergeSevenYearItchGameMode(
+  defaults: Record<string, unknown>,
+  overrides: Record<string, unknown>,
+): Record<string, unknown> {
+  const result = { ...defaults };
+  for (const key of Object.keys(overrides)) {
+    if (overrides[key] === undefined) continue;
+    const defVal = defaults[key];
+    const ovVal = overrides[key];
+    if (
+      ovVal !== null &&
+      typeof ovVal === "object" &&
+      !Array.isArray(ovVal) &&
+      defVal !== null &&
+      typeof defVal === "object" &&
+      !Array.isArray(defVal)
+    ) {
+      result[key] = mergeSevenYearItchGameMode(
+        defVal as Record<string, unknown>,
+        ovVal as Record<string, unknown>,
+      );
+    } else {
+      result[key] = ovVal;
+    }
+  }
+  return result;
+}
+
+/** Active mode: default merged with `gameModes.normalGame` (currently empty). */
+export function getCurrentSevenYearItchGameMode(): SevenYearItchGameModeConfig {
+  const base = { ...sevenYearItchGameConfig.defaultGameMode } as unknown as Record<string, unknown>;
+  const overrides = sevenYearItchGameConfig.gameModes.normalGame as unknown as Record<string, unknown>;
+  return mergeSevenYearItchGameMode(base, overrides) as unknown as SevenYearItchGameModeConfig;
+}
+
+/** Resolve a specific mode (for future shell / session `modeId`). */
+export function getSevenYearItchGameMode(
+  modeId: keyof typeof sevenYearItchGameConfig.gameModes,
+): SevenYearItchGameModeConfig {
+  const base = { ...sevenYearItchGameConfig.defaultGameMode } as unknown as Record<string, unknown>;
+  const overrides = (sevenYearItchGameConfig.gameModes[modeId] ?? {}) as unknown as Record<string, unknown>;
+  return mergeSevenYearItchGameMode(base, overrides) as unknown as SevenYearItchGameModeConfig;
+}
+
+/** Resolved table rules for the active shell session (normal mode until the host passes a mode id). */
+export const sevenYearItchTableConfig: SevenYearItchGameModeConfig = getCurrentSevenYearItchGameMode();
 
 export const sevenYearItchRackets = {
   2: { name: "Political Graft", risk: "Extreme", story: "City Hall opens a side door and the councilmen start taking envelopes." },
@@ -42,7 +119,8 @@ export type SevenYearItchHeatBonusId =
   | "look_the_other_way"
   | "inside_man"
   | "kingpins_cut"
-  | "aggressive_expansion";
+  | "aggressive_expansion"
+  | "clean_getaway";
 
 export type SevenYearItchHeatBonus = {
   id: SevenYearItchHeatBonusId;
@@ -50,7 +128,12 @@ export type SevenYearItchHeatBonus = {
   description: string;
   pullWeight: number;
   effect: {
-    type: "shield_next_seven" | "next_non_seven_multiplier" | "place_hit_multiplier" | "risk_reward_multiplier";
+    type:
+      | "shield_next_seven"
+      | "next_non_seven_multiplier"
+      | "place_hit_multiplier"
+      | "risk_reward_multiplier"
+      | "free_divest";
     value: number;
     risk?: "seven_forfeits_table";
   };
@@ -84,6 +167,14 @@ export const sevenYearItchHeatBonuses: readonly SevenYearItchHeatBonus[] = [
     description: "Double the next non-7 payout, but a 7 forfeits everything still on the felt.",
     pullWeight: 12,
     effect: { type: "risk_reward_multiplier", value: 2, risk: "seven_forfeits_table" },
+  },
+  {
+    id: "clean_getaway",
+    title: "Clean Getaway",
+    description:
+      "The next time you Divest, you sweep the back-line bets with no skim — place numbers still pay full street odds for the rest of the hand.",
+    pullWeight: 18,
+    effect: { type: "free_divest", value: 1 },
   },
 ] as const;
 
@@ -120,6 +211,14 @@ export function maxFreeOddsStake(passStake: number, maxMultiple: number = sevenY
   const p = Math.max(0, Math.floor(passStake));
   if (p <= 0) return 0;
   return Math.floor(p * maxMultiple);
+}
+
+/** Apply post-divest skim: full return at scale 1; after Divest, scale is 0.5 on profit only. */
+export function placeBetScaledReturn(point: PointNumber, stake: number, profitScale: number): number {
+  const full = placeBetTotalReturn(point, stake);
+  if (profitScale >= 1 || stake <= 0) return full;
+  const profit = full - stake;
+  return stake + Math.floor(profit * profitScale);
 }
 
 /** Total return (stake + profit) for a winning place bet on `point`. */

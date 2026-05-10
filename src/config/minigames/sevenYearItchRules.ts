@@ -16,26 +16,91 @@ export type PointNumber = 2 | 3 | 4 | 5 | 6 | 8 | 9 | 10 | 11 | 12;
 export const POINT_NUMBERS: readonly PointNumber[] = [2, 3, 4, 5, 6, 8, 9, 10, 11, 12];
 
 /**
- * Tunables for a ruleset / “game mode”. Swap this object (or import from JSON later)
- * to change chip size, visibility, and heat cadence without touching engine math.
+ * Game mode container: **defaultGameMode** is the base profile; each **gameModes** entry
+ * deep-merges on top (same pattern as {@link ./oublietteNo9GameRules.ts} `gameConfig`).
+ * Shell wiring can later select `getSevenYearItchGameMode(modeId)`; the table currently
+ * uses {@link getCurrentSevenYearItchGameMode} (`normalGame` overrides).
  */
-export const sevenYearItchGameplayConfig = {
-  /** Table clicks add/remove this many credits per tap (primary / context). */
-  chipIncrement: 50,
-  minPassBet: 50,
-  minPlaceBet: 50,
-  /** Field + Horn row (shown behind one-roll props when true). */
-  showFieldAndHornSection: true,
-  /** Rolls without a 7 before the favors shop offers new heat bonuses. */
-  heatRollsPerFavorOffer: 4,
+export const sevenYearItchGameConfig = {
+  defaultGameMode: {
+    displayName: "Normal table",
+    /** Table clicks add/remove this many credits per tap (primary / context). */
+    chipIncrement: 50,
+    minPassBet: 50,
+    minPlaceBet: 50,
+    /** Field + Horn row (shown behind one-roll props when true). */
+    showFieldAndHornSection: true,
+    /** Rolls without a 7 before the favors shop offers new heat bonuses. */
+    heatRollsPerFavorOffer: 4,
+    /** Max free-odds stake as a multiple of the current pass line stake (simplified table rule). */
+    maxFreeOddsMultipleOfPass: 2,
+    maxPassBetFractionOfBuyIn: 0.25 as number,
+  },
+  /** Mode overrides keyed by id. Empty object = use defaultGameMode as-is. */
+  gameModes: {
+    normalGame: {},
+    /**
+     * Example alternate profile (not shell-selected yet). Shows how modes override the base.
+     * Delete or replace when product adds real variants.
+     */
+    quickTable: {
+      chipIncrement: 25,
+      minPassBet: 25,
+      minPlaceBet: 25,
+      showFieldAndHornSection: false,
+      heatRollsPerFavorOffer: 3,
+    },
+  },
 } as const;
 
-export const sevenYearItchTableConfig = {
-  ...sevenYearItchGameplayConfig,
-  /** Max free-odds stake as a multiple of the current pass line stake (simplified table rule). */
-  maxFreeOddsMultipleOfPass: 2,
-  maxPassBetFractionOfBuyIn: 0.25 as number,
-} as const;
+export type SevenYearItchGameModeConfig = (typeof sevenYearItchGameConfig)["defaultGameMode"];
+
+function mergeSevenYearItchGameMode(
+  defaults: Record<string, unknown>,
+  overrides: Record<string, unknown>,
+): Record<string, unknown> {
+  const result = { ...defaults };
+  for (const key of Object.keys(overrides)) {
+    if (overrides[key] === undefined) continue;
+    const defVal = defaults[key];
+    const ovVal = overrides[key];
+    if (
+      ovVal !== null &&
+      typeof ovVal === "object" &&
+      !Array.isArray(ovVal) &&
+      defVal !== null &&
+      typeof defVal === "object" &&
+      !Array.isArray(defVal)
+    ) {
+      result[key] = mergeSevenYearItchGameMode(
+        defVal as Record<string, unknown>,
+        ovVal as Record<string, unknown>,
+      );
+    } else {
+      result[key] = ovVal;
+    }
+  }
+  return result;
+}
+
+/** Active mode: default merged with `gameModes.normalGame` (currently empty). */
+export function getCurrentSevenYearItchGameMode(): SevenYearItchGameModeConfig {
+  const base = { ...sevenYearItchGameConfig.defaultGameMode } as unknown as Record<string, unknown>;
+  const overrides = sevenYearItchGameConfig.gameModes.normalGame as unknown as Record<string, unknown>;
+  return mergeSevenYearItchGameMode(base, overrides) as unknown as SevenYearItchGameModeConfig;
+}
+
+/** Resolve a specific mode (for future shell / session `modeId`). */
+export function getSevenYearItchGameMode(
+  modeId: keyof typeof sevenYearItchGameConfig.gameModes,
+): SevenYearItchGameModeConfig {
+  const base = { ...sevenYearItchGameConfig.defaultGameMode } as unknown as Record<string, unknown>;
+  const overrides = (sevenYearItchGameConfig.gameModes[modeId] ?? {}) as unknown as Record<string, unknown>;
+  return mergeSevenYearItchGameMode(base, overrides) as unknown as SevenYearItchGameModeConfig;
+}
+
+/** Resolved table rules for the active shell session (normal mode until the host passes a mode id). */
+export const sevenYearItchTableConfig: SevenYearItchGameModeConfig = getCurrentSevenYearItchGameMode();
 
 export const sevenYearItchRackets = {
   2: { name: "Political Graft", risk: "Extreme", story: "City Hall opens a side door and the councilmen start taking envelopes." },

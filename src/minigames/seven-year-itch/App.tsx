@@ -32,7 +32,7 @@ const CHIP = sevenYearItchTableConfig.chipIncrement;
 const HEAT_ROLLS = sevenYearItchTableConfig.heatRollsPerFavorOffer;
 const SHOW_FIELD_HORN = sevenYearItchTableConfig.showFieldAndHornSection;
 
-type MainView = "table" | "favors" | "handEnd";
+type MainView = "table" | "favors";
 
 type HandEndSummary = {
   feltBeforeRoll: number;
@@ -111,14 +111,13 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
   const [diceRunStyle, setDiceRunStyle] = useState<React.CSSProperties>({});
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [cashOutOpen, setCashOutOpen] = useState(false);
-  const [handEndSummary, setHandEndSummary] = useState<HandEndSummary | null>(null);
+  /** When set, roll story modal includes hand recap + continue / cash-out actions. */
+  const [loreHandRecap, setLoreHandRecap] = useState<HandEndSummary | null>(null);
 
   const tableRef = useRef(table);
   const betsRef = useRef(bets);
   const balanceRef = useRef(balance);
   const handStartWealthRef = useRef(props.sessionCredits);
-  const showHandEndAfterLoreRef = useRef(false);
-  const pendingSummaryRef = useRef<HandEndSummary | null>(null);
   const animTimersRef = useRef<number[]>([]);
 
   useEffect(() => {
@@ -365,6 +364,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
       const currentBets = betsRef.current;
       const feltBeforeRoll = totalOnLayout(currentBets);
       const bonus = activeBonus;
+      /** Table fantasy: the shield leaves the **whole layout** in place (all bet spots). */
       const shieldAbsorbsSeven =
         bonus?.effect.type === "shield_next_seven" && r.total === 7 && currentTable.phase === "point";
       const endsHand = rollEndsHand(currentTable, r) && !shieldAbsorbsSeven;
@@ -423,16 +423,14 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
 
       const wealthAfter = balBefore + walletDelta + totalOnLayout(nextBets);
       if (endsHand) {
-        pendingSummaryRef.current = {
+        setLoreHandRecap({
           feltBeforeRoll,
           creditsThisRoll: walletDelta,
           netWealthVsHandStart: wealthAfter - handStartWealthRef.current,
           roll: r,
-        };
-        showHandEndAfterLoreRef.current = true;
+        });
       } else {
-        showHandEndAfterLoreRef.current = false;
-        pendingSummaryRef.current = null;
+        setLoreHandRecap(null);
       }
 
       setHeatRolls((prev) => {
@@ -449,15 +447,15 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
     [activeBonus, pickHeatChoices],
   );
 
-  const closeLoreModal = useCallback(() => {
-    setLoreOpen(false);
-    if (showHandEndAfterLoreRef.current && pendingSummaryRef.current) {
-      setHandEndSummary(pendingSummaryRef.current);
-      pendingSummaryRef.current = null;
-      showHandEndAfterLoreRef.current = false;
-      setMainView("handEnd");
-    }
+  const beginNextHand = useCallback(() => {
+    handStartWealthRef.current = balanceRef.current + totalOnLayout(betsRef.current);
   }, []);
+
+  const closeLoreModal = useCallback(() => {
+    if (loreHandRecap) beginNextHand();
+    setLoreOpen(false);
+    setLoreHandRecap(null);
+  }, [loreHandRecap, beginNextHand]);
 
   const handleRoll = useCallback(() => {
     if (!canRoll || diceRunActive) return;
@@ -494,12 +492,6 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
     table.phase !== "point" || table.point == null
       ? "NO OPEN CASE"
       : `CASE FILE — ${table.point} ${sevenYearItchRackets[table.point].name}`;
-
-  const beginNextHand = useCallback(() => {
-    handStartWealthRef.current = balanceRef.current + totalOnLayout(betsRef.current);
-    setHandEndSummary(null);
-    setMainView("table");
-  }, []);
 
   const favorSelectionBody = (
     <Stack gap="sm">
@@ -598,63 +590,6 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
           </Paper>
         ) : null}
 
-        {mainView === "handEnd" && handEndSummary ? (
-          <Paper
-            radius="md"
-            p="md"
-            withBorder
-            style={{ borderColor: "var(--7yi-amber-dim)", background: "var(--7yi-paper)" }}
-            data-testid="hand-end-screen"
-          >
-            <Stack gap="md">
-              <Title order={3} size="h4" c="var(--7yi-amber)" style={{ fontFamily: "Georgia, serif" }}>
-                Hand closed
-              </Title>
-              <Text size="sm">
-                The dice showed{" "}
-                <strong>
-                  {handEndSummary.roll.d1} + {handEndSummary.roll.d2} = {handEndSummary.roll.total}
-                </strong>
-                .
-              </Text>
-              <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
-                <Paper p="sm" withBorder>
-                  <Text size="xs" c="dimmed">
-                    On the felt (before the final roll)
-                  </Text>
-                  <Text fw={700}>{handEndSummary.feltBeforeRoll.toLocaleString()}</Text>
-                </Paper>
-                <Paper p="sm" withBorder>
-                  <Text size="xs" c="dimmed">
-                    Credits from the final roll
-                  </Text>
-                  <Text fw={700}>{handEndSummary.creditsThisRoll.toLocaleString()}</Text>
-                </Paper>
-                <Paper p="sm" withBorder style={{ gridColumn: "1 / -1" }}>
-                  <Text size="xs" c="dimmed">
-                    Net change this hand (wallet + table vs hand start)
-                  </Text>
-                  <Text fw={700}>{handEndSummary.netWealthVsHandStart.toLocaleString()}</Text>
-                </Paper>
-              </SimpleGrid>
-              <Group grow wrap="wrap">
-                <Button color="orange" onClick={beginNextHand}>
-                  Play next hand
-                </Button>
-                <Button
-                  variant="light"
-                  color="gray"
-                  disabled={!canCashOut}
-                  onClick={() => setCashOutOpen(true)}
-                  title={canCashOut ? "Settle and return to the club" : "Wait until dice finish"}
-                >
-                  Cash out
-                </Button>
-              </Group>
-            </Stack>
-          </Paper>
-        ) : null}
-
         {mainView === "table" ? (
           <>
             <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="xs">
@@ -698,7 +633,16 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
                     ? "Open investigation: bet the pass line only. Seven wins even money; any other total sets the point and opens the full racket board."
                     : loreState.body}
                 </Text>
-                <Button variant="subtle" color="orange" size="xs" onClick={() => setLoreOpen(true)} style={{ flexShrink: 0 }}>
+                <Button
+                  variant="subtle"
+                  color="orange"
+                  size="xs"
+                  onClick={() => {
+                    setLoreHandRecap(null);
+                    setLoreOpen(true);
+                  }}
+                  style={{ flexShrink: 0 }}
+                >
                   Last story
                 </Button>
               </Group>
@@ -771,9 +715,67 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
         ) : null}
       </Stack>
 
-      <Modal opened={loreOpen} onClose={closeLoreModal} title={loreState.title} centered>
+      <Modal opened={loreOpen} onClose={closeLoreModal} title={loreState.title} centered data-testid="yi-roll-modal">
         <Stack gap="sm">
           <Text size="sm">{loreState.body}</Text>
+          {loreHandRecap ? (
+            <Stack gap="xs" data-testid="yi-hand-recap">
+              <Title order={5} c="var(--7yi-amber)" size="sm" tt="uppercase" style={{ fontFamily: "Georgia, serif" }}>
+                Hand recap
+              </Title>
+              <Text size="xs" c="dimmed">
+                Final roll:{" "}
+                <strong>
+                  {loreHandRecap.roll.d1} + {loreHandRecap.roll.d2} = {loreHandRecap.roll.total}
+                </strong>
+              </Text>
+              <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xs">
+                <Paper p="sm" withBorder>
+                  <Text size="xs" c="dimmed">
+                    On the felt (before that roll)
+                  </Text>
+                  <Text fw={700}>{loreHandRecap.feltBeforeRoll.toLocaleString()}</Text>
+                </Paper>
+                <Paper p="sm" withBorder>
+                  <Text size="xs" c="dimmed">
+                    Credits from that roll
+                  </Text>
+                  <Text fw={700}>{loreHandRecap.creditsThisRoll.toLocaleString()}</Text>
+                </Paper>
+                <Paper p="sm" withBorder style={{ gridColumn: "1 / -1" }}>
+                  <Text size="xs" c="dimmed">
+                    Net this hand (wallet + table vs hand start)
+                  </Text>
+                  <Text fw={700}>{loreHandRecap.netWealthVsHandStart.toLocaleString()}</Text>
+                </Paper>
+              </SimpleGrid>
+              <Group grow wrap="wrap">
+                <Button
+                  color="orange"
+                  onClick={() => {
+                    beginNextHand();
+                    setLoreOpen(false);
+                    setLoreHandRecap(null);
+                  }}
+                >
+                  Play next hand
+                </Button>
+                <Button
+                  variant="light"
+                  color="gray"
+                  disabled={!canCashOut}
+                  onClick={() => {
+                    setLoreOpen(false);
+                    setLoreHandRecap(null);
+                    setCashOutOpen(true);
+                  }}
+                  title={canCashOut ? "Settle and return to the club" : "Cash out unlocks when no point is active"}
+                >
+                  Cash out
+                </Button>
+              </Group>
+            </Stack>
+          ) : null}
           <SimpleGrid cols={3} spacing="xs">
             <Paper p="xs" withBorder>
               <Text size="xs" c="dimmed">

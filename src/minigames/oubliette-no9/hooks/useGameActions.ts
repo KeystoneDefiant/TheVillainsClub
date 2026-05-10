@@ -3,7 +3,7 @@ import { GameState, Card } from '../types';
 import { createFullDeck, shuffleDeck, removeCardsFromDeck } from '../utils/deck';
 import { generateParallelHands } from '../utils/parallelHands';
 import { findBestDevilsDealCards } from '../utils/devilsDeal';
-import { getCurrentGameMode } from '@/config/minigames/oublietteNo9GameRules';
+import { useOublietteGameMode } from "../OublietteGameModeContext";
 import { PokerEvaluator } from '../utils/pokerEvaluator';
 
 /**
@@ -26,6 +26,7 @@ export function useGameActions(
   _state: GameState,
   setState: React.Dispatch<React.SetStateAction<GameState>>
 ) {
+  const mode = useOublietteGameMode();
   /**
    * Deal a new hand to the player
    * Deducts bet amount and sets up initial game state
@@ -39,8 +40,7 @@ export function useGameActions(
         return prev;
       }
 
-      const currentMode = getCurrentGameMode();
-      const maxHandSize = (currentMode as { maxHandSize?: number }).maxHandSize ?? 5 + ((currentMode.shop?.extraCardInHand as { maxPurchases?: number })?.maxPurchases ?? 3);
+      const maxHandSize = mode.maxHandSize;
       const handSize = Math.min(maxHandSize, 5 + (prev.extraCardsInHand ?? 0));
       const deck = shuffleDeck(
         createFullDeck(
@@ -52,7 +52,7 @@ export function useGameActions(
       const newHand: Card[] = deck.slice(0, handSize);
 
       // Check for Devil's Deal
-      const devilsDealConfig = currentMode.devilsDeal;
+      const devilsDealConfig = mode.devilsDeal;
       let devilsDealCard: Card | null = null;
       let devilsDealCost = 0;
 
@@ -92,7 +92,7 @@ export function useGameActions(
             for (let position = 0; position < 5; position++) {
               const testHand = [...handForDeal];
               testHand[position] = selectedCard;
-              const result = PokerEvaluator.evaluate(testHand);
+              const result = PokerEvaluator.evaluate(testHand, { minimumPairRank: mode.minimumPairRank });
               const withRewards = PokerEvaluator.applyRewards(result, prev.rewardTable);
               if (withRewards.multiplier > bestMultiplier) {
                 bestMultiplier = withRewards.multiplier;
@@ -137,7 +137,7 @@ export function useGameActions(
         credits: prev.credits - totalBet,
         screen: 'game',
         gamePhase: 'playing',
-        maxDraws: Math.max(1, (currentMode as { maxDraws?: number }).maxDraws ?? 1) + (prev.extraDrawPurchased ? 1 : 0),
+        maxDraws: Math.max(1, mode.maxDraws) + (prev.extraDrawPurchased ? 1 : 0),
         drawsCompletedThisRound: 0,
         selectedHandCount: prev.selectedHandCount || prev.handCount,
         devilsDealCard,
@@ -145,7 +145,7 @@ export function useGameActions(
         devilsDealHeld: false,
       };
     });
-  }, [setState]);
+  }, [setState, mode]);
 
   /**
    * Toggle hold status of a card at the specified index

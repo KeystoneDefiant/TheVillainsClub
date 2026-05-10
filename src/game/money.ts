@@ -15,6 +15,11 @@ export type TableSession = {
   drinkId: string;
   buyIn: number;
   sessionWallet: number;
+  /**
+   * Optional rules profile id (must exist in the minigame’s `gameModes` map).
+   * Persisted with the session so resume uses the same merged config as buy-in.
+   */
+  gameModeId?: string;
   /** Last resumable round / roll marker reported by a minigame. */
   progressRound?: number;
   /** Oubliette state snapshot for resuming without another buy-in. */
@@ -33,6 +38,7 @@ export type StartSessionInput = {
   drinkId: string;
   buyIn: number;
   settlement: OublietteSettlementProfile;
+  gameModeId?: string;
 };
 
 export type StartSessionResult =
@@ -60,6 +66,7 @@ export function startTableSession(
       buyIn: input.buyIn,
       sessionWallet: input.buyIn,
       settlement: input.settlement,
+      ...(input.gameModeId != null && input.gameModeId !== "" ? { gameModeId: input.gameModeId } : {}),
     },
   };
 }

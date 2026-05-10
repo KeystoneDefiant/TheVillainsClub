@@ -21,16 +21,15 @@ export class PokerEvaluator {
   /**
    * Evaluates a 5-card hand and returns the hand result
    */
-  static evaluate(hand: Card[]): HandResult {
+  static evaluate(hand: Card[], opts?: { minimumPairRank?: number }): HandResult {
     if (hand.length !== 5) {
       throw new Error('Hand must contain exactly 5 cards');
     }
 
-    // Filter out dead cards before evaluation - dead cards don't invalidate the hand,
-    // they're simply ignored and don't count toward hand calculation
+    const minimumPairRank = opts?.minimumPairRank ?? getCurrentGameMode().minimumPairRank;
+
     const activeHand = hand.filter((card) => !card.isDead);
 
-    // If we have no active cards, return high card
     if (activeHand.length === 0) {
       return {
         rank: 'high-card',
@@ -40,154 +39,21 @@ export class PokerEvaluator {
       };
     }
 
-    // Separate wild cards from regular cards
     const wildCards = activeHand.filter((card) => card.isWild);
     const regularCards = activeHand.filter((card) => !card.isWild);
 
-    // If we have wild cards, evaluate with best possible hand
     if (wildCards.length > 0) {
-      return this.evaluateWithWildCards(regularCards, wildCards);
+      return this.evaluateWithWildCards(regularCards, wildCards, minimumPairRank);
     }
 
     const sortedHand = [...activeHand].sort((a, b) => RANK_VALUES[a.rank] - RANK_VALUES[b.rank]);
-
-    const rankCounts = this.getRankCounts(sortedHand);
-    const suitCounts = this.getSuitCounts(sortedHand);
-    const ranks = sortedHand.map((c) => RANK_VALUES[c.rank]);
-    // Flush requires all cards to be same suit (only check if we have 5 active cards)
-    const isFlush =
-      activeHand.length === 5 && Object.values(suitCounts).some((count) => count === 5);
-    // Straight requires 5 cards in sequence (only check if we have 5 active cards)
-    const isStraight = activeHand.length === 5 && this.isStraight(ranks);
-    const isRoyal = isStraight && ranks.length === 5 && ranks[0] === 10 && ranks[4] === 14;
-
-    // Royal Flush
-    if (isRoyal && isFlush) {
-      return {
-        rank: 'royal-flush',
-        multiplier: 0, // Set by reward table
-        score: 10000,
-        winningCards: sortedHand,
-      };
-    }
-
-    // Straight Flush
-    if (isStraight && isFlush) {
-      return {
-        rank: 'straight-flush',
-        multiplier: 0,
-        score: 9000 + ranks[4],
-        winningCards: sortedHand,
-      };
-    }
-
-    // Five of a Kind (only possible with wild cards)
-    const fiveKind = Object.entries(rankCounts).find(([, count]) => count === 5);
-    if (fiveKind) {
-      const quintRank = parseInt(fiveKind[0]);
-      return {
-        rank: 'five-of-a-kind',
-        multiplier: 0,
-        score: 8500 + quintRank,
-        winningCards: sortedHand,
-      };
-    }
-
-    // Four of a Kind
-    const fourKind = Object.entries(rankCounts).find(([, count]) => count === 4);
-    if (fourKind) {
-      const quadRank = parseInt(fourKind[0]);
-      return {
-        rank: 'four-of-a-kind',
-        multiplier: 0,
-        score: 8000 + quadRank,
-        winningCards: sortedHand,
-      };
-    }
-
-    // Full House
-    const threeKind = Object.entries(rankCounts).find(([, count]) => count === 3);
-    const pair = Object.entries(rankCounts).find(([, count]) => count === 2);
-    if (threeKind && pair) {
-      return {
-        rank: 'full-house',
-        multiplier: 0,
-        score: 7000 + parseInt(threeKind[0]),
-        winningCards: sortedHand,
-      };
-    }
-
-    // Flush
-    if (isFlush) {
-      return {
-        rank: 'flush',
-        multiplier: 0,
-        score: 6000 + ranks[4],
-        winningCards: sortedHand,
-      };
-    }
-
-    // Straight
-    if (isStraight) {
-      return {
-        rank: 'straight',
-        multiplier: 0,
-        score: 5000 + ranks[4],
-        winningCards: sortedHand,
-      };
-    }
-
-    // Three of a Kind
-    if (threeKind) {
-      return {
-        rank: 'three-of-a-kind',
-        multiplier: 0,
-        score: 4000 + parseInt(threeKind[0]),
-        winningCards: sortedHand,
-      };
-    }
-
-    // Two Pair
-    const pairs = Object.entries(rankCounts).filter(([, count]) => count === 2);
-    if (pairs.length === 2) {
-      const highPair = Math.max(parseInt(pairs[0][0]), parseInt(pairs[1][0]));
-      return {
-        rank: 'two-pair',
-        multiplier: 0,
-        score: 3000 + highPair,
-        winningCards: sortedHand,
-      };
-    }
-
-    // One Pair (jacks or better only)
-    if (pair) {
-      const pairRank = parseInt(pair[0]);
-      // Only score pairs at or above the minimum pair rank (e.g., Jacks or Better)
-      if (pairRank >= getCurrentGameMode().minimumPairRank) {
-        return {
-          rank: 'one-pair',
-          multiplier: 0,
-          score: 2000 + pairRank,
-          winningCards: sortedHand,
-        };
-      }
-      // Lower pairs fall through to high card
-    }
-
-    // High Card
-    const highestRank = ranks.length > 0 ? ranks[ranks.length - 1] : 0;
-    return {
-      rank: 'high-card',
-      multiplier: 0,
-      score: 1000 + highestRank,
-      winningCards: sortedHand,
-    };
+    return this.evaluateRegularHand(sortedHand, minimumPairRank);
   }
 
   /**
    * Evaluates a regular hand (no wild cards)
    */
-  private static evaluateRegularHand(hand: Card[]): HandResult {
+  private static evaluateRegularHand(hand: Card[], minimumPairRank: number): HandResult {
     const sortedHand = [...hand].sort((a, b) => RANK_VALUES[a.rank] - RANK_VALUES[b.rank]);
 
     const rankCounts = this.getRankCounts(sortedHand);
@@ -295,10 +161,10 @@ export class PokerEvaluator {
       };
     }
 
-    // One Pair (jacks or better only)
+    // One Pair (minimum rank from game mode, e.g. jacks or better)
     if (pair) {
       const pairRank = parseInt(pair[0]);
-      if (pairRank >= 11) {
+      if (pairRank >= minimumPairRank) {
         return {
           rank: 'one-pair',
           multiplier: 0,
@@ -368,7 +234,7 @@ export class PokerEvaluator {
    * Evaluates hand with wild cards by trying to form the best possible hand
    * Wild cards can be any suit, rank, and face value
    */
-  private static evaluateWithWildCards(regularCards: Card[], wildCards: Card[]): HandResult {
+  private static evaluateWithWildCards(regularCards: Card[], wildCards: Card[], minimumPairRank: number): HandResult {
     const numWilds = wildCards.length;
     const numRegular = regularCards.length;
     const allRanks = Object.keys(RANK_VALUES) as Array<keyof typeof RANK_VALUES>;
@@ -425,7 +291,7 @@ export class PokerEvaluator {
               isWild: true,
             });
           }
-          const result = this.evaluateRegularHand(expanded);
+          const result = this.evaluateRegularHand(expanded, minimumPairRank);
           if (result.rank === 'royal-flush') {
             return result;
           }
@@ -464,7 +330,7 @@ export class PokerEvaluator {
             });
           }
           if (expanded.length === 5) {
-            const result = this.evaluateRegularHand(expanded);
+            const result = this.evaluateRegularHand(expanded, minimumPairRank);
             if (result.rank === 'straight-flush') {
               if (!bestHand || scoreHand(result) > scoreHand(bestHand)) {
                 bestHand = result;
@@ -495,7 +361,7 @@ export class PokerEvaluator {
               isWild: true,
             });
           }
-          const result = this.evaluateRegularHand(expanded);
+          const result = this.evaluateRegularHand(expanded, minimumPairRank);
           if (result.rank === 'four-of-a-kind' || result.rank === 'five-of-a-kind') {
             const fiveKindResult: HandResult = {
               ...result,
@@ -547,7 +413,7 @@ export class PokerEvaluator {
           });
         }
         if (expanded.length === 5) {
-          const result = this.evaluateRegularHand(expanded);
+          const result = this.evaluateRegularHand(expanded, minimumPairRank);
           if (result.rank === 'four-of-a-kind' || result.rank === 'five-of-a-kind') {
             return result;
           }
@@ -595,7 +461,7 @@ export class PokerEvaluator {
                 });
               }
               if (expanded.length === 5) {
-                const result = this.evaluateRegularHand(expanded);
+                const result = this.evaluateRegularHand(expanded, minimumPairRank);
                 if (result.rank === 'full-house') {
                   return result;
                 }
@@ -637,7 +503,7 @@ export class PokerEvaluator {
           });
         }
         if (expanded.length === 5) {
-          const result = this.evaluateRegularHand(expanded);
+          const result = this.evaluateRegularHand(expanded, minimumPairRank);
           if (
             result.rank === 'flush' ||
             result.rank === 'straight-flush' ||
@@ -672,7 +538,7 @@ export class PokerEvaluator {
         });
       }
       if (expanded.length === 5) {
-        const result = this.evaluateRegularHand(expanded);
+        const result = this.evaluateRegularHand(expanded, minimumPairRank);
         if (result.rank === 'straight') {
           if (!bestHand || scoreHand(result) > scoreHand(bestHand)) {
             bestHand = result;
@@ -710,7 +576,7 @@ export class PokerEvaluator {
           });
         }
         if (expanded.length === 5) {
-          const result = this.evaluateRegularHand(expanded);
+          const result = this.evaluateRegularHand(expanded, minimumPairRank);
           if (result.rank === 'straight') {
             if (!bestHand || scoreHand(result) > scoreHand(bestHand)) {
               bestHand = result;
@@ -748,7 +614,7 @@ export class PokerEvaluator {
         }
         // Evaluate if we have at least 3 cards
         if (expanded.length >= 3) {
-          const result = this.evaluateRegularHand(expanded);
+          const result = this.evaluateRegularHand(expanded, minimumPairRank);
           if (result.rank === 'three-of-a-kind') {
             return result;
           }
@@ -798,7 +664,7 @@ export class PokerEvaluator {
             }
             // Evaluate if we have at least 4 cards (two pairs)
             if (expanded.length >= 4) {
-              const result = this.evaluateRegularHand(expanded);
+              const result = this.evaluateRegularHand(expanded, minimumPairRank);
               if (result.rank === 'two-pair') {
                 return result;
               }
@@ -811,7 +677,7 @@ export class PokerEvaluator {
     // Try One Pair (Jacks or better with wilds)
     for (const rank of allRanks) {
       const rankValue = RANK_VALUES[rank];
-      if (rankValue < getCurrentGameMode().minimumPairRank) continue;
+      if (rankValue < minimumPairRank) continue;
 
       const count = regularCards.filter((c) => c.rank === rank).length;
       if (count + numWilds >= 2) {
@@ -836,7 +702,7 @@ export class PokerEvaluator {
         }
         // Evaluate if we have at least 2 cards (one pair)
         if (expanded.length >= 2) {
-          const result = this.evaluateRegularHand(expanded);
+          const result = this.evaluateRegularHand(expanded, minimumPairRank);
           if (result.rank === 'one-pair') {
             return result;
           }
@@ -854,6 +720,6 @@ export class PokerEvaluator {
         isWild: true,
       });
     }
-    return this.evaluateRegularHand(expanded);
+    return this.evaluateRegularHand(expanded, minimumPairRank);
   }
 }

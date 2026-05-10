@@ -13,7 +13,8 @@ import {
   getCreditsNeededForDisplayedRound,
   getCreditsNeededForUpcomingRound,
 } from '../utils/config';
-import { gameConfig, getCurrentGameMode, getShopDisplayName } from '@/config/minigames/oublietteNo9GameRules';
+import { gameConfig, getShopDisplayName } from '@/config/minigames/oublietteNo9GameRules';
+import { useOublietteGameMode } from '../OublietteGameModeContext';
 import './Shop.css';
 import { ShopOptionType } from '../types';
 import { formatCredits } from '../utils/format';
@@ -131,7 +132,7 @@ export function Shop({
   onShowSettings,
 }: ShopProps) {
   void wildCards;
-  const currentMode = getCurrentGameMode();
+  const currentMode = useOublietteGameMode();
   const isVipShop = creditsForPricing >= gameConfig.shopOptions.premium.creditsThreshold;
   // Track items purchased during this shop visit
   const [purchasedItems, setPurchasedItems] = useState<Set<ShopOptionType>>(new Set());
@@ -158,7 +159,7 @@ export function Shop({
 
   // Helper to calculate bundle cost (uses creditsForPricing so prices stay fixed for the visit)
   const calculateBundleCost = (bundleSize: number): number => {
-    const baseCost = getParallelHandsBundleBaseCost(bundleSize, creditsForPricing);
+    const baseCost = getParallelHandsBundleBaseCost(bundleSize, creditsForPricing, currentMode);
     return applyShopCostMultiplier(baseCost, creditsForPricing);
   };
 
@@ -174,27 +175,27 @@ export function Shop({
 
   // Calculate costs (use creditsForPricing so prices stay fixed for the visit)
   const singleDeadCardRemovalCost = applyShopCostMultiplier(
-    calculateSingleDeadCardRemovalCost(deadCardRemovalCount),
+    calculateSingleDeadCardRemovalCost(deadCardRemovalCount, currentMode),
     creditsForPricing
   );
   const allDeadCardsRemovalCost = applyShopCostMultiplier(
-    calculateAllDeadCardsRemovalCost(deadCardRemovalCount, deadCards.length),
+    calculateAllDeadCardsRemovalCost(deadCardRemovalCount, deadCards.length, currentMode),
     creditsForPricing
   );
   const wildCardCost = applyShopCostMultiplier(
-    calculateWildCardCost(wildCardCount),
+    calculateWildCardCost(wildCardCount, currentMode),
     creditsForPricing
   );
   const devilsDealChanceCost = applyShopCostMultiplier(
-    calculateDevilsDealChanceCost(devilsDealChancePurchases),
+    calculateDevilsDealChanceCost(devilsDealChancePurchases, currentMode),
     creditsForPricing
   );
   const devilsDealCostReductionCost = applyShopCostMultiplier(
-    calculateDevilsDealCostReductionCost(devilsDealCostReductionPurchases),
+    calculateDevilsDealCostReductionCost(devilsDealCostReductionPurchases, currentMode),
     creditsForPricing
   );
   const extraCardInHandCost = applyShopCostMultiplier(
-    calculateExtraCardInHandCost(extraCardsInHand),
+    calculateExtraCardInHandCost(extraCardsInHand, currentMode),
     creditsForPricing
   );
   const extraDrawCost = applyShopCostMultiplier(

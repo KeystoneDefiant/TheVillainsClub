@@ -99,7 +99,17 @@ export function getSevenYearItchGameMode(
   return mergeSevenYearItchGameMode(base, overrides) as unknown as SevenYearItchGameModeConfig;
 }
 
-/** Resolved table rules for the active shell session (normal mode until the host passes a mode id). */
+export type SevenYearItchGameModeId = keyof typeof sevenYearItchGameConfig.gameModes;
+
+/** Session / shell: invalid or missing ids fall back to the normal merged profile. */
+export function resolveSevenYearItchGameMode(modeId: string | undefined): SevenYearItchGameModeConfig {
+  if (modeId != null && modeId !== "" && modeId in sevenYearItchGameConfig.gameModes) {
+    return getSevenYearItchGameMode(modeId as SevenYearItchGameModeId);
+  }
+  return getCurrentSevenYearItchGameMode();
+}
+
+/** Default resolved rules (normal game); engine tests use this when no session is present. */
 export const sevenYearItchTableConfig: SevenYearItchGameModeConfig = getCurrentSevenYearItchGameMode();
 
 export const sevenYearItchRackets = {

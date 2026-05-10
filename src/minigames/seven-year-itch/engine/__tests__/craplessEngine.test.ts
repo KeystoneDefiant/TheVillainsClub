@@ -181,9 +181,9 @@ describe("resolveRoll crapless", () => {
 });
 
 describe("clampFreeOdds", () => {
-  it("caps at 2× pass by default", () => {
-    expect(clampFreeOdds(100, 250)).toBe(200);
-    expect(clampFreeOdds(100, 50)).toBe(50);
+  it("caps at the given multiple of pass", () => {
+    expect(clampFreeOdds(100, 250, 2)).toBe(200);
+    expect(clampFreeOdds(100, 50, 2)).toBe(50);
   });
 });
 

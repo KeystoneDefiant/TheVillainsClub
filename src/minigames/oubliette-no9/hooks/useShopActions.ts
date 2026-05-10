@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { GameState, Card } from "../types";
-import { gameConfig, getCurrentGameMode } from "@/config/minigames/oublietteNo9GameRules";
+import { gameConfig } from "@/config/minigames/oublietteNo9GameRules";
+import { useOublietteGameMode } from "../OublietteGameModeContext";
 import {
   calculateWildCardCost,
   calculateSingleDeadCardRemovalCost,
@@ -13,7 +14,6 @@ import {
 } from '../utils/config';
 import { useThemeAudio } from '../hooks/useThemeAudio';
 
-const currentMode = getCurrentGameMode();
 /**
  * Hook for shop-related actions
  * Provides functions for purchasing and managing shop items
@@ -34,6 +34,7 @@ export function useShopActions(
   _state: GameState,
   setState: React.Dispatch<React.SetStateAction<GameState>>,
 ) {
+  const mode = useOublietteGameMode();
   const { playSound } = useThemeAudio();
   /**
    * Add a dead card to the deck for credits
@@ -47,7 +48,7 @@ export function useShopActions(
         return prev; // Don't add if at limit
       }
 
-      const reward = currentMode.shop.deadCard.creditReward;
+      const reward = mode.shop.deadCard.creditReward;
 
       // Create a dead card (random suit/rank, marked as dead)
       const suits: Array<'hearts' | 'diamonds' | 'clubs' | 'spades'> = [
@@ -79,7 +80,7 @@ export function useShopActions(
         },
       };
     });
-  }, [setState, playSound]);
+  }, [setState, playSound, mode]);
 
   const removeSingleDeadCard = useCallback(() => {
     playSound('shopPurchase');
@@ -91,7 +92,7 @@ export function useShopActions(
 
       const creditsForPricing = prev.creditsAtShopOpen ?? prev.credits;
       const cost = applyShopCostMultiplier(
-        calculateSingleDeadCardRemovalCost(prev.deckModifications.deadCardRemovalCount),
+        calculateSingleDeadCardRemovalCost(prev.deckModifications.deadCardRemovalCount, mode),
         creditsForPricing
       );
 
@@ -116,7 +117,7 @@ export function useShopActions(
         },
       };
     });
-  }, [setState, playSound]);
+  }, [setState, playSound, mode]);
 
   const removeAllDeadCards = useCallback(() => {
     playSound('shopPurchase');
@@ -131,7 +132,8 @@ export function useShopActions(
       const cost = applyShopCostMultiplier(
         calculateAllDeadCardsRemovalCost(
           prev.deckModifications.deadCardRemovalCount,
-          deadCardCount
+          deadCardCount,
+          mode
         ),
         creditsForPricing
       );
@@ -154,17 +156,17 @@ export function useShopActions(
         },
       };
     });
-  }, [setState, playSound]);
+  }, [setState, playSound, mode]);
 
   const addWildCard = useCallback(() => {
     playSound('shopPurchase');
     setState((prev) => {
       const creditsForPricing = prev.creditsAtShopOpen ?? prev.credits;
       const cost = applyShopCostMultiplier(
-        calculateWildCardCost(prev.wildCardCount),
+        calculateWildCardCost(prev.wildCardCount, mode),
         creditsForPricing
       );
-      if (prev.credits < cost || prev.wildCardCount >= currentMode.shop.wildCard.maxCount) {
+      if (prev.credits < cost || prev.wildCardCount >= mode.shop.wildCard.maxCount) {
         return prev;
       }
 
@@ -186,14 +188,14 @@ export function useShopActions(
         },
       };
     });
-  }, [setState, playSound]);
+  }, [setState, playSound, mode]);
 
   const purchaseExtraDraw = useCallback(() => {
     playSound('shopPurchase');
     setState((prev) => {
       const creditsForPricing = prev.creditsAtShopOpen ?? prev.credits;
       const cost = applyShopCostMultiplier(
-        currentMode.shop.extraDraw.cost,
+        mode.shop.extraDraw.cost,
         creditsForPricing
       );
       if (prev.credits < cost || prev.extraDrawPurchased) {
@@ -205,14 +207,14 @@ export function useShopActions(
         extraDrawPurchased: true,
       };
     });
-  }, [setState, playSound]);
+  }, [setState, playSound, mode]);
 
   const addParallelHandsBundle = useCallback(
     (bundleSize: number) => {
       playSound('shopPurchase');
       setState((prev) => {
         const creditsForPricing = prev.creditsAtShopOpen ?? prev.credits;
-        const baseCost = getParallelHandsBundleBaseCost(bundleSize, creditsForPricing);
+        const baseCost = getParallelHandsBundleBaseCost(bundleSize, creditsForPricing, mode);
         const cost = applyShopCostMultiplier(baseCost, creditsForPricing);
         if (prev.credits < cost) {
           return prev;
@@ -226,13 +228,13 @@ export function useShopActions(
         };
       });
     },
-    [setState, playSound]
+    [setState, playSound, mode]
   );
 
   const purchaseDevilsDealChance = useCallback(() => {
     playSound('shopPurchase');
     setState((prev) => {
-      const devilsDealConfig = currentMode.devilsDeal;
+      const devilsDealConfig = mode.devilsDeal;
       if (!devilsDealConfig) {
         return prev;
       }
@@ -244,7 +246,7 @@ export function useShopActions(
 
       const creditsForPricing = prev.creditsAtShopOpen ?? prev.credits;
       const cost = applyShopCostMultiplier(
-        calculateDevilsDealChanceCost(prev.devilsDealChancePurchases),
+        calculateDevilsDealChanceCost(prev.devilsDealChancePurchases, mode),
         creditsForPricing
       );
       if (prev.credits < cost) {
@@ -257,12 +259,12 @@ export function useShopActions(
         devilsDealChancePurchases: prev.devilsDealChancePurchases + 1,
       };
     });
-  }, [setState, playSound]);
+  }, [setState, playSound, mode]);
 
   const purchaseDevilsDealCostReduction = useCallback(() => {
     playSound('shopPurchase');
     setState((prev) => {
-      const devilsDealConfig = currentMode.devilsDeal;
+      const devilsDealConfig = mode.devilsDeal;
       if (!devilsDealConfig) {
         return prev;
       }
@@ -274,7 +276,7 @@ export function useShopActions(
 
       const creditsForPricing = prev.creditsAtShopOpen ?? prev.credits;
       const cost = applyShopCostMultiplier(
-        calculateDevilsDealCostReductionCost(prev.devilsDealCostReductionPurchases),
+        calculateDevilsDealCostReductionCost(prev.devilsDealCostReductionPurchases, mode),
         creditsForPricing
       );
       if (prev.credits < cost) {
@@ -287,18 +289,18 @@ export function useShopActions(
         devilsDealCostReductionPurchases: prev.devilsDealCostReductionPurchases + 1,
       };
     });
-  }, [setState, playSound]);
+  }, [setState, playSound, mode]);
 
   const purchaseExtraCardInHand = useCallback(() => {
     playSound('shopPurchase');
     setState((prev) => {
-      const { maxPurchases } = currentMode.shop.extraCardInHand;
+      const { maxPurchases } = mode.shop.extraCardInHand;
       if (prev.extraCardsInHand >= maxPurchases) {
         return prev;
       }
       const creditsForPricing = prev.creditsAtShopOpen ?? prev.credits;
       const cost = applyShopCostMultiplier(
-        calculateExtraCardInHandCost(prev.extraCardsInHand),
+        calculateExtraCardInHandCost(prev.extraCardsInHand, mode),
         creditsForPricing
       );
       if (prev.credits < cost) {
@@ -310,7 +312,7 @@ export function useShopActions(
         extraCardsInHand: prev.extraCardsInHand + 1,
       };
     });
-  }, [setState, playSound]);
+  }, [setState, playSound, mode]);
 
   return {
     addDeadCard,

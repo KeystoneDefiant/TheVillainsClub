@@ -20,7 +20,7 @@ import {
   fatesealProphecyMode,
   fatesealScatterRitual,
   fatesealSymbolLore,
-  fatesealTableConfig,
+  resolveFatesealGameMode,
   type FatesealProphecyModeKey,
   type FatesealStandardId,
   type FatesealSymbolId,
@@ -199,9 +199,10 @@ function fatesealPhasePresence(reduceMotion: boolean) {
 
 export function FatesealSilverRoot(props: FatesealShellBinding) {
   const buyIn = props.settlement.buyIn;
+  const tableRules = useMemo(() => resolveFatesealGameMode(props.gameModeId), [props.gameModeId]);
   const reduceMotion = usePrefersReducedMotion();
   const [engine, setEngine] = useState<FatesealEngineState>(() =>
-    createInitialFatesealState(props.sessionCredits, buyIn, Math.random),
+    createInitialFatesealState(props.sessionCredits, buyIn, Math.random, resolveFatesealGameMode(props.gameModeId)),
   );
   const [phase, setPhase] = useState<FatesealPhase>("altar");
   const [prophecyMode, setProphecyMode] = useState<FatesealProphecyModeKey>("single");
@@ -261,10 +262,10 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
   const maxBaseBet = useMemo(
     () =>
       Math.max(
-        fatesealTableConfig.minBaseBet,
-        Math.floor(engine.sessionWallet * fatesealTableConfig.maxBaseBetFractionOfSession),
+        tableRules.minBaseBet,
+        Math.floor(engine.sessionWallet * tableRules.maxBaseBetFractionOfSession),
       ),
-    [engine.sessionWallet],
+    [engine.sessionWallet, tableRules.maxBaseBetFractionOfSession, tableRules.minBaseBet],
   );
 
   const needPicks = prophecyMode === "single" ? 1 : 3;
@@ -658,14 +659,14 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
                       <NumberInput
                         size="xs"
                         label="Base bet"
-                        min={fatesealTableConfig.minBaseBet}
+                        min={tableRules.minBaseBet}
                         max={maxBaseBet}
-                        step={fatesealTableConfig.chipIncrement}
+                        step={tableRules.chipIncrement}
                         value={engine.baseBet}
                         onChange={(v) => {
                           const n = typeof v === "number" ? v : engine.baseBet;
                           const clamped = Math.min(
-                            Math.max(fatesealTableConfig.minBaseBet, Math.floor(n)),
+                            Math.max(tableRules.minBaseBet, Math.floor(n)),
                             maxBaseBet,
                           );
                           setEngine((e) => ({ ...e, baseBet: clamped }));

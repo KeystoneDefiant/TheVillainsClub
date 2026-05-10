@@ -86,6 +86,7 @@ export function ClubTableGamesSection() {
       drinkId: "club_table",
       buyIn: oublietteBuyIn,
       settlement,
+      gameModeId: villainsGameDefaults.oublietteNo9.defaultGameModeId,
     });
     if (!result.ok) {
       setSessionError(startSessionErrorMessage(result.reason));
@@ -116,6 +117,7 @@ export function ClubTableGamesSection() {
       drinkId: "seven_year_itch",
       buyIn: sevenYearItchBuyIn,
       settlement,
+      gameModeId: villainsGameDefaults.sevenYearItch.defaultGameModeId,
     });
     if (!result.ok) {
       setSessionError(startSessionErrorMessage(result.reason));
@@ -146,6 +148,7 @@ export function ClubTableGamesSection() {
       drinkId: "fateseal_silver",
       buyIn: fatesealBuyIn,
       settlement,
+      gameModeId: villainsGameDefaults.fatesealSilver.defaultGameModeId,
     });
     if (!result.ok) {
       setSessionError(startSessionErrorMessage(result.reason));

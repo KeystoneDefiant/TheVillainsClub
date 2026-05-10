@@ -4,7 +4,8 @@ import { computeOublietteReturn } from "@/game/sessionSettlement";
 import { GameState, GameOverReason, HandRank, Card } from "../types";
 import { createFullDeck, shuffleDeck } from "../utils/deck";
 import { selectShopOptionsByRarity } from "../utils/shopSelection";
-import { getCurrentGameMode, getShopModeForCredits } from "@/config/minigames/oublietteNo9GameRules";
+import { getShopModeForCredits, type GameModeConfig } from "@/config/minigames/oublietteNo9GameRules";
+import { useOublietteGameMode } from "../OublietteGameModeContext";
 import { useGameActions } from "./useGameActions";
 import { useShopActions } from "./useShopActions";
 import { checkFailureConditions } from "../utils/failureConditions";
@@ -13,8 +14,6 @@ import { calculateStreakMultiplier } from "../utils/streakCalculator";
 import { useThemeAudio } from "../hooks/useThemeAudio";
 import { parseAnimationSettings } from "../utils/typeGuards";
 import { getStoredCardTheme, setStoredCardTheme } from "@/ui/cards/cardThemes";
-
-const currentMode = getCurrentGameMode();
 
 export type { OublietteShellBinding } from "@/game/sessionSettlement";
 
@@ -27,7 +26,7 @@ function loadAnimationSettings(): GameState['animationSpeedMode'] {
   return parsed?.animationSpeedMode ?? DEFAULT_ANIMATION_SPEED;
 }
 
-function createInitialState(shell?: OublietteShellBinding | null): GameState {
+function createInitialState(shell: OublietteShellBinding | null | undefined, mode: GameModeConfig): GameState {
   const savedState = shell?.savedState;
   const initialState: GameState = {
     screen: shell ? "game" : "menu",
@@ -36,15 +35,15 @@ function createInitialState(shell?: OublietteShellBinding | null): GameState {
     playerHand: [],
     heldIndices: [],
     parallelHands: [],
-    handCount: currentMode.startingHandCount,
-    rewardTable: currentMode.rewards,
-    credits: shell ? shell.sessionCredits : currentMode.startingCredits,
+    handCount: mode.startingHandCount,
+    rewardTable: mode.rewards,
+    credits: shell ? shell.sessionCredits : mode.startingCredits,
     currentRun: 0,
     additionalHandsBought: 0,
-    betAmount: currentMode.startingBet,
-    selectedHandCount: currentMode.startingHandCount,
-    minimumBet: currentMode.startingBet,
-    baseMinimumBet: currentMode.startingBet,
+    betAmount: mode.startingBet,
+    selectedHandCount: mode.startingHandCount,
+    minimumBet: mode.startingBet,
+    baseMinimumBet: mode.startingBet,
     round: 1,
     totalEarnings: 0,
     deckModifications: {
@@ -54,7 +53,7 @@ function createInitialState(shell?: OublietteShellBinding | null): GameState {
       deadCardRemovalCount: 0,
     },
     extraDrawPurchased: false,
-    maxDraws: 1,
+    maxDraws: Math.max(1, mode.maxDraws),
     drawsCompletedThisRound: 0,
     wildCardCount: 0,
     gameOver: false,
@@ -98,10 +97,11 @@ function createInitialState(shell?: OublietteShellBinding | null): GameState {
 }
 
 export function useGameState(shellBinding?: OublietteShellBinding | null) {
+  const mode = useOublietteGameMode();
   const shellRef = useRef(shellBinding);
   shellRef.current = shellBinding;
 
-  const [state, setState] = useState<GameState>(() => createInitialState(shellBinding ?? null));
+  const [state, setState] = useState<GameState>(() => createInitialState(shellBinding ?? null, mode));
 
   // Use specialized hooks for different action types
   const gameActions = useGameActions(state, setState);
@@ -146,17 +146,17 @@ export function useGameState(shellBinding?: OublietteShellBinding | null) {
           const detail = computeOublietteReturn(prev.credits, shell.settlement);
           shell.onReturnToClubMenu({ ...detail, tableRound: prev.round });
         }
-        return createInitialState(shellRef.current ?? null);
+        return createInitialState(shellRef.current ?? null, mode);
       });
     });
-  }, []);
+  }, [mode]);
 
   const returnToPreDraw = useCallback((payout: number = 0) => {
     resetRoundSoundCounts();
     setState((prev) => {
       // Count winning hands from last round (hands with payout > 0)
       const winningHandsCount = prev.parallelHands.reduce((count, hand) => {
-        const result = PokerEvaluator.evaluate(hand.cards);
+        const result = PokerEvaluator.evaluate(hand.cards, { minimumPairRank: mode.minimumPairRank });
         const withRewards = PokerEvaluator.applyRewards(result, prev.rewardTable);
         const handPayout = prev.betAmount * withRewards.multiplier;
         return handPayout > 0 ? count + 1 : count;
@@ -172,7 +172,7 @@ export function useGameState(shellBinding?: OublietteShellBinding | null) {
       const newRound = prev.round + 1;
 
       // Check if we should enter endless mode (at or above startRound)
-      const endlessConfig = currentMode.endlessMode;
+      const endlessConfig = mode.endlessMode;
       const shouldEnterEndlessMode =
         endlessConfig && newRound >= endlessConfig.startRound && !prev.isEndlessMode;
 
@@ -187,9 +187,9 @@ export function useGameState(shellBinding?: OublietteShellBinding | null) {
 
       // Increase minimum bet every X rounds based on minimumBetIncreaseInterval and minimumBetIncreasePercent
       const shouldIncreaseMinBet =
-        newRound % currentMode.minimumBetIncreaseInterval === 0;
+        newRound % mode.minimumBetIncreaseInterval === 0;
       if (shouldIncreaseMinBet) {
-        const minBetMultiplier = 1 + currentMode.minimumBetIncreasePercent / 100;
+        const minBetMultiplier = 1 + mode.minimumBetIncreasePercent / 100;
         newMinimumBet = Math.floor(prev.minimumBet * minBetMultiplier);
       }
 
@@ -244,7 +244,7 @@ export function useGameState(shellBinding?: OublietteShellBinding | null) {
           isEndlessMode: true,
         };
 
-        currentFailureState = checkFailureConditions(tempState);
+        currentFailureState = checkFailureConditions(tempState, mode);
 
         // If a failure condition is active, trigger game over
         if (currentFailureState !== null) {
@@ -254,7 +254,7 @@ export function useGameState(shellBinding?: OublietteShellBinding | null) {
       }
 
       // Check if shop should appear next round and generate options if so
-      const showShopNextRound = newRound % currentMode.shopFrequency === 0;
+      const showShopNextRound = newRound % mode.shopFrequency === 0;
       const selectedShopOptions = showShopNextRound
         ? selectShopOptionsByRarity(getShopModeForCredits(newCredits))
         : [];
@@ -290,7 +290,7 @@ export function useGameState(shellBinding?: OublietteShellBinding | null) {
         currentStreakMultiplier: 1.0, // Reset multiplier at the start of each round
       };
     });
-  }, [playSound, resetRoundSoundCounts]);
+  }, [playSound, resetRoundSoundCounts, mode]);
 
   const startNewRun = useCallback(() => {
     setState((prev) => ({
@@ -302,14 +302,14 @@ export function useGameState(shellBinding?: OublietteShellBinding | null) {
       parallelHands: [],
       additionalHandsBought: 0,
       currentRun: prev.currentRun + 1,
-      betAmount: currentMode.startingBet,
+      betAmount: mode.startingBet,
       selectedHandCount: prev.handCount,
-      minimumBet: currentMode.startingBet,
-      baseMinimumBet: currentMode.startingBet,
+      minimumBet: mode.startingBet,
+      baseMinimumBet: mode.startingBet,
       round: 1,
       totalEarnings: 0,
       gameOver: false,
-      maxDraws: 1,
+      maxDraws: Math.max(1, mode.maxDraws),
       drawsCompletedThisRound: 0,
       showShopNextRound: false,
       selectedShopOptions: [],
@@ -330,7 +330,7 @@ export function useGameState(shellBinding?: OublietteShellBinding | null) {
       runHighestCombo: 0,
       runHighestMultiplier: 1.0,
     }));
-  }, []);
+  }, [mode]);
 
   /**
    * End the current run and show game over summary screen.
@@ -393,11 +393,11 @@ export function useGameState(shellBinding?: OublietteShellBinding | null) {
         parallelHands: [],
         additionalHandsBought: 0,
         credits: prev.credits - cost,
-        maxDraws: Math.max(1, (getCurrentGameMode() as { maxDraws?: number }).maxDraws ?? 1) + (prev.extraDrawPurchased ? 1 : 0),
+        maxDraws: Math.max(1, mode.maxDraws) + (prev.extraDrawPurchased ? 1 : 0),
         drawsCompletedThisRound: 0,
       };
     });
-  }, []);
+  }, [mode]);
 
   const setBetAmount = useCallback((amount: number) => {
     setState((prev) => {

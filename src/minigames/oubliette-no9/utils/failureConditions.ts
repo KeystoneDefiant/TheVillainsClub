@@ -1,8 +1,10 @@
 import { GameState, FailureStateType } from '../types';
-import { getCurrentGameMode } from '@/config/minigames/oublietteNo9GameRules';
+import { getCurrentGameMode, type GameModeConfig } from '@/config/minigames/oublietteNo9GameRules';
 
-export function getMinimumWinPercentForRound(round: number): number | null {
-  const mode = getCurrentGameMode();
+export function getMinimumWinPercentForRound(
+  round: number,
+  mode: GameModeConfig = getCurrentGameMode(),
+): number | null {
   const endlessConfig = mode.endlessMode;
   const minWinPct = endlessConfig?.failureConditions.minimumWinPercent;
 
@@ -24,8 +26,10 @@ export function getMinimumWinPercentForRound(round: number): number | null {
  * @param state - Current game state
  * @returns The type of failure condition that is failing, or null if all conditions pass
  */
-export function checkFailureConditions(state: GameState): FailureStateType {
-  const mode = getCurrentGameMode();
+export function checkFailureConditions(
+  state: GameState,
+  mode: GameModeConfig = getCurrentGameMode(),
+): FailureStateType {
   const endlessConfig = mode.endlessMode;
 
   // Only check failure conditions if endless mode is active
@@ -63,7 +67,7 @@ export function checkFailureConditions(state: GameState): FailureStateType {
   }
 
   // Check minimum win percentage (only increments from when endless mode started)
-  const requiredPercent = getMinimumWinPercentForRound(lastCompletedRound);
+  const requiredPercent = getMinimumWinPercentForRound(lastCompletedRound, mode);
   if (requiredPercent != null) {
     const minRequiredWins = Math.ceil(
       (state.selectedHandCount * requiredPercent) / 100
@@ -86,9 +90,9 @@ export function checkFailureConditions(state: GameState): FailureStateType {
  */
 export function getFailureStateDescription(
   failureState: FailureStateType,
-  state: GameState
+  state: GameState,
+  mode: GameModeConfig = getCurrentGameMode(),
 ): string {
-  const mode = getCurrentGameMode();
   const endlessConfig = mode.endlessMode;
 
   if (!failureState || !endlessConfig) {
@@ -113,7 +117,7 @@ export function getFailureStateDescription(
     }
     case 'minimum-win-percent': {
       const requiredPercent =
-        getMinimumWinPercentForRound(Math.max(endlessConfig.startRound, state.round - 1)) ?? 0;
+        getMinimumWinPercentForRound(Math.max(endlessConfig.startRound, state.round - 1), mode) ?? 0;
       return `You must win at least ${requiredPercent}% of the hands played this round`;
     }
     default:
@@ -128,8 +132,10 @@ export function getFailureStateDescription(
  * @param state - Current game state
  * @returns Array of condition descriptions, or empty if endless mode is not active
  */
-export function getEndlessModeConditions(state: GameState): string[] {
-  const mode = getCurrentGameMode();
+export function getEndlessModeConditions(
+  state: GameState,
+  mode: GameModeConfig = getCurrentGameMode(),
+): string[] {
   const endlessConfig = mode.endlessMode;
 
   if (!state.isEndlessMode || !endlessConfig) {
@@ -159,7 +165,7 @@ export function getEndlessModeConditions(state: GameState): string[] {
   }
 
   if (conditions.minimumWinPercent?.enabled) {
-    const requiredPercent = getMinimumWinPercentForRound(state.round);
+    const requiredPercent = getMinimumWinPercentForRound(state.round, mode);
     if (requiredPercent != null) {
       result.push(`Win at least ${requiredPercent}% of hands this round`);
     }

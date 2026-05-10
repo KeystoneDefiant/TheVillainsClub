@@ -33,6 +33,8 @@ export type ClubTableReturnDetail = {
 export type OublietteShellBinding = {
   sessionCredits: number;
   settlement: OublietteSettlementProfile;
+  /** Matches `gameModes` keys in `oublietteNo9GameRules` (default: normal profile). */
+  gameModeId?: string;
   savedState?: Partial<OublietteGameState>;
   onReturnToClubMenu?: (detail: ClubTableReturnDetail) => void;
 };
@@ -41,6 +43,8 @@ export type OublietteShellBinding = {
 export type SevenYearItchShellBinding = {
   sessionCredits: number;
   settlement: OublietteSettlementProfile;
+  /** Matches `gameModes` keys in `sevenYearItchRules` (default: normal profile). */
+  gameModeId?: string;
   onReturnToClubMenu?: (detail: ClubTableReturnDetail) => void;
   onPauseToClub?: () => void;
 };
@@ -49,6 +53,8 @@ export type SevenYearItchShellBinding = {
 export type FatesealShellBinding = {
   sessionCredits: number;
   settlement: OublietteSettlementProfile;
+  /** Matches `gameModes` keys in `fatesealRules` (default: normal profile). */
+  gameModeId?: string;
   onReturnToClubMenu?: (detail: ClubTableReturnDetail) => void;
   onPauseToClub?: () => void;
 };

@@ -83,14 +83,82 @@ export const fatesealScatterRitual = {
   freeRitualWildWeightBoost: 1,
 } as const;
 
-/** Table stakes — session wallet debited each spin unless Free Ritual is active. */
-export const fatesealTableConfig = {
-  /** Primary chip step for base bet control. */
-  chipIncrement: 10,
-  minBaseBet: 10,
-  /** Max base bet as a fraction of current session credits (session wallet). */
-  maxBaseBetFractionOfSession: 0.25,
+/**
+ * Game mode container (same pattern as Oubliette / 7 Year Itch): **defaultGameMode** plus
+ * **gameModes** partial overrides. Shell passes `gameModeId` on `TableSession`.
+ */
+export const fatesealGameConfig = {
+  defaultGameMode: {
+    displayName: "Normal ritual",
+    /** Primary chip step for base bet control. */
+    chipIncrement: 10,
+    minBaseBet: 10,
+    /** Max base bet as a fraction of current session credits (session wallet). */
+    maxBaseBetFractionOfSession: 0.25 as number,
+  },
+  gameModes: {
+    normalGame: {},
+    /** Example low-stakes profile (not shell-selected until wired). */
+    quickBet: {
+      chipIncrement: 5,
+      minBaseBet: 5,
+    },
+  },
 } as const;
+
+export type FatesealGameModeConfig = (typeof fatesealGameConfig)["defaultGameMode"];
+
+function mergeFatesealGameMode(
+  defaults: Record<string, unknown>,
+  overrides: Record<string, unknown>,
+): Record<string, unknown> {
+  const result = { ...defaults };
+  for (const key of Object.keys(overrides)) {
+    if (overrides[key] === undefined) continue;
+    const defVal = defaults[key];
+    const ovVal = overrides[key];
+    if (
+      ovVal !== null &&
+      typeof ovVal === "object" &&
+      !Array.isArray(ovVal) &&
+      defVal !== null &&
+      typeof defVal === "object" &&
+      !Array.isArray(defVal)
+    ) {
+      result[key] = mergeFatesealGameMode(
+        defVal as Record<string, unknown>,
+        ovVal as Record<string, unknown>,
+      );
+    } else {
+      result[key] = ovVal;
+    }
+  }
+  return result;
+}
+
+export function getCurrentFatesealGameMode(): FatesealGameModeConfig {
+  const base = { ...fatesealGameConfig.defaultGameMode } as unknown as Record<string, unknown>;
+  const overrides = fatesealGameConfig.gameModes.normalGame as unknown as Record<string, unknown>;
+  return mergeFatesealGameMode(base, overrides) as unknown as FatesealGameModeConfig;
+}
+
+export function getFatesealGameMode(modeId: keyof typeof fatesealGameConfig.gameModes): FatesealGameModeConfig {
+  const base = { ...fatesealGameConfig.defaultGameMode } as unknown as Record<string, unknown>;
+  const overrides = (fatesealGameConfig.gameModes[modeId] ?? {}) as unknown as Record<string, unknown>;
+  return mergeFatesealGameMode(base, overrides) as unknown as FatesealGameModeConfig;
+}
+
+export type FatesealGameModeId = keyof typeof fatesealGameConfig.gameModes;
+
+export function resolveFatesealGameMode(modeId: string | undefined): FatesealGameModeConfig {
+  if (modeId != null && modeId !== "" && modeId in fatesealGameConfig.gameModes) {
+    return getFatesealGameMode(modeId as FatesealGameModeId);
+  }
+  return getCurrentFatesealGameMode();
+}
+
+/** Default table stakes for engines / scripts when no session is present. */
+export const fatesealTableConfig: FatesealGameModeConfig = getCurrentFatesealGameMode();
 
 /**
  * §4 Crossroads — costs scale with buy-in so the shop stays legible across stakes.

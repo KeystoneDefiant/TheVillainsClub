@@ -7,6 +7,8 @@ import {
   fatesealDefaultSymbolPool,
   fatesealProphecyMode,
   fatesealScatterRitual,
+  getCurrentFatesealGameMode,
+  type FatesealGameModeConfig,
   type FatesealPoolEntry,
   type FatesealProphecyModeKey,
   type FatesealStandardId,
@@ -308,16 +310,29 @@ function runCascadeStep(
   };
 }
 
-export function createInitialFatesealState(sessionWallet: number, buyIn: number, rng?: Rng): FatesealEngineState {
+export function createInitialFatesealState(
+  sessionWallet: number,
+  buyIn: number,
+  rng?: Rng,
+  tableConfig: FatesealGameModeConfig = getCurrentFatesealGameMode(),
+): FatesealEngineState {
   const grid = newEmptyGrid();
   const pool = clonePool(fatesealDefaultSymbolPool);
   if (rng) fillGridRandom(grid, pool, rng);
+  const cap = Math.max(
+    tableConfig.minBaseBet,
+    Math.floor(sessionWallet * tableConfig.maxBaseBetFractionOfSession),
+  );
+  const step = Math.max(1, tableConfig.chipIncrement);
+  const raw = Math.max(tableConfig.minBaseBet, Math.min(Math.floor(buyIn * 0.05), cap));
+  const aligned = Math.floor(raw / step) * step;
+  const baseBet = Math.min(Math.max(tableConfig.minBaseBet, aligned), cap);
   return {
     grid,
     symbolPool: pool,
     prophecyMode: "single",
     activeProphecy: [],
-    baseBet: Math.max(10, Math.floor(buyIn * 0.05)),
+    baseBet,
     sessionWallet,
     spinCount: 0,
     scatterMeter: 0,

@@ -4,9 +4,9 @@ import { computeSevenYearItchReturn, type SevenYearItchShellBinding } from "@/ga
 import {
   HARDWAY_NUMBERS,
   POINT_NUMBERS,
+  resolveSevenYearItchGameMode,
   sevenYearItchHeatBonuses,
   sevenYearItchRackets,
-  sevenYearItchTableConfig,
   type SevenYearItchHeatBonus,
   type HardwayNumber,
   type HopKey,
@@ -27,10 +27,6 @@ import {
 import { CraplessTableFelt } from "./components/CraplessTableFelt";
 import { DicePair3D } from "./components/DicePair3D";
 import "./sevenYearItch.css";
-
-const CHIP = sevenYearItchTableConfig.chipIncrement;
-const HEAT_ROLLS = sevenYearItchTableConfig.heatRollsPerFavorOffer;
-const SHOW_FIELD_HORN = sevenYearItchTableConfig.showFieldAndHornSection;
 
 type MainView = "table" | "favors";
 
@@ -87,6 +83,10 @@ function pickWeightedWithoutReplacement<T extends { pullWeight: number }>(pool: 
 
 export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
   const buyIn = props.settlement.buyIn;
+  const tableRules = useMemo(() => resolveSevenYearItchGameMode(props.gameModeId), [props.gameModeId]);
+  const chip = tableRules.chipIncrement;
+  const heatRollsPerFavorOffer = tableRules.heatRollsPerFavorOffer;
+  const showFieldHorn = tableRules.showFieldAndHornSection;
   const reduceMotion = usePrefersReducedMotion();
   const [balance, setBalance] = useState(props.sessionCredits);
   const [table, setTable] = useState(initialTableState);
@@ -138,20 +138,20 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
   }, []);
 
   const wealth = balance + totalOnLayout(bets);
-  const capPassHouse = Math.floor(buyIn * sevenYearItchTableConfig.maxPassBetFractionOfBuyIn);
+  const capPassHouse = Math.floor(buyIn * tableRules.maxPassBetFractionOfBuyIn);
   const passLocked = table.phase === "point" && bets.passLine > 0;
   const passOnlyLayout = table.phase === "comeOut" && table.point == null;
 
   const maxOddsCap = useMemo(() => {
     const p = Math.max(0, Math.floor(bets.passLine));
     if (p <= 0) return 0;
-    return Math.floor(p * sevenYearItchTableConfig.maxFreeOddsMultipleOfPass);
-  }, [bets.passLine]);
+    return Math.floor(p * tableRules.maxFreeOddsMultipleOfPass);
+  }, [bets.passLine, tableRules.maxFreeOddsMultipleOfPass]);
 
   const maxOddsWallet = balance + bets.freeOdds;
   const maxOddsDisplay = Math.min(maxOddsCap, maxOddsWallet);
 
-  const heat = Math.min(100, (heatRolls / HEAT_ROLLS) * 100);
+  const heat = Math.min(100, (heatRolls / heatRollsPerFavorOffer) * 100);
   const canCashOut = table.phase === "comeOut" && table.point == null && !diceRunActive;
 
   const pickHeatChoices = useCallback(() => {
@@ -166,47 +166,47 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
   const addPassChip = useCallback(() => {
     if (passLocked) return;
     const maxPass = Math.min(capPassHouse, bets.passLine + balance);
-    const next = Math.min(bets.passLine + CHIP, maxPass);
+    const next = Math.min(bets.passLine + chip, maxPass);
     if (next <= bets.passLine) return;
     const d = next - bets.passLine;
     setBalance((b) => b - d);
     setBets((prev) => ({ ...prev, passLine: next }));
-  }, [balance, bets.passLine, capPassHouse, passLocked]);
+  }, [balance, bets.passLine, capPassHouse, chip, passLocked]);
 
   const removePassChip = useCallback(() => {
     if (passLocked) return;
     if (bets.passLine <= 0) return;
-    const next = Math.max(0, bets.passLine - CHIP);
+    const next = Math.max(0, bets.passLine - chip);
     const d = bets.passLine - next;
     setBalance((b) => b + d);
     setBets((prev) => ({ ...prev, passLine: next }));
-  }, [bets.passLine, passLocked]);
+  }, [bets.passLine, chip, passLocked]);
 
   const addOddsChip = useCallback(() => {
     if (table.phase !== "point") return;
     const cap = Math.min(maxOddsCap, maxOddsWallet);
-    const next = Math.min(bets.freeOdds + CHIP, cap);
+    const next = Math.min(bets.freeOdds + chip, cap);
     if (next <= bets.freeOdds) return;
     const d = next - bets.freeOdds;
     setBalance((b) => b - d);
     setBets((prev) => ({ ...prev, freeOdds: next }));
-  }, [bets.freeOdds, maxOddsCap, maxOddsWallet, table.phase]);
+  }, [bets.freeOdds, chip, maxOddsCap, maxOddsWallet, table.phase]);
 
   const removeOddsChip = useCallback(() => {
     if (table.phase !== "point") return;
     if (bets.freeOdds <= 0) return;
-    const next = Math.max(0, bets.freeOdds - CHIP);
+    const next = Math.max(0, bets.freeOdds - chip);
     const d = bets.freeOdds - next;
     setBalance((b) => b + d);
     setBets((prev) => ({ ...prev, freeOdds: next }));
-  }, [bets.freeOdds, table.phase]);
+  }, [bets.freeOdds, chip, table.phase]);
 
   const addPlaceChip = useCallback(
     (pk: PointNumber) => {
       if (table.phase !== "point") return;
       const old = bets.place[pk] ?? 0;
       const cap = old + balance;
-      const next = Math.min(old + CHIP, cap);
+      const next = Math.min(old + chip, cap);
       if (next <= old) return;
       const d = next - old;
       setBalance((b) => b - d);
@@ -216,7 +216,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
         return { ...prev, place };
       });
     },
-    [balance, bets.place, table.phase],
+    [balance, bets.place, chip, table.phase],
   );
 
   const removePlaceChip = useCallback(
@@ -224,8 +224,8 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
       if (table.phase !== "point") return;
       const old = bets.place[pk] ?? 0;
       if (old <= 0) return;
-      let next = Math.max(0, old - CHIP);
-      if (next > 0 && next < sevenYearItchTableConfig.minPlaceBet) {
+      let next = Math.max(0, old - chip);
+      if (next > 0 && next < tableRules.minPlaceBet) {
         next = 0;
       }
       const d = old - next;
@@ -237,56 +237,56 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
         return { ...prev, place };
       });
     },
-    [bets.place, table.phase],
+    [bets.place, chip, table.phase, tableRules.minPlaceBet],
   );
 
   const addFieldChip = useCallback(() => {
-    const next = bets.field + CHIP;
-    if (balance < CHIP) return;
-    setBalance((b) => b - CHIP);
+    const next = bets.field + chip;
+    if (balance < chip) return;
+    setBalance((b) => b - chip);
     setBets((prev) => ({ ...prev, field: next }));
-  }, [balance, bets.field]);
+  }, [balance, bets.field, chip]);
 
   const removeFieldChip = useCallback(() => {
     if (bets.field <= 0) return;
-    const next = Math.max(0, bets.field - CHIP);
+    const next = Math.max(0, bets.field - chip);
     const d = bets.field - next;
     setBalance((b) => b + d);
     setBets((prev) => ({ ...prev, field: next }));
-  }, [bets.field]);
+  }, [bets.field, chip]);
 
   const addHornChip = useCallback(() => {
-    const cost = CHIP * 4;
+    const cost = chip * 4;
     if (balance < cost) return;
     setBalance((b) => b - cost);
-    setBets((prev) => ({ ...prev, hornUnit: prev.hornUnit + CHIP }));
-  }, [balance]);
+    setBets((prev) => ({ ...prev, hornUnit: prev.hornUnit + chip }));
+  }, [balance, chip]);
 
   const removeHornChip = useCallback(() => {
     if (bets.hornUnit <= 0) return;
-    const next = Math.max(0, bets.hornUnit - CHIP);
+    const next = Math.max(0, bets.hornUnit - chip);
     const d = bets.hornUnit - next;
     setBalance((b) => b + d * 4);
     setBets((prev) => ({ ...prev, hornUnit: next }));
-  }, [bets.hornUnit]);
+  }, [bets.hornUnit, chip]);
 
   const addHopChip = useCallback(
     (key: HopKey) => {
-      if (balance < CHIP) return;
+      if (balance < chip) return;
       const old = bets.hops[key] ?? 0;
-      setBalance((b) => b - CHIP);
+      setBalance((b) => b - chip);
       setBets((prev) => ({
         ...prev,
-        hops: { ...prev.hops, [key]: old + CHIP },
+        hops: { ...prev.hops, [key]: old + chip },
       }));
     },
-    [balance, bets.hops],
+    [balance, bets.hops, chip],
   );
 
   const removeHopChip = useCallback((key: HopKey) => {
     const old = bets.hops[key] ?? 0;
     if (old <= 0) return;
-    const next = Math.max(0, old - CHIP);
+    const next = Math.max(0, old - chip);
     const d = old - next;
     setBalance((b) => b + d);
     setBets((prev) => {
@@ -295,25 +295,25 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
       else hops[key] = next;
       return { ...prev, hops };
     });
-  }, [bets.hops]);
+  }, [bets.hops, chip]);
 
   const addHardwayChip = useCallback(
     (hw: HardwayNumber) => {
-      if (balance < CHIP) return;
+      if (balance < chip) return;
       const old = bets.hardways[hw] ?? 0;
-      setBalance((b) => b - CHIP);
+      setBalance((b) => b - chip);
       setBets((prev) => ({
         ...prev,
-        hardways: { ...prev.hardways, [hw]: old + CHIP },
+        hardways: { ...prev.hardways, [hw]: old + chip },
       }));
     },
-    [balance, bets.hardways],
+    [balance, bets.hardways, chip],
   );
 
   const removeHardwayChip = useCallback((hw: HardwayNumber) => {
     const old = bets.hardways[hw] ?? 0;
     if (old <= 0) return;
-    const next = Math.max(0, old - CHIP);
+    const next = Math.max(0, old - chip);
     const d = old - next;
     setBalance((b) => b + d);
     setBets((prev) => {
@@ -322,7 +322,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
       else hardways[hw] = next;
       return { ...prev, hardways };
     });
-  }, [bets.hardways]);
+  }, [bets.hardways, chip]);
 
   const handleDivest = useCallback(() => {
     if (table.phase !== "point" || table.hasUsedDivest || diceRunActive) return;
@@ -352,7 +352,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
 
   const canRoll =
     table.phase === "comeOut"
-      ? bets.passLine >= sevenYearItchTableConfig.minPassBet
+      ? bets.passLine >= tableRules.minPassBet
       : bets.passLine > 0;
 
   const canDivest =
@@ -437,14 +437,14 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
         if (endsHand) return 0;
         if (r.total === 7) return 0;
         const next = prev + 1;
-        if (next >= HEAT_ROLLS) {
+        if (next >= heatRollsPerFavorOffer) {
           pickHeatChoices();
           return 0;
         }
         return next;
       });
     },
-    [activeBonus, pickHeatChoices],
+    [activeBonus, heatRollsPerFavorOffer, pickHeatChoices],
   );
 
   const beginNextHand = useCallback(() => {
@@ -619,7 +619,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
                     Heat
                   </Text>
                   <Text size="xs" c="var(--7yi-amber)">
-                    {heatRolls}/{HEAT_ROLLS}
+                    {heatRolls}/{heatRollsPerFavorOffer}
                   </Text>
                 </Group>
                 <Progress value={heat} color="orange" size="sm" radius="xs" />
@@ -655,9 +655,9 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
               lastD2={lastD2}
               diceRolling={diceRunActive}
               reduceMotion={reduceMotion}
-              chip={CHIP}
+              chip={chip}
               passOnlyLayout={passOnlyLayout}
-              showFieldAndHorn={SHOW_FIELD_HORN}
+              showFieldAndHorn={showFieldHorn}
               placePayoutScale={table.placePayoutScale}
               activeFavorTitle={activeBonus?.title ?? null}
               canRoll={canRoll}
@@ -794,7 +794,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
                 Heat
               </Text>
               <Text fw={700}>
-                {heatRolls}/{HEAT_ROLLS}
+                {heatRolls}/{heatRollsPerFavorOffer}
               </Text>
             </Paper>
           </SimpleGrid>

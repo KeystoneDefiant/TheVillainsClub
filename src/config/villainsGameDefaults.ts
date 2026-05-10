@@ -12,6 +12,8 @@ export const villainsGameDefaults = {
   oublietteNo9: {
     /** Default stake when starting a table (static for now; specials may vary later). */
     defaultBuyIn: 2000,
+    /** Key into `gameModes` in `oublietteNo9GameRules.ts` (merged over `defaultGameMode`). */
+    defaultGameModeId: "normalGame" as const,
     /** Enables the standalone `/oubliette-no9` landing outside the club menu. */
     standaloneLandingEnabled: true,
     /**
@@ -39,6 +41,7 @@ export const villainsGameDefaults = {
   /** 7 Year Itch — Crapless table (see `7YI_plan.md`). */
   sevenYearItch: {
     defaultBuyIn: 2000,
+    defaultGameModeId: "normalGame" as const,
     maxReturnMultipleOfBuyIn: 50,
     overachievement: {
       capMultiple: 50,
@@ -51,6 +54,7 @@ export const villainsGameDefaults = {
   /** Fateseal Silver — occult cascading grid slot. */
   fatesealSilver: {
     defaultBuyIn: 2000,
+    defaultGameModeId: "normalGame" as const,
     maxReturnMultipleOfBuyIn: 50,
     overachievement: {
       capMultiple: 50,

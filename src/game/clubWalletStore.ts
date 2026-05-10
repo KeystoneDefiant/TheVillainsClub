@@ -17,6 +17,7 @@ type ClubWalletState = {
     drinkId: string;
     buyIn: number;
     settlement: TableSession["settlement"];
+    gameModeId?: string;
   }) => StartClubSessionResult;
   updateActiveSessionProgress: (
     patch: Partial<Pick<TableSession, "progressRound" | "oublietteState">>,
@@ -44,6 +45,7 @@ export const useClubWallet = create<ClubWalletState>()(
           drinkId: input.drinkId,
           buyIn: input.buyIn,
           settlement: input.settlement,
+          gameModeId: input.gameModeId,
         });
         if (!result.ok) return { ok: false, reason: result.reason };
         set({

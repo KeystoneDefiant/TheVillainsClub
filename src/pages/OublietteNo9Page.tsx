@@ -10,6 +10,8 @@ import { disposeOublietteAudio } from "@/minigames/oubliette-no9/hooks/useThemeA
 import { usePrefersReducedMotion } from "@/motion/usePrefersReducedMotion";
 import { clubTokens } from "@/theme/clubTokens";
 import { OUBLIETTE_STANDALONE_ROUTE } from "@/config/standaloneLanding";
+import { resolveOublietteGameMode } from "@/config/minigames/oublietteNo9GameRules";
+import { OublietteGameModeProvider } from "@/minigames/oubliette-no9/OublietteGameModeContext";
 
 import "@/minigames/oubliette-no9/styles/global.css";
 
@@ -69,10 +71,16 @@ export function OublietteNo9Page({ standalone = false }: OublietteNo9PageProps) 
     return {
       sessionCredits: activeSession.sessionWallet,
       settlement: activeSession.settlement,
+      gameModeId: activeSession.gameModeId,
       savedState,
       onReturnToClubMenu: handleReturnToClub,
     };
   }, [activeSession, handleReturnToClub]);
+
+  const oublietteGameMode = useMemo(
+    () => resolveOublietteGameMode(activeSession?.gameModeId),
+    [activeSession?.gameModeId],
+  );
 
   useEffect(() => {
     return () => {
@@ -117,7 +125,9 @@ export function OublietteNo9Page({ standalone = false }: OublietteNo9PageProps) 
             </Box>
           }
         >
-          <OublietteNo9Root {...shellProps} />
+          <OublietteGameModeProvider value={oublietteGameMode}>
+            <OublietteNo9Root {...shellProps} />
+          </OublietteGameModeProvider>
         </Suspense>
       </MinigameLazyErrorBoundary>
     </Box>

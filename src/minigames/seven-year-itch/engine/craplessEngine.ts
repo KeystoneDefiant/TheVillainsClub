@@ -15,7 +15,6 @@ import {
   placeBetScaledReturn,
   placeBetTotalReturn,
   rollTotal,
-  sevenYearItchTableConfig,
 } from "@/config/minigames/sevenYearItchRules";
 
 export type GamePhase = "comeOut" | "point";
@@ -110,8 +109,8 @@ function emptyAllBets(): TableBets {
 /**
  * Validates and clamps free odds to pass and table rule.
  */
-export function clampFreeOdds(passLine: number, requested: number): number {
-  const cap = maxFreeOddsStake(passLine, sevenYearItchTableConfig.maxFreeOddsMultipleOfPass);
+export function clampFreeOdds(passLine: number, requested: number, maxFreeOddsMultipleOfPass: number): number {
+  const cap = maxFreeOddsStake(passLine, maxFreeOddsMultipleOfPass);
   return Math.max(0, Math.min(Math.floor(requested), cap));
 }
 

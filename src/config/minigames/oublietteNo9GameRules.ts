@@ -309,6 +309,16 @@ export function getGameMode(modeId: keyof typeof gameConfig.gameModes): GameMode
   ) as GameModeConfig;
 }
 
+export type OublietteGameModeId = keyof typeof gameConfig.gameModes;
+
+/** Table session: unknown ids fall back to the normal merged profile. */
+export function resolveOublietteGameMode(modeId: string | undefined): GameModeConfig {
+  if (modeId != null && modeId !== "" && modeId in gameConfig.gameModes) {
+    return getGameMode(modeId as OublietteGameModeId);
+  }
+  return getCurrentGameMode();
+}
+
 /** Shop mode shape for selection (slots, items, count). */
 export type ShopSelectionMode = {
   shopSlots: ReadonlyArray<{ maxRarity: number; rarityChances?: ReadonlyArray<number> }>;

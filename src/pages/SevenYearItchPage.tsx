@@ -55,6 +55,7 @@ export function SevenYearItchPage() {
     return {
       sessionCredits: activeSession.sessionWallet,
       settlement: activeSession.settlement,
+      gameModeId: activeSession.gameModeId,
       onReturnToClubMenu: handleReturnToClub,
       onPauseToClub: () => navigate("/bar", { replace: true }),
     };

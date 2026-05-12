@@ -48,6 +48,7 @@ export const FATESEAL_GRID_SIZE = 5 as const;
  */
 export const fatesealProphecyMode = {
   single: { pickCount: 1 as const, winMultipleOfBaseBet: 10 },
+  /** Retained for tests / alternate modes; shell seals a single omen only (TODO.md). */
   triple: { pickCount: 3 as const, winMultipleOfBaseBet: 1 },
 } as const;
 
@@ -58,7 +59,7 @@ export type FatesealProphecyModeKey = keyof typeof fatesealProphecyMode;
  * symbolic multipliers alone. Re-tune with `npm run sim:fateseal`.
  */
 /** Monte Carlo (see `npm run sim:fateseal` with `FATESEAL_SIM_BASE_ONLY=1`) targets ~88–95% payout/paid bet. */
-export const fatesealCascadePayoutScale = 0.0125 as const;
+export const fatesealCascadePayoutScale = 0.00935 as const;
 
 /**
  * §3C step 3 — payout uses a per-cascade multiplier that rises with chain depth.
@@ -67,18 +68,77 @@ export const fatesealCascadePayoutScale = 0.0125 as const;
  */
 export const fatesealCascadeMultipliers = [1, 1, 2, 3, 4, 6] as const;
 
-/** Adjacent (orthogonal) clusters of this many matching standards (+ wild) clear per §3C step 4. */
+/**
+ * Legacy §3C cluster size (3) — **non-prophecy** clears now use
+ * {@link fatesealProgressionRules.linking.minOrthogonalRunForNonProphecyRemoval}. Kept for older
+ * references / docs parity.
+ */
 export const fatesealAdjacentMinRun = 3;
 
-/** §4 — Crossroads after every N completed spins (counted after cascades settle). */
-export const fatesealCrossroadsEveryNSpins = 3;
+/**
+ * TODO.md Fateseal backlog — tunables for engine/UI work in progress.
+ * Import from tests and `cascadeEngine` so values cannot drift from production.
+ */
+export const fatesealProgressionRules = {
+  crossroads: {
+    /**
+     * Crossroads opens after this many **scatter** symbols land on the **final
+     * settled grid** of completed spins (v1 stand-in for “bonus symbols revealed”).
+     */
+    scatterSymbolsToTriggerShop: 15,
+  },
+  linking: {
+    /** Non–actively-prophesied standards need this many orthogonally linked tiles to clear. */
+    minOrthogonalRunForNonProphecyRemoval: 5,
+    /**
+     * Each undirected orthogonal adjacency between two prophecy-hit cells adds this to the
+     * cascade step multiplier (before `fatesealCascadePayoutScale`), capped by `maxCascadeMultBonusFromLinking`.
+     * Used only when {@link usePowProphecyLinkingForCascadeMult} is false.
+     */
+    cascadeMultAddPerProphecyAdjacency: 0.06,
+    /** Upper bound on the sum added to the depth cascade mult from prophecy linking (additive mode). */
+    maxCascadeMultBonusFromLinking: 5,
+    /**
+     * TODO.md — “2× multiplier per matched linking symbols”: multiply the depth cascade mult by
+     * `powBase` raised to `min(prophecyAdjacencyEdges, maxEdgesForPow)` (configurable per game mode).
+     */
+    usePowProphecyLinkingForCascadeMult: true,
+    prophecyLinkingPowBasePerAdjacency: 2,
+    maxProphecyEdgesForLinkingPow: 2,
+  },
+  sympatheticVibrations: {
+    /** Lump payout vs base bet when enough ritual meter fires occur in a single spin. */
+    payoutMultipleOfBaseBet: 75,
+    /** Minimum number of Free Ritual grants from the meter in this spin to pay Sympathetic Vibrations once. */
+    bonusRoundIndexTrigger: 4,
+  },
+  purchasedReels: {
+    wildRitualSpins: 3,
+    deadRitualSpins: 5,
+    markedRitualSpins: 3,
+    markedSymbolPayoutMultiplier: 1.5,
+    /** Free Ritual spins (zero bet) do not decrement Crossroads wild/dead/mark spin timers. */
+    bonusSpinsExcludeFromReelDecay: true,
+  },
+  bonusGrid: {
+    extraRowsPerBonusTier: 1,
+    extraColsPerBonusTier: 1,
+    maxGridSize: 9,
+  },
+} as const;
 
-/** §3A / §5 — Scatter collected across spins until the Free Ritual fires. */
+/** Pool weight for scatter drops — lower = rarer bonus (TODO.md). */
+export const fatesealScatterSymbolPoolWeight = 0.68 as const;
+
+/** §3A / §5 — Scatter meter ticks mid-cascade for Sympathetic accumulation; meter fires that enqueue bonus append waves log `scatter_ritual_started` (see `runSpin`). */
 export const fatesealScatterRitual = {
   /** Scatters on the board added to the meter after each spin settles. */
   meterToTrigger: 12,
-  /** Bonus spins granted — no base bet deducted while active. */
-  freeSpinsGranted: 2,
+  /**
+   * Log label / legacy copy — each meter fire **appends one in-spin bonus wave** to the current
+   * ritual (TODO.md); meter no longer banks separate “free ritual” charges.
+   */
+  freeSpinsGranted: 1,
   /** During Free Ritual fills, extra wild weight is applied in generation (soft guarantee). */
   freeRitualWildWeightBoost: 1,
 } as const;
@@ -182,6 +242,38 @@ export const fatesealCrossroadsOffers = {
   },
 } as const;
 
+/**
+ * TODO.md Crossroads — absolute-credit SKUs (reel counters are stored on session state; column
+ * gravity / dead-column behavior is not simulated in the cascade engine yet).
+ */
+export const fatesealCrossroadsNewShop = {
+  addOmenSymbol: {
+    firstPurchaseCredits: 3500,
+    extraPurchaseCredits: 2500,
+    /** Extra symbols that can be bought this visit (sealed omen + extras, max 4 total). */
+    maxPurchasesThisVisit: 3,
+  },
+  wildReel: {
+    costCredits: 5000,
+    maxActive: 3,
+  },
+  deadReel: {
+    grantCreditsOnTake: 1500,
+    maxActive: 3,
+  },
+  omenMark: {
+    costCredits: 4000,
+    maxActive: 1,
+  },
+} as const;
+
+/** Credits for the next “add omen symbol” purchase this visit (`alreadyPurchased` in 0..max-1). */
+export function crossroadsNextOmenAdditionCostCredits(alreadyPurchasedThisVisit: number): number {
+  const c = fatesealCrossroadsNewShop.addOmenSymbol;
+  if (alreadyPurchasedThisVisit >= c.maxPurchasesThisVisit) return Number.POSITIVE_INFINITY;
+  return c.firstPurchaseCredits + c.extraPurchaseCredits * alreadyPurchasedThisVisit;
+}
+
 /** Weighted pool row used for drops / shop bookkeeping. */
 export type FatesealPoolEntry = {
   symbol: FatesealSymbolId;
@@ -202,7 +294,8 @@ export const fatesealDefaultSymbolPool: readonly FatesealPoolEntry[] = [
   { symbol: "flame", weight: 9 },
   { symbol: "key", weight: 9 },
   { symbol: "wild", weight: 2 },
-  { symbol: "scatter", weight: 2 },
+  /** Tunable via {@link fatesealScatterSymbolPoolWeight} — tune with `npm run sim:fateseal`. */
+  { symbol: "scatter", weight: fatesealScatterSymbolPoolWeight },
 ];
 
 export function totalPoolWeight(pool: readonly FatesealPoolEntry[]): number {

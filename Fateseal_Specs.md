@@ -4,7 +4,7 @@
 
 **Title:** Fateseal Silver  
 **Genre:** Occult Prophecy / Cascading Grid Slot  
-**Core Hook:** A 5x5 grid where the player **prophesies** (bets on) specific symbols. Successes trigger cascading chain reactions. Every three spins, the player must navigate **"The Crossroads"** (Shop) to modify their deck/pool.
+**Core Hook:** A 5x5 grid where the player **prophesies** (bets on) specific symbols. Successes trigger cascading chain reactions. When enough **scatter** symbols have appeared on the **final settled grid** (threshold in `fatesealProgressionRules.crossroads.scatterSymbolsToTriggerShop`, default 15 in the Villains Club build), the player opens **"The Crossroads"** (shop) to modify their pool and session — see §4.
 
 ---
 
@@ -50,13 +50,20 @@ Before the spin, the player must select their "Focus":
 
 ## 4. The Crossroads (The Shop)
 
-Triggered every **3 spins**. The player is presented with a choice of "Bargains":
+**Villains Club implementation:** Crossroads is a **dedicated in-game phase** (full-width panel in `App.tsx`, not a modal). It opens after the scatter-accumulation rule in §7 fires; the player returns to the **ledger** when they dismiss it.
 
-| Bargain Type           | Mechanic                                                         | Narrative Cost                         |
-| :--------------------- | :--------------------------------------------------------------- | :------------------------------------- |
-| **Faustian Bargain**   | Grant immediate **LargeSum** of credits.                         | Add 3 **Void Symbols** to the `SymbolPool` permanently. |
-| **Silver Vision**      | Convert 1 standard symbol in the `SymbolPool` to a **Wild**.   | Higher cost in credits.                |
-| **The Forbidden Tome** | Increase the probability of **Scatters** appearing for the next 3 spins. | Moderate cost in credits.              |
+**Credit shop (config `fatesealCrossroadsNewShop` + `crossroadsNextOmenAdditionCostCredits`):**
+
+| SKU | Mechanic |
+| :--- | :--- |
+| **Add omen symbol** | Pay tiered credits (first purchase + step per extra); append a new standard to `activeProphecy` (cap: sealed omen + `maxPurchasesThisVisit` extras). |
+| **Wild reel slot** | Pay credits; appends a FIFO paid-spin timer (`wildReelPaidSpinTimers`); leftmost *k* columns are forced wild on fills until timers expire. |
+| **Dead reel boon** | Grants credits; appends FIFO timers (`deadReelPaidSpinTimers`); rightmost *k* columns are void on fills until timers expire. |
+| **Omen mark** | Pay once while no mark is set; choose a symbol already in `activeProphecy`; cascade pays **`markedSymbolPayoutMultiplier`** when that standard appears in a prophecy hit (`fatesealProgressionRules.purchasedReels`). |
+
+**Legacy bargains** (still in `fatesealCrossroadsOffers` / `applyCrossroads`): **Faustian Bargain** (credits + void pool weights), **Silver Vision** (cost + convert chosen standard’s pool entries toward wild for the session), **The Forbidden Tome** (cost + boosted scatter weight for N spins). In the shell, each legacy line is **once per Crossroads opening** alongside the new SKUs.
+
+*Original pitch deck table:* “every three spins” and a smaller fixed set of bargains — superseded in this repo by the scatter gate + tables above.
 
 ---
 
@@ -87,7 +94,7 @@ interface GameState {
 
 - **Left Sidebar**: The "Prophecy Altar" where players select their symbols.
 - **Center**: The 5x5 "Fateseal" stone tablet.
-- **Right Sidebar**: The "Ledger" showing current payout multipliers and the "Spins until Crossroads" countdown.
+- **Right Sidebar**: The "Ledger" showing current payout multipliers and progress toward **Crossroads** (scatter symbols on the final settled grid vs. `fatesealProgressionRules.crossroads.scatterSymbolsToTriggerShop`).
 - **The "Void" Effect**: When a Void symbol is rolled, it should have a subtle "pulling" animation, making nearby symbols vibrate.
 
 ---
@@ -97,12 +104,17 @@ interface GameState {
 Authoritative tunables live in **`src/config/minigames/fatesealRules.ts`**. Deviations from the prose above (for session economy):
 
 - **`fatesealCascadePayoutScale`** — Applied after the §3B–§3C payout expression (per cascade step). Tuned with **`npm run sim:fateseal`** so that with `FATESEAL_SIM_BASE_ONLY=1`, **payout ÷ paid base bet** lands near **90%** (house edge ~10% on the base ritual in isolation).
-- **Scatter / Free Ritual** — Meter threshold, free spin count, and wild boost in config may be stricter than early drafts so that the **full** sim (scatter + Free Ritual, denominator = paid bets only) stays in a bounded band (~**110%** effective return vs. paid stake at current defaults — free spins add win volume without charging bets).
-- **Crossroads** — Faustian credit ratio and shop costs are the implementation source of truth; tune alongside the pool.
+- **Scatter / Free Ritual** — Meter threshold and wild boost live in config. **TODO.md behavior:** each meter fire **appends bonus cascade waves** inside the same paid spin (extra rows/columns up to `fatesealProgressionRules.bonusGrid.maxGridSize`, transient bonus dead columns on the left, no banked “next spin free” charges). The engine still ticks the meter mid-cascade for **Sympathetic Vibrations** accumulation; `scatter_ritual_started` log lines are emitted only when a wave begins with a logged meter fire. **Sympathetic Vibrations** — when `fatesealProgressionRules.sympatheticVibrations.bonusRoundIndexTrigger` ritual grants occur in one composite spin, a lump **`payoutMultipleOfBaseBet` × base bet** is paid once and logged as `sympathetic_vibrations`. **Scatter meter remainder does not carry** to the next player spin (`scatterMeter` resets to 0 after each `runSpin`).
+- **Crossroads** — Faustian credit ratio and legacy shop costs are the implementation source of truth; tune alongside the pool. **Villains Club:** Crossroads opens after **`fatesealProgressionRules.crossroads.scatterSymbolsToTriggerShop`** scatter symbols appear on the **final settled grid** per completed spin (v1 stand-in for “bonus symbols revealed” in TODO.md); remainder carries toward the next visit. **New SKUs:** **`fatesealCrossroadsNewShop`** + helpers in `src/minigames/fateseal-silver/engine/shopEngine.ts`. **Linking:** non–actively-prophesied standards need **five** orthogonally linked tiles (+ wild) to clear; prophecy hits add a **capped bonus** to the cascade step multiplier from prophecy–prophecy adjacency edges (`fatesealProgressionRules.linking`). Other backlog constants (Sympathetic Vibrations payout, purchased reel spin decay, bonus grid growth) live in **`fatesealProgressionRules`** in the same file.
 
 Monte Carlo:
 
 ```bash
 npm run sim:fateseal                       # full model
 FATESEAL_SIM_BASE_ONLY=1 npm run sim:fateseal   # base ritual only (RTP scale check)
+# If `tsx` is not on PATH in your shell, use:
+# npx tsx scripts/sim-fateseal.ts
+# FATESEAL_SIM_BASE_ONLY=1 npx tsx scripts/sim-fateseal.ts
 ```
+
+**Harness snapshot (dev run, seed `face1234`, 30 000 spins, `fatesealCascadePayoutScale` = `0.00935`, current engine):** base-only sim (`FATESEAL_SIM_BASE_ONLY=1`, **`forBaseRitualSim`**) ≈ **90.4%** payout ÷ paid base bet; full model ≈ **90.4%** on the same harness profile (moon prophecy, no Crossroads purchases) — scatter volume is modest here so base and full align; use only as a regression fingerprint; tune with `fatesealCascadePayoutScale`, pool weights, and scatter cadence.

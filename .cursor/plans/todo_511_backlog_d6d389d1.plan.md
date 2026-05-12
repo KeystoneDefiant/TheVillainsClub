@@ -16,16 +16,16 @@ todos:
     status: completed
   - id: fateseal-config-engine
     content: "Fateseal: config keys + cascadeEngine state machine (bonus append, dead reels, grid growth, sympathetic vibrations, linking rules, meter reset)"
-    status: pending
+    status: completed
   - id: fateseal-ui-shop
     content: "Fateseal: bet buttons, single omen, reel lifetimes, larger/slower ritual, side panel, crossroads full screen + shop SKUs"
-    status: pending
+    status: completed
   - id: fateseal-verify-docs
     content: sim:fateseal, Vitest/Playwright as needed, Fateseal_Specs + PLAN current status
-    status: pending
+    status: completed
   - id: write-511plan
     content: After user approval, save this plan to repo root 511plan.md (credit section updated for Pro + $20 buy-up, 85% used)
-    status: pending
+    status: completed
 isProject: false
 ---
 

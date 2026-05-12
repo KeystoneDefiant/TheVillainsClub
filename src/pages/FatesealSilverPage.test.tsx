@@ -90,7 +90,7 @@ describe("FatesealSilverPage", () => {
      */
     fireEvent.click(await screen.findByTestId("fateseal-pick-dagger", {}, { timeout: 5000 }));
     fireEvent.click(await screen.findByTestId("fateseal-seal-prophecy"));
-    fireEvent.click(await screen.findByTestId("fateseal-ritual-spin"));
+    fireEvent.click(await screen.findByTestId("fateseal-bet-min"));
 
     fireEvent.click(await screen.findByRole("button", { name: /cash out to club/i }));
     fireEvent.click(await screen.findByRole("button", { name: /^confirm$/i }));

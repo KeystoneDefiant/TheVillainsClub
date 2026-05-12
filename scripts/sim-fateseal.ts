@@ -3,8 +3,8 @@
  * Run: `npm run sim:fateseal`
  *
  * Environment:
- * - `FATESEAL_SIM_BASE_ONLY=1` — reset scatter meter and free ritual each spin (**base ritual RTP**; use to tune scale).
- * - unset — **full model** (scatter meter + Free Ritual spins accumulate).
+ * - `FATESEAL_SIM_BASE_ONLY=1` — **`runSpin(..., { forBaseRitualSim: true })`**: no scatter meter, bonus appends, or sympathetic (**base ritual RTP**; use to tune `fatesealCascadePayoutScale`).
+ * - unset — **full model** (scatter meter, in-spin bonus appends, sympathetic; denominator = paid bets only).
  *
  * Primary tuning target: **Payout / paid base bet** in the **base-only** run ≈ **88%–95%**.
  */
@@ -52,7 +52,7 @@ for (let i = 0; i < SPINS; i++) {
   }
   const paid = state.freeRitualSpinsLeft <= 0;
   if (paid) sumBet += state.baseBet;
-  const r = runSpin(state, rng);
+  const r = runSpin(state, rng, { forBaseRitualSim: baseOnly });
   sumPayout += r.totalPayout;
   state = r.nextState;
 }
@@ -62,12 +62,16 @@ const pct = sumBet > 0 ? (sumPayout / sumBet) * 100 : 0;
 // eslint-disable-next-line no-console -- CLI report
 console.log(`Fateseal Monte Carlo seed=${seed.toString(16)} spins=${SPINS}`);
 // eslint-disable-next-line no-console -- CLI report
-console.log(`Mode: ${baseOnly ? "FATESEAL_SIM_BASE_ONLY=1 (strip scatter & free ritual each spin)" : "full (scatter + Free Ritual)"}`);
+console.log(
+  `Mode: ${baseOnly ? "FATESEAL_SIM_BASE_ONLY=1 (base ritual sim — no meter / bonus / sympathetic)" : "full (scatter meter + in-spin bonus appends + sympathetic)"}`,
+);
 // eslint-disable-next-line no-console -- CLI report
 console.log(`Cascade payout scale: ${fatesealCascadePayoutScale}`);
 if (!baseOnly) {
   // eslint-disable-next-line no-console -- CLI report
-  console.log(`Scatter ritual (config): meter ${fatesealScatterRitual.meterToTrigger}, +${fatesealScatterRitual.freeSpinsGranted} spins`);
+  console.log(`Scatter ritual (config): meter ${fatesealScatterRitual.meterToTrigger}, append waves (log grant count ${fatesealScatterRitual.freeSpinsGranted})`);
 }
 // eslint-disable-next-line no-console -- CLI report
-console.log(`Payout / paid base bets (%): ${pct.toFixed(2)}%  (base-only target ~88–95)`);
+console.log(
+  `Payout / paid base bets (%): ${pct.toFixed(2)}%  (${baseOnly ? "target ~88–95 for base ritual" : "full-model fingerprint — product-tune vs paid stake"})`,
+);

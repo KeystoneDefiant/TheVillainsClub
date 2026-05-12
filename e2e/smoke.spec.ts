@@ -92,8 +92,8 @@ test("club table buy-in opens Fateseal Silver", async ({ page }) => {
   await expect(page.getByTestId("fateseal-pick-dagger")).toBeVisible();
   await page.getByTestId("fateseal-pick-dagger").click();
   await page.getByTestId("fateseal-seal-prophecy").click();
-  await expect(page.getByTestId("fateseal-ritual-spin")).toBeVisible();
-  await expect(page.getByTestId("fateseal-ritual-spin")).toBeEnabled();
+  await expect(page.getByTestId("fateseal-bet-min")).toBeVisible();
+  await expect(page.getByTestId("fateseal-bet-min")).toBeEnabled();
 });
 
 test("7 Year Itch cash-out is disabled while a point is active", async ({ page }) => {

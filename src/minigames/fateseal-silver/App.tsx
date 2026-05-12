@@ -5,7 +5,6 @@ import {
   Group,
   Loader,
   Modal,
-  NumberInput,
   Paper,
   SimpleGrid,
   Stack,
@@ -17,11 +16,13 @@ import { AnimatePresence, motion } from "framer-motion";
 import { computeFatesealReturn, type FatesealShellBinding } from "@/game/sessionSettlement";
 import {
   FATESEAL_STANDARD_SYMBOLS,
+  crossroadsNextOmenAdditionCostCredits,
+  fatesealCrossroadsNewShop,
   fatesealProphecyMode,
+  fatesealProgressionRules,
   fatesealScatterRitual,
   fatesealSymbolLore,
   resolveFatesealGameMode,
-  type FatesealProphecyModeKey,
   type FatesealStandardId,
   type FatesealSymbolId,
 } from "@/config/minigames/fatesealRules";
@@ -35,6 +36,10 @@ import {
 } from "./engine/cascadeEngine";
 import {
   applyCrossroads,
+  applyCrossroadsAddOmenSymbol,
+  applyCrossroadsDeadReel,
+  applyCrossroadsOmenMark,
+  applyCrossroadsWildReel,
   faustianCreditGrant,
   silverVisionCost,
   tomeCost,
@@ -56,20 +61,51 @@ const SYMBOL_LABEL: Record<FatesealSymbolId, string> = {
   void: "∅",
 };
 
-type FatesealPhase = "altar" | "ritual" | "ledger";
+type FatesealPhase = "altar" | "ritual" | "ledger" | "crossroads";
+
+type CrossroadsVisitFlags = {
+  /** Successful add-omen purchases this visit (drives next price via `crossroadsNextOmenAdditionCostCredits`). */
+  omenAddPurchased: number;
+  legacyFaustian: boolean;
+  legacySilver: boolean;
+  legacyTome: boolean;
+};
+
+function emptyCrossroadsVisit(): CrossroadsVisitFlags {
+  return {
+    omenAddPurchased: 0,
+    legacyFaustian: false,
+    legacySilver: false,
+    legacyTome: false,
+  };
+}
 
 function rngFactory() {
   return () => Math.random();
 }
 
-function spinsUntilCrossroads(spinCount: number): number {
-  if (spinCount === 0) return 3;
-  const r = spinCount % 3;
-  return r === 0 ? 0 : 3 - r;
-}
-
 function dupGrid(grid: FatesealSymbolId[][]): FatesealSymbolId[][] {
   return grid.map((row) => [...row]);
+}
+
+function clampBetToTable(raw: number, minBet: number, maxBet: number, chipStep: number): number {
+  const step = Math.max(1, chipStep);
+  const cap = Math.max(minBet, maxBet);
+  const clamped = Math.floor(Math.max(minBet, Math.min(raw, cap)) / step) * step;
+  return Math.min(Math.max(clamped, minBet), cap);
+}
+
+/** Raw bankroll fraction must reach `minBet` before the chip is enabled (TODO.md). */
+function walletFractionBet(
+  wallet: number,
+  fraction: number,
+  minBet: number,
+  maxBet: number,
+  chipStep: number,
+): { bet: number; disabled: boolean } {
+  const raw = Math.floor(wallet * fraction);
+  if (raw < minBet) return { bet: minBet, disabled: true };
+  return { bet: clampBetToTable(raw, minBet, maxBet, chipStep), disabled: false };
 }
 
 /** Split cascade step payout across prophecy-hit cells — sums equal `payout` when payout > 0 and n > 0. */
@@ -80,22 +116,25 @@ function splitCascadeStepPayout(payout: number, prophecyHits: number): number[] 
   return Array.from({ length: prophecyHits }, (_, i) => base + (i < rem ? 1 : 0));
 }
 
-const CASCADE_FOCUS_MS = 140;
-const CASCADE_EMIT_AFTER_MS = 100;
+/** TODO.md — slightly slower cascade choreography on motion-enabled builds. */
+const RITUAL_TIMING_SCALE = 1.15;
+
+const CASCADE_FOCUS_MS = Math.round(140 * RITUAL_TIMING_SCALE);
+const CASCADE_EMIT_AFTER_MS = Math.round(100 * RITUAL_TIMING_SCALE);
 /**
  * Time the prophecy / payout overlay holds with the BEFORE grid before the
  * post-cascade refill swaps in. Tuned so the payout flyoff (~480ms total) is
  * mostly past its peak when the new tiles begin to drop.
  */
-const CASCADE_FLOAT_MS = 360;
+const CASCADE_FLOAT_MS = Math.round(360 * RITUAL_TIMING_SCALE);
 /**
  * Window during which the post-cascade grid is shown with `--dropIn` cells
  * animating in. Must comfortably exceed the drop-in animation duration plus
  * the per-row stagger (CSS: 320ms anim + 4 × 35ms stagger = 460ms).
  */
-const CASCADE_REFILL_MS = 480;
+const CASCADE_REFILL_MS = Math.round(480 * RITUAL_TIMING_SCALE);
 /** Final beat after tiles settle visually before next cascade depth. */
-const CASCADE_SETTLE_MS = 80;
+const CASCADE_SETTLE_MS = Math.round(80 * RITUAL_TIMING_SCALE);
 
 /**
  * Timings tuned so total per depth ≈
@@ -113,7 +152,7 @@ const CASCADE_STEP_DURATION_MS =
  * grid is replaced by a fresh randomized roll). Holds the cascade-step gating
  * back until the tiles have visibly "landed" on the tablet.
  */
-const FILL_DURATION_MS = 460;
+const FILL_DURATION_MS = Math.round(460 * RITUAL_TIMING_SCALE);
 
 type CascadeOverlay = {
   /**
@@ -156,6 +195,7 @@ function allCellKeys(grid: FatesealSymbolId[][]): Set<string> {
 }
 
 function adjacentVoid(grid: FatesealSymbolId[][], row: number, col: number): boolean {
+  const n = grid.length;
   const dirs = [
     [1, 0],
     [-1, 0],
@@ -165,7 +205,7 @@ function adjacentVoid(grid: FatesealSymbolId[][], row: number, col: number): boo
   for (const [dr, dc] of dirs) {
     const r = row + dr;
     const c = col + dc;
-    if (r >= 0 && r < 5 && c >= 0 && c < 5 && grid[r]![c] === "void") return true;
+    if (r >= 0 && r < n && c >= 0 && c < n && grid[r]![c] === "void") return true;
   }
   return false;
 }
@@ -205,14 +245,18 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
     createInitialFatesealState(props.sessionCredits, buyIn, Math.random, resolveFatesealGameMode(props.gameModeId)),
   );
   const [phase, setPhase] = useState<FatesealPhase>("altar");
-  const [prophecyMode, setProphecyMode] = useState<FatesealProphecyModeKey>("single");
+  const atCrossroads = phase === "crossroads";
   const [picks, setPicks] = useState<FatesealStandardId[]>([]);
   const [busy, setBusy] = useState(false);
-  const [crossroadsOpen, setCrossroadsOpen] = useState(false);
+  const [crossroadsVisit, setCrossroadsVisit] = useState<CrossroadsVisitFlags>(emptyCrossroadsVisit);
   const [lastFeed, setLastFeed] = useState<string[]>([]);
+  const [lastSpinTotalPayout, setLastSpinTotalPayout] = useState(0);
+  const [sympatheticFlash, setSympatheticFlash] = useState<{ payout: number; id: number } | null>(null);
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [cashOutOpen, setCashOutOpen] = useState(false);
   const [silverPick, setSilverPick] = useState<FatesealStandardId>("dagger");
+  const [omenAddPick, setOmenAddPick] = useState<FatesealStandardId>("chalice");
+  const [markPick, setMarkPick] = useState<FatesealStandardId>("dagger");
   const [cascadeOverlay, setCascadeOverlay] = useState<CascadeOverlay | null>(null);
   /** Browser timers are numeric handles; avoids NodeJS `Timeout` vs `number` clashes under `tsc`. */
   const cascadeTimersRef = useRef<number[]>([]);
@@ -222,6 +266,24 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
       cascadeTimersRef.current.forEach((id) => window.clearTimeout(id));
     };
   }, []);
+
+  useEffect(() => {
+    if (phase !== "crossroads") return;
+    if (engine.activeProphecy.includes(omenAddPick)) {
+      const next = FATESEAL_STANDARD_SYMBOLS.find((id) => !engine.activeProphecy.includes(id));
+      if (next != null) setOmenAddPick(next);
+    }
+    if (engine.activeProphecy.length > 0 && !engine.activeProphecy.includes(markPick)) {
+      setMarkPick(engine.activeProphecy[0]!);
+    }
+  }, [phase, engine.activeProphecy, omenAddPick, markPick]);
+
+  useEffect(() => {
+    if (!sympatheticFlash) return;
+    const ms = reduceMotion ? 900 : 4000;
+    const t = window.setTimeout(() => setSympatheticFlash(null), ms);
+    return () => window.clearTimeout(t);
+  }, [sympatheticFlash, reduceMotion]);
 
   const clearCascadeTimers = useCallback(() => {
     cascadeTimersRef.current.forEach((id) => window.clearTimeout(id));
@@ -268,79 +330,105 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
     [engine.sessionWallet, tableRules.maxBaseBetFractionOfSession, tableRules.minBaseBet],
   );
 
-  const needPicks = prophecyMode === "single" ? 1 : 3;
+  const betChipOptions = useMemo(() => {
+    const w = engine.sessionWallet;
+    const minB = tableRules.minBaseBet;
+    const maxB = maxBaseBet;
+    const step = tableRules.chipIncrement;
+    return {
+      min: clampBetToTable(minB, minB, maxB, step),
+      eighth: walletFractionBet(w, 1 / 8, minB, maxB, step),
+      quarter: walletFractionBet(w, 1 / 4, minB, maxB, step),
+      half: walletFractionBet(w, 1 / 2, minB, maxB, step),
+    };
+  }, [engine.sessionWallet, maxBaseBet, tableRules.chipIncrement, tableRules.minBaseBet]);
 
   const sealProphecy = useCallback(() => {
     const uniq = [...new Set(picks)];
-    if (uniq.length !== needPicks) return;
+    if (uniq.length !== 1) return;
     setEngine((e) => ({
       ...e,
-      prophecyMode,
+      prophecyMode: "single",
       activeProphecy: uniq,
     }));
     setPhase("ritual");
-  }, [needPicks, picks, prophecyMode]);
+  }, [picks]);
 
   const goToAltarFromRitual = useCallback(() => {
     if (busy) return;
     clearCascadeTimers();
     setCascadeOverlay(null);
+    const prev = engine.activeProphecy;
     setEngine((e) => ({
       ...e,
       activeProphecy: [],
     }));
-    setPicks([]);
+    setPicks(prev.length > 0 ? [prev[0]!] : []);
     setPhase("altar");
-  }, [busy, clearCascadeTimers]);
+  }, [busy, clearCascadeTimers, engine.activeProphecy]);
 
   const goToRitualFromLedger = useCallback(() => {
-    if (busy || crossroadsOpen || engine.activeProphecy.length === 0) return;
+    if (busy || atCrossroads || engine.activeProphecy.length === 0) return;
     setPhase("ritual");
-  }, [busy, crossroadsOpen, engine.activeProphecy.length]);
+  }, [atCrossroads, busy, engine.activeProphecy.length]);
 
-  const togglePick = useCallback(
-    (id: FatesealStandardId) => {
-      setPicks((prev) => {
-        if (prophecyMode === "single") {
-          return prev[0] === id ? [] : [id];
-        }
-        const set = new Set(prev);
-        if (set.has(id)) set.delete(id);
-        else if (set.size < 3) set.add(id);
-        return [...set] as FatesealStandardId[];
-      });
-    },
-    [prophecyMode],
-  );
+  const togglePick = useCallback((id: FatesealStandardId) => {
+    setPicks((prev) => (prev[0] === id ? [] : [id]));
+  }, []);
 
-  const handleSpin = useCallback(() => {
-    if (busy || crossroadsOpen) return;
-    if (engine.activeProphecy.length === 0) return;
-    setBusy(true);
-    clearCascadeTimers();
-    const rng = rngFactory();
-    /**
-     * The grid that was visible to the player before this spin replaces it
-     * with a fresh randomized roll. Used to compute which cells appear "new"
-     * for the initial fill drop-in animation.
-     */
-    const preSpinGrid = engine.grid;
-    const result = runSpin(engine, rng);
+  const handleSpin = useCallback(
+    (overrideBaseBet?: number) => {
+      if (busy || atCrossroads) return;
+      if (engine.activeProphecy.length === 0) return;
+      setBusy(true);
+      clearCascadeTimers();
+      const rng = rngFactory();
+      const spinEngine =
+        overrideBaseBet !== undefined
+          ? {
+              ...engine,
+              baseBet: clampBetToTable(
+                overrideBaseBet,
+                tableRules.minBaseBet,
+                maxBaseBet,
+                tableRules.chipIncrement,
+              ),
+            }
+          : engine;
+      /**
+       * The grid that was visible to the player before this spin replaces it
+       * with a fresh randomized roll. Used to compute which cells appear "new"
+       * for the initial fill drop-in animation.
+       */
+      const preSpinGrid = spinEngine.grid;
+      const result = runSpin(spinEngine, rng);
 
     const pushLedgerAndFinish = () => {
       const lines = result.log
         .filter((l): l is Extract<typeof l, { kind: "cascade" }> => l.kind === "cascade")
         .map((l) => `Cascade ${l.depth + 1}: +${l.payout.toLocaleString()} (prophecy ${l.prophecyMatches})`);
+      for (const l of result.log) {
+        if (l.kind === "sympathetic_vibrations") {
+          lines.push(`Sympathetic Vibrations: +${l.payout.toLocaleString()}`);
+        }
+      }
       if (result.totalPayout > 0) {
         lines.push(`Spin total +${result.totalPayout.toLocaleString()}`);
+      }
+      setLastSpinTotalPayout(result.totalPayout);
+      const sym = result.log.find((l): l is Extract<typeof l, { kind: "sympathetic_vibrations" }> => l.kind === "sympathetic_vibrations");
+      if (sym) {
+        setSympatheticFlash({ payout: sym.payout, id: Date.now() });
       }
       setLastFeed((f) => [...lines, ...f].slice(0, 14));
       setCascadeOverlay(null);
       setEngine(result.nextState);
       setBusy(false);
-      setPhase("ledger");
       if (result.crossroadsGate) {
-        setCrossroadsOpen(true);
+        setCrossroadsVisit(emptyCrossroadsVisit());
+        setPhase("crossroads");
+      } else {
+        setPhase("ledger");
       }
     };
 
@@ -438,22 +526,181 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
     }
 
     cascadeTimersRef.current.push(window.setTimeout(pushLedgerAndFinish, at));
-  }, [busy, clearCascadeTimers, crossroadsOpen, engine, reduceMotion]);
+  }, [atCrossroads, busy, clearCascadeTimers, engine, maxBaseBet, reduceMotion, tableRules]);
 
-  const applyShop = useCallback(
+  const applyLegacyShop = useCallback(
     (choice: CrossroadsChoice) => {
+      if (choice === "faustian_bargain" && crossroadsVisit.legacyFaustian) return;
+      if (choice === "silver_vision" && (crossroadsVisit.legacySilver || engine.silverVisionTarget != null)) return;
+      if (choice === "forbidden_tome" && crossroadsVisit.legacyTome) return;
       const res = applyCrossroads(engine, choice, choice === "silver_vision" ? silverPick : null, buyIn);
       if (!res.ok) return;
       setEngine(res.nextState);
-      setCrossroadsOpen(false);
+      setCrossroadsVisit((v) => ({
+        ...v,
+        legacyFaustian: choice === "faustian_bargain" ? true : v.legacyFaustian,
+        legacySilver: choice === "silver_vision" ? true : v.legacySilver,
+        legacyTome: choice === "forbidden_tome" ? true : v.legacyTome,
+      }));
     },
-    [buyIn, engine, silverPick],
+    [buyIn, crossroadsVisit.legacyFaustian, crossroadsVisit.legacySilver, crossroadsVisit.legacyTome, engine, silverPick],
   );
 
-  const canCashOut = !busy && !crossroadsOpen && engine.activeProphecy.length > 0;
-  const untilX = spinsUntilCrossroads(engine.spinCount);
+  const buyAddOmen = useCallback(() => {
+    const res = applyCrossroadsAddOmenSymbol(engine, omenAddPick, crossroadsVisit.omenAddPurchased);
+    if (!res.ok) return;
+    setEngine(res.nextState);
+    setCrossroadsVisit((v) => ({ ...v, omenAddPurchased: v.omenAddPurchased + 1 }));
+  }, [crossroadsVisit.omenAddPurchased, engine, omenAddPick]);
+
+  const buyWildReel = useCallback(() => {
+    const res = applyCrossroadsWildReel(engine);
+    if (!res.ok) return;
+    setEngine(res.nextState);
+  }, [engine]);
+
+  const takeDeadReel = useCallback(() => {
+    const res = applyCrossroadsDeadReel(engine);
+    if (!res.ok) return;
+    setEngine(res.nextState);
+  }, [engine]);
+
+  const buyOmenMark = useCallback(() => {
+    const res = applyCrossroadsOmenMark(engine, markPick);
+    if (!res.ok) return;
+    setEngine(res.nextState);
+  }, [engine, markPick]);
+
+  const leaveCrossroads = useCallback(() => setPhase("ledger"), []);
+
+  const canCashOut = !busy && !atCrossroads && engine.activeProphecy.length > 0;
+
+  const addOmenShop = useMemo(() => {
+    const maxSymbols = 1 + fatesealCrossroadsNewShop.addOmenSymbol.maxPurchasesThisVisit;
+    const nextCost = crossroadsNextOmenAdditionCostCredits(crossroadsVisit.omenAddPurchased);
+    const canBuy =
+      engine.activeProphecy.length < maxSymbols &&
+      Number.isFinite(nextCost) &&
+      !engine.activeProphecy.includes(omenAddPick) &&
+      engine.sessionWallet >= nextCost;
+    return { maxSymbols, nextCost, canBuy };
+  }, [
+    crossroadsVisit.omenAddPurchased,
+    engine.activeProphecy,
+    engine.sessionWallet,
+    omenAddPick,
+  ]);
+
+  const wildReelShop = useMemo(() => {
+    const cfg = fatesealCrossroadsNewShop.wildReel;
+    const n = engine.wildReelPaidSpinTimers.length;
+    const canBuy = n < cfg.maxActive && engine.sessionWallet >= cfg.costCredits;
+    return { ...cfg, canBuy, activeSlots: n, timers: engine.wildReelPaidSpinTimers };
+  }, [engine.sessionWallet, engine.wildReelPaidSpinTimers]);
+
+  const deadReelShop = useMemo(() => {
+    const cfg = fatesealCrossroadsNewShop.deadReel;
+    const n = engine.deadReelPaidSpinTimers.length;
+    const canTake = n < cfg.maxActive;
+    return { ...cfg, canTake, activeSlots: n, timers: engine.deadReelPaidSpinTimers };
+  }, [engine.deadReelPaidSpinTimers]);
+
+  const omenMarkShop = useMemo(() => {
+    const cfg = fatesealCrossroadsNewShop.omenMark;
+    const canBuy =
+      engine.markedOmenSymbol == null &&
+      engine.activeProphecy.includes(markPick) &&
+      engine.sessionWallet >= cfg.costCredits;
+    return { ...cfg, canBuy };
+  }, [engine.activeProphecy, engine.markedOmenSymbol, engine.sessionWallet, markPick]);
+
+  const crossroadsScatterThreshold = fatesealProgressionRules.crossroads.scatterSymbolsToTriggerShop;
+  const bonusSymbolsUntilCrossroads = Math.max(
+    0,
+    crossroadsScatterThreshold - engine.crossroadsBonusAccum,
+  );
   const displayGrid = cascadeOverlay?.grid ?? engine.grid;
   const presence = fatesealPhasePresence(reduceMotion);
+
+  const ritualSidePanel = (
+    <Paper
+      radius="md"
+      p="sm"
+      withBorder
+      style={{
+        ...panelPaper,
+        alignSelf: "stretch",
+        maxHeight: 440,
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+        minWidth: 200,
+        flex: "1 1 200px",
+      }}
+      className="fateseal-ritual-side"
+      aria-label="Round stats and recent ledger lines"
+    >
+      <Text size="xs" tt="uppercase" fw={700} c={clubTokens.text.muted}>
+        Table readout
+      </Text>
+      <Text size="xs" mt={4}>
+        Base bet (stake):{" "}
+        <Text span fw={700}>
+          {engine.baseBet.toLocaleString()}
+        </Text>
+      </Text>
+      <Text size="xs">
+        Last spin total:{" "}
+        <Text span fw={700}>
+          {lastSpinTotalPayout.toLocaleString()}
+        </Text>
+      </Text>
+      <Text size="xs" c="dimmed">
+        Active omens:{" "}
+        <Text span fw={600}>
+          {engine.activeProphecy.length > 0
+            ? engine.activeProphecy.map((p) => SYMBOL_LABEL[p]).join(", ")
+            : "—"}
+        </Text>
+      </Text>
+      <Text size="xs" c="dimmed">
+        Free ritual meter: {engine.scatterMeter} / {fatesealScatterRitual.meterToTrigger}
+      </Text>
+      <Text size="xs" c="dimmed">
+        Crossroads: {bonusSymbolsUntilCrossroads} / {crossroadsScatterThreshold} scatters (final grid)
+      </Text>
+      <Text size="xs" c="dimmed">
+        Wild slots (paid spins left):{" "}
+        {engine.wildReelPaidSpinTimers.length > 0 ? engine.wildReelPaidSpinTimers.join(" · ") : "—"}
+      </Text>
+      <Text size="xs" c="dimmed">
+        Dead slots (paid spins left):{" "}
+        {engine.deadReelPaidSpinTimers.length > 0 ? engine.deadReelPaidSpinTimers.join(" · ") : "—"}
+      </Text>
+      <Text size="xs" c="dimmed">
+        Mark:{" "}
+        {engine.markedOmenSymbol
+          ? `${SYMBOL_LABEL[engine.markedOmenSymbol]} (${engine.markedOmenPaidSpinsLeft} paid spins)`
+          : "—"}
+      </Text>
+      <Text size="xs" fw={700} mt="sm" tt="uppercase" c={clubTokens.text.muted}>
+        Recent lines
+      </Text>
+      <Stack gap={4} mt={4} style={{ overflowY: "auto", minHeight: 0, flex: 1 }}>
+        {lastFeed.length === 0 ? (
+          <Text size="xs" c="dimmed" fs="italic">
+            Spin to imprint the side scroll.
+          </Text>
+        ) : (
+          lastFeed.slice(0, 20).map((line, idx) => (
+            <Text key={`side-${idx}:${line}`} size="xs" c={clubTokens.text.secondary} lineClamp={2}>
+              {line}
+            </Text>
+          ))
+        )}
+      </Stack>
+    </Paper>
+  );
 
   const headerWalletPaper = (
     <Paper radius="md" px="xs" py={6} withBorder style={{ ...panelPaper, minWidth: 88 }}>
@@ -468,7 +715,15 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
 
   const renderGridCells = () => (
     <div className="fateseal-grid-wrap">
-      <div className="fateseal-grid" aria-label="Fateseal grid">
+      <div
+        className="fateseal-grid"
+        style={
+          {
+            ["--fs-cols" as string]: String(displayGrid.length),
+          } as CSSProperties
+        }
+        aria-label="Fateseal grid"
+      >
         {displayGrid.map((row, r) =>
           row.map((sym, c) => {
             const ck = `${r},${c}`;
@@ -573,7 +828,13 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
             key={phase}
             className="fateseal-screen"
             aria-label={
-              phase === "altar" ? "Prophecy altar" : phase === "ritual" ? "Ritual chamber" : "Ledger"
+              phase === "altar"
+                ? "Prophecy altar"
+                : phase === "ritual"
+                  ? "Ritual chamber"
+                  : phase === "crossroads"
+                    ? "The Crossroads"
+                    : "Ledger"
             }
             {...presence}
           >
@@ -583,30 +844,9 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
                   <Text size="xs" tt="uppercase" fw={700} c={clubTokens.text.muted}>
                     Prophecy altar
                   </Text>
-                  <Group gap="xs">
-                    <Button
-                      size="xs"
-                      variant={prophecyMode === "single" ? "light" : "subtle"}
-                      color="gray"
-                      onClick={() => {
-                        setProphecyMode("single");
-                        setPicks([]);
-                      }}
-                    >
-                      Single ({fatesealProphecyMode.single.winMultipleOfBaseBet}×)
-                    </Button>
-                    <Button
-                      size="xs"
-                      variant={prophecyMode === "triple" ? "light" : "subtle"}
-                      color="gray"
-                      onClick={() => {
-                        setProphecyMode("triple");
-                        setPicks([]);
-                      }}
-                    >
-                      Triple ({fatesealProphecyMode.triple.winMultipleOfBaseBet}×)
-                    </Button>
-                  </Group>
+                  <Text size="sm" c={clubTokens.text.secondary}>
+                    Single omen — {fatesealProphecyMode.single.winMultipleOfBaseBet}× per prophecy match.
+                  </Text>
                   {pickerGrid}
                   <Button
                     data-testid="fateseal-seal-prophecy"
@@ -614,12 +854,12 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
                     variant="outline"
                     color="gray"
                     onClick={sealProphecy}
-                    disabled={picks.length !== needPicks}
+                    disabled={picks.length !== 1}
                   >
-                    Seal the prophecy ({needPicks} symbol{needPicks > 1 ? "s" : ""})
+                    Seal the prophecy (1 symbol)
                   </Button>
                   <Text size="xs" c="dimmed">
-                    Choose symbols, seal them, then the ritual chamber opens—cascade settles on the ledger.
+                    Choose one symbol, seal it, then stake the ritual from chip buttons in the chamber.
                   </Text>
                 </Stack>
               </Paper>
@@ -637,8 +877,9 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
                       <Text span fw={700} c={clubTokens.text.dimGreen}>
                         {engine.activeProphecy.map((p) => SYMBOL_LABEL[p]).join(", ")}
                       </Text>
-                      {" "}
-                      ({engine.prophecyMode})
+                      {" — "}
+                      {fatesealProphecyMode.single.winMultipleOfBaseBet}× per prophecy tile (
+                      {engine.activeProphecy.length} omen{engine.activeProphecy.length !== 1 ? "s" : ""})
                     </Text>
                   </Stack>
                   <Button
@@ -652,45 +893,84 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
                   </Button>
                 </Group>
 
-                <div className="fateseal-felt">
-                  <Stack gap="md" align="center">
-                    {renderGridCells()}
-                    <Group justify="center" gap="sm" wrap="nowrap" mt="xs">
-                      <NumberInput
-                        size="xs"
-                        label="Base bet"
-                        min={tableRules.minBaseBet}
-                        max={maxBaseBet}
-                        step={tableRules.chipIncrement}
-                        value={engine.baseBet}
-                        onChange={(v) => {
-                          const n = typeof v === "number" ? v : engine.baseBet;
-                          const clamped = Math.min(
-                            Math.max(tableRules.minBaseBet, Math.floor(n)),
-                            maxBaseBet,
-                          );
-                          setEngine((e) => ({ ...e, baseBet: clamped }));
-                        }}
-                        styles={{ label: { color: clubTokens.text.muted } }}
-                        style={{ maxWidth: 140 }}
-                      />
-                      <Stack gap={6} mt={22}>
-                        {busy ? <Loader color="grape" size="xs" /> : <Box h={14} />}
-                        <button
-                          type="button"
-                          className="fateseal-ritual-btn"
-                          data-testid="fateseal-ritual-spin"
-                          aria-busy={busy}
-                          disabled={
-                            busy ||
-                            crossroadsOpen ||
-                            engine.activeProphecy.length === 0
-                          }
-                          onClick={handleSpin}
-                        >
-                          The ritual (spin)
-                        </button>
-                      </Stack>
+                <Group align="flex-start" justify="center" wrap="wrap" gap="md" grow>
+                  <div className="fateseal-felt">
+                    <Stack gap="md" align="center">
+                      {renderGridCells()}
+                      <Group justify="center" gap="xs" wrap="wrap" mt="xs">
+                      {engine.freeRitualSpinsLeft > 0 ? (
+                        <Stack gap={6} align="center">
+                          {busy ? <Loader color="grape" size="xs" /> : <Box h={14} />}
+                          <button
+                            type="button"
+                            className="fateseal-ritual-btn"
+                            data-testid="fateseal-ritual-spin"
+                            aria-busy={busy}
+                            disabled={busy || atCrossroads || engine.activeProphecy.length === 0}
+                            onClick={() => handleSpin()}
+                          >
+                            Free ritual (spin)
+                          </button>
+                        </Stack>
+                      ) : (
+                        <Stack gap={8} align="center">
+                          <Text size="xs" c="dimmed" ta="center">
+                            Stake — bank buttons set base bet and open the cascade
+                          </Text>
+                          <Group justify="center" gap="xs" wrap="wrap">
+                            {busy ? <Loader color="grape" size="xs" /> : <Box w={0} h={14} />}
+                            <Button
+                              size="xs"
+                              variant="light"
+                              color="grape"
+                              data-testid="fateseal-bet-min"
+                              disabled={busy || atCrossroads}
+                              onClick={() => handleSpin(betChipOptions.min)}
+                            >
+                              Min ({betChipOptions.min.toLocaleString()})
+                            </Button>
+                            <Button
+                              size="xs"
+                              variant="light"
+                              color="grape"
+                              data-testid="fateseal-bet-eighth"
+                              disabled={busy || atCrossroads || betChipOptions.eighth.disabled}
+                              onClick={() => handleSpin(betChipOptions.eighth.bet)}
+                            >
+                              ⅛ bank
+                              {betChipOptions.eighth.disabled
+                                ? " (under min)"
+                                : ` (${betChipOptions.eighth.bet.toLocaleString()})`}
+                            </Button>
+                            <Button
+                              size="xs"
+                              variant="light"
+                              color="grape"
+                              data-testid="fateseal-bet-quarter"
+                              disabled={busy || atCrossroads || betChipOptions.quarter.disabled}
+                              onClick={() => handleSpin(betChipOptions.quarter.bet)}
+                            >
+                              ¼ bank
+                              {betChipOptions.quarter.disabled
+                                ? " (under min)"
+                                : ` (${betChipOptions.quarter.bet.toLocaleString()})`}
+                            </Button>
+                            <Button
+                              size="xs"
+                              variant="light"
+                              color="grape"
+                              data-testid="fateseal-bet-half"
+                              disabled={busy || atCrossroads || betChipOptions.half.disabled}
+                              onClick={() => handleSpin(betChipOptions.half.bet)}
+                            >
+                              ½ bank
+                              {betChipOptions.half.disabled
+                                ? " (under min)"
+                                : ` (${betChipOptions.half.bet.toLocaleString()})`}
+                            </Button>
+                          </Group>
+                        </Stack>
+                      )}
                     </Group>
                     {engine.freeRitualSpinsLeft > 0 ? (
                       <Text size="xs" ta="center" c="grape">
@@ -700,7 +980,9 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
                     ) : null}
                   </Stack>
                 </div>
-              </Stack>
+                {ritualSidePanel}
+              </Group>
+            </Stack>
             ) : null}
 
             {phase === "ledger" ? (
@@ -715,15 +997,17 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
                         Scatter meter
                       </Text>
                       <Text size="sm" fw={700}>
-                        {engine.scatterMeter} / {fatesealScatterRitual.meterToTrigger} (+{fatesealScatterRitual.freeSpinsGranted})
+                        {engine.scatterMeter} / {fatesealScatterRitual.meterToTrigger} (fills append in-spin)
                       </Text>
                     </Paper>
                     <Paper radius="md" px="xs" py={6} withBorder style={{ borderColor: panelPaper.borderColor, background: "rgba(0,0,0,0.28)" }}>
                       <Text size="xs" c="dimmed">
-                        Crossroads in
+                        Crossroads (scatters)
                       </Text>
                       <Text size="sm" fw={700}>
-                        {crossroadsOpen ? "At the threshold" : untilX === 0 ? "Now" : `${untilX} spin(s)`}
+                        {atCrossroads
+                          ? "At the threshold"
+                          : `${bonusSymbolsUntilCrossroads} / ${crossroadsScatterThreshold} on final grid`}
                       </Text>
                     </Paper>
                   </SimpleGrid>
@@ -760,7 +1044,7 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
                       color="grape"
                       variant="light"
                       onClick={goToRitualFromLedger}
-                      disabled={busy || crossroadsOpen || engine.activeProphecy.length === 0}
+                      disabled={busy || atCrossroads || engine.activeProphecy.length === 0}
                     >
                       Next ritual
                     </Button>
@@ -787,61 +1071,196 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
                 </Stack>
               </Paper>
             ) : null}
+
+            {phase === "crossroads" ? (
+              <Paper
+                p="md"
+                radius="md"
+                withBorder
+                style={{ ...panelPaper, maxHeight: "min(92vh, 720px)", overflowY: "auto" }}
+                data-testid="fateseal-crossroads-root"
+              >
+                <Stack gap="md">
+                  <Group justify="space-between" align="flex-start" wrap="wrap">
+                    <Stack gap={4}>
+                      <Title order={3} size="h5" c={clubTokens.text.primary} style={{ fontFamily: "Georgia, serif" }}>
+                        The Crossroads
+                      </Title>
+                      <Text size="sm" c="dimmed">
+                        Enough scatters landed on the settled grid to open the threshold. Credit rites apply here; legacy pacts are once per opening.
+                      </Text>
+                    </Stack>
+                    <Button
+                      size="xs"
+                      variant="light"
+                      color="gray"
+                      data-testid="fateseal-crossroads-return"
+                      onClick={leaveCrossroads}
+                    >
+                      Return to ledger
+                    </Button>
+                  </Group>
+
+                  <Text size="xs" tt="uppercase" fw={700} c={clubTokens.text.muted}>
+                    New rites
+                  </Text>
+
+                  <Stack gap={6}>
+                    <Text size="xs" c="dimmed">
+                      Add omen —{" "}
+                      {Number.isFinite(addOmenShop.nextCost)
+                        ? `${addOmenShop.nextCost.toLocaleString()} credits`
+                        : "capacity reached"}{" "}
+                      ({engine.activeProphecy.length}/{addOmenShop.maxSymbols} symbols)
+                    </Text>
+                    <Group gap="xs" wrap="wrap" align="flex-end">
+                      <select
+                        aria-label="Symbol to add to prophecy"
+                        value={omenAddPick}
+                        onChange={(e) => setOmenAddPick(e.target.value as FatesealStandardId)}
+                        style={{
+                          minWidth: 160,
+                          padding: 8,
+                          borderRadius: 6,
+                          background: "#111",
+                          color: "#ddd",
+                          border: "1px solid #444",
+                        }}
+                      >
+                        {FATESEAL_STANDARD_SYMBOLS.map((id) => (
+                          <option key={id} value={id} disabled={engine.activeProphecy.includes(id)}>
+                            {fatesealSymbolLore[id]?.title ?? id}
+                          </option>
+                        ))}
+                      </select>
+                      <Button size="xs" variant="light" color="grape" disabled={!addOmenShop.canBuy} onClick={buyAddOmen}>
+                        Add symbol
+                      </Button>
+                    </Group>
+                  </Stack>
+
+                  <Stack gap={6}>
+                    <Text size="xs" c="dimmed">
+                      Wild reel slot — {wildReelShop.costCredits.toLocaleString()} credits (active{" "}
+                      {wildReelShop.activeSlots}/{wildReelShop.maxActive}; paid spins left per slot:{" "}
+                      {wildReelShop.timers.length ? wildReelShop.timers.join(", ") : "—"}; column effect pending).
+                    </Text>
+                    <Button size="xs" variant="light" color="orange" disabled={!wildReelShop.canBuy} onClick={buyWildReel}>
+                      Buy wild reel slot
+                    </Button>
+                  </Stack>
+
+                  <Stack gap={6}>
+                    <Text size="xs" c="dimmed">
+                      Dead reel boon — +{deadReelShop.grantCreditsOnTake.toLocaleString()} credits (active{" "}
+                      {deadReelShop.activeSlots}/{deadReelShop.maxActive}; paid spins left per slot:{" "}
+                      {deadReelShop.timers.length ? deadReelShop.timers.join(", ") : "—"}; column effect pending).
+                    </Text>
+                    <Button size="xs" variant="light" color="gray" disabled={!deadReelShop.canTake} onClick={takeDeadReel}>
+                      Take dead reel grant
+                    </Button>
+                  </Stack>
+
+                  <Stack gap={6}>
+                    <Text size="xs" c="dimmed">
+                      Omen mark — {omenMarkShop.costCredits.toLocaleString()} credits (×
+                      {fatesealProgressionRules.purchasedReels.markedSymbolPayoutMultiplier} on a prophecy hit that shows the marked standard).
+                    </Text>
+                    <Group gap="xs" wrap="wrap" align="flex-end">
+                      <select
+                        aria-label="Omen mark symbol"
+                        value={markPick}
+                        onChange={(e) => setMarkPick(e.target.value as FatesealStandardId)}
+                        style={{
+                          minWidth: 160,
+                          padding: 8,
+                          borderRadius: 6,
+                          background: "#111",
+                          color: "#ddd",
+                          border: "1px solid #444",
+                        }}
+                      >
+                        {FATESEAL_STANDARD_SYMBOLS.map((id) => (
+                          <option key={id} value={id} disabled={!engine.activeProphecy.includes(id)}>
+                            {fatesealSymbolLore[id]?.title ?? id}
+                          </option>
+                        ))}
+                      </select>
+                      <Button size="xs" variant="light" color="violet" disabled={!omenMarkShop.canBuy} onClick={buyOmenMark}>
+                        Mark the omen
+                      </Button>
+                    </Group>
+                    {engine.markedOmenSymbol ? (
+                      <Text size="xs" c="dimmed">
+                        Marked: {SYMBOL_LABEL[engine.markedOmenSymbol]} — {engine.markedOmenPaidSpinsLeft} paid spin
+                        {engine.markedOmenPaidSpinsLeft !== 1 ? "s" : ""} remaining.
+                      </Text>
+                    ) : null}
+                  </Stack>
+
+                  <Text size="xs" tt="uppercase" fw={700} c={clubTokens.text.muted}>
+                    Legacy pacts
+                  </Text>
+
+                  <Button
+                    variant="light"
+                    color="red"
+                    disabled={crossroadsVisit.legacyFaustian}
+                    onClick={() => applyLegacyShop("faustian_bargain")}
+                  >
+                    Faustian Bargain — +{faustianCreditGrant(buyIn).toLocaleString()} credits; add {3} Voids to the pool
+                  </Button>
+                  <Stack gap={4}>
+                    <Text size="xs" c="dimmed">
+                      Silver Vision — cost {silverVisionCost(buyIn).toLocaleString()} (pick a standard to promote toward Wild in the pool)
+                    </Text>
+                    <Group gap="xs" wrap="wrap">
+                      <select
+                        aria-label="Silver Vision symbol"
+                        value={silverPick}
+                        onChange={(e) => setSilverPick(e.target.value as FatesealStandardId)}
+                        disabled={
+                          crossroadsVisit.legacySilver || engine.silverVisionTarget != null
+                        }
+                        style={{
+                          flex: "1 1 160px",
+                          padding: 8,
+                          borderRadius: 6,
+                          background: "#111",
+                          color: "#ddd",
+                          border: "1px solid #444",
+                        }}
+                      >
+                        {FATESEAL_STANDARD_SYMBOLS.map((id) => (
+                          <option key={id} value={id}>
+                            {fatesealSymbolLore[id]?.title ?? id}
+                          </option>
+                        ))}
+                      </select>
+                      <Button
+                        variant="light"
+                        color="gray"
+                        disabled={crossroadsVisit.legacySilver || engine.silverVisionTarget != null}
+                        onClick={() => applyLegacyShop("silver_vision")}
+                      >
+                        Buy Vision
+                      </Button>
+                    </Group>
+                  </Stack>
+                  <Button
+                    variant="light"
+                    color="violet"
+                    disabled={crossroadsVisit.legacyTome}
+                    onClick={() => applyLegacyShop("forbidden_tome")}
+                  >
+                    The Forbidden Tome — {tomeCost(buyIn).toLocaleString()} credits — double scatter weight (3 spins)
+                  </Button>
+                </Stack>
+              </Paper>
+            ) : null}
           </motion.section>
         </AnimatePresence>
       </Stack>
-
-      <Modal
-        opened={crossroadsOpen}
-        onClose={() => {}}
-        title="The Crossroads"
-        centered
-        closeOnClickOutside={false}
-        closeOnEscape={false}
-        withCloseButton={false}
-      >
-        <Stack gap="sm">
-          <Text size="sm" c="dimmed">
-            Every third spin, the ledger opens a bargain. Pick one.
-          </Text>
-          <Button variant="light" color="red" onClick={() => applyShop("faustian_bargain")}>
-            Faustian Bargain — +{faustianCreditGrant(buyIn).toLocaleString()} credits; add {3} Voids to the pool
-          </Button>
-          <Stack gap={4}>
-            <Text size="xs" c="dimmed">
-              Silver Vision — cost {silverVisionCost(buyIn).toLocaleString()} (pick a standard to promote toward Wild in the pool)
-            </Text>
-            <Group gap="xs">
-              <select
-                aria-label="Silver Vision symbol"
-                value={silverPick}
-                onChange={(e) => setSilverPick(e.target.value as FatesealStandardId)}
-                disabled={engine.silverVisionTarget != null}
-                style={{
-                  flex: 1,
-                  padding: 8,
-                  borderRadius: 6,
-                  background: "#111",
-                  color: "#ddd",
-                  border: "1px solid #444",
-                }}
-              >
-                {FATESEAL_STANDARD_SYMBOLS.map((id) => (
-                  <option key={id} value={id}>
-                    {fatesealSymbolLore[id]?.title ?? id}
-                  </option>
-                ))}
-              </select>
-              <Button variant="light" color="gray" disabled={engine.silverVisionTarget != null} onClick={() => applyShop("silver_vision")}>
-                Buy Vision
-              </Button>
-            </Group>
-          </Stack>
-          <Button variant="light" color="violet" onClick={() => applyShop("forbidden_tome")}>
-            The Forbidden Tome — {tomeCost(buyIn).toLocaleString()} credits — double scatter weight (3 spins)
-          </Button>
-        </Stack>
-      </Modal>
 
       <Modal opened={leaveOpen} onClose={() => setLeaveOpen(false)} title="Session saved" centered>
         <Stack gap="md">
@@ -874,6 +1293,24 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
           </Group>
         </Stack>
       </Modal>
+
+      {sympatheticFlash ? (
+        <Box
+          key={sympatheticFlash.id}
+          className="fateseal-sympathetic-flash"
+          role="status"
+          aria-live="polite"
+        >
+          <Stack align="center" gap="md" justify="center" style={{ textAlign: "center", maxWidth: 520 }}>
+            <Title order={2} size="h3" c="violet" style={{ fontFamily: "Georgia, serif", lineHeight: 1.25 }}>
+              The Spirits Have Received Your Sympathetic Vibrations
+            </Title>
+            <Text size="xl" fw={800} c={clubTokens.text.primary}>
+              +{sympatheticFlash.payout.toLocaleString()}
+            </Text>
+          </Stack>
+        </Box>
+      ) : null}
     </Box>
   );
 }

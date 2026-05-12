@@ -22,6 +22,7 @@ import { effectiveBandIndexForBarDate } from "@/audio/barBandOverrideStore";
 import { bandsCatalog } from "@/config/bandsCatalog";
 import { villainsGameDefaults } from "@/config/villainsGameDefaults";
 import { ClubSettlementDock } from "@/components/club/ClubSettlementDock";
+import { VcLogoBarMark } from "@/components/club/VcLogoBarMark";
 import { MenuHazeBackground } from "@/components/layout/MenuHazeBackground";
 import { ClubButton } from "@/components/ui/ClubButton";
 import { ClubHeading } from "@/components/ui/ClubHeading";
@@ -352,6 +353,7 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
             <div className="club-landing__menu-inner">
               <ClubPanel maw={470} w="min(470px, calc(100vw - 2rem))" className="club-menu-card">
                 <Stack gap="md">
+                <VcLogoBarMark width={112} />
                 <Stack gap={3} ta="center">
                   <Text size="xs" tt="uppercase" c={clubTokens.text.muted} fw={700}>
                     Tonight’s menu

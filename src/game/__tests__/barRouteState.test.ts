@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { villainsGameDefaults } from "@/config/villainsGameDefaults";
+import { buildOublietteSettlementProfile } from "../sessionSettlement";
 import { buildBarRouteStateFromReturn, isBarRouteState, tableReturnTagline } from "../barRouteState";
 
 const defaultBuyIn = villainsGameDefaults.oublietteNo9.defaultBuyIn;
@@ -19,9 +20,22 @@ describe("barRouteState", () => {
         },
       }),
     ).toBe(true);
+    expect(
+      isBarRouteState({
+        lastTable: {
+          gameId: "oubliette_no9",
+          buyIn: defaultBuyIn,
+          totalReturn: 50,
+          tableRound: 5,
+          tiers: 0,
+          maxWinCredits: Number.NaN,
+        },
+      }),
+    ).toBe(false);
   });
 
-  it("buildBarRouteStateFromReturn copies detail fields", () => {
+  it("buildBarRouteStateFromReturn copies detail fields and max win ceiling", () => {
+    const settlement = buildOublietteSettlementProfile(defaultBuyIn);
     const state = buildBarRouteStateFromReturn("oubliette_no9", defaultBuyIn, {
       uncappedCredits: 200,
       basePayout: 50,
@@ -29,14 +43,13 @@ describe("barRouteState", () => {
       tiers: 0,
       totalReturn: 50,
       tableRound: 12,
-    });
-    expect(state.lastTable).toEqual({
-      gameId: "oubliette_no9",
-      buyIn: defaultBuyIn,
-      totalReturn: 50,
-      tableRound: 12,
-      tiers: 0,
-    });
+    }, settlement);
+    expect(state.lastTable.gameId).toBe("oubliette_no9");
+    expect(state.lastTable.buyIn).toBe(defaultBuyIn);
+    expect(state.lastTable.totalReturn).toBe(50);
+    expect(state.lastTable.tableRound).toBe(12);
+    expect(state.lastTable.tiers).toBe(0);
+    expect(state.lastTable.maxWinCredits).toBeGreaterThan(0);
   });
 
   it("tableReturnTagline picks tier and round lines", () => {

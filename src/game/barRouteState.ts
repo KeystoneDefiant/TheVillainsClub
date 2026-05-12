@@ -1,4 +1,8 @@
-import type { ClubTableReturnDetail } from "./sessionSettlement";
+import {
+  getOublietteBaseReturnCeiling,
+  type ClubTableReturnDetail,
+  type OublietteSettlementProfile,
+} from "./sessionSettlement";
 
 /** Passed in React Router `location.state` when landing on `/bar` after a table session. */
 export type BarRouteState = {
@@ -8,6 +12,11 @@ export type BarRouteState = {
     totalReturn: number;
     tableRound: number;
     tiers: number;
+    /**
+     * Base return ceiling at table open (buy-in × cap multiples), before overachievement tiers.
+     * Used for extreme-win quip gating. Omitted on legacy saved router state.
+     */
+    maxWinCredits?: number;
   };
 };
 
@@ -17,13 +26,15 @@ export function isBarRouteState(value: unknown): value is BarRouteState {
   const lt = o.lastTable;
   if (!lt || typeof lt !== "object") return false;
   const t = lt as Record<string, unknown>;
-  return (
+  const base =
     typeof t.gameId === "string" &&
     typeof t.buyIn === "number" &&
     typeof t.totalReturn === "number" &&
     typeof t.tableRound === "number" &&
-    typeof t.tiers === "number"
-  );
+    typeof t.tiers === "number";
+  if (!base) return false;
+  if (t.maxWinCredits === undefined) return true;
+  return typeof t.maxWinCredits === "number" && Number.isFinite(t.maxWinCredits);
 }
 
 /** Short in-character line after settling (driven only by settlement numbers). */
@@ -77,7 +88,9 @@ export function buildBarRouteStateFromReturn(
   gameId: string,
   buyIn: number,
   detail: ClubTableReturnDetail,
+  settlement: OublietteSettlementProfile,
 ): BarRouteState {
+  const maxWinCredits = getOublietteBaseReturnCeiling(settlement);
   return {
     lastTable: {
       gameId,
@@ -85,6 +98,7 @@ export function buildBarRouteStateFromReturn(
       totalReturn: detail.totalReturn,
       tableRound: detail.tableRound ?? 0,
       tiers: detail.tiers,
+      maxWinCredits,
     },
   };
 }

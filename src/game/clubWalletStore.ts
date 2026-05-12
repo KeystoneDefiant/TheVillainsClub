@@ -27,6 +27,11 @@ type ClubWalletState = {
   setHasSave: (value: boolean) => void;
   /** Club balance → default, clear table session and resume stub. Does not touch audio or other prefs. */
   resetWalletAndSession: () => void;
+  /**
+   * End the active table without returning session credits to the club wallet.
+   * Buy-in already left the club at `startSession`; forfeiture means no payout and no refund.
+   */
+  forfeitActiveSession: () => void;
 };
 
 const STORAGE_KEY = "villains-club-wallet";
@@ -72,6 +77,11 @@ export const useClubWallet = create<ClubWalletState>()(
         set({ clubBalance: get().clubBalance + amount });
       },
       setHasSave: (value) => set({ hasSave: value }),
+      forfeitActiveSession: () => {
+        const { activeSession } = get();
+        if (!activeSession) return;
+        set({ activeSession: null });
+      },
       resetWalletAndSession: () =>
         set({
           clubBalance: villainsGameDefaults.defaultClubBalance,

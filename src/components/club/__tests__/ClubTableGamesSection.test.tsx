@@ -102,4 +102,25 @@ describe("ClubTableGamesSection", () => {
     fireEvent.click(screen.getByRole("button", { name: /fateseal silver \(cascading slot\)/i }));
     expect(screen.getByTestId("in-fateseal")).toBeInTheDocument();
   });
+
+  it("forfeits active session from abandon modal without restoring buy-in to club balance", async () => {
+    const buyIn = villainsGameDefaults.oublietteNo9.defaultBuyIn;
+    const afterBuyIn = villainsGameDefaults.defaultClubBalance - buyIn;
+    useClubWallet.setState({
+      clubBalance: afterBuyIn,
+      activeSession: {
+        gameId: "oubliette_no9",
+        drinkId: "club_table",
+        buyIn,
+        sessionWallet: buyIn,
+        settlement: buildOublietteSettlementProfile(buyIn),
+      },
+    });
+    renderSection();
+    fireEvent.click(screen.getByRole("button", { name: /abandon table/i }));
+    const confirm = await screen.findByRole("button", { name: /confirm abandon table/i });
+    fireEvent.click(confirm);
+    expect(useClubWallet.getState().activeSession).toBeNull();
+    expect(useClubWallet.getState().clubBalance).toBe(afterBuyIn);
+  });
 });

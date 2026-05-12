@@ -54,7 +54,7 @@ function seededUnit(seed: number): number {
 }
 
 function seedFromLastTable(t: BarRouteState["lastTable"]): number {
-  const payload = `${t.gameId}\0${t.buyIn}\0${t.totalReturn}\0${t.tableRound}\0${t.tiers}`;
+  const payload = `${t.gameId}\0${t.buyIn}\0${t.totalReturn}\0${t.tableRound}\0${t.tiers}\0${t.maxWinCredits ?? ""}`;
   let h = 0;
   for (let i = 0; i < payload.length; i++) {
     h = (Math.imul(31, h) + payload.charCodeAt(i)) | 0;
@@ -71,12 +71,17 @@ export function barSettlementTone(lastTable: BarRouteState["lastTable"]): BarSet
   const back = Math.max(0, lastTable.totalReturn);
   const fractionBack = back / buyIn;
   const tiers = Math.max(0, Math.floor(lastTable.tiers));
+  const maxWin = lastTable.maxWinCredits;
 
-  if (back <= 0 || fractionBack < 0.22) return "extreme_loss";
+  /** Lost ≥85% of buy-in (≤15% returned). */
+  if (back <= 0 || fractionBack <= 0.15) return "extreme_loss";
   if (fractionBack < 0.92) return "loss";
   /** Exact return of buy-in with no tier stamp — net club delta zero. */
   if (tiers === 0 && Math.round(back - buyIn) === 0) return "break_even";
-  if (fractionBack >= 3 || tiers >= 2) return "extreme_win";
+
+  const capFloor = maxWin != null && maxWin > 0 ? 0.95 * maxWin : null;
+  if (capFloor != null && back >= capFloor) return "extreme_win";
+  if (maxWin == null && (fractionBack >= 3 || tiers >= 2)) return "extreme_win";
   if (fractionBack >= 1 || tiers >= 1) return "win";
   return "loss";
 }

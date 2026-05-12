@@ -53,12 +53,14 @@ export function OublietteNo9Page({ standalone = false }: OublietteNo9PageProps) 
       const snap = useClubWallet.getState().activeSession;
       const buyIn = snap?.buyIn ?? 0;
       const gameId = snap?.gameId ?? "oubliette_no9";
+      const settlement = snap?.settlement;
       endSession(detail);
       if (launchedStandalone) {
         navigate(OUBLIETTE_STANDALONE_ROUTE, { replace: true });
         return;
       }
-      navigate("/bar", { replace: true, state: buildBarRouteStateFromReturn(gameId, buyIn, detail) });
+      if (!settlement) return;
+      navigate("/bar", { replace: true, state: buildBarRouteStateFromReturn(gameId, buyIn, detail, settlement) });
     },
     [endSession, launchedStandalone, navigate],
   );

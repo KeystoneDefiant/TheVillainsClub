@@ -44,8 +44,10 @@ export function FatesealSilverPage() {
       const snap = useClubWallet.getState().activeSession;
       const buyIn = snap?.buyIn ?? 0;
       const gameId = snap?.gameId ?? "fateseal_silver";
+      const settlement = snap?.settlement;
       endSession(detail);
-      navigate("/bar", { replace: true, state: buildBarRouteStateFromReturn(gameId, buyIn, detail) });
+      if (!settlement) return;
+      navigate("/bar", { replace: true, state: buildBarRouteStateFromReturn(gameId, buyIn, detail, settlement) });
     },
     [endSession, navigate],
   );

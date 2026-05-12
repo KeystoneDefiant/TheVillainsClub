@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Alert, Stack, Text } from "@mantine/core";
+import { Alert, Group, Modal, Stack, Text } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { ClubButton } from "@/components/ui/ClubButton";
 import { villainsGameDefaults } from "@/config/villainsGameDefaults";
 import {
@@ -33,6 +34,8 @@ export function ClubTableGamesSection() {
   const clubBalance = useClubWallet((s) => s.clubBalance);
   const activeSession = useClubWallet((s) => s.activeSession);
   const startSession = useClubWallet((s) => s.startSession);
+  const forfeitActiveSession = useClubWallet((s) => s.forfeitActiveSession);
+  const [abandonOpened, { open: openAbandon, close: closeAbandon }] = useDisclosure(false);
   const [startingOubliette, setStartingOubliette] = useState(false);
   const [starting7yi, setStarting7yi] = useState(false);
   const [startingFateseal, setStartingFateseal] = useState(false);
@@ -190,6 +193,9 @@ export function ClubTableGamesSection() {
           <ClubButton fullWidth mt="sm" variant="filled" onClick={() => navigate("/minigames/oubliette-no9")}>
             Resume Oubliette No. 9
           </ClubButton>
+          <ClubButton fullWidth mt="xs" variant="subtle" color="red" onClick={openAbandon}>
+            Abandon table…
+          </ClubButton>
         </Alert>
       ) : null}
 
@@ -199,6 +205,9 @@ export function ClubTableGamesSection() {
           <ClubButton fullWidth mt="sm" variant="filled" onClick={() => navigate("/minigames/seven-year-itch")}>
             Resume 7 Year Itch
           </ClubButton>
+          <ClubButton fullWidth mt="xs" variant="subtle" color="red" onClick={openAbandon}>
+            Abandon table…
+          </ClubButton>
         </Alert>
       ) : null}
 
@@ -207,6 +216,9 @@ export function ClubTableGamesSection() {
           The seal still hungers. Resume Fateseal Silver?
           <ClubButton fullWidth mt="sm" variant="filled" color="grape" onClick={() => navigate("/minigames/fateseal-silver")}>
             Resume Fateseal Silver
+          </ClubButton>
+          <ClubButton fullWidth mt="xs" variant="subtle" color="red" onClick={openAbandon}>
+            Abandon table…
           </ClubButton>
         </Alert>
       ) : null}
@@ -260,6 +272,29 @@ export function ClubTableGamesSection() {
         Buy-in {fatesealBuyIn.toLocaleString()} credits. Cascading ritual grid — return to the club capped near{" "}
         {fatesealReturnCeiling.toLocaleString()} credits before overachievement.
       </Text>
+
+      <Modal opened={abandonOpened} onClose={closeAbandon} title="Abandon this table?" centered>
+        <Stack gap="md">
+          <Text size="sm" c={clubTokens.text.secondary}>
+            You will not receive a payout. The buy-in you moved to the table is forfeited and stays with the house.
+          </Text>
+          <Group grow>
+            <ClubButton variant="light" onClick={closeAbandon}>
+              Keep table
+            </ClubButton>
+            <ClubButton
+              color="red"
+              aria-label="Confirm abandon table"
+              onClick={() => {
+                forfeitActiveSession();
+                closeAbandon();
+              }}
+            >
+              Abandon — lose buy-in
+            </ClubButton>
+          </Group>
+        </Stack>
+      </Modal>
     </Stack>
   );
 }

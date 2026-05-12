@@ -13,6 +13,7 @@ function table(over: Partial<BarRouteState["lastTable"]>): BarRouteState["lastTa
     totalReturn: over.totalReturn ?? 0,
     tableRound: over.tableRound ?? 1,
     tiers: over.tiers ?? 0,
+    ...(over.maxWinCredits !== undefined ? { maxWinCredits: over.maxWinCredits } : {}),
   };
 }
 
@@ -23,9 +24,10 @@ describe("barSettlementQuips", () => {
     expect(netClubDeltaFromSettlement(table({ buyIn: 1000, totalReturn: 1000 }))).toBe(0);
   });
 
-  it("classifies extreme_loss for empty or nearly empty return", () => {
+  it("classifies extreme_loss for empty return or ≥85% buy-in lost (≤15% back)", () => {
     expect(barSettlementTone(table({ totalReturn: 0, buyIn: 1000 }))).toBe("extreme_loss");
-    expect(barSettlementTone(table({ totalReturn: 219, buyIn: 1000 }))).toBe("extreme_loss");
+    expect(barSettlementTone(table({ totalReturn: 150, buyIn: 1000 }))).toBe("extreme_loss");
+    expect(barSettlementTone(table({ totalReturn: 151, buyIn: 1000 }))).toBe("loss");
   });
 
   it("classifies loss for partial beat with no tier", () => {
@@ -43,7 +45,13 @@ describe("barSettlementQuips", () => {
     expect(barSettlementTone(table({ totalReturn: 950, buyIn: 1000, tiers: 1 }))).toBe("win");
   });
 
-  it("classifies extreme_win for big multiples or multiple tiers", () => {
+  it("classifies extreme_win when within top 5% of capped base max when maxWinCredits is set", () => {
+    const maxWin = 10_000;
+    expect(barSettlementTone(table({ buyIn: 1000, totalReturn: 9500, tiers: 0, maxWinCredits: maxWin }))).toBe("extreme_win");
+    expect(barSettlementTone(table({ buyIn: 1000, totalReturn: 9490, tiers: 0, maxWinCredits: maxWin }))).toBe("win");
+  });
+
+  it("classifies extreme_win from legacy multiples when maxWinCredits is absent", () => {
     expect(barSettlementTone(table({ totalReturn: 3400, buyIn: 1000, tiers: 0 }))).toBe("extreme_win");
     expect(barSettlementTone(table({ totalReturn: 2100, buyIn: 1000, tiers: 2 }))).toBe("extreme_win");
   });

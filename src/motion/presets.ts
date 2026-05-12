@@ -1,5 +1,11 @@
 export type MotionPreset = {
   introTitleDuration: number;
+  /** Red fill fades in before neon / grey (VC intro mark). */
+  introRedDrawSec: number;
+  /** Neon-style pulse on the red mark before grey letters. */
+  introRedNeonSec: number;
+  /** Glow settles off while red fill stays solid. */
+  introRedGlowFadeSec: number;
   /** Per grey letter bottom→top fill reveal in the VC intro mark; zoom duration matches the sum of these steps (see IntroPage). */
   introLogoLetterDrawSec: number;
   /** Pause after the last grey letter finishes revealing before the intro moves to the “hold” phase. */
@@ -16,6 +22,9 @@ export type MotionPreset = {
 
 export const defaultMotionPreset: MotionPreset = {
   introTitleDuration: 0.9,
+  introRedDrawSec: 0.42,
+  introRedNeonSec: 1.05,
+  introRedGlowFadeSec: 0.52,
   introLogoLetterDrawSec: 0.2,
   introLogoSettleSec: 0.38,
   introHoldSec: 0.45,

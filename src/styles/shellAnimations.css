@@ -4,6 +4,36 @@
  * Imported from main.tsx.
  */
 
+@media (prefers-reduced-motion: no-preference) {
+  .shell-intro-vc-logo-wrap.shell-intro-red-neon-phase svg {
+    filter: drop-shadow(0 0 10px rgba(255, 90, 90, 0.55)) drop-shadow(0 0 22px rgba(200, 30, 40, 0.45));
+    animation: shell-intro-red-neon-flicker 0.11s ease-in-out 22 alternate;
+  }
+
+  .shell-intro-vc-logo-wrap.shell-intro-red-glow-settle svg {
+    animation: shell-intro-red-glow-settle 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+}
+
+@keyframes shell-intro-red-neon-flicker {
+  from {
+    filter: drop-shadow(0 0 6px rgba(255, 120, 120, 0.35)) brightness(1);
+  }
+  to {
+    filter: drop-shadow(0 0 20px rgba(255, 60, 60, 0.95)) drop-shadow(0 0 32px rgba(255, 40, 40, 0.35))
+      brightness(1.12);
+  }
+}
+
+@keyframes shell-intro-red-glow-settle {
+  from {
+    filter: drop-shadow(0 0 18px rgba(255, 80, 80, 0.75)) brightness(1.08);
+  }
+  to {
+    filter: drop-shadow(0 0 0 transparent) brightness(1);
+  }
+}
+
 @keyframes shell-intro-fade-up {
   from {
     opacity: 0;

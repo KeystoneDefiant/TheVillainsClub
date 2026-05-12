@@ -832,6 +832,30 @@ export function UiPlayground() {
                   onChange={(v) => setPartial({ introTitleDuration: v })}
                 />
                 <Slider
+                  label="Intro red draw-in (s)"
+                  min={0.15}
+                  max={1.2}
+                  step={0.02}
+                  value={preset.introRedDrawSec}
+                  onChange={(v) => setPartial({ introRedDrawSec: v })}
+                />
+                <Slider
+                  label="Intro red neon pulse (s)"
+                  min={0.2}
+                  max={2.5}
+                  step={0.05}
+                  value={preset.introRedNeonSec}
+                  onChange={(v) => setPartial({ introRedNeonSec: v })}
+                />
+                <Slider
+                  label="Intro red glow fade (s)"
+                  min={0.15}
+                  max={1.5}
+                  step={0.02}
+                  value={preset.introRedGlowFadeSec}
+                  onChange={(v) => setPartial({ introRedGlowFadeSec: v })}
+                />
+                <Slider
                   label="Intro logo grey letter reveal (s each, bottom→top)"
                   min={0.12}
                   max={0.55}

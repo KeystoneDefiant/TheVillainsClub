@@ -1,5 +1,5 @@
 import { animate } from "framer-motion";
-import { useId, useEffect, useRef } from "react";
+import { useId, useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { VC_LOGO_INTRO_VIEWBOX, vcLogoGreyPaths, vcLogoRedPaths } from "./vcLogoIntroPaths";
 
@@ -12,9 +12,15 @@ const ASPECT = 165.6 / 241.3;
 
 type VcLogoIntroMarkProps = {
   scale?: number;
+  /** Outer zoom duration while grey letters reveal (after {@link greyRevealDelaySec}). */
   zoomDurationSec: number;
   letterDrawSec: number;
   easing: readonly [number, number, number, number];
+  /** Seconds before grey letter reveals begin (red draw + neon + glow fade). */
+  greyRevealDelaySec: number;
+  introRedDrawSec: number;
+  introRedNeonSec: number;
+  introRedGlowFadeSec: number;
 };
 
 type GreyBottomToTopGradientProps = {
@@ -80,33 +86,52 @@ function GreyBottomToTopGradient({
   );
 }
 
-export function VcLogoIntroMark({ scale = 1, zoomDurationSec, letterDrawSec, easing }: VcLogoIntroMarkProps) {
+export function VcLogoIntroMark({
+  scale = 1,
+  zoomDurationSec,
+  letterDrawSec,
+  easing,
+  greyRevealDelaySec,
+  introRedDrawSec,
+  introRedNeonSec,
+  introRedGlowFadeSec,
+}: VcLogoIntroMarkProps) {
   const uid = useId().replace(/:/g, "");
-  const filterId = `vcred-${uid}`;
   const reduceMotion = useReducedMotion();
-  const zoomFrom = 2.35;
+  const zoomFrom = 1.22;
   const zoomTo = 1;
   const w = BASE_W * scale;
   const h = Math.round(ASPECT * BASE_W * scale);
   const letterStepSec = letterDrawSec * 0.78;
 
+  const [neonWrapClass, setNeonWrapClass] = useState<"" | "shell-intro-red-neon-phase" | "shell-intro-red-glow-settle">(
+    "",
+  );
+
+  useEffect(() => {
+    if (reduceMotion) return;
+    const tNeon = window.setTimeout(() => setNeonWrapClass("shell-intro-red-neon-phase"), introRedDrawSec * 1000);
+    const tSettle = window.setTimeout(
+      () => setNeonWrapClass("shell-intro-red-glow-settle"),
+      (introRedDrawSec + introRedNeonSec) * 1000,
+    );
+    const tClear = window.setTimeout(
+      () => setNeonWrapClass(""),
+      (introRedDrawSec + introRedNeonSec + introRedGlowFadeSec) * 1000,
+    );
+    return () => {
+      window.clearTimeout(tNeon);
+      window.clearTimeout(tSettle);
+      window.clearTimeout(tClear);
+    };
+  }, [introRedDrawSec, introRedNeonSec, introRedGlowFadeSec, reduceMotion]);
+
+  const wrapClass = `shell-intro-vc-logo-wrap${neonWrapClass ? ` ${neonWrapClass}` : ""}`;
+
   const svg = (
-    <svg
-      viewBox={VC_LOGO_INTRO_VIEWBOX}
-      width={w}
-      height={h}
-      aria-hidden
-      style={{ display: "block", overflow: "visible" }}
-    >
+    <svg viewBox={VC_LOGO_INTRO_VIEWBOX} width={w} height={h} aria-hidden style={{ display: "block", overflow: "visible" }}>
       <title>Villains Club</title>
       <defs>
-        <filter id={filterId} x="-25%" y="-25%" width="150%" height="150%">
-          <feGaussianBlur stdDeviation="1" result="b" />
-          <feMerge>
-            <feMergeNode in="b" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
         {!reduceMotion &&
           vcLogoGreyPaths.map((p, i) => (
             <GreyBottomToTopGradient
@@ -114,17 +139,30 @@ export function VcLogoIntroMark({ scale = 1, zoomDurationSec, letterDrawSec, eas
               gradientId={`${uid}-grey-grad-${i}`}
               clipY0={p.clipY0}
               clipY1={p.clipY1}
-              delaySec={i * letterStepSec}
+              delaySec={greyRevealDelaySec + i * letterStepSec}
               durationSec={letterDrawSec}
               easing={easing}
             />
           ))}
       </defs>
-      <g fill={RED_FILL} filter={reduceMotion ? undefined : `url(#${filterId})`}>
-        {vcLogoRedPaths.map((p) => (
-          <path key={p.id} d={p.d} />
-        ))}
-      </g>
+      {reduceMotion ? (
+        <g fill={RED_FILL}>
+          {vcLogoRedPaths.map((p) => (
+            <path key={p.id} d={p.d} />
+          ))}
+        </g>
+      ) : (
+        <motion.g
+          fill={RED_FILL}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: introRedDrawSec, ease: easing }}
+        >
+          {vcLogoRedPaths.map((p) => (
+            <path key={p.id} d={p.d} />
+          ))}
+        </motion.g>
+      )}
       <g>
         {vcLogoGreyPaths.map((p, i) => (
           <motion.path
@@ -137,7 +175,7 @@ export function VcLogoIntroMark({ scale = 1, zoomDurationSec, letterDrawSec, eas
               reduceMotion
                 ? undefined
                 : {
-                    delay: i * letterStepSec,
+                    delay: greyRevealDelaySec + i * letterStepSec,
                     duration: letterDrawSec * 0.85,
                     ease: easing,
                   }
@@ -149,15 +187,16 @@ export function VcLogoIntroMark({ scale = 1, zoomDurationSec, letterDrawSec, eas
   );
 
   if (reduceMotion) {
-    return svg;
+    return <div className={wrapClass}>{svg}</div>;
   }
 
   return (
     <motion.div
+      className={wrapClass}
       style={{ transformOrigin: "50% 50%", willChange: "transform" }}
       initial={{ scale: zoomFrom }}
       animate={{ scale: zoomTo }}
-      transition={{ duration: zoomDurationSec, ease: easing }}
+      transition={{ delay: greyRevealDelaySec, duration: zoomDurationSec, ease: easing }}
     >
       {svg}
     </motion.div>

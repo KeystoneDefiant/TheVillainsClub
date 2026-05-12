@@ -4,6 +4,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { buildClubTheme } from "@/theme/clubTheme";
 import { routerBasenameFromBaseUrl } from "@/routerBasename";
 import { useThemeLab } from "@/dev/themeLabStore";
+import { IntroToBarOverlay } from "@/components/intro/IntroToBarOverlay";
 import { IntroPage } from "@/pages/IntroPage";
 import { MainMenuPage } from "@/pages/MainMenuPage";
 import { BarStubPage } from "@/pages/BarStubPage";
@@ -24,6 +25,7 @@ export default function App() {
     <MantineProvider theme={theme} defaultColorScheme="dark" forceColorScheme="dark">
       <BrowserRouter basename={routerBasename}>
         <ShellBandMusicHost />
+        <IntroToBarOverlay />
         <Routes>
           <Route path="/" element={<IntroPage />} />
           <Route path="/menu" element={<MainMenuPage />} />

@@ -5,32 +5,132 @@
  */
 
 @media (prefers-reduced-motion: no-preference) {
-  .shell-intro-vc-logo-wrap.shell-intro-red-neon-phase svg {
-    filter: drop-shadow(0 0 10px rgba(255, 90, 90, 0.55)) drop-shadow(0 0 22px rgba(200, 30, 40, 0.45));
-    animation: shell-intro-red-neon-flicker 0.11s ease-in-out 22 alternate;
+  .shell-intro-vc-logo-wrap:not([data-vc-red-static="true"]) .shell-intro-vc-red-cluster {
+    transform-box: fill-box;
+    transform-origin: 108px 76px;
+    will-change: transform;
+    animation: shell-intro-vc-red-cluster-zoom var(--vc-red-zoom-dur, 1.47s) cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
 
-  .shell-intro-vc-logo-wrap.shell-intro-red-glow-settle svg {
-    animation: shell-intro-red-glow-settle 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  .shell-intro-vc-red-fill path {
+    fill: #c0272d;
+    fill-opacity: 0;
+  }
+
+  .shell-intro-vc-logo-wrap.shell-intro-red-phase-outline .shell-intro-vc-red-stroke path {
+    fill: none;
+    stroke: #ffb3b6;
+    stroke-width: 2.1px;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+    stroke-opacity: 0;
+    animation: shell-intro-red-stroke-flicker-in var(--vc-red-draw, 0.42s) cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  .shell-intro-vc-logo-wrap.shell-intro-red-phase-neon .shell-intro-vc-red-stroke path {
+    fill: none;
+    stroke: #ffc8ca;
+    stroke-width: 2.1px;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+    animation: shell-intro-red-stroke-neon-brighten var(--vc-red-neon, 1.05s) cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  .shell-intro-vc-logo-wrap.shell-intro-red-phase-neon .shell-intro-vc-red-fill path {
+    animation: shell-intro-red-fill-ramp var(--vc-red-neon, 1.05s) cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  .shell-intro-vc-logo-wrap.shell-intro-red-phase-settle .shell-intro-vc-red-stroke path {
+    fill: none;
+    stroke: #ffc8ca;
+    stroke-width: 2.1px;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+    animation: shell-intro-red-stroke-dimout var(--vc-red-glow-fade, 0.52s) cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  .shell-intro-vc-logo-wrap.shell-intro-red-phase-settle .shell-intro-vc-red-fill path,
+  .shell-intro-vc-logo-wrap.shell-intro-red-phase-done .shell-intro-vc-red-fill path {
+    fill-opacity: 1;
+  }
+
+  .shell-intro-vc-logo-wrap.shell-intro-red-phase-done .shell-intro-vc-red-stroke {
+    visibility: hidden;
   }
 }
 
-@keyframes shell-intro-red-neon-flicker {
+@keyframes shell-intro-vc-red-cluster-zoom {
   from {
-    filter: drop-shadow(0 0 6px rgba(255, 120, 120, 0.35)) brightness(1);
+    transform: translate(26px, 5px) scale(0.8);
   }
   to {
-    filter: drop-shadow(0 0 20px rgba(255, 60, 60, 0.95)) drop-shadow(0 0 32px rgba(255, 40, 40, 0.35))
-      brightness(1.12);
+    transform: translate(0, 0) scale(1);
   }
 }
 
-@keyframes shell-intro-red-glow-settle {
+@keyframes shell-intro-red-stroke-flicker-in {
+  0% {
+    stroke-opacity: 0;
+    filter: drop-shadow(0 0 0 transparent);
+  }
+  14% {
+    stroke-opacity: 0.9;
+  }
+  26% {
+    stroke-opacity: 0.22;
+    filter: drop-shadow(0 0 5px rgba(255, 130, 130, 0.45));
+  }
+  40% {
+    stroke-opacity: 1;
+  }
+  58% {
+    stroke-opacity: 0.45;
+    filter: drop-shadow(0 0 10px rgba(255, 95, 95, 0.65));
+  }
+  82% {
+    stroke-opacity: 1;
+    filter: drop-shadow(0 0 18px rgba(255, 65, 65, 0.82));
+  }
+  100% {
+    stroke-opacity: 1;
+    filter: drop-shadow(0 0 22px rgba(255, 50, 50, 0.92));
+  }
+}
+
+@keyframes shell-intro-red-stroke-neon-brighten {
+  0% {
+    stroke-opacity: 1;
+    filter: drop-shadow(0 0 22px rgba(255, 50, 50, 0.92));
+  }
+  55% {
+    filter: drop-shadow(0 0 28px rgba(255, 110, 110, 1)) drop-shadow(0 0 46px rgba(255, 40, 40, 0.55));
+  }
+  100% {
+    stroke-opacity: 1;
+    filter: drop-shadow(0 0 36px rgba(255, 130, 130, 0.98)) drop-shadow(0 0 52px rgba(255, 55, 55, 0.42));
+  }
+}
+
+@keyframes shell-intro-red-fill-ramp {
   from {
-    filter: drop-shadow(0 0 18px rgba(255, 80, 80, 0.75)) brightness(1.08);
+    fill-opacity: 0;
   }
   to {
-    filter: drop-shadow(0 0 0 transparent) brightness(1);
+    fill-opacity: 1;
+  }
+}
+
+@keyframes shell-intro-red-stroke-dimout {
+  from {
+    stroke-opacity: 1;
+    filter: drop-shadow(0 0 36px rgba(255, 130, 130, 0.98));
+  }
+  to {
+    stroke-opacity: 0;
+    filter: none;
   }
 }
 

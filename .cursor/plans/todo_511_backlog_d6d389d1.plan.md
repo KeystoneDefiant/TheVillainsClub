@@ -4,16 +4,16 @@ overview: "Execute [TODO.md](e:/LocalWorkspace/TheVillainsClub/TODO.md) in docum
 todos:
   - id: forfeit-session
     content: Implement abandon/forfeit active table session (store + bar UI + warnings + tests)
-    status: pending
+    status: completed
   - id: intro-transition
     content: "Redesign intro Enter the Club sequence: red-first draw, neon, zoom-to-red, bar pre-rendered behind fade"
-    status: pending
+    status: completed
   - id: bar-logo
     content: Add VC logo header to bar menu layout
-    status: pending
+    status: completed
   - id: settlement-extremes
     content: Extend BarRouteState + barSettlementTone for cap-proximate extreme_win and 85% loss extreme_loss
-    status: pending
+    status: completed
   - id: fateseal-config-engine
     content: "Fateseal: config keys + cascadeEngine state machine (bonus append, dead reels, grid growth, sympathetic vibrations, linking rules, meter reset)"
     status: pending

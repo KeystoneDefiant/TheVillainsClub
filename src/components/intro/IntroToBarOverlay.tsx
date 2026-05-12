@@ -107,16 +107,15 @@ export function IntroToBarOverlay() {
         style={{
           position: "absolute",
           left: "50%",
-          top: "44%",
-          transform: "translate(-50%, -50%)",
-          transformOrigin: "50% 50%",
+          top: "50%",
+          transform: "translate(calc(-50% + min(8vw, 72px)), -50%)",
         }}
       >
         <motion.div
           initial={{ scale: 0.42 }}
           animate={{ scale: 14 }}
           transition={{ duration: RED_ZOOM_SEC, ease: easing }}
-          style={{ transformOrigin: "42% 46%" }}
+          style={{ transformOrigin: "36% 46%" }}
         >
           <RedOnlyMark width={BASE_W} />
         </motion.div>

@@ -1,5 +1,5 @@
 import { animate } from "framer-motion";
-import { useId, useEffect, useRef, useState } from "react";
+import { useId, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { VC_LOGO_INTRO_VIEWBOX, vcLogoGreyPaths, vcLogoRedPaths } from "./vcLogoIntroPaths";
 
@@ -9,6 +9,8 @@ const GREY_FILL = "#808080";
 
 const BASE_W = 420;
 const ASPECT = 165.6 / 241.3;
+
+type RedPhase = "outline" | "neon" | "settle" | "done";
 
 type VcLogoIntroMarkProps = {
   scale?: number;
@@ -104,29 +106,37 @@ export function VcLogoIntroMark({
   const h = Math.round(ASPECT * BASE_W * scale);
   const letterStepSec = letterDrawSec * 0.78;
 
-  const [neonWrapClass, setNeonWrapClass] = useState<"" | "shell-intro-red-neon-phase" | "shell-intro-red-glow-settle">(
-    "",
-  );
+  const [redPhase, setRedPhase] = useState<RedPhase>("outline");
+
+  useLayoutEffect(() => {
+    if (reduceMotion) setRedPhase("done");
+  }, [reduceMotion]);
 
   useEffect(() => {
     if (reduceMotion) return;
-    const tNeon = window.setTimeout(() => setNeonWrapClass("shell-intro-red-neon-phase"), introRedDrawSec * 1000);
-    const tSettle = window.setTimeout(
-      () => setNeonWrapClass("shell-intro-red-glow-settle"),
-      (introRedDrawSec + introRedNeonSec) * 1000,
-    );
-    const tClear = window.setTimeout(
-      () => setNeonWrapClass(""),
+    const tNeon = window.setTimeout(() => setRedPhase("neon"), introRedDrawSec * 1000);
+    const tSettle = window.setTimeout(() => setRedPhase("settle"), (introRedDrawSec + introRedNeonSec) * 1000);
+    const tDone = window.setTimeout(
+      () => setRedPhase("done"),
       (introRedDrawSec + introRedNeonSec + introRedGlowFadeSec) * 1000,
     );
     return () => {
       window.clearTimeout(tNeon);
       window.clearTimeout(tSettle);
-      window.clearTimeout(tClear);
+      window.clearTimeout(tDone);
     };
   }, [introRedDrawSec, introRedNeonSec, introRedGlowFadeSec, reduceMotion]);
 
-  const wrapClass = `shell-intro-vc-logo-wrap${neonWrapClass ? ` ${neonWrapClass}` : ""}`;
+  const redZoomDurSec = introRedDrawSec + introRedNeonSec;
+
+  const wrapStyle = {
+    ["--vc-red-draw" as string]: `${introRedDrawSec}s`,
+    ["--vc-red-neon" as string]: `${introRedNeonSec}s`,
+    ["--vc-red-glow-fade" as string]: `${introRedGlowFadeSec}s`,
+    ["--vc-red-zoom-dur" as string]: `${redZoomDurSec}s`,
+  } as CSSProperties;
+
+  const wrapClass = `shell-intro-vc-logo-wrap shell-intro-red-phase-${redPhase}`;
 
   const svg = (
     <svg viewBox={VC_LOGO_INTRO_VIEWBOX} width={w} height={h} aria-hidden style={{ display: "block", overflow: "visible" }}>
@@ -152,16 +162,18 @@ export function VcLogoIntroMark({
           ))}
         </g>
       ) : (
-        <motion.g
-          fill={RED_FILL}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: introRedDrawSec, ease: easing }}
-        >
-          {vcLogoRedPaths.map((p) => (
-            <path key={p.id} d={p.d} />
-          ))}
-        </motion.g>
+        <g className="shell-intro-vc-red-cluster">
+          <g className="shell-intro-vc-red-stroke" aria-hidden>
+            {vcLogoRedPaths.map((p) => (
+              <path key={`s-${p.id}`} d={p.d} />
+            ))}
+          </g>
+          <g className="shell-intro-vc-red-fill">
+            {vcLogoRedPaths.map((p) => (
+              <path key={`f-${p.id}`} d={p.d} />
+            ))}
+          </g>
+        </g>
       )}
       <g>
         {vcLogoGreyPaths.map((p, i) => (
@@ -187,18 +199,23 @@ export function VcLogoIntroMark({
   );
 
   if (reduceMotion) {
-    return <div className={wrapClass}>{svg}</div>;
+    return (
+      <div className="shell-intro-vc-logo-wrap shell-intro-red-phase-done" data-vc-red-static="true" style={wrapStyle}>
+        {svg}
+      </div>
+    );
   }
 
   return (
     <motion.div
-      className={wrapClass}
       style={{ transformOrigin: "50% 50%", willChange: "transform" }}
       initial={{ scale: zoomFrom }}
       animate={{ scale: zoomTo }}
       transition={{ delay: greyRevealDelaySec, duration: zoomDurationSec, ease: easing }}
     >
-      {svg}
+      <div className={wrapClass} style={wrapStyle}>
+        {svg}
+      </div>
     </motion.div>
   );
 }

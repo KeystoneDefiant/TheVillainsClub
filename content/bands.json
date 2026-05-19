@@ -1,9 +1,9 @@
 {
   "interlude_chance_between_tracks": 0.38,
-  "bands": [
+  "bands": [  
     {
       "id": "buckmiller",
-      "display_name": "Buckmiller",
+      "display_name": "The Buck Miller Band",
       "asset_root": "audio/bands/buckmiller",
       "music_files": [
         "1.mp3",

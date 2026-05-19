@@ -31,7 +31,7 @@ export type FatesealSymbolId = FatesealStandardId | FatesealSpecialId;
 export const fatesealSymbolLore: Record<FatesealStandardId, { title: string; blurb: string }> = {
   dagger: { title: "The Dagger", blurb: "A promise cut in silver." },
   chalice: { title: "The Chalice", blurb: "Wine dark as a sealed oath." },
-  goat: { title: "The Goat", blurb: "Horns against a thin moon." },
+  goat: { title: "The Goat", blurb: "Horns against a thin veil." },
   eye: { title: "The Eye", blurb: "It blinks when nobody is watching." },
   serpent: { title: "The Serpent", blurb: "Coils in the corner of the vision." },
   moon: { title: "The Moon", blurb: "A thin sickle over charcoal stone." },
@@ -152,7 +152,7 @@ export const fatesealGameConfig = {
     displayName: "Normal ritual",
     /** Primary chip step for base bet control. */
     chipIncrement: 10,
-    minBaseBet: 10,
+    minBaseBet: 100,
     /** Max base bet as a fraction of current session credits (session wallet). */
     maxBaseBetFractionOfSession: 0.25 as number,
   },

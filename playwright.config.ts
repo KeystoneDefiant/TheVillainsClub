@@ -13,7 +13,7 @@ export default defineConfig({
     url: previewOrigin,
     // Always start a fresh preview so `dist/` matches the latest build (avoids stale chunks after `npm run test:e2e` changed code).
     reuseExistingServer: false,
-    timeout: 90_000,
+    timeout: 9000,
   },
   use: {
     baseURL: previewOrigin,

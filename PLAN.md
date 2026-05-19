@@ -17,7 +17,7 @@ This document describes **how** the project is built and operated. Overarching o
 - **Routes:** Intro (`/`) plays the VC mark in **sequenced phases** (red draw-in → CSS neon pulse → glow settle → grey letter reveals, then gentle zoom), then shows **Enter the Club**; choosing it calls `useIntroToBarTransition` so **`/bar` mounts under a fixed `IntroToBarOverlay`** that zooms the red mark to fill the frame and fades out (skipped under `prefers-reduced-motion`). The door state in `/menu` still shows **Enter the Club** + Settings; after entry it redirects to `/bar`, keeps the shelf/bar scene mounted, and presents the restaurant-style club menu with game landing cards. **Oubliette No. 9** can also start from a standalone landing (`/oubliette-no9`, enabled by `villainsGameDefaults.oublietteNo9.standaloneLandingEnabled` and disabled at runtime with `VITE_OUBLIETTE_NO9_STANDALONE=false`). **Oubliette No. 9** (`/minigames/oubliette-no9`) starts shell-bound sessions directly at pre-draw, without the legacy in-minigame main menu; **7 Year Itch** (`/minigames/seven-year-itch`) and **Fateseal Silver** (`/minigames/fateseal-silver`) start from their landing cards. `/bar` deep links reuse the same unified host and still show optional settlement flash state; **`/__playground`** remains linked from the club menu.
 - **Theme:** Club palette in `src/theme/`; typography loads via **Google Fonts** in `src/styles/fonts.css` (add self-hosted files under `assets/fonts/` later if you want fully offline dev).
 - **Economy:** `src/game/money.ts` + persisted **`clubWalletStore`** — buy-in leaves the club once; resuming an active table reuses the existing session instead of charging another buy-in. **`TableSession.gameModeId`** (optional) tags the active rules profile; **`/bar`** starts tables with each game’s **`villainsGameDefaults.*.defaultGameModeId`** (typically `normalGame`). **Return settlement** uses `src/game/sessionSettlement.ts` (same cap / tier shape across table minigames; product uses `oubliette_cap_mult`, `seven_year_itch_cap_mult`, or **`fateseal_cap_mult`** × `all_minigames_cap_mult` per game). Defaults in **`src/config/villainsGameDefaults.ts`**; cap keys on specials rows in **`content/specials.json`** resolved in **`src/game/specialsResolver.ts`** (separate from `payout_mult`).
-- **Oubliette port:** First-party copy under **`src/minigames/oubliette-no9/`**; table rules config at **`src/config/minigames/oublietteNo9GameRules.ts`** (`resolveOublietteGameMode`); runtime mode is provided by **`OublietteGameModeProvider`** on **`OublietteNo9Page`** so hooks and shop math track the session profile. Tailwind + theme SCSS loaded from **`OublietteNo9Page`**. Shell-bound sessions snapshot Oubliette state for resume, and voluntary cash-out is available at round 31+. **`TO_PORT/OublietteNo9`** remains the upstream reference submodule.
+- **Oubliette port:** First-party copy under **`src/minigames/oubliette-no9/`**; table rules config at **`src/config/minigames/oublietteNo9GameRules.ts`** (`resolveOublietteGameMode`); runtime mode is provided by **`OublietteGameModeProvider`** on **`OublietteNo9Page`** so hooks and shop math track the session profile. Tailwind + theme SCSS loaded from **`OublietteNo9Page`**. Shell-bound sessions snapshot Oubliette state for resume, and voluntary cash-out is available at round 31+.
 - **7 Year Itch:** Crapless craps minigame under **`src/minigames/seven-year-itch/`**; NV paytables, racket lore, heat bonuses, **`sevenYearItchGameConfig`** (same **default + `gameModes` merge** pattern as Oubliette’s `gameConfig`; resolved table rules in **`sevenYearItchTableConfig`** / **`getSevenYearItchGameMode`**), and **per-roll noir lines** in **`src/config/minigames/sevenYearItchRollStories.ts`**; agent plan **`7YI_plan.md`**. UX: pass-only come-out → full layout with point; **hand recap is merged into the roll story modal** with continue / cash-out; favors as a full view; **Look the other way** keeps the **whole layout**; **Divest** / **Clean Getaway**; optional Field/Horn; cash-out only when no point is active.
 - **Fateseal Silver:** Occult cascading grid slot under **`src/minigames/fateseal-silver/`**; design spec **`Fateseal_Specs.md`**. **Shell:** single-symbol seal at the altar; additional omens only via Crossroads “add symbol” SKU. Ritual stakes via **Min / ⅛ / ¼ / ½ bank** chip buttons (bank fractions disabled when below `minBaseBet`); legacy **`freeRitualSpinsLeft`** path remains for zero-bet spins but the scatter meter **no longer banks** charges — meter fires **append bonus waves** inside the same `runSpin` (grid grows up to **`bonusGrid.maxGridSize`**, transient bonus dead columns, Sympathetic at configured fire count). Weighted symbol pool, cascades with linking + **`fatesealProgressionRules`** / engine. **`fatesealCrossroadsNewShop`** — wild/dead purchases use **FIFO paid-spin timers** with **column fill masks** (wild left / purchased dead right). **`fatesealGameConfig`** (**default + `gameModes` merge**, `resolveFatesealGameMode`) for chip / min bet / max bet fraction, plus **`fatesealCascadePayoutScale`**. Pure engine in **`src/minigames/fateseal-silver/engine/`**. Shell UI: **altar → ritual (grid + cascades) → ledger**, plus in-flow **`crossroads`** phase (full-width shop, not a modal) when the scatter bank trips. Monte Carlo: **`npm run sim:fateseal`** (`scripts/sim-fateseal.ts`; use **`npx tsx scripts/sim-fateseal.ts`** if `tsx` is not on PATH); use **`FATESEAL_SIM_BASE_ONLY=1`** when tuning the scale toward the staged ~90% payout on paid bets in the stripped base game.
 - **Settlement → bar handoff:** Each minigame page (`OublietteNo9Page`, `SevenYearItchPage`, `FatesealSilverPage`) holds an **`isReturningToClubRef`** that gates the "no active session → redirect to /menu" effect; the cash-out handler flips the ref before calling `endSession`, so the immediate `navigate("/bar", { state: BarRouteState })` is not trampled by the redirect-to-menu effect that fires once `activeSession` becomes null. Without this guard, `ClubSettlementDock` (the bar-side quip card) never receives `lastTable` state.
@@ -37,7 +37,6 @@ This document describes **how** the project is built and operated. Overarching o
 ## Engine and language
 
 - **Shell:** **Electron** (main/preload under `electron/`), renderer **Vite + React + TypeScript** under `src/`.
-- **Reference sources:** JavaScript originals live in **`TO_PORT/`** as a **git submodule**. Ports become first-party React (or shared packages); keep parity notes (e.g. `docs/oubliette_port_parity.md`) updated when behavior is ported.
 
 ## Platforms
 
@@ -47,7 +46,6 @@ This document describes **how** the project is built and operated. Overarching o
 ## Repository layout (current)
 
 ```
-TO_PORT/              # git submodule — JS reference; not auto-imported by app
 content/              # JSON/JSONC catalogs (drinks, bands, sfx manifests, etc.)
 electron/             # main.cjs, preload.cjs
 src/                  # React app: pages, theme, components, game/, dev playground
@@ -56,10 +54,6 @@ compose.yaml          # optional plain Docker `dev` service
 docs/                 # architecture, roadmaps (some Godot-era text may be stale)
 .github/workflows/    # CI
 ```
-
-Submodule init:
-
-`git submodule update --init --recursive`
 
 ## Architecture (high level)
 
@@ -120,7 +114,6 @@ Electron builds can still use **HTTP-fetched** optional content packs or local d
 ## Security and scope
 
 - No secrets in git; use CI secrets for signing and publishing.
-- **`TO_PORT/`** is reference-only until code is copied or wrapped intentionally in `src/`.
 
 ## References
 

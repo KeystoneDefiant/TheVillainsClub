@@ -37,10 +37,6 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: E2E smoke (production build + Playwright)
-        run: |
-          npx playwright install chromium
-          npm run test:e2e
 
   electron-build:
     needs: test

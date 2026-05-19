@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
-import { Box, Text } from "@mantine/core";
+import { Box } from "@mantine/core";
 import { getPlayingCardSpriteStyle } from "./cardSprite";
 import { PlayingCardFace } from "./PlayingCardFace";
 import type { PlayingCardFaceData, PlayingCardFaceMode, PlayingCardSize } from "./types";
@@ -78,13 +78,13 @@ export function PlayingCard({
           inset: 0,
           border: "1px solid",
           borderRadius: "var(--mantine-radius-md, 8px)",
-          boxShadow: "var(--mantine-shadow-sm, 0 1px 3px rgba(0,0,0,0.35))",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.5), inset 0 0 10px rgba(0,0,0,0.4)",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          transition: "transform 500ms",
-          ...(isHeld ? {} : { borderColor: "var(--game-card-border)" }),
+          transition: "transform 500ms, border-color 0.2s ease, box-shadow 0.2s ease",
+          borderColor: isHeld ? "var(--game-card-held-border)" : "var(--game-card-border)",
           backgroundColor: "var(--game-card-background)",
           transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
           transformStyle: "preserve-3d",
@@ -106,16 +106,49 @@ export function PlayingCard({
           inset: 0,
           border: "1px solid",
           borderRadius: "var(--mantine-radius-md, 8px)",
-          boxShadow: "var(--mantine-shadow-sm, 0 1px 3px rgba(0,0,0,0.35))",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
           transition: "transform 500ms",
+          borderColor: "var(--game-card-border)",
           transform: isFlipped ? "rotateY(0deg)" : "rotateY(180deg)",
           transformStyle: "preserve-3d",
           zIndex: isFlipped ? 2 : 1,
+          overflow: "hidden",
         }}
       >
-        <Text className="card-back-text" size="xs" fw={700}>
-          POKER
-        </Text>
+        {/* Intricate Gold Filigree Card Back Pattern */}
+        <svg
+          width="100%"
+          height="100%"
+          viewBox="0 0 80 120"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          style={{
+            position: "absolute",
+            inset: 0,
+            padding: "4px",
+            boxSizing: "border-box",
+          }}
+          aria-hidden="true"
+        >
+          <rect x="3" y="3" width="74" height="114" rx="5" stroke="#c79e57" strokeWidth="0.8" strokeDasharray="2 1" opacity="0.65" />
+          <rect x="5.5" y="5.5" width="69" height="109" rx="4.5" stroke="#c79e57" strokeWidth="0.5" opacity="0.4" />
+          
+          <path d="M5.5 5.5 L74.5 114.5 M74.5 5.5 L5.5 114.5" stroke="#c79e57" strokeWidth="0.4" opacity="0.12" />
+          <path d="M5.5 32.5 L74.5 87.5 M74.5 32.5 L5.5 87.5" stroke="#c79e57" strokeWidth="0.4" opacity="0.12" />
+          <path d="M5.5 60 L74.5 60 M40 5.5 L40 114.5" stroke="#c79e57" strokeWidth="0.4" opacity="0.12" />
+          
+          <circle cx="40" cy="60" r="15" stroke="#ffd780" strokeWidth="0.85" opacity="0.8" />
+          <circle cx="40" cy="60" r="12" stroke="#c79e57" strokeWidth="0.4" strokeDasharray="1 1" opacity="0.65" />
+          
+          <path d="M40 48 L48 60 L40 72 L32 60 Z" fill="#ffd780" opacity="0.15" />
+          <path d="M40 46 L50 60 L40 74 L30 60 Z" stroke="#ffd780" strokeWidth="1.1" opacity="0.85" />
+          <circle cx="40" cy="60" r="2.5" fill="#c79e57" />
+          
+          <path d="M9 16 L16 9 M9 9 L16 16" stroke="#c79e57" strokeWidth="0.65" opacity="0.55" />
+          <path d="M71 16 L64 9 M71 9 L64 16" stroke="#c79e57" strokeWidth="0.65" opacity="0.55" />
+          <path d="M9 104 L16 111 M9 111 L16 104" stroke="#c79e57" strokeWidth="0.65" opacity="0.55" />
+          <path d="M71 104 L64 111 M71 111 L64 104" stroke="#c79e57" strokeWidth="0.65" opacity="0.55" />
+        </svg>
       </Box>
     </Box>
   );

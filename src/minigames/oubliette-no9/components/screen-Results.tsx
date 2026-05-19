@@ -119,7 +119,7 @@ export function Results({
         touchAction: "manipulation",
       }}
     >
-      <Stack className="oubliette-play-stack" maw={896} w="100%" mx="auto" gap="md">
+      <Stack className="oubliette-play-stack" maw={896} w="100%" mx="auto" gap="xs">
         <GameHeader
           credits={credits}
           round={round}
@@ -129,9 +129,9 @@ export function Results({
           onShowSettings={onShowSettings}
         />
 
-        <Stack className="oubliette-scroll-section" gap="md" style={{ flex: 1 }}>
-          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-            <Paper {...panelBase} className="oubliette-compact-panel">
+        <Stack className="oubliette-scroll-section" gap="xs" style={{ flex: 1 }}>
+          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xs">
+            <Paper {...panelBase} className="oubliette-compact-panel" visibleFrom="sm">
               <Title order={3} mb="md" c={clubTokens.text.brass} fz={{ base: "1.15rem", sm: "1.35rem" }}>
                 Hand summary
               </Title>
@@ -182,10 +182,10 @@ export function Results({
             </Paper>
           </SimpleGrid>
 
-          <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="md">
+          <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="xs">
             <Paper
               radius="lg"
-              p={{ base: "md", sm: "lg" }}
+              p={{ base: "sm", sm: "lg" }}
               className="animate-fadeIn oubliette-compact-panel"
               style={{
                 ...panelBase.style,
@@ -193,10 +193,10 @@ export function Results({
                 boxShadow: `0 0 24px rgba(201, 162, 39, 0.2)`,
               }}
             >
-              <Title order={2} mb="lg" c={clubTokens.text.brass} fz={{ base: "1.35rem", sm: "1.65rem" }}>
+              <Title order={2} mb={{ base: "xs", sm: "lg" }} c={clubTokens.text.brass} fz={{ base: "1.35rem", sm: "1.65rem" }}>
                 Round summary
               </Title>
-              <Stack gap="md">
+              <Stack gap="xs">
                 {rankData.map((item) => (
                   <Group key={item.rank} justify="space-between" wrap="wrap">
                     <Text size="md" fw={500} c={clubTokens.text.primary} tt="capitalize">
@@ -215,8 +215,8 @@ export function Results({
               </Stack>
             </Paper>
 
-            <Paper className="game-panel-muted animate-fadeIn oubliette-compact-panel" radius="lg" p={{ base: "md", sm: "lg" }}>
-              <Stack gap="md">
+            <Paper className="game-panel-muted animate-fadeIn oubliette-compact-panel" radius="lg" p={{ base: "sm", sm: "lg" }}>
+              <Stack gap="xs">
                 <Group justify="space-between" wrap="wrap">
                   <Text size="md" fw={600} c={clubTokens.text.primary}>
                     Round cost:
@@ -248,7 +248,7 @@ export function Results({
                 <Group
                   justify="space-between"
                   wrap="wrap"
-                  pt="sm"
+                  pt="xs"
                   style={{ borderTop: `1px solid ${clubTokens.surface.brassStroke}` }}
                 >
                   <Text size="lg" fw={700} c={clubTokens.text.primary}>
@@ -264,8 +264,8 @@ export function Results({
                 </Group>
 
                 <Stack
-                  gap="sm"
-                  pt="md"
+                  gap="xs"
+                  pt="xs"
                   style={{ borderTop: `1px solid ${clubTokens.surface.brassStroke}` }}
                 >
                   <Group justify="space-between">
@@ -284,7 +284,7 @@ export function Results({
                       {formatMultiplier(highestMultiplier)}
                     </Text>
                   </Group>
-                  <Paper p="sm" radius="md" withBorder style={{ borderColor: clubTokens.surface.brassStroke }}>
+                  <Paper p="sm" radius="md" withBorder style={{ borderColor: clubTokens.surface.brassStroke }} visibleFrom="sm">
                     <Group justify="space-between" mb="xs">
                       <Text size="xs" tt="uppercase" fw={600} c={clubTokens.text.muted}>
                         Combo progression

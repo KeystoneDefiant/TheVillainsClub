@@ -14,6 +14,7 @@ import {
 } from "@/config/minigames/sevenYearItchRules";
 import { pickSevenYearItchRollStory } from "@/config/minigames/sevenYearItchRollStories";
 import { usePrefersReducedMotion } from "@/motion/usePrefersReducedMotion";
+import { clubTokens } from "@/theme/clubTokens";
 import {
   initialBets,
   initialTableState,
@@ -26,6 +27,9 @@ import {
 } from "./engine/craplessEngine";
 import { CraplessTableFelt } from "./components/CraplessTableFelt";
 import { DicePair3D } from "./components/DicePair3D";
+import { UnifiedGameHeader } from "@/components/ui/UnifiedGameHeader";
+import { GameSettingsModal } from "@/components/ui/GameSettingsModal";
+import { SevenYearItchOddsModal } from "./components/SevenYearItchOddsModal";
 import "./sevenYearItch.css";
 
 type MainView = "table" | "favors";
@@ -111,6 +115,8 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
   const [diceRunStyle, setDiceRunStyle] = useState<React.CSSProperties>({});
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [cashOutOpen, setCashOutOpen] = useState(false);
+  const [settingsOpened, setSettingsOpened] = useState(false);
+  const [oddsOpened, setOddsOpened] = useState(false);
   /** When set, roll story modal includes hand recap + continue / cash-out actions. */
   const [loreHandRecap, setLoreHandRecap] = useState<HandEndSummary | null>(null);
 
@@ -488,10 +494,6 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
     animTimersRef.current.push(t2);
   }, [applyRollResult, canRoll, diceRunActive, reduceMotion]);
 
-  const caseLabel =
-    table.phase !== "point" || table.point == null
-      ? "NO OPEN CASE"
-      : `CASE FILE — ${table.point} ${sevenYearItchRackets[table.point].name}`;
 
   const favorSelectionBody = (
     <Stack gap="sm">
@@ -551,6 +553,11 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
     </Stack>
   );
 
+  const caseLabel =
+    table.phase !== "point" || table.point == null
+      ? "NO OPEN CASE"
+      : `CASE FILE — ${table.point} ${sevenYearItchRackets[table.point].name}`;
+
   return (
     <Box className="seven-year-itch-root" data-testid="seven-year-itch-root">
       {diceRunActive ? (
@@ -562,19 +569,35 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
       ) : null}
 
       <Stack gap="xs" className="seven-year-itch-frame">
-        <Group justify="space-between" align="center" wrap="nowrap" className="seven-year-itch-topbar">
-          <Stack gap={0}>
-            <Title order={2} c="var(--7yi-amber)" size="h4" style={{ fontFamily: "Georgia, serif" }}>
-              7 Year Itch
-            </Title>
-            <Text size="xs" c="dimmed">
-              {caseLabel}
-            </Text>
-          </Stack>
-          <div className="seven-year-itch-rollBadge" aria-label="Last roll" data-testid="roll-badge">
-            {lastRollText === "—" ? "—" : lastRollText.split(" = ")[1]}
-          </div>
-        </Group>
+        <UnifiedGameHeader
+          gameTitle="7 Year Itch"
+          walletAmount={wealth}
+          currentRound={rollCount}
+          roundLabel="Rolls"
+          onShowSettings={() => setSettingsOpened(true)}
+          extraButtons={
+            <Group gap="xs" wrap="nowrap">
+              {lastRollText !== "—" && (
+                <div className="seven-year-itch-rollBadge" aria-label="Last roll" data-testid="roll-badge">
+                  {lastRollText.split(" = ")[1]}
+                </div>
+              )}
+              <Button
+                type="button"
+                size="xs"
+                variant="filled"
+                color="yellow"
+                radius="md"
+                px="xs"
+                onClick={() => setOddsOpened(true)}
+                title="Show payout table"
+                styles={{ label: { fontWeight: 700, color: clubTokens.surface.deepWalnut } }}
+              >
+                📊 Odds
+              </Button>
+            </Group>
+          }
+        />
 
         {mainView === "favors" ? (
           <Paper
@@ -627,12 +650,17 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
             </SimpleGrid>
 
             <Paper radius="md" p="xs" withBorder style={{ borderColor: "var(--7yi-amber-dim)", background: "var(--7yi-paper)" }}>
-              <Group justify="space-between" wrap="wrap" gap="xs">
-                <Text size="xs" c="dimmed" lineClamp={3} style={{ flex: "1 1 200px", minWidth: 0 }}>
-                  {passOnlyLayout
-                    ? "Open investigation: bet the pass line only. Seven wins even money; any other total sets the point and opens the full racket board."
-                    : loreState.body}
-                </Text>
+              <Group justify="space-between" wrap="wrap" gap="xs" style={{ width: "100%" }}>
+                <Stack gap={2} style={{ flex: "1 1 200px", minWidth: 0 }}>
+                  <Text size="xs" fw={700} c="var(--7yi-amber)">
+                    {caseLabel}
+                  </Text>
+                  <Text size="xs" c="dimmed" lineClamp={3}>
+                    {passOnlyLayout
+                      ? "Open investigation: bet the pass line only. Seven wins even money; any other total sets the point and opens the full racket board."
+                      : loreState.body}
+                  </Text>
+                </Stack>
                 <Button
                   variant="subtle"
                   color="orange"
@@ -857,6 +885,13 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
           </SimpleGrid>
         </Stack>
       </Modal>
+
+      <GameSettingsModal opened={settingsOpened} onClose={() => setSettingsOpened(false)} />
+      <SevenYearItchOddsModal
+        opened={oddsOpened}
+        onClose={() => setOddsOpened(false)}
+        placePayoutScale={table.placePayoutScale}
+      />
     </Box>
   );
 }

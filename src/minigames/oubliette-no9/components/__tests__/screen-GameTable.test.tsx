@@ -208,10 +208,10 @@ describe('GameTable Component', () => {
     it('should show card backs before first draw', () => {
       vi.useFakeTimers();
       const props = { ...mockProps, firstDrawComplete: false };
-      render(<GameTable {...props} />);
+      const { container } = render(<GameTable {...props} />);
       
-      // Card backs show "POKER" text (before flip animation completes)
-      expect(screen.getAllByText('POKER').length).toBeGreaterThan(0);
+      // Card backs should render card-back container elements
+      expect(container.querySelectorAll('.card-back').length).toBeGreaterThan(0);
       vi.useRealTimers();
     });
 

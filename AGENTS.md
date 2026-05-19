@@ -8,7 +8,7 @@ Each agent session that does more than a trivial typo-only pass should **before 
 
 1. **`AGENTS.md`** — When commands, ports, devcontainer behavior, CI, Playwright/Electron flows, or agent-facing expectations change, update this file so the next run matches reality.
 2. **Documentation** — When behavior, milestones, or contracts shift: **`PLAN.md` → Current status** (and other `PLAN.md` sections as needed); **`docs/architecture.md`** when module boundaries or data flow change; any other doc the work makes wrong or obsolete. Do not add new markdown files unless the user asked for them.
-3. **Tests** — Add or adjust **Vitest** for deterministic logic you change; add or extend **Playwright** when shell routing, menu/bar flows, or other CI-critical journeys change. Run **`npm run lint`**, **`npm run test`**, and **`npm run typecheck`** when you touched code; run **`npm run test:e2e`** when the production build or those journeys may be affected.
+3. **Tests** — Add or adjust **Vitest** for deterministic logic you change. Run **`npm run lint`**, **`npm run test`**, and **`npm run typecheck`** when you touched code.
 
 ### Tests and tunable values
 
@@ -36,7 +36,7 @@ The **Agent cycle checklist** below is the same bar, itemized.
 - **Install:** `npm ci` (preferred) or `npm install`.
 - **Dev (Vite only):** `npm run dev:web` — best inside containers or without a GUI.
 - **Dev (Electron + Vite):** `npm run dev` — starts Vite on **5173** and opens Electron when the dev server is ready.
-- **Quality:** `npm run lint`, `npm run test`, `npm run typecheck`. **`npm run test:e2e`** runs a **production `vite build`** then Playwright against `vite preview` (CI uses the same script).
+- **Quality:** `npm run lint`, `npm run test`, `npm run typecheck`.
 - **Tuning:** **`npm run sim:fateseal`** runs the Fateseal Silver Monte Carlo harness (`scripts/sim-fateseal.ts`; uses **`npx tsx`** so it works when `tsx` is not on PATH). Set **`FATESEAL_SIM_BASE_ONLY=1`** to measure **base ritual** payout vs. paid bets (~**88–95%** target for `fatesealCascadePayoutScale` with `forBaseRitualSim`); omit for the full model fingerprint (meter + in-spin bonus appends + sympathetic).
 - **Production bundle (renderer):** `npm run build`.
 - **Packaged desktop (local):** `npm run pack` or `npm run dist` (requires a full toolchain for `electron-builder` targets you enable).
@@ -73,13 +73,12 @@ git submodule update --init --recursive
 - [ ] Update **`AGENTS.md`** (this file) when run commands, ports, devcontainer behavior, CI, or agent expectations change.
 - [ ] Update **`docs/architecture.md`** when module boundaries or data contracts change.
 - [ ] Add or adjust **Vitest** tests under `src/` for deterministic rules and regressions you might introduce.
-- [ ] Add or adjust **Playwright** (`e2e/`) when shell routing, menu/bar/minigame entry, or other user journeys you rely on in CI change.
-- [ ] Run **`npm run lint`**, **`npm run test`**, **`npm run typecheck`** before handoff when code changed; run **`npm run test:e2e`** when a production build or those journeys may break.
+- [ ] Run **`npm run lint`**, **`npm run test`**, and **`npm run typecheck`** before handoff when code changed.
 - [ ] Keep **`content/*.json`** valid JSON where the app parses them; JSONC files cannot be parsed by `JSON.parse` until converted or stripped.
 
 ## CI (GitHub Actions)
 
-- **Push/PR:** `npm ci`, then **`npm run lint`**, **`npm run test`**, **`npm run typecheck`**, **`npm run build`**, Playwright smoke, **Electron** packaging on Ubuntu / Windows / macOS (`dist:electron:*`, unsigned), and on pushes to the **default branch** a **GitHub Pages** deploy (see `.github/workflows/ci.yml`).
+- **Push/PR:** `npm ci`, then **`npm run lint`**, **`npm run test`**, **`npm run typecheck`**, **`npm run build`**, **Electron** packaging on Ubuntu / Windows / macOS (`dist:electron:*`, unsigned), and on pushes to the **default branch** a **GitHub Pages** deploy (see `.github/workflows/ci.yml`).
 - **Pages setup:** Repository **Settings → Pages**: set **Build and deployment** source to **GitHub Actions** (not “Deploy from a branch”). The site is built with `VITE_BASE=/<repository-name>/` so asset URLs and `BrowserRouter` match project Pages (`https://<user>.github.io/<repo>/`). SPA deep links use **`404.html`** copied from `index.html` in CI.
 - **Local desktop installers:** `npm run dist` (Windows **NSIS** in `package.json`); CI uses **`dir`** targets for speed and to avoid signing.
 

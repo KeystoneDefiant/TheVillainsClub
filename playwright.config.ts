@@ -9,7 +9,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   webServer: {
-    command: `npx vite preview --host ${previewHost} --port ${previewPort}`,
+    command: `npm run preview -- --host ${previewHost} --port ${previewPort}`,
     url: previewOrigin,
     // Always start a fresh preview so `dist/` matches the latest build (avoids stale chunks after `npm run test:e2e` changed code).
     reuseExistingServer: false,

@@ -20,6 +20,14 @@ export function MenuHazeBackground() {
         backfaceVisibility: "hidden",
         isolation: "isolate",
       }}
-    />
+    >
+      <div className="haze-particle" />
+      <div className="haze-particle" />
+      <div className="haze-particle" />
+      <div className="haze-particle" />
+      <div className="haze-particle" />
+      <div className="haze-particle" />
+    </Box>
   );
 }
+

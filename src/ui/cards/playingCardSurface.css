@@ -6,55 +6,55 @@
 
 :root {
   --game-card-background: #1a1418;
-  --game-card-border: #2a1f24;
-  --game-card-back-bg: linear-gradient(145deg, #1a1418 0%, #0d0a0c 100%);
-  --game-card-back-text: #8a8279;
-  --game-card-suit-red: #dc2626;
-  --game-card-suit-black: #cbd5e1;
+  --game-card-border: rgba(199, 158, 87, 0.3);
+  --game-card-back-bg: radial-gradient(circle at center, #261814 0%, #0d0807 100%);
+  --game-card-back-text: #ffd780;
+  --game-card-suit-red: #e11d48;
+  --game-card-suit-black: #e2e8f0;
   --game-card-small-bg: #0d0a0c;
-  --game-card-small-border: #2a1f24;
+  --game-card-small-border: rgba(199, 158, 87, 0.2);
   --game-card-panel-bg: #120e10;
-  --game-card-held-border: #c9a227;
+  --game-card-held-border: #ffd780;
   --game-card-held-border-width: 3px;
-  --game-card-held-border-style: solid;
-  --game-card-held-glow: rgba(201, 162, 39, 0.25);
-  --game-card-wild-color: #ea580c;
+  --game-card-held-border-style: double;
+  --game-card-held-glow: rgba(255, 215, 128, 0.55);
+  --game-card-wild-color: #f97316;
   --game-card-back-text-offset-y: 0.15em;
 }
 
 [data-card-theme="light"] {
   --game-card-background: #ffffff;
-  --game-card-border: #e5e7eb;
-  --game-card-back-bg: linear-gradient(145deg, #f3f4f6 0%, #e5e7eb 100%);
-  --game-card-back-text: #6b7280;
+  --game-card-border: #d1c4b2;
+  --game-card-back-bg: radial-gradient(circle at center, #f5ecd7 0%, #dcd2b8 100%);
+  --game-card-back-text: #78350f;
   --game-card-suit-red: #dc2626;
   --game-card-suit-black: #1f2937;
   --game-card-small-bg: #ffffff;
   --game-card-small-border: #d1d5db;
   --game-card-panel-bg: #f9fafb;
-  --game-card-held-border: #c9a227;
+  --game-card-held-border: #b45309;
   --game-card-held-border-width: 3px;
-  --game-card-held-border-style: solid;
-  --game-card-held-glow: rgba(201, 162, 39, 0.35);
+  --game-card-held-border-style: double;
+  --game-card-held-glow: rgba(180, 83, 9, 0.4);
   --game-card-wild-color: #ea580c;
   --game-card-back-text-offset-y: 0.15em;
 }
 
 [data-card-theme="dark"] {
   --game-card-background: #1a1418;
-  --game-card-border: #2a1f24;
-  --game-card-back-bg: linear-gradient(145deg, #1a1418 0%, #0d0a0c 100%);
-  --game-card-back-text: #8a8279;
-  --game-card-suit-red: #dc2626;
-  --game-card-suit-black: #cbd5e1;
+  --game-card-border: rgba(199, 158, 87, 0.35);
+  --game-card-back-bg: radial-gradient(circle at center, #261814 0%, #0d0807 100%);
+  --game-card-back-text: #ffd780;
+  --game-card-suit-red: #e11d48;
+  --game-card-suit-black: #e2e8f0;
   --game-card-small-bg: #0d0a0c;
-  --game-card-small-border: #2a1f24;
+  --game-card-small-border: rgba(199, 158, 87, 0.2);
   --game-card-panel-bg: #120e10;
-  --game-card-held-border: #c9a227;
+  --game-card-held-border: #ffd780;
   --game-card-held-border-width: 3px;
-  --game-card-held-border-style: solid;
-  --game-card-held-glow: rgba(201, 162, 39, 0.25);
-  --game-card-wild-color: #ea580c;
+  --game-card-held-border-style: double;
+  --game-card-held-glow: rgba(255, 215, 128, 0.55);
+  --game-card-wild-color: #f97316;
   --game-card-back-text-offset-y: 0.15em;
 }
 
@@ -73,10 +73,11 @@
 }
 
 .card-held {
-  border-width: var(--game-card-held-border-width);
-  border-style: var(--game-card-held-border-style);
-  border-color: var(--game-card-held-border);
-  box-shadow: 0 0 12px var(--game-card-held-glow);
+  border-width: var(--game-card-held-border-width) !important;
+  border-style: var(--game-card-held-border-style) !important;
+  border-color: var(--game-card-held-border) !important;
+  box-shadow: 0 -8px 20px rgba(0, 0, 0, 0.6), 0 0 15px var(--game-card-held-glow) !important;
+  transform: translateY(-8px) scale(1.03) !important;
 }
 
 .card-suit-red {
@@ -89,4 +90,6 @@
 
 .card-wild {
   color: var(--game-card-wild-color);
+  text-shadow: 0 0 6px rgba(249, 115, 22, 0.4);
 }
+

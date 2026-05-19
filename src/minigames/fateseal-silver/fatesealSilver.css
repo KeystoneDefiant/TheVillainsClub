@@ -113,8 +113,9 @@
   position: relative;
   overflow: visible;
   border-radius: 6px;
-  border: 1px solid rgba(200, 208, 218, 0.18);
-  background: rgba(10, 10, 12, 0.88);
+  border: 1px solid rgba(168, 85, 247, 0.28);
+  background: radial-gradient(circle at center, #1b1324 0%, #060408 100%);
+  box-shadow: inset 0 2px 3px rgba(255,255,255,0.03), inset 0 -3px 6px rgba(0,0,0,0.85), 0 3px 6px rgba(0,0,0,0.45);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -123,12 +124,14 @@
   text-transform: uppercase;
   letter-spacing: 0.02em;
   min-height: 0;
+  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .fateseal-cell--void {
-  background: radial-gradient(circle at 50% 45%, #1a1528, #050306 72%);
-  border-color: rgba(120, 90, 160, 0.45);
-  color: #6a5a8a;
+  background: radial-gradient(circle at center, #2b0c47 0%, #050208 100%);
+  border-color: #a855f7;
+  color: #e9d5ff;
+  text-shadow: 0 0 8px rgba(168, 85, 247, 0.7);
   animation: fateseal-void-pull 2.8s ease-in-out infinite;
 }
 
@@ -136,11 +139,12 @@
   0%,
   100% {
     transform: scale(1);
-    box-shadow: inset 0 0 0 1px rgba(80, 60, 120, 0.2);
+    box-shadow: inset 0 0 12px rgba(168, 85, 247, 0.2), 0 0 8px rgba(168, 85, 247, 0.15);
   }
   50% {
     transform: scale(1.03);
-    box-shadow: inset 0 0 22px rgba(40, 20, 80, 0.35);
+    box-shadow: inset 0 0 22px rgba(168, 85, 247, 0.5), 0 0 15px rgba(168, 85, 247, 0.35);
+    border-color: #c084fc;
   }
 }
 
@@ -162,13 +166,17 @@
 }
 
 .fateseal-cell--scatter {
-  color: var(--fs-crimson);
-  border-color: rgba(139, 28, 28, 0.5);
+  color: #ff80a0;
+  border-color: #f43f5e;
+  text-shadow: 0 0 6px rgba(244, 63, 94, 0.8);
+  box-shadow: inset 0 0 10px rgba(244, 63, 94, 0.45), 0 0 12px rgba(244, 63, 94, 0.35);
 }
 
 .fateseal-cell--wild {
-  color: #e8eef5;
-  border-color: rgba(200, 208, 218, 0.45);
+  color: #e9d5ff;
+  border-color: #c084fc;
+  text-shadow: 0 0 6px rgba(192, 132, 252, 0.8);
+  box-shadow: inset 0 0 10px rgba(192, 132, 252, 0.45), 0 0 12px rgba(192, 132, 252, 0.35);
 }
 
 .fateseal-cell--cascadePulse {

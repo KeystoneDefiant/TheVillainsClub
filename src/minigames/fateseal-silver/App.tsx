@@ -14,6 +14,8 @@ import {
 } from "@mantine/core";
 import { AnimatePresence, motion } from "framer-motion";
 import { computeFatesealReturn, type FatesealShellBinding } from "@/game/sessionSettlement";
+import { UnifiedGameHeader } from "@/components/ui/UnifiedGameHeader";
+import { GameSettingsModal } from "@/components/ui/GameSettingsModal";
 import {
   FATESEAL_STANDARD_SYMBOLS,
   crossroadsNextOmenAdditionCostCredits,
@@ -254,6 +256,7 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
   const [sympatheticFlash, setSympatheticFlash] = useState<{ payout: number; id: number } | null>(null);
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [cashOutOpen, setCashOutOpen] = useState(false);
+  const [settingsOpened, setSettingsOpened] = useState(false);
   const [silverPick, setSilverPick] = useState<FatesealStandardId>("dagger");
   const [omenAddPick, setOmenAddPick] = useState<FatesealStandardId>("chalice");
   const [markPick, setMarkPick] = useState<FatesealStandardId>("dagger");
@@ -702,16 +705,7 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
     </Paper>
   );
 
-  const headerWalletPaper = (
-    <Paper radius="md" px="xs" py={6} withBorder style={{ ...panelPaper, minWidth: 88 }}>
-      <Text size="xs" c="dimmed">
-        In hand
-      </Text>
-      <Text fw={700} c={clubTokens.text.primary}>
-        {engine.sessionWallet.toLocaleString()}
-      </Text>
-    </Paper>
-  );
+
 
   const renderGridCells = () => (
     <div className="fateseal-grid-wrap">
@@ -806,22 +800,30 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
   return (
     <Box className="fateseal-root" data-testid="fateseal-root">
       <Stack gap="xs" className="fateseal-frame">
-        <Group justify="space-between" align="center" wrap="nowrap" className="fateseal-topbar">
-          <Stack gap={0}>
-            <Title order={2} size="h4" c={clubTokens.text.primary} style={{ fontFamily: "Georgia, serif" }}>
-              Fateseal Silver
-            </Title>
-            <Text size="xs" c={clubTokens.text.muted}>
-              Cascading ritual — prophecy, the seal, crossroads ledger.
-            </Text>
-          </Stack>
-          <Group gap="xs" wrap="nowrap">
-            <div className="fateseal-spin-badge" aria-label="Completed rituals">
-              {engine.spinCount}
-            </div>
-            {headerWalletPaper}
-          </Group>
-        </Group>
+        <UnifiedGameHeader
+          gameTitle="Fateseal Silver"
+          walletAmount={engine.sessionWallet}
+          currentRound={engine.spinCount}
+          roundLabel="Rituals"
+          onShowSettings={() => setSettingsOpened(true)}
+          extraButtons={
+            phase !== "altar" ? (
+              <Button
+                type="button"
+                size="xs"
+                variant="filled"
+                color="grape"
+                radius="md"
+                px="xs"
+                onClick={goToAltarFromRitual}
+                title="Return to prophecy altar"
+                styles={{ label: { fontWeight: 700, color: clubTokens.text.primary } }}
+              >
+                🔮 Altar
+              </Button>
+            ) : null
+          }
+        />
 
         <AnimatePresence mode="wait">
           <motion.section
@@ -1293,6 +1295,8 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
           </Group>
         </Stack>
       </Modal>
+
+      <GameSettingsModal opened={settingsOpened} onClose={() => setSettingsOpened(false)} />
 
       {sympatheticFlash ? (
         <Box

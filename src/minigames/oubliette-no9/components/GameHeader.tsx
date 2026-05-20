@@ -13,6 +13,8 @@ interface GameHeaderProps {
   hideFailureInHeader?: boolean;
   onShowPayoutTable?: () => void;
   onShowSettings?: () => void;
+  onAbandonRun?: () => void;
+  extraButtons?: React.ReactNode;
 }
 
 export function GameHeader({
@@ -23,11 +25,13 @@ export function GameHeader({
   hideFailureInHeader,
   onShowPayoutTable,
   onShowSettings,
+  onAbandonRun,
+  extraButtons,
 }: GameHeaderProps) {
   const failureDescription =
     failureState && gameState ? getFailureStateDescription(failureState, gameState) : null;
 
-  const extraButtons = onShowPayoutTable ? (
+  const defaultExtraButtons = onShowPayoutTable ? (
     <Button
       type="button"
       size="xs"
@@ -43,6 +47,13 @@ export function GameHeader({
     </Button>
   ) : null;
 
+  const combinedExtraButtons = (
+    <>
+      {extraButtons}
+      {defaultExtraButtons}
+    </>
+  );
+
   return (
     <UnifiedGameHeader
       gameTitle="Oubliette No. 9"
@@ -51,8 +62,9 @@ export function GameHeader({
       currentRound={round}
       roundLabel="Round"
       onShowSettings={onShowSettings}
+      onAbandonRun={onAbandonRun}
       failureMessage={!hideFailureInHeader ? failureDescription : null}
-      extraButtons={extraButtons}
+      extraButtons={combinedExtraButtons}
     />
   );
 }

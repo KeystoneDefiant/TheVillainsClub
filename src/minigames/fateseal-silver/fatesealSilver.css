@@ -264,6 +264,22 @@
   }
 }
 
+.fateseal-cell--dropOut {
+  animation: fateseal-cell-drop-out 280ms cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards;
+  animation-delay: calc(var(--fs-drop-row, 0) * 30ms);
+  z-index: 1;
+}
+
+@keyframes fateseal-cell-drop-out {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(130%);
+    opacity: 0;
+  }
+}
 .fateseal-payout-flyoff {
   position: absolute;
   left: 50%;

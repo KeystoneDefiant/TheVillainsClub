@@ -6,6 +6,7 @@ import {
   Loader,
   Modal,
   Paper,
+  Progress,
   SimpleGrid,
   Stack,
   Text,
@@ -119,7 +120,7 @@ function splitCascadeStepPayout(payout: number, prophecyHits: number): number[] 
 }
 
 /** TODO.md — slightly slower cascade choreography on motion-enabled builds. */
-const RITUAL_TIMING_SCALE = 1.15;
+const RITUAL_TIMING_SCALE = 0.85;
 
 const CASCADE_FOCUS_MS = Math.round(140 * RITUAL_TIMING_SCALE);
 const CASCADE_EMIT_AFTER_MS = Math.round(100 * RITUAL_TIMING_SCALE);
@@ -168,6 +169,7 @@ type CascadeOverlay = {
   prophecyKeys: ReadonlySet<string>;
   /** Cells that should play the drop-in CSS animation against the current grid. */
   dropInKeys: ReadonlySet<string>;
+  dropOutKeys?: ReadonlySet<string>;
   payouts: readonly { cellKey: string; text: string }[];
 };
 
@@ -252,7 +254,7 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
   const [busy, setBusy] = useState(false);
   const [crossroadsVisit, setCrossroadsVisit] = useState<CrossroadsVisitFlags>(emptyCrossroadsVisit);
   const [lastFeed, setLastFeed] = useState<string[]>([]);
-  const [lastSpinTotalPayout, setLastSpinTotalPayout] = useState(0);
+  const [currentSpinRollingPayout, setCurrentSpinRollingPayout] = useState(0);
   const [sympatheticFlash, setSympatheticFlash] = useState<{ payout: number; id: number } | null>(null);
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [cashOutOpen, setCashOutOpen] = useState(false);
@@ -418,7 +420,6 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
       if (result.totalPayout > 0) {
         lines.push(`Spin total +${result.totalPayout.toLocaleString()}`);
       }
-      setLastSpinTotalPayout(result.totalPayout);
       const sym = result.log.find((l): l is Extract<typeof l, { kind: "sympathetic_vibrations" }> => l.kind === "sympathetic_vibrations");
       if (sym) {
         setSympatheticFlash({ payout: sym.payout, id: Date.now() });
@@ -434,6 +435,8 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
         setPhase("ledger");
       }
     };
+    
+    setCurrentSpinRollingPayout(0);
 
     const frames = result.cascadeKeyframes;
 
@@ -449,14 +452,25 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
      */
     const postFillGrid =
       frames.length > 0 ? frames[0]!.gridBeforeRemoval : result.nextState.grid;
-    const fillDropIns = diffDropInKeys(preSpinGrid, postFillGrid);
-    /**
-     * Even when no cell symbol changed (e.g. an empty initial grid scenario
-     * in tests), animate the whole tablet so the fill always reads as "new"
-     * to the player.
-     */
-    const fillKeys =
-      fillDropIns.size > 0 ? fillDropIns : allCellKeys(postFillGrid);
+    
+    // Always fill the whole grid to complete the cascade effect
+    const fillKeys = allCellKeys(postFillGrid);
+
+    const DROP_OUT_MS = Math.round(400 * RITUAL_TIMING_SCALE);
+
+    cascadeTimersRef.current.push(
+      window.setTimeout(() => {
+        setCascadeOverlay({
+          depth: -2,
+          grid: dupGrid(preSpinGrid),
+          removalKeys: new Set<string>(),
+          prophecyKeys: new Set<string>(),
+          dropInKeys: new Set<string>(),
+          dropOutKeys: allCellKeys(preSpinGrid),
+          payouts: [],
+        });
+      }, 0),
+    );
 
     cascadeTimersRef.current.push(
       window.setTimeout(() => {
@@ -468,14 +482,19 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
           dropInKeys: fillKeys,
           payouts: [],
         });
-      }, 0),
+      }, DROP_OUT_MS),
     );
 
-    let at = FILL_DURATION_MS;
+    let at = FILL_DURATION_MS + DROP_OUT_MS;
+    let rollingAcc = 0;
+    
     for (const fr of frames) {
       const removals = new Set(fr.removedKeys);
       const prophecies = new Set(fr.prophecyMatchKeys);
       const refillDropIns = diffDropInKeys(fr.gridBeforeRemoval, fr.gridAfterCascade);
+      
+      rollingAcc += fr.payout;
+      const thisStepAcc = rollingAcc;
 
       cascadeTimersRef.current.push(
         window.setTimeout(() => {
@@ -509,6 +528,7 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
             dropInKeys: new Set<string>(),
             payouts,
           });
+          setCurrentSpinRollingPayout(thisStepAcc);
         }, at + CASCADE_FOCUS_MS + CASCADE_EMIT_AFTER_MS),
       );
 
@@ -625,85 +645,6 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
   const displayGrid = cascadeOverlay?.grid ?? engine.grid;
   const presence = fatesealPhasePresence(reduceMotion);
 
-  const ritualSidePanel = (
-    <Paper
-      radius="md"
-      p="sm"
-      withBorder
-      style={{
-        ...panelPaper,
-        alignSelf: "stretch",
-        maxHeight: 440,
-        overflow: "hidden",
-        display: "flex",
-        flexDirection: "column",
-        minWidth: 200,
-        flex: "1 1 200px",
-      }}
-      className="fateseal-ritual-side"
-      aria-label="Round stats and recent ledger lines"
-    >
-      <Text size="xs" tt="uppercase" fw={700} c={clubTokens.text.muted}>
-        Table readout
-      </Text>
-      <Text size="xs" mt={4}>
-        Base bet (stake):{" "}
-        <Text span fw={700}>
-          {engine.baseBet.toLocaleString()}
-        </Text>
-      </Text>
-      <Text size="xs">
-        Last spin total:{" "}
-        <Text span fw={700}>
-          {lastSpinTotalPayout.toLocaleString()}
-        </Text>
-      </Text>
-      <Text size="xs" c="dimmed">
-        Active omens:{" "}
-        <Text span fw={600}>
-          {engine.activeProphecy.length > 0
-            ? engine.activeProphecy.map((p) => SYMBOL_LABEL[p]).join(", ")
-            : "—"}
-        </Text>
-      </Text>
-      <Text size="xs" c="dimmed">
-        Free ritual meter: {engine.scatterMeter} / {fatesealScatterRitual.meterToTrigger}
-      </Text>
-      <Text size="xs" c="dimmed">
-        Crossroads: {bonusSymbolsUntilCrossroads} / {crossroadsScatterThreshold} scatters (final grid)
-      </Text>
-      <Text size="xs" c="dimmed">
-        Wild slots (paid spins left):{" "}
-        {engine.wildReelPaidSpinTimers.length > 0 ? engine.wildReelPaidSpinTimers.join(" · ") : "—"}
-      </Text>
-      <Text size="xs" c="dimmed">
-        Dead slots (paid spins left):{" "}
-        {engine.deadReelPaidSpinTimers.length > 0 ? engine.deadReelPaidSpinTimers.join(" · ") : "—"}
-      </Text>
-      <Text size="xs" c="dimmed">
-        Mark:{" "}
-        {engine.markedOmenSymbol
-          ? `${SYMBOL_LABEL[engine.markedOmenSymbol]} (${engine.markedOmenPaidSpinsLeft} paid spins)`
-          : "—"}
-      </Text>
-      <Text size="xs" fw={700} mt="sm" tt="uppercase" c={clubTokens.text.muted}>
-        Recent lines
-      </Text>
-      <Stack gap={4} mt={4} style={{ overflowY: "auto", minHeight: 0, flex: 1 }}>
-        {lastFeed.length === 0 ? (
-          <Text size="xs" c="dimmed" fs="italic">
-            Spin to imprint the side scroll.
-          </Text>
-        ) : (
-          lastFeed.slice(0, 20).map((line, idx) => (
-            <Text key={`side-${idx}:${line}`} size="xs" c={clubTokens.text.secondary} lineClamp={2}>
-              {line}
-            </Text>
-          ))
-        )}
-      </Stack>
-    </Paper>
-  );
 
 
 
@@ -725,6 +666,7 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
             const removing = cascadeOverlay?.removalKeys.has(ck);
             const prophecyHit = cascadeOverlay?.prophecyKeys.has(ck);
             const dropIn = cascadeOverlay?.dropInKeys.has(ck);
+            const dropOut = cascadeOverlay?.dropOutKeys?.has(ck);
             const flyoffs =
               cascadeOverlay?.payouts.filter((p) => p.cellKey === ck && p.text) ?? [];
             /**
@@ -733,9 +675,9 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
              * receives a new tile (otherwise React keeps the existing DOM
              * node and the animation is skipped).
              */
-            const cellKey = dropIn ? `${ck}@${cascadeOverlay?.depth ?? 0}` : ck;
-            const dropInStyle =
-              dropIn && !reduceMotion
+            const cellKey = (dropIn || dropOut) ? `${ck}@${cascadeOverlay?.depth ?? 0}` : ck;
+            const dropStyle =
+              (dropIn || dropOut) && !reduceMotion
                 ? ({ ["--fs-drop-row" as string]: r } as CSSProperties)
                 : undefined;
             return (
@@ -750,10 +692,11 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
                   !reduceMotion && removing ? "fateseal-cell--cascadePulse" : "",
                   !reduceMotion && prophecyHit && cascadeOverlay?.payouts.length ? "fateseal-cell--prophecyBloom" : "",
                   !reduceMotion && dropIn ? "fateseal-cell--dropIn" : "",
+                  !reduceMotion && dropOut ? "fateseal-cell--dropOut" : "",
                 ]
                   .filter(Boolean)
                   .join(" ")}
-                style={dropInStyle}
+                style={dropStyle}
               >
                 {SYMBOL_LABEL[sym]}
                 {flyoffs.map((p, fi) => (
@@ -770,6 +713,18 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
           }),
         )}
       </div>
+      {currentSpinRollingPayout > 0 && (
+        <Text
+          fw={900}
+          size="xl"
+          c="yellow"
+          ta="center"
+          mt="sm"
+          style={{ textShadow: "0 0 10px rgba(255, 215, 0, 0.5)" }}
+        >
+          +{currentSpinRollingPayout.toLocaleString()}
+        </Text>
+      )}
     </div>
   );
 
@@ -806,6 +761,7 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
           currentRound={engine.spinCount}
           roundLabel="Rituals"
           onShowSettings={() => setSettingsOpened(true)}
+          onAbandonRun={props?.onAbandonRun}
           extraButtons={
             phase !== "altar" ? (
               <Button
@@ -897,7 +853,22 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
 
                 <Group align="flex-start" justify="center" wrap="wrap" gap="md" grow>
                   <div className="fateseal-felt">
-                    <Stack gap="md" align="center">
+                    <Stack gap="md" align="center" style={{ width: "100%" }}>
+                      <Stack gap={2} style={{ width: "100%" }}>
+                        <Group justify="space-between">
+                          <Text size="xs" c="dimmed">Crossroads progress</Text>
+                          <Text size="xs" fw={700} c="grape">
+                            {engine.crossroadsBonusAccum} / {crossroadsScatterThreshold} scatters
+                          </Text>
+                        </Group>
+                        <Progress
+                          value={(engine.crossroadsBonusAccum / crossroadsScatterThreshold) * 100}
+                          color="grape"
+                          size="sm"
+                          radius="xl"
+                          style={{ background: "rgba(0, 0, 0, 0.4)" }}
+                        />
+                      </Stack>
                       {renderGridCells()}
                       <Group justify="center" gap="xs" wrap="wrap" mt="xs">
                       {engine.freeRitualSpinsLeft > 0 ? (
@@ -926,10 +897,12 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
                               variant="light"
                               color="grape"
                               data-testid="fateseal-bet-min"
-                              disabled={busy || atCrossroads}
+                              disabled={busy || atCrossroads || engine.deadReelPaidSpinTimers.length > 0}
                               onClick={() => handleSpin(betChipOptions.min)}
                             >
-                              Min ({betChipOptions.min.toLocaleString()})
+                              {engine.deadReelPaidSpinTimers.length > 0
+                                ? "Min (locked)"
+                                : `Min (${betChipOptions.min.toLocaleString()})`}
                             </Button>
                             <Button
                               size="xs"
@@ -982,7 +955,6 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
                     ) : null}
                   </Stack>
                 </div>
-                {ritualSidePanel}
               </Group>
             </Stack>
             ) : null}

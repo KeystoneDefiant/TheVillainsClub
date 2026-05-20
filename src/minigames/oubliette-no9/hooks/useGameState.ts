@@ -203,8 +203,11 @@ export function useGameState(shellBinding?: OublietteShellBinding | null) {
       const previousTotalCost = adjustedBet * adjustedHandCount;
       const canAffordPrevious = newCredits >= previousTotalCost;
 
-      // Only adjust if player can't afford their previous bet/hand count
-      if (!canAffordPrevious) {
+      // Check if shop should appear next round
+      const showShopNextRound = newRound % mode.shopFrequency === 0;
+
+      // Only adjust if player can't afford their previous bet/hand count (and not going to shop)
+      if (!canAffordPrevious && !showShopNextRound) {
         // Auto-adjust bet and hand count if player can't afford current bet
         // Step 1: Try reducing bet size until affordable (but not below minimum)
         const maxAffordableBet = Math.floor(newCredits / adjustedHandCount);
@@ -219,9 +222,9 @@ export function useGameState(shellBinding?: OublietteShellBinding | null) {
         }
       }
 
-      // Step 3: If still can't afford, trigger game over
+      // Step 3: If still can't afford, trigger game over (unless going to shop)
       let gameOverReason: GameOverReason | null = null;
-      if (newCredits < adjustedBet * adjustedHandCount) {
+      if (newCredits < adjustedBet * adjustedHandCount && !showShopNextRound) {
         gameOver = true;
         gameOverReason = 'insufficient-credits';
       }
@@ -253,8 +256,6 @@ export function useGameState(shellBinding?: OublietteShellBinding | null) {
         }
       }
 
-      // Check if shop should appear next round and generate options if so
-      const showShopNextRound = newRound % mode.shopFrequency === 0;
       const selectedShopOptions = showShopNextRound
         ? selectShopOptionsByRarity(getShopModeForCredits(newCredits))
         : [];
@@ -474,6 +475,29 @@ export function useGameState(shellBinding?: OublietteShellBinding | null) {
 
   const proceedFromResults = useCallback(() => {
     setState((prev) => {
+      let newBet = prev.betAmount;
+      let newHandCount = prev.selectedHandCount;
+      let gameOver = prev.gameOver;
+      let gameOverReason = prev.gameOverReason;
+
+      if (!gameOver) {
+        const canAffordPrevious = prev.credits >= newBet * newHandCount;
+        if (!canAffordPrevious) {
+          const maxAffordableBet = Math.floor(prev.credits / newHandCount);
+          if (maxAffordableBet >= prev.minimumBet) {
+            newBet = maxAffordableBet;
+          } else {
+            newBet = prev.minimumBet;
+            newHandCount = Math.max(1, Math.floor(prev.credits / newBet));
+            newHandCount = Math.min(prev.handCount, newHandCount);
+          }
+        }
+        if (prev.credits < newBet * newHandCount) {
+          gameOver = true;
+          gameOverReason = 'insufficient-credits';
+        }
+      }
+
       // Always hide the shop and go to PreDraw
       return {
         ...prev,
@@ -484,6 +508,10 @@ export function useGameState(shellBinding?: OublietteShellBinding | null) {
         creditsAtShopOpen: null,
         prevRoundMinimumBet: null,
         shopDisplayBetAmount: null,
+        betAmount: newBet,
+        selectedHandCount: newHandCount,
+        gameOver,
+        gameOverReason,
       };
     });
   }, []);

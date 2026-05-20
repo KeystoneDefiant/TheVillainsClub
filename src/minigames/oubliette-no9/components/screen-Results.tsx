@@ -25,6 +25,7 @@ interface ResultsProps {
   showShopNextRound?: boolean;
   onShowPayoutTable?: () => void;
   onShowSettings?: () => void;
+  onAbandonRun?: () => void;
 }
 
 function formatMultiplier(multiplier: number): string {
@@ -74,6 +75,7 @@ export function Results({
   showShopNextRound = false,
   onShowPayoutTable,
   onShowSettings,
+  onAbandonRun,
 }: ResultsProps) {
   const {
     comboProgression,
@@ -127,6 +129,7 @@ export function Results({
           gameState={gameState}
           onShowPayoutTable={onShowPayoutTable}
           onShowSettings={onShowSettings}
+          onAbandonRun={onAbandonRun}
         />
 
         <Stack className="oubliette-scroll-section" gap="xs" style={{ flex: 1 }}>

@@ -65,6 +65,16 @@ export function OublietteNo9Page({ standalone = false }: OublietteNo9PageProps) 
     [endSession, launchedStandalone, navigate],
   );
 
+  const handleAbandonRun = useCallback(() => {
+    isReturningToClubRef.current = true;
+    useClubWallet.getState().forfeitActiveSession();
+    if (launchedStandalone) {
+      navigate(OUBLIETTE_STANDALONE_ROUTE, { replace: true });
+    } else {
+      navigate("/bar", { replace: true });
+    }
+  }, [launchedStandalone, navigate]);
+
   const shellProps = useMemo((): OublietteShellBinding | null => {
     if (!activeSession || activeSession.gameId !== "oubliette_no9") return null;
     const savedState =
@@ -76,8 +86,9 @@ export function OublietteNo9Page({ standalone = false }: OublietteNo9PageProps) 
       gameModeId: activeSession.gameModeId,
       savedState,
       onReturnToClubMenu: handleReturnToClub,
+      onAbandonRun: handleAbandonRun,
     };
-  }, [activeSession, handleReturnToClub]);
+  }, [activeSession, handleReturnToClub, handleAbandonRun]);
 
   const oublietteGameMode = useMemo(
     () => resolveOublietteGameMode(activeSession?.gameModeId),

@@ -35,6 +35,7 @@ interface PreDrawProps {
   onEndRun: (reason?: GameOverReason) => void;
   onShowPayoutTable?: () => void;
   onShowSettings?: () => void;
+  onAbandonRun?: () => void;
 }
 
 const EARLY_CASH_OUT_ROUND = 31;
@@ -65,6 +66,7 @@ export function PreDraw({
   onEndRun,
   onShowPayoutTable,
   onShowSettings,
+  onAbandonRun,
 }: PreDrawProps) {
   const [showEndRunConfirm, setShowEndRunConfirm] = useState(false);
 
@@ -113,6 +115,7 @@ export function PreDraw({
           hideFailureInHeader
           onShowPayoutTable={onShowPayoutTable}
           onShowSettings={onShowSettings}
+          onAbandonRun={onAbandonRun}
         />
 
         <Paper p={{ base: "sm", sm: "lg" }} radius="lg" {...panelPaper} style={{ flex: 1, display: "flex" }}>

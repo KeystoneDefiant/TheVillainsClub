@@ -10,6 +10,7 @@ export type StartClubSessionResult =
 
 type ClubWalletState = {
   clubBalance: number;
+  playerName: string | null;
   activeSession: TableSession | null;
   hasSave: boolean;
   startSession: (input: {
@@ -25,6 +26,7 @@ type ClubWalletState = {
   endSession: (returned: number | ClubTableReturnDetail) => void;
   creditClub: (amount: number) => void;
   setHasSave: (value: boolean) => void;
+  setPlayerName: (name: string) => void;
   /** Club balance → default, clear table session and resume stub. Does not touch audio or other prefs. */
   resetWalletAndSession: () => void;
   /**
@@ -40,6 +42,7 @@ export const useClubWallet = create<ClubWalletState>()(
   persist(
     (set, get) => ({
       clubBalance: villainsGameDefaults.defaultClubBalance,
+      playerName: null,
       activeSession: null,
       hasSave: false,
       startSession: (input) => {
@@ -77,6 +80,7 @@ export const useClubWallet = create<ClubWalletState>()(
         set({ clubBalance: get().clubBalance + amount });
       },
       setHasSave: (value) => set({ hasSave: value }),
+      setPlayerName: (name) => set({ playerName: name }),
       forfeitActiveSession: () => {
         const { activeSession } = get();
         if (!activeSession) return;
@@ -86,6 +90,7 @@ export const useClubWallet = create<ClubWalletState>()(
         set({
           clubBalance: villainsGameDefaults.defaultClubBalance,
           activeSession: null,
+          playerName: null,
           hasSave: false,
         }),
     }),
@@ -94,6 +99,7 @@ export const useClubWallet = create<ClubWalletState>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (s) => ({
         clubBalance: s.clubBalance,
+        playerName: s.playerName,
         activeSession: s.activeSession,
         hasSave: s.hasSave,
       }),

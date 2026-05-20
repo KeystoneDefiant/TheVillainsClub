@@ -8,4 +8,7 @@ import { useMetaProgression } from "./metaProgressionStore";
 export function resetShellGameProgress(): void {
   useClubWallet.getState().resetWalletAndSession();
   useMetaProgression.getState().resetMetaProgression();
+  
+  // Force a full reload to the root to restart the intro and onboarding flows
+  window.location.href = import.meta.env.BASE_URL || "/";
 }

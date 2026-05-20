@@ -374,7 +374,20 @@
 
 @keyframes yi-dice-rollAcross {
   0% {
-    transform: translate(0, 0) rotate(0deg) scale(1);
+    transform: translate(0, 0) rotate(0deg) scale(1.8);
+    animation-timing-function: cubic-bezier(0.33, 1, 0.68, 1);
+  }
+  35% {
+    transform: translate(calc(var(--yi-roll-dx, 120px) * 0.5), calc(var(--yi-roll-dy, -180px) * 0.5)) rotate(270deg) scale(1);
+    animation-timing-function: cubic-bezier(0.32, 0, 0.67, 0);
+  }
+  65% {
+    transform: translate(calc(var(--yi-roll-dx, 120px) * 0.8), calc(var(--yi-roll-dy, -180px) * 0.8)) rotate(540deg) scale(1.3);
+    animation-timing-function: cubic-bezier(0.33, 1, 0.68, 1);
+  }
+  85% {
+    transform: translate(calc(var(--yi-roll-dx, 120px) * 0.95), calc(var(--yi-roll-dy, -180px) * 0.95)) rotate(680deg) scale(1.05);
+    animation-timing-function: cubic-bezier(0.32, 0, 0.67, 0);
   }
   100% {
     transform: translate(var(--yi-roll-dx, 120px), var(--yi-roll-dy, -180px)) rotate(720deg) scale(1.05);

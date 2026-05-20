@@ -50,7 +50,7 @@ describe('Shop Component', () => {
     it('should render the shop modal', () => {
       render(<Shop {...mockProps} />);
       
-      expect(screen.getByRole('heading', { name: /Shop/i })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /Oubliette No. 9/i })).toBeInTheDocument();
     });
 
     it('should display current credits', () => {
@@ -61,7 +61,7 @@ describe('Shop Component', () => {
 
     it('should display credits needed for next round', () => {
       render(<Shop {...mockProps} />);
-      const label = screen.getByText(/Credits needed for next round/i);
+      const label = screen.getByText(/Next round cost/i);
       expect(label).toBeInTheDocument();
       // Next round cost = betAmount * selectedHandCount (from config)
       const expectedCost = mode.startingBet * mode.startingHandCount;
@@ -70,7 +70,7 @@ describe('Shop Component', () => {
 
     it('should use the completed-round bet snapshot when upcoming minimum is unavailable', () => {
       render(<Shop {...mockProps} betAmount={15} selectedHandCount={8} shopDisplayBetAmount={10} />);
-      expect(screen.getByText(/Credits needed for next round/i).closest('div')?.textContent).toMatch(/80/);
+      expect(screen.getByText(/Next round cost/i).closest('div')?.textContent).toMatch(/80/);
     });
 
     it('should reflect the already-advanced upcoming minimum bet in the round 18 shop', () => {
@@ -98,7 +98,7 @@ describe('Shop Component', () => {
           shopDisplayBetAmount={completedRoundBet}
         />,
       );
-      const label = screen.getByText(/Credits needed for next round/i);
+      const label = screen.getByText(/Next round cost/i);
       expect(label.closest('div')?.textContent).toContain(expectedCost.toLocaleString());
       expect(label.closest('div')?.textContent).not.toContain(
         (completedRoundBet * selectedHandCount).toLocaleString(),
@@ -436,7 +436,7 @@ describe('Shop Component', () => {
       
       // Shop is a full-screen panel, not necessarily role="dialog"
       const heading = container.querySelector('h2');
-      expect(heading?.textContent).toMatch(/Shop/i);
+      expect(heading?.textContent).toMatch(/Oubliette No. 9/i);
     });
 
     it('should have descriptive button labels', () => {

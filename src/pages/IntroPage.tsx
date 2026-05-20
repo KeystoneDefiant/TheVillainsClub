@@ -9,6 +9,7 @@ import { useClubFlowStore } from "@/game/clubFlowStore";
 import { useIntroToBarTransition } from "@/game/introToBarTransitionStore";
 import { useMotionPresetStore } from "@/motion/motionPresetStore";
 import { usePrefersReducedMotion } from "@/motion/usePrefersReducedMotion";
+import { useClubWallet } from "@/game/clubWalletStore";
 
 export function IntroPage() {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ export function IntroPage() {
   const beginIntroToBar = useIntroToBarTransition((s) => s.begin);
   const [phase, setPhase] = useState<"enter" | "hold" | "prompt">("enter");
   const [skipped, setSkipped] = useState(false);
+  const [variant] = useState<"A" | "B">(() => (Math.random() > 0.5 ? "A" : "B"));
 
   const greyCount = VC_LOGO_GREY_LETTER_COUNT;
   const greyRevealDelaySec = useMemo(
@@ -60,12 +62,13 @@ export function IntroPage() {
 
   const enterClub = useCallback(() => {
     setHasEnteredClub(true);
+    const dest = useClubWallet.getState().playerName ? "/bar" : "/onboarding";
     if (reduceMotion) {
-      navigate("/bar", { replace: true });
+      navigate(dest, { replace: true });
       return;
     }
     beginIntroToBar();
-    navigate("/bar", { replace: true });
+    navigate(dest, { replace: true });
   }, [navigate, reduceMotion, setHasEnteredClub, beginIntroToBar]);
 
   const easing = preset.easing;
@@ -123,16 +126,45 @@ export function IntroPage() {
             style={introShellStyle}
           >
             <Box mb="sm" className={`shell-intro-logo ${phase === "prompt" ? "shell-intro-logo--raised" : ""}`}>
-              <VcLogoIntroMark
-                scale={1}
-                zoomDurationSec={logoZoomSec}
-                letterDrawSec={preset.introLogoLetterDrawSec}
-                easing={easing}
-                greyRevealDelaySec={greyRevealDelaySec}
-                introRedDrawSec={preset.introRedDrawSec}
-                introRedNeonSec={preset.introRedNeonSec}
-                introRedGlowFadeSec={preset.introRedGlowFadeSec}
-              />
+              {variant === "A" ? (
+                <VcLogoIntroMark
+                  scale={1}
+                  zoomDurationSec={logoZoomSec}
+                  letterDrawSec={preset.introLogoLetterDrawSec}
+                  easing={easing}
+                  greyRevealDelaySec={greyRevealDelaySec}
+                  introRedDrawSec={preset.introRedDrawSec}
+                  introRedNeonSec={preset.introRedNeonSec}
+                  introRedGlowFadeSec={preset.introRedGlowFadeSec}
+                />
+              ) : (
+                <motion.img
+                  src={`${import.meta.env.BASE_URL || "/"}images/logos/VC Logo - Color.svg`}
+                  alt="The Villains Club"
+                  style={{ width: "100%", maxWidth: 600, height: "auto" }}
+                  initial={{ opacity: 0, scale: 0.95, filter: "drop-shadow(0 0 0px rgba(214, 97, 102, 0))" }}
+                  animate={
+                    phase === "enter"
+                      ? { opacity: 1, scale: 1, filter: "drop-shadow(0 0 15px rgba(214, 97, 102, 0.4))" }
+                      : phase === "hold"
+                        ? {
+                            opacity: 1,
+                            scale: [1, 1.02, 1],
+                            filter: [
+                              "drop-shadow(0 0 15px rgba(214, 97, 102, 0.4))",
+                              "drop-shadow(0 0 30px rgba(214, 97, 102, 0.7))",
+                              "drop-shadow(0 0 15px rgba(214, 97, 102, 0.4))",
+                            ],
+                          }
+                        : { opacity: 1, scale: 1, filter: "drop-shadow(0 0 15px rgba(214, 97, 102, 0.4))" }
+                  }
+                  transition={
+                    phase === "hold"
+                      ? { duration: 2, repeat: Infinity, ease: "easeInOut" }
+                      : { duration: 1.5, ease: easing }
+                  }
+                />
+              )}
             </Box>
             {phase === "prompt" ? (
               <motion.button

@@ -10,6 +10,7 @@ export interface UnifiedGameHeaderProps {
   roundLabel?: string; // e.g. "Round", "Spins", "Rolls", "Rituals". Defaults to "Round"
   onShowSettings?: () => void;
   failureMessage?: string | null;
+  onAbandonRun?: () => void;
   extraButtons?: ReactNode;
 }
 
@@ -27,6 +28,7 @@ export function UnifiedGameHeader({
   roundLabel = "Round",
   onShowSettings,
   failureMessage,
+  onAbandonRun,
   extraButtons,
 }: UnifiedGameHeaderProps) {
   const defaultLogo = `${import.meta.env.BASE_URL || "/"}images/logos/VC Logo - Color.svg`;
@@ -107,6 +109,22 @@ export function UnifiedGameHeader({
 
         {/* Right Side: Action buttons */}
         <Group gap={6} wrap="nowrap" style={{ flexShrink: 0, marginLeft: "auto" }}>
+          {onAbandonRun ? (
+            <Button
+              type="button"
+              size="xs"
+              variant="subtle"
+              color="red"
+              radius="md"
+              h={36}
+              px="xs"
+              onClick={onAbandonRun}
+              title="Abandon run"
+              styles={{ root: { ...chipStyle, color: clubTokens.text.accent } }}
+            >
+              Abandon
+            </Button>
+          ) : null}
           {extraButtons}
           {onShowSettings ? (
             <Button

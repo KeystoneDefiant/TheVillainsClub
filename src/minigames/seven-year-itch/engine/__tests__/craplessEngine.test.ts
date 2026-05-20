@@ -60,9 +60,10 @@ describe("resolveRoll crapless", () => {
     };
     const b0 = { ...initialBets(), passLine: 100, freeOdds: 60, place: { 6: 30 } };
     const r = resolveRoll(t0, b0, roll(3, 3));
-    expect(r.walletDelta).toBe(397);
+    expect(r.walletDelta).toBe(367);
     expect(r.nextTable.phase).toBe("comeOut");
     expect(r.nextBets.passLine).toBe(0);
+    expect(r.nextBets.place[6]).toBe(30);
   });
 
   it("place hit (not point) pays profit only; stake rides", () => {

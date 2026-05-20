@@ -85,7 +85,7 @@ export const fatesealProgressionRules = {
      * Crossroads opens after this many **scatter** symbols land on the **final
      * settled grid** of completed spins (v1 stand-in for “bonus symbols revealed”).
      */
-    scatterSymbolsToTriggerShop: 15,
+    scatterSymbolsToTriggerShop: 4,
   },
   linking: {
     /** Non–actively-prophesied standards need this many orthogonally linked tiles to clear. */
@@ -114,9 +114,12 @@ export const fatesealProgressionRules = {
   },
   purchasedReels: {
     wildRitualSpins: 3,
+    wildChancePerActiveReel: 0.20,
     deadRitualSpins: 5,
     markedRitualSpins: 3,
     markedSymbolPayoutMultiplier: 1.5,
+    /** Payout scaling multiplier per symbol as the count of active omens increases (1, 2, 3, 4+). */
+    omenScalingFactors: [1.0, 0.7, 0.55, 0.45],
     /** Free Ritual spins (zero bet) do not decrement Crossroads wild/dead/mark spin timers. */
     bonusSpinsExcludeFromReelDecay: true,
   },
@@ -154,7 +157,7 @@ export const fatesealGameConfig = {
     chipIncrement: 10,
     minBaseBet: 100,
     /** Max base bet as a fraction of current session credits (session wallet). */
-    maxBaseBetFractionOfSession: 0.25 as number,
+    maxBaseBetFractionOfSession: 0.5 as number,
   },
   gameModes: {
     normalGame: {},

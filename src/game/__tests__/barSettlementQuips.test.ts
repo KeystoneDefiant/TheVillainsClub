@@ -51,9 +51,9 @@ describe("barSettlementQuips", () => {
     expect(barSettlementTone(table({ buyIn: 1000, totalReturn: 9490, tiers: 0, maxWinCredits: maxWin }))).toBe("win");
   });
 
-  it("classifies extreme_win from legacy multiples when maxWinCredits is absent", () => {
-    expect(barSettlementTone(table({ totalReturn: 3400, buyIn: 1000, tiers: 0 }))).toBe("extreme_win");
-    expect(barSettlementTone(table({ totalReturn: 2100, buyIn: 1000, tiers: 2 }))).toBe("extreme_win");
+  it("does not classify extreme_win when maxWinCredits is absent", () => {
+    expect(barSettlementTone(table({ totalReturn: 3400, buyIn: 1000, tiers: 0 }))).toBe("win");
+    expect(barSettlementTone(table({ totalReturn: 2100, buyIn: 1000, tiers: 2 }))).toBe("win");
   });
 
   it("pickSettlementQuip is deterministic for the same settlement row and tone", () => {

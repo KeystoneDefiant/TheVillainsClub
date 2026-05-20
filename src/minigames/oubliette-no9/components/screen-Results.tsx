@@ -50,7 +50,7 @@ function getComboGraphPoints(comboProgression: number[], width: number, height: 
 
 const panelBase = {
   radius: "lg" as const,
-  p: { base: "md", sm: "lg" } as const,
+  p: { base: "xs", sm: "md" } as const,
   style: {
     backgroundColor: clubTokens.surface.panel,
     border: `1px solid ${clubTokens.surface.brassStroke}`,
@@ -130,14 +130,19 @@ export function Results({
         />
 
         <Stack className="oubliette-scroll-section" gap="xs" style={{ flex: 1 }}>
-          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xs">
-            <Paper {...panelBase} className="oubliette-compact-panel" visibleFrom="sm">
-              <Title order={3} mb="md" c={clubTokens.text.brass} fz={{ base: "1.15rem", sm: "1.35rem" }}>
+          <Group gap="xs" align="stretch" grow wrap="wrap">
+            <Paper
+              {...panelBase}
+              className="oubliette-results-hand-summary oubliette-compact-panel"
+              visibleFrom="sm"
+              style={{ ...panelBase.style, flex: "1 1 340px" }}
+            >
+              <Title order={3} mb="xs" c={clubTokens.text.brass} fz={{ base: "1.05rem", sm: "1.25rem" }}>
                 Hand summary
               </Title>
               {heldIndices.length > 0 ? (
-                <Stack gap="sm">
-                  <Text size="sm" fw={500} c={clubTokens.text.muted}>
+                <Stack gap="xs">
+                  <Text size="xs" fw={500} c={clubTokens.text.muted}>
                     Cards held:
                   </Text>
                   <Group gap="xs" wrap="wrap">
@@ -149,43 +154,47 @@ export function Results({
               ) : null}
             </Paper>
 
-            <Paper {...panelBase} className="oubliette-compact-panel">
-              <Title order={3} mb="md" c={clubTokens.text.brass} fz={{ base: "1.15rem", sm: "1.35rem" }}>
+            <Paper
+              {...panelBase}
+              className="oubliette-compact-panel"
+              style={{ ...panelBase.style, flex: "1 1 340px" }}
+            >
+              <Title order={3} mb="xs" c={clubTokens.text.brass} fz={{ base: "1.05rem", sm: "1.25rem" }}>
                 Win stats
               </Title>
-              <Stack gap="sm">
+              <Stack gap="xs">
                 <Group justify="space-between">
-                  <Text size="sm" fw={500} c={clubTokens.text.muted}>
+                  <Text size="xs" fw={500} c={clubTokens.text.muted}>
                     Hands played
                   </Text>
-                  <Text size="lg" fw={700} c={clubTokens.text.primary}>
+                  <Text size="sm" fw={700} c={clubTokens.text.primary}>
                     {handsPlayed}
                   </Text>
                 </Group>
                 <Group justify="space-between">
-                  <Text size="sm" fw={500} c={clubTokens.text.muted}>
+                  <Text size="xs" fw={500} c={clubTokens.text.muted}>
                     Hands won
                   </Text>
-                  <Text size="lg" fw={700} c={clubTokens.text.brass}>
+                  <Text size="sm" fw={700} c={clubTokens.text.brass}>
                     {handsWon}
                   </Text>
                 </Group>
                 <Group justify="space-between">
-                  <Text size="sm" fw={500} c={clubTokens.text.muted}>
+                  <Text size="xs" fw={500} c={clubTokens.text.muted}>
                     Win %
                   </Text>
-                  <Text size="lg" fw={700} c={clubTokens.text.brass}>
+                  <Text size="sm" fw={700} c={clubTokens.text.brass}>
                     {winPercent.toFixed(1)}%
                   </Text>
                 </Group>
               </Stack>
             </Paper>
-          </SimpleGrid>
+          </Group>
 
-          <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="xs">
+          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xs">
             <Paper
               radius="lg"
-              p={{ base: "sm", sm: "lg" }}
+              p={{ base: "xs", sm: "md" }}
               className="animate-fadeIn oubliette-compact-panel"
               style={{
                 ...panelBase.style,
@@ -193,71 +202,74 @@ export function Results({
                 boxShadow: `0 0 24px rgba(201, 162, 39, 0.2)`,
               }}
             >
-              <Title order={2} mb={{ base: "xs", sm: "lg" }} c={clubTokens.text.brass} fz={{ base: "1.35rem", sm: "1.65rem" }}>
+              <Title order={2} mb={{ base: "xs", sm: "sm" }} c={clubTokens.text.brass} fz={{ base: "1.15rem", sm: "1.35rem" }}>
                 Round summary
               </Title>
-              <Stack gap="xs">
-                {rankData.map((item) => (
-                  <Group key={item.rank} justify="space-between" wrap="wrap">
-                    <Text size="md" fw={500} c={clubTokens.text.primary} tt="capitalize">
-                      {item.rank.replace(/-/g, " ")} ×{item.count}
-                    </Text>
-                    <Text
-                      size="md"
-                      fw={700}
-                      c={item.totalPayout > 0 ? clubTokens.text.brass : clubTokens.text.muted}
-                    >
-                      = {formatCredits(Math.round(item.totalPayout))} credit
-                      {Math.round(item.totalPayout) !== 1 ? "s" : ""}
-                    </Text>
-                  </Group>
-                ))}
-              </Stack>
+              <Box style={{ maxHeight: 120, overflowY: "auto", paddingRight: 4 }}>
+                <Stack gap="xs">
+                  {rankData.map((item) => (
+                    <Group key={item.rank} justify="space-between" wrap="nowrap">
+                      <Text size="sm" fw={500} c={clubTokens.text.primary} tt="capitalize" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {item.rank.replace(/-/g, " ")} ×{item.count}
+                      </Text>
+                      <Text
+                        size="sm"
+                        fw={700}
+                        c={item.totalPayout > 0 ? clubTokens.text.brass : clubTokens.text.muted}
+                        style={{ whiteSpace: "nowrap" }}
+                      >
+                        = {formatCredits(Math.round(item.totalPayout))} credit
+                        {Math.round(item.totalPayout) !== 1 ? "s" : ""}
+                      </Text>
+                    </Group>
+                  ))}
+                </Stack>
+              </Box>
             </Paper>
 
-            <Paper className="game-panel-muted animate-fadeIn oubliette-compact-panel" radius="lg" p={{ base: "sm", sm: "lg" }}>
+            <Paper className="game-panel-muted animate-fadeIn oubliette-compact-panel" radius="lg" p={{ base: "xs", sm: "md" }}>
               <Stack gap="xs">
-                <Group justify="space-between" wrap="wrap">
-                  <Text size="md" fw={600} c={clubTokens.text.primary}>
+                <Group justify="space-between" wrap="nowrap">
+                  <Text size="sm" fw={600} c={clubTokens.text.primary}>
                     Round cost:
                   </Text>
-                  <Text size="xl" fw={700} c={clubTokens.text.accent}>
+                  <Text size="md" fw={700} c={clubTokens.text.accent}>
                     {formatCredits(betAmount * selectedHandCount)} credits
                   </Text>
                 </Group>
                 {gameState?.devilsDealCard &&
                   gameState?.devilsDealHeld &&
                   gameState?.devilsDealCost > 0 && (
-                    <Group justify="space-between" wrap="wrap">
-                      <Text size="md" fw={600} c={clubTokens.text.primary}>
+                    <Group justify="space-between" wrap="nowrap">
+                      <Text size="sm" fw={600} c={clubTokens.text.primary}>
                         Devil&apos;s deal:
                       </Text>
-                      <Text size="xl" fw={700} c={clubTokens.text.accent}>
+                      <Text size="md" fw={700} c={clubTokens.text.accent}>
                         -{formatCredits(Math.abs(gameState.devilsDealCost))} credits
                       </Text>
                     </Group>
                   )}
-                <Group justify="space-between" wrap="wrap">
-                  <Text size="md" fw={600} c={clubTokens.text.primary}>
+                <Group justify="space-between" wrap="nowrap">
+                  <Text size="sm" fw={600} c={clubTokens.text.primary}>
                     Total payout:
                   </Text>
-                  <Text size="xl" fw={700} c={clubTokens.text.brass}>
+                  <Text size="md" fw={700} c={clubTokens.text.brass}>
                     {formatCredits(totalPayout)} credits
                   </Text>
                 </Group>
                 <Group
                   justify="space-between"
-                  wrap="wrap"
+                  wrap="nowrap"
                   pt="xs"
                   style={{ borderTop: `1px solid ${clubTokens.surface.brassStroke}` }}
                 >
-                  <Text size="lg" fw={700} c={clubTokens.text.primary}>
+                  <Text size="md" fw={700} c={clubTokens.text.primary}>
                     Profit:
                   </Text>
                   <Text
-                    size="xl"
+                    size="md"
                     fw={800}
-                    c={profit >= 0 ? clubTokens.text.brass : clubTokens.text.accent}
+                    c={profit >= 0 ? profit > 0 ? clubTokens.text.brass : clubTokens.text.primary : clubTokens.text.accent}
                   >
                     {formatCredits(profit)} credit{Math.abs(profit) !== 1 ? "s" : ""}
                   </Text>
@@ -268,23 +280,23 @@ export function Results({
                   pt="xs"
                   style={{ borderTop: `1px solid ${clubTokens.surface.brassStroke}` }}
                 >
-                  <Group justify="space-between">
-                    <Text size="sm" fw={600} c={clubTokens.text.muted}>
+                  <Group justify="space-between" wrap="nowrap">
+                    <Text size="xs" fw={600} c={clubTokens.text.muted}>
                       Highest combo
                     </Text>
-                    <Text size="lg" fw={700} c={clubTokens.text.brass}>
+                    <Text size="sm" fw={700} c={clubTokens.text.brass}>
                       {highestCombo}
                     </Text>
                   </Group>
-                  <Group justify="space-between">
-                    <Text size="sm" fw={600} c={clubTokens.text.muted}>
+                  <Group justify="space-between" wrap="nowrap">
+                    <Text size="xs" fw={600} c={clubTokens.text.muted}>
                       Highest multiplier
                     </Text>
-                    <Text size="lg" fw={700} c={clubTokens.text.brass}>
+                    <Text size="sm" fw={700} c={clubTokens.text.brass}>
                       {formatMultiplier(highestMultiplier)}
                     </Text>
                   </Group>
-                  <Paper p="sm" radius="md" withBorder style={{ borderColor: clubTokens.surface.brassStroke }} visibleFrom="sm">
+                  <Paper p="xs" radius="md" withBorder style={{ borderColor: clubTokens.surface.brassStroke, background: "rgba(0,0,0,0.2)" }} visibleFrom="sm">
                     <Group justify="space-between" mb="xs">
                       <Text size="xs" tt="uppercase" fw={600} c={clubTokens.text.muted}>
                         Combo progression
@@ -296,7 +308,7 @@ export function Results({
                     {comboProgression.length > 0 ? (
                       <svg
                         viewBox="0 0 100 44"
-                        className="w-full h-24"
+                        style={{ width: "100%", height: 44 }}
                         role="img"
                         aria-label="Combo progression graph"
                       >
@@ -319,7 +331,7 @@ export function Results({
                         />
                       </svg>
                     ) : (
-                      <Text size="sm" c={clubTokens.text.dimGreen} style={{ fontStyle: "italic" }}>
+                      <Text size="xs" c={clubTokens.text.dimGreen} style={{ fontStyle: "italic" }}>
                         No combo data this round yet.
                       </Text>
                     )}

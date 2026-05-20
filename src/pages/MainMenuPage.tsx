@@ -114,11 +114,12 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
   const location = useLocation();
   const preset = useMotionPresetStore((s) => s.preset);
   const reduceMotion = usePrefersReducedMotion();
-  const { clubBalance, hasSave, setHasSave, activeSession, startSession } = useClubWallet();
+  const { clubBalance, hasSave, setHasSave, activeSession, startSession, forfeitActiveSession } = useClubWallet();
   const hasEnteredClub = useClubFlowStore((s) => s.hasEnteredClub);
   const setHasEnteredClub = useClubFlowStore((s) => s.setHasEnteredClub);
   const [settingsOpened, { open: openSettings, close: closeSettings }] = useDisclosure(false);
   const [rulesOpened, { open: openRules, close: closeRules }] = useDisclosure(false);
+  const [abandonOpened, { open: openAbandon, close: closeAbandon }] = useDisclosure(false);
   const [resetProgressArmed, setResetProgressArmed] = useState(false);
   const [selectedGame, setSelectedGame] = useState<GameMenuEntry | null>(null);
   const [ruleset, setRuleset] = useState("house");
@@ -330,14 +331,34 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
                     {sessionError}
                   </Alert>
                 ) : null}
+                {activeSession && activeSession.gameId !== selectedGame.id ? (
+                  <Alert color="red" variant="light" title="Active session exists">
+                    You have an active session in {
+                      activeSession.gameId === "oubliette_no9"
+                        ? "Oubliette No. 9"
+                        : activeSession.gameId === "seven_year_itch"
+                          ? "7 Year Itch"
+                          : "Fateseal Silver"
+                    }. You must resume or abandon it before starting a new game.
+                  </Alert>
+                ) : null}
                 <Group grow>
                   <ClubButton variant="light" onClick={openRules}>
                     How to play / rules
                   </ClubButton>
-                  <ClubButton loading={startingGame === selectedGame.id} onClick={() => startGame(selectedGame)}>
+                  <ClubButton
+                    loading={startingGame === selectedGame.id}
+                    disabled={Boolean(activeSession && activeSession.gameId !== selectedGame.id)}
+                    onClick={() => startGame(selectedGame)}
+                  >
                     {activeSession?.gameId === selectedGame.id ? "Resume game" : "Start game"}
                   </ClubButton>
                 </Group>
+                {activeSession && activeSession.gameId === selectedGame.id ? (
+                  <ClubButton fullWidth variant="subtle" color="red" onClick={openAbandon}>
+                    Abandon table…
+                  </ClubButton>
+                ) : null}
               </Stack>
             </ClubPanel>
           </motion.section>
@@ -349,11 +370,14 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
             animate={{ x: 0, opacity: 1 }}
             exit={reduceMotion ? { opacity: 0 } : { y: 140, opacity: 0 }}
             transition={{ duration: 0.48, ease: preset.easing }}
+            style={{ flexDirection: "column", alignItems: "center", justifyContent: "flex-start", gap: "2rem", width: "100%" }}
           >
+            <Box style={{ width: "100%", display: "flex", justifyContent: "center" }}>
+              <VcLogoBarMark width={180} />
+            </Box>
             <div className="club-landing__menu-inner">
               <ClubPanel maw={470} w="min(470px, calc(100vw - 2rem))" className="club-menu-card">
                 <Stack gap="md">
-                <VcLogoBarMark width={112} />
                 <Stack gap={3} ta="center">
                   <Text size="xs" tt="uppercase" c={clubTokens.text.muted} fw={700}>
                     Tonight’s menu
@@ -389,6 +413,44 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
                     </Text>
                   ))}
                 </Stack>
+                {activeSession ? (
+                  <Alert
+                    color={
+                      activeSession.gameId === "oubliette_no9"
+                        ? "yellow"
+                        : activeSession.gameId === "seven_year_itch"
+                          ? "orange"
+                          : "grape"
+                    }
+                    variant="light"
+                    title="Table still open"
+                    mt="xs"
+                  >
+                    <Text size="sm" c={clubTokens.text.secondary} mb="xs">
+                      You have an active {activeSession.gameId === "oubliette_no9" ? "Oubliette No. 9" : activeSession.gameId === "seven_year_itch" ? "7 Year Itch" : "Fateseal Silver"} session.
+                    </Text>
+                    <Group gap="xs" grow>
+                      <ClubButton
+                        size="xs"
+                        variant="filled"
+                        onClick={() => {
+                          const gameRoute =
+                            activeSession.gameId === "oubliette_no9"
+                              ? "/minigames/oubliette-no9"
+                              : activeSession.gameId === "seven_year_itch"
+                                ? "/minigames/seven-year-itch"
+                                : "/minigames/fateseal-silver";
+                          navigate(gameRoute);
+                        }}
+                      >
+                        Resume
+                      </ClubButton>
+                      <ClubButton size="xs" variant="subtle" color="red" onClick={openAbandon}>
+                        Abandon
+                      </ClubButton>
+                    </Group>
+                  </Alert>
+                ) : null}
 
                 <Divider />
 
@@ -524,6 +586,30 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
               </Group>
             </>
           )}
+        </Stack>
+      </Modal>
+
+      <Modal opened={abandonOpened} onClose={closeAbandon} title="Abandon this table?" centered>
+        <Stack gap="md">
+          <Text size="sm" c={clubTokens.text.secondary}>
+            You will not receive a payout. The buy-in you moved to the table is forfeited and stays with the house.
+          </Text>
+          <Group grow>
+            <ClubButton variant="light" onClick={closeAbandon}>
+              Keep table
+            </ClubButton>
+            <ClubButton
+              color="red"
+              aria-label="Confirm abandon table"
+              onClick={() => {
+                forfeitActiveSession();
+                closeAbandon();
+                setSelectedGame(null);
+              }}
+            >
+              Abandon — lose buy-in
+            </ClubButton>
+          </Group>
         </Stack>
       </Modal>
     </Box>

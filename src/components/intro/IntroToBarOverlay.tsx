@@ -7,17 +7,18 @@ import { useMotionPresetStore } from "@/motion/motionPresetStore";
 import { usePrefersReducedMotion } from "@/motion/usePrefersReducedMotion";
 
 const RED_FILL = "#c0272d";
-const BASE_W = 420;
-const ASPECT = 165.6 / 241.3;
 /** Zoom in on the red mark (seconds). */
 const RED_ZOOM_SEC = 0.88;
 /** Hold solid club red before fade (seconds). */
 const RED_SOLID_HOLD_SEC = 0.2;
 
-function RedOnlyMark({ width }: { width: number }) {
-  const h = Math.round(ASPECT * width);
+function RedOnlyMark() {
   return (
-    <svg viewBox={VC_LOGO_INTRO_VIEWBOX} width={width} height={h} aria-hidden style={{ display: "block" }}>
+    <svg
+      viewBox={VC_LOGO_INTRO_VIEWBOX}
+      style={{ display: "block", width: "100%", height: "auto" }}
+      aria-hidden
+    >
       <title> </title>
       <g fill={RED_FILL}>
         {vcLogoRedPaths.map((p) => (
@@ -101,23 +102,20 @@ export function IntroToBarOverlay() {
         overflow: "hidden",
         background: "radial-gradient(circle at 50% 55%, rgba(26, 10, 18, 0.35) 0%, rgba(8, 4, 10, 0.92) 65%)",
         pointerEvents: "none",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "2rem",
       }}
     >
-      <Box
-        style={{
-          position: "absolute",
-          left: "50%",
-          top: "50%",
-          transform: "translate(calc(-50% + min(8vw, 72px)), -50%)",
-        }}
-      >
+      <Box className="shell-intro-logo shell-intro-logo--raised" style={{ flexShrink: 0 }}>
         <motion.div
-          initial={{ scale: 0.42 }}
-          animate={{ scale: 14 }}
+          initial={{ scale: 1 }}
+          animate={{ scale: 35 }}
           transition={{ duration: RED_ZOOM_SEC, ease: easing }}
-          style={{ transformOrigin: "36% 46%" }}
+          style={{ transformOrigin: "36% 46%", width: "100%" }}
         >
-          <RedOnlyMark width={BASE_W} />
+          <RedOnlyMark />
         </motion.div>
       </Box>
       <motion.div

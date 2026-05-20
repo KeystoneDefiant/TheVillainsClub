@@ -75,13 +75,14 @@ export function barSettlementTone(lastTable: BarRouteState["lastTable"]): BarSet
 
   /** Lost ≥85% of buy-in (≤15% returned). */
   if (back <= 0 || fractionBack <= 0.15) return "extreme_loss";
-  if (fractionBack < 0.92) return "loss";
+
+  /** Extreme Win: ONLY when within 5% of capped base max when maxWinCredits is set. */
+  const capFloor = maxWin != null && maxWin > 0 ? 0.95 * maxWin : null;
+  if (capFloor != null && back >= capFloor) return "extreme_win";
+
   /** Exact return of buy-in with no tier stamp — net club delta zero. */
   if (tiers === 0 && Math.round(back - buyIn) === 0) return "break_even";
 
-  const capFloor = maxWin != null && maxWin > 0 ? 0.95 * maxWin : null;
-  if (capFloor != null && back >= capFloor) return "extreme_win";
-  if (maxWin == null && (fractionBack >= 3 || tiers >= 2)) return "extreme_win";
   if (fractionBack >= 1 || tiers >= 1) return "win";
   return "loss";
 }

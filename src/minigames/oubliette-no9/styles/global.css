@@ -714,3 +714,10 @@ h2 {
     padding-bottom: max(0px, env(safe-area-inset-bottom));
   }
 }
+
+/* Hide Oubliette Hand Summary (cards held) on short or narrow screens */
+@media (max-width: 1024px) or (max-height: 800px) {
+  .oubliette-results-hand-summary {
+    display: none !important;
+  }
+}

@@ -28,6 +28,7 @@ interface GameTableProps {
   onDraw: () => void;
   onShowPayoutTable?: () => void;
   onShowSettings?: () => void;
+  onAbandonRun?: () => void;
 }
 
 export function GameTable({
@@ -46,6 +47,7 @@ export function GameTable({
   onDraw,
   onShowPayoutTable,
   onShowSettings,
+  onAbandonRun,
 }: GameTableProps) {
   void _totalEarnings;
   const useLargeCards = useMediaQuery("(min-width: 48em)");
@@ -119,6 +121,7 @@ export function GameTable({
           gameState={gameState}
           onShowPayoutTable={onShowPayoutTable}
           onShowSettings={onShowSettings}
+          onAbandonRun={onAbandonRun}
         />
 
         <Paper

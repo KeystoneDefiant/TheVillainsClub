@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { Box, Button, Group, Modal, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+import { Box, Group, Modal, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 import { clubTokens } from "@/theme/clubTokens";
 import {
   calculateWildCardCost,
@@ -13,12 +13,13 @@ import {
   getCreditsNeededForDisplayedRound,
   getCreditsNeededForUpcomingRound,
 } from '../utils/config';
-import { gameConfig, getShopDisplayName } from '@/config/minigames/oublietteNo9GameRules';
+import { gameConfig } from '@/config/minigames/oublietteNo9GameRules';
 import { useOublietteGameMode } from '../OublietteGameModeContext';
 import './Shop.css';
 import { ShopOptionType } from '../types';
 import { formatCredits } from '../utils/format';
 import { GameButton } from './GameButton';
+import { GameHeader } from './GameHeader';
 /**
  * Shop component props
  *
@@ -81,6 +82,8 @@ interface ShopProps {
   onClose: () => void;
   /** Callback to open settings modal */
   onShowSettings?: () => void;
+  /** Callback to abandon run */
+  onAbandonRun?: () => void;
 }
 
 /**
@@ -130,6 +133,7 @@ export function Shop({
   onPurchaseExtraCardInHand,
   onClose,
   onShowSettings,
+  onAbandonRun,
 }: ShopProps) {
   void wildCards;
   const currentMode = useOublietteGameMode();
@@ -816,54 +820,25 @@ export function Shop({
         className="oubliette-play-stack"
         style={{ minHeight: "calc(100dvh - 1.4rem)" }}
       >
-        <Group justify="space-between" align="flex-start" wrap="wrap" gap="xs">
-          <Title order={2} c={clubTokens.text.brass} fz={{ base: "1.35rem", sm: "1.65rem", md: "1.85rem" }}>
-            {getShopDisplayName(creditsForPricing)}
-          </Title>
-          <Group gap="xs">
-            {onShowSettings ? (
-              <Button
-                type="button"
-                variant="default"
-                size="xs"
-                w={36}
-                h={36}
-                p={0}
-                onClick={onShowSettings}
-                title="Settings"
-                aria-label="Open settings"
-                styles={{
-                  root: {
-                    border: `1px solid ${clubTokens.surface.brassStroke}`,
-                    background: `linear-gradient(145deg, ${clubTokens.surface.walnutHi} 0%, ${clubTokens.surface.panel} 100%)`,
-                  },
-                }}
-              >
-                ⚙️
-              </Button>
-            ) : null}
-            <GameButton onClick={onClose} variant="primary" size="sm">
-              Close Shop
-            </GameButton>
-          </Group>
-        </Group>
-
-        <Paper className="game-panel-muted" p={{ base: "xs", sm: "md" }} radius="md" withBorder>
-          <Group justify="space-between" wrap="wrap" gap="sm">
-            <Text size="md" fw={600} c={clubTokens.text.primary}>
-              Credits:{" "}
-              <Text span c={clubTokens.text.brass} inherit>
-                {formatCredits(credits)}
+        <GameHeader
+          credits={credits}
+          onShowSettings={onShowSettings}
+          onAbandonRun={onAbandonRun}
+          hideFailureInHeader
+          extraButtons={
+            <Group gap="xs" align="center">
+              <Text size="xs" c={clubTokens.text.muted} visibleFrom="sm" mr="xs">
+                Next round cost:{" "}
+                <Text span fw={700} c={clubTokens.text.primary} inherit>
+                  {formatCredits(creditsNeededForNextRound)}
+                </Text>
               </Text>
-            </Text>
-            <Text size="sm" c={clubTokens.text.muted}>
-              Credits needed for next round:{" "}
-              <Text span fw={600} c={clubTokens.text.primary} inherit>
-                {formatCredits(creditsNeededForNextRound)}
-              </Text>
-            </Text>
-          </Group>
-        </Paper>
+              <GameButton onClick={onClose} variant="primary" size="sm">
+                Close Shop
+              </GameButton>
+            </Group>
+          }
+        />
 
         {selectedShopOptions.length === 0 ? (
           <Stack align="center" justify="center" py="xl" gap="md" style={{ flex: 1 }}>

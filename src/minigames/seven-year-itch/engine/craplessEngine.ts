@@ -289,20 +289,20 @@ export function resolveRoll(table: CraplessTableState, bets: TableBets, roll: Di
       walletDelta += bets.freeOdds + pr;
       lines.push({ kind: "win", text: `Free odds rake in ${(bets.freeOdds + pr).toLocaleString()} credits.` });
     }
+    const newPlace = { ...bets.place };
     const plOnPoint = bets.place[pt] ?? 0;
     if (plOnPoint > 0) {
       const ret = placeBetScaledReturn(pt, plOnPoint, table.placePayoutScale);
-      walletDelta += ret;
+      const profit = ret - plOnPoint;
+      walletDelta += profit;
       lines.push({
         kind: "win",
         text:
           table.placePayoutScale < 1
-            ? `Place on ${pt} returns ${ret.toLocaleString()} credits (post-divest skim).`
-            : `Place on ${pt} returns ${ret.toLocaleString()} credits.`,
+            ? `Place on ${pt} — ${profit.toLocaleString()} credits profit after skim (stake rides).`
+            : `Place on ${pt} — ${profit.toLocaleString()} credits profit (stake rides).`,
       });
     }
-    const newPlace = { ...bets.place };
-    delete newPlace[pt];
     lines.push({ kind: "neutral", text: "Point is made. New come-out — set your pass." });
     const cleared = emptyAllBets();
     return {

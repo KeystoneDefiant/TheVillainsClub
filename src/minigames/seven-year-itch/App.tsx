@@ -106,7 +106,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
   const [loreOpen, setLoreOpen] = useState(false);
   const [loreState, setLoreState] = useState({
     title: "The Investigation",
-    body: "Put money on the pass line and roll. Seven wins on the open; anything else sets the point.",
+    body: "Put money on the Come Out Pass and roll. Seven wins on the open; anything else sets the point.",
   });
   const [lastRollText, setLastRollText] = useState("—");
   const [lastD1, setLastD1] = useState(1);
@@ -163,11 +163,21 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
   const pickHeatChoices = useCallback(() => {
     const excludeId = activeBonus?.id;
     const pool = excludeId ? sevenYearItchHeatBonuses.filter((b) => b.id !== excludeId) : [...sevenYearItchHeatBonuses];
-    const picks = pickWeightedWithoutReplacement(pool, 3, Math.random);
+    
+    let adjustedPool = pool;
+    if (wealth > buyIn) {
+      adjustedPool = pool.map((b) =>
+        b.id === "look_the_other_way"
+          ? { ...b, pullWeight: Math.max(1, Math.floor(b.pullWeight * 0.25)) }
+          : b
+      );
+    }
+
+    const picks = pickWeightedWithoutReplacement(adjustedPool, 3, Math.random);
     setFavorPicks(picks);
     setFavorOfferKeep(!!activeBonus);
     setMainView("favors");
-  }, [activeBonus]);
+  }, [activeBonus, wealth, buyIn]);
 
   const addPassChip = useCallback(() => {
     if (passLocked) return;
@@ -182,11 +192,22 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
   const removePassChip = useCallback(() => {
     if (passLocked) return;
     if (bets.passLine <= 0) return;
-    const next = Math.max(0, bets.passLine - chip);
+    
+    let next = Math.max(0, bets.passLine - chip);
+    
+    const maxPlaceStake = Object.values(bets.place).reduce((max, val) => Math.max(max, val ?? 0), 0);
+    const minRequiredPass = Math.ceil(maxPlaceStake / 3);
+    
+    if (next < minRequiredPass) {
+      next = minRequiredPass;
+    }
+    
+    if (next === bets.passLine) return;
+
     const d = bets.passLine - next;
     setBalance((b) => b + d);
     setBets((prev) => ({ ...prev, passLine: next }));
-  }, [bets.passLine, chip, passLocked]);
+  }, [bets.passLine, bets.place, chip, passLocked]);
 
   const addOddsChip = useCallback(() => {
     if (table.phase !== "point") return;
@@ -211,7 +232,11 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
     (pk: PointNumber) => {
       if (table.phase !== "point") return;
       const old = bets.place[pk] ?? 0;
-      const cap = old + balance;
+      
+      const maxPlaceLimit = bets.passLine * 3;
+      const walletCap = old + balance;
+      const cap = Math.min(walletCap, maxPlaceLimit);
+      
       const next = Math.min(old + chip, cap);
       if (next <= old) return;
       const d = next - old;
@@ -222,7 +247,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
         return { ...prev, place };
       });
     },
-    [balance, bets.place, chip, table.phase],
+    [balance, bets.place, bets.passLine, chip, table.phase],
   );
 
   const removePlaceChip = useCallback(
@@ -440,13 +465,29 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
       }
 
       setHeatRolls((prev) => {
-        if (endsHand) return 0;
-        if (r.total === 7) return 0;
-        const next = prev + 1;
+        const activeBetsCount =
+          (betsRef.current.passLine > 0 ? 1 : 0) +
+          (betsRef.current.freeOdds > 0 ? 1 : 0) +
+          Object.keys(betsRef.current.place).length +
+          (betsRef.current.field > 0 ? 1 : 0) +
+          Object.keys(betsRef.current.hardways).length +
+          Object.keys(betsRef.current.hops).length +
+          (betsRef.current.hornUnit > 0 ? 1 : 0);
+
+        const next = prev + Math.max(1, activeBetsCount);
+
         if (next >= heatRollsPerFavorOffer) {
           pickHeatChoices();
           return 0;
         }
+
+        if (endsHand) {
+          if (r.total !== 7) {
+            return activeBetsCount; // Bonus head start for next hand
+          }
+          return 0; // 7-out resets completely
+        }
+
         return next;
       });
     },
@@ -575,6 +616,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
           currentRound={rollCount}
           roundLabel="Rolls"
           onShowSettings={() => setSettingsOpened(true)}
+          onAbandonRun={props?.onAbandonRun}
           extraButtons={
             <Group gap="xs" wrap="nowrap">
               {lastRollText !== "—" && (
@@ -645,7 +687,13 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
                     {heatRolls}/{heatRollsPerFavorOffer}
                   </Text>
                 </Group>
-                <Progress value={heat} color="orange" size="sm" radius="xs" />
+                <Progress
+                  value={heat}
+                  color={heat > 80 ? "red" : heat > 50 ? "orange" : "yellow"}
+                  size="md"
+                  radius="xs"
+                  transitionDuration={500}
+                />
               </Paper>
             </SimpleGrid>
 
@@ -657,7 +705,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
                   </Text>
                   <Text size="xs" c="dimmed" lineClamp={3}>
                     {passOnlyLayout
-                      ? "Open investigation: bet the pass line only. Seven wins even money; any other total sets the point and opens the full racket board."
+                      ? "Open investigation: bet the Come Out Pass only. Seven wins even money; any other total sets the point and opens the full racket board."
                       : loreState.body}
                   </Text>
                 </Stack>

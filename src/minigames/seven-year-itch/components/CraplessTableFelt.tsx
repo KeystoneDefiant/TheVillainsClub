@@ -190,7 +190,7 @@ export function CraplessTableFelt({
             onPassSecondary();
           }}
         >
-          <span className="yi-felt-pass-label">Pass line</span>
+          <span className="yi-felt-pass-label">Come Out Pass</span>
           <span className="yi-felt-pass-amount">{bets.passLine > 0 ? bets.passLine : "—"}</span>
           <span className="yi-felt-chipHint">+{chip} · right-click −{chip}</span>
           {passLocked ? <span className="yi-felt-pass-lock">Locked — point in play</span> : null}

@@ -33,8 +33,15 @@ export function OublietteNo9Root(props?: OublietteShellBinding) {
       settlement: props.settlement,
       savedState: props.savedState,
       onReturnToClubMenu: props.onReturnToClubMenu,
+      onAbandonRun: props.onAbandonRun,
     };
-  }, [props?.sessionCredits, props?.settlement, props?.savedState, props?.onReturnToClubMenu]);
+  }, [
+    props?.sessionCredits,
+    props?.settlement,
+    props?.savedState,
+    props?.onReturnToClubMenu,
+    props?.onAbandonRun,
+  ]);
   /* eslint-enable react-hooks/exhaustive-deps */
   const [showCredits, setShowCredits] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
@@ -196,6 +203,7 @@ export function OublietteNo9Root(props?: OublietteShellBinding) {
               onEndRun={endRun}
               onShowPayoutTable={openPayoutTable}
               onShowSettings={() => setShowSettings(true)}
+              onAbandonRun={shellBinding?.onAbandonRun}
             />
           </div>
           </Suspense>
@@ -223,6 +231,7 @@ export function OublietteNo9Root(props?: OublietteShellBinding) {
               onDraw={drawParallelHands}
               onShowPayoutTable={openPayoutTable}
               onShowSettings={() => setShowSettings(true)}
+              onAbandonRun={shellBinding?.onAbandonRun}
             />
           </div>
           </Suspense>
@@ -276,6 +285,7 @@ export function OublietteNo9Root(props?: OublietteShellBinding) {
                 showShopNextRound={state.showShopNextRound}
                 onShowPayoutTable={openPayoutTable}
                 onShowSettings={() => setShowSettings(true)}
+                onAbandonRun={shellBinding?.onAbandonRun}
               />
             </div>
           </Suspense>
@@ -314,6 +324,7 @@ export function OublietteNo9Root(props?: OublietteShellBinding) {
               onPurchaseExtraCardInHand={purchaseExtraCardInHand}
               onClose={proceedFromResults}
               onShowSettings={() => setShowSettings(true)}
+              onAbandonRun={props?.onAbandonRun}
             />
           </div>
           </Suspense>

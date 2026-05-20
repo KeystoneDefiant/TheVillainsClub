@@ -52,6 +52,12 @@ export function FatesealSilverPage() {
     [endSession, navigate],
   );
 
+  const handleAbandonRun = useCallback(() => {
+    isReturningToClubRef.current = true;
+    useClubWallet.getState().forfeitActiveSession();
+    navigate("/bar", { replace: true });
+  }, [navigate]);
+
   const shellProps = useMemo((): FatesealShellBinding | null => {
     if (!activeSession || activeSession.gameId !== "fateseal_silver") return null;
     return {
@@ -59,9 +65,10 @@ export function FatesealSilverPage() {
       settlement: activeSession.settlement,
       gameModeId: activeSession.gameModeId,
       onReturnToClubMenu: handleReturnToClub,
+      onAbandonRun: handleAbandonRun,
       onPauseToClub: () => navigate("/bar", { replace: true }),
     };
-  }, [activeSession, handleReturnToClub, navigate]);
+  }, [activeSession, handleReturnToClub, handleAbandonRun, navigate]);
 
   if (!shellProps) {
     return null;

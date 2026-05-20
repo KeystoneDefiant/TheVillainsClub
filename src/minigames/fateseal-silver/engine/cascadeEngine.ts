@@ -161,16 +161,20 @@ export type FatesealFillColumnContext = {
 function applyColumnPostPick(
   grid: FatesealSymbolId[][],
   colCtx: FatesealFillColumnContext | undefined,
+  rng: Rng,
 ): void {
   if (!colCtx) return;
   const n = grid.length;
-  const wildK = Math.max(0, Math.min(colCtx.wildColCount, n));
+  const wildK = colCtx.wildColCount;
   const deadK = Math.max(0, Math.min(colCtx.purchasedDeadColCount, n));
   const bonusDead = Math.max(0, Math.min(colCtx.bonusDeadColCount, n));
+  
+  const chance = fatesealProgressionRules.purchasedReels.wildChancePerActiveReel * wildK;
+
   for (let r = 0; r < n; r++) {
     for (let c = 0; c < n; c++) {
       let sym = grid[r]![c]!;
-      if (c < wildK) sym = "wild";
+      if (wildK > 0 && sym !== "void" && rng() < chance) sym = "wild";
       if (c >= n - deadK) sym = "void";
       if (c < bonusDead) sym = "void";
       grid[r]![c] = sym;
@@ -191,7 +195,7 @@ export function fillGridRandom(
       grid[r]![c] = pickFromPool(pool, t, rng);
     }
   }
-  applyColumnPostPick(grid, colCtx);
+  applyColumnPostPick(grid, colCtx, rng);
 }
 
 function countScattersOnGrid(grid: FatesealSymbolId[][]): number {
@@ -358,10 +362,17 @@ function applyGravity(g: NullableGrid): NullableGrid {
   const n = g.length;
   const out: NullableGrid = Array.from({ length: n }, () => Array.from({ length: n }, () => null));
   for (let c = 0; c < n; c++) {
+    for (let r = 0; r < n; r++) {
+      if (g[r]![c] === "void") {
+        out[r]![c] = "void";
+      }
+    }
     let writeRow = n - 1;
     for (let r = n - 1; r >= 0; r--) {
       const cell = g[r]![c];
-      if (cell != null) {
+      if (cell === "void") {
+        writeRow = r - 1;
+      } else if (cell != null) {
         out[writeRow]![c] = cell;
         writeRow--;
       }
@@ -438,8 +449,21 @@ function runCascadeStep(
     effectiveMult = mult + linkAdd;
   }
   const base = modeMult(state.prophecyMode);
+  const activeCount = state.activeProphecy.length || 1;
+  const factors = fatesealProgressionRules.purchasedReels.omenScalingFactors;
+  const scale =
+    state.prophecyMode === "single"
+      ? (factors[Math.min(activeCount - 1, factors.length - 1)] ?? 1.0)
+      : 1.0;
+
+  const prophecyContribution = prophecy.size * base * scale;
+  const nonSelectedContribution = clusters.size * 0.5;
+
   let stepPayout = Math.floor(
-    prophecy.size * base * state.baseBet * effectiveMult * fatesealCascadePayoutScale,
+    (prophecyContribution + nonSelectedContribution) *
+      state.baseBet *
+      effectiveMult *
+      fatesealCascadePayoutScale,
   );
   const marked = state.markedOmenSymbol;
   if (marked && stepPayout > 0) {
@@ -456,7 +480,7 @@ function runCascadeStep(
   let g = applyRemovalMask(grid, remove);
   g = applyGravity(g);
   const filled = fillNullsFromPool(g, pool, rng);
-  applyColumnPostPick(filled, fillColCtx);
+  applyColumnPostPick(filled, fillColCtx, rng);
   return {
     grid: filled,
     stepPayout,
@@ -493,7 +517,7 @@ export function expandGridForBonusWave(
       g[r]![c] = pickFromPool(pool, t, rng);
     }
   }
-  applyColumnPostPick(g, colCtx);
+  applyColumnPostPick(g, colCtx, rng);
   return g;
 }
 

@@ -12,6 +12,7 @@ import { OublietteNo9Page } from "@/pages/OublietteNo9Page";
 import { OublietteNo9LandingPage } from "@/pages/OublietteNo9LandingPage";
 import { SevenYearItchPage } from "@/pages/SevenYearItchPage";
 import { FatesealSilverPage } from "@/pages/FatesealSilverPage";
+import { OnboardingPage } from "@/pages/OnboardingPage";
 import { UiPlayground } from "@/dev/UiPlayground";
 import { ShellBandMusicHost } from "@/audio/useShellBandMusic";
 import { isOublietteStandaloneLandingEnabled, OUBLIETTE_STANDALONE_ROUTE } from "@/config/standaloneLanding";
@@ -28,6 +29,7 @@ export default function App() {
         <IntroToBarOverlay />
         <Routes>
           <Route path="/" element={<IntroPage />} />
+          <Route path="/onboarding" element={<OnboardingPage />} />
           <Route path="/menu" element={<MainMenuPage />} />
           <Route path="/bar" element={<BarStubPage />} />
           <Route

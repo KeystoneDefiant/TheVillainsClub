@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
-import { Box, Button, Stack, Text, Title } from "@mantine/core";
+import { Box, Stack, Text, Title } from "@mantine/core";
+import { ClubButton } from "../ui/ClubButton";
 import { clubTokens } from "@/theme/clubTokens";
 
 type Props = {
@@ -62,12 +63,12 @@ export class MinigameLazyErrorBoundary extends Component<Props, State> {
                 {this.state.error.message}
               </Text>
             ) : null}
-            <Button onClick={this.handleRetry} color="yellow" variant="filled">
+            <ClubButton onClick={this.handleRetry} variant="filled">
               Reload
-            </Button>
-            <Button onClick={this.handleLeave} variant="light" color="gray">
+            </ClubButton>
+            <ClubButton onClick={this.handleLeave} variant="light">
               Return to club
-            </Button>
+            </ClubButton>
           </Stack>
         </Box>
       );

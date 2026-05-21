@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { Group } from "@mantine/core";
 
 type FaceProps = { value: 1 | 2 | 3 | 4 | 5 | 6 };
@@ -30,7 +30,7 @@ function DieFace({ value }: FaceProps) {
  * Rotations to bring the labeled physical face to the front.
  * Cube faces: front=1, back=6, right=3, left=4, top=5, bottom=2.
  */
-function rotationForValue(value: number): string {
+export function rotationForValue(value: number): string {
   const v = Math.min(6, Math.max(1, Math.floor(value)));
   switch (v) {
     case 1:
@@ -50,16 +50,18 @@ function rotationForValue(value: number): string {
   }
 }
 
-function DieCube({
+export function DieCube({
   value,
   rolling,
   reduceMotion,
   animKey,
+  style,
 }: {
   value: number;
   rolling: boolean;
   reduceMotion: boolean;
   animKey: number;
+  style?: CSSProperties;
 }) {
   const v = Math.min(6, Math.max(1, Math.floor(value))) as FaceProps["value"];
   const settle = rotationForValue(v);
@@ -70,6 +72,7 @@ function DieCube({
         className={`yi-die-cube ${rolling && !reduceMotion ? "yi-die-cube--rolling" : ""}`}
         style={{
           transform: rolling && !reduceMotion ? undefined : settle,
+          ...style,
         }}
       >
         <div className="yi-die-faceWrap yi-die-faceWrap--front">

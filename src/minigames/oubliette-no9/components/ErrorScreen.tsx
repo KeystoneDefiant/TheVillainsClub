@@ -1,4 +1,5 @@
-import { Box, Center, Paper, Stack, Title, Text, Button, Code } from "@mantine/core";
+import { Box, Center, Paper, Stack, Title, Text, Code } from "@mantine/core";
+import { ClubButton } from "@/components/ui/ClubButton";
 import { clubTokens } from "@/theme/clubTokens";
 
 interface ErrorScreenProps {
@@ -39,9 +40,9 @@ export function ErrorScreen({ error, resetErrorBoundary }: ErrorScreenProps) {
               {error.message}
             </Code>
           </Box>
-          <Button variant="filled" color="yellow" onClick={resetErrorBoundary} fullWidth>
+          <ClubButton variant="filled" onClick={resetErrorBoundary} fullWidth>
             Try again
-          </Button>
+          </ClubButton>
         </Stack>
       </Paper>
     </Center>

@@ -58,8 +58,8 @@ type GameMenuEntry = {
 const GAME_ENTRIES: GameMenuEntry[] = [
   {
     id: "oubliette_no9",
-    title: "Oubliette No. 9",
-    subtitle: "Poker roguelike table",
+    title: "Oubliette Number 9",
+    subtitle: "Why Play One Hand of Poker When You Can Play Hundreds",
     route: "/minigames/oubliette-no9",
     buyIn: villainsGameDefaults.oublietteNo9.defaultBuyIn,
     rulesets: [{ value: "house", label: "House rules" }],
@@ -67,7 +67,7 @@ const GAME_ENTRIES: GameMenuEntry[] = [
   {
     id: "seven_year_itch",
     title: "7 Year Itch",
-    subtitle: "Crapless business racket",
+    subtitle: "Illicit Business Dealings at the Roll of the Dice",
     route: "/minigames/seven-year-itch",
     buyIn: villainsGameDefaults.sevenYearItch.defaultBuyIn,
     rulesets: [{ value: "nv-crapless", label: "NV crapless" }],
@@ -75,7 +75,7 @@ const GAME_ENTRIES: GameMenuEntry[] = [
   {
     id: "fateseal_silver",
     title: "Fateseal Silver",
-    subtitle: "Occult cascading grid",
+    subtitle: "See the Future, for a Price",
     route: "/minigames/fateseal-silver",
     buyIn: villainsGameDefaults.fatesealSilver.defaultBuyIn,
     rulesets: [{ value: "silver", label: "House Fateseal" }],
@@ -378,136 +378,133 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
             <div className="club-landing__menu-inner">
               <ClubPanel maw={470} w="min(470px, calc(100vw - 2rem))" className="club-menu-card">
                 <Stack gap="md">
-                <Stack gap={3} ta="center">
-                  <Text size="xs" tt="uppercase" c={clubTokens.text.muted} fw={700}>
-                    Tonight’s menu
-                  </Text>
-                  <ClubHeading order={2} size="h3" c={clubTokens.text.brass}>
-                    The bar is open.
-                  </ClubHeading>
-                </Stack>
-
-                <Group justify="space-between">
-                  <Text size="sm" c={clubTokens.text.secondary}>
-                    Club balance
-                  </Text>
-                  <Text fw={700} c={clubTokens.text.brass}>
-                    {clubBalance.toLocaleString()} credits
-                  </Text>
-                </Group>
-                <Group justify="space-between">
-                  <Text size="sm" c={clubTokens.text.secondary}>
-                    Tonight’s band
-                  </Text>
-                  <Text size="sm" fw={600}>
-                    {band}
-                  </Text>
-                </Group>
-                <Stack gap={2}>
-                  <Text size="xs" tt="uppercase" fw={700} c={clubTokens.text.muted}>
-                    Club modifiers
-                  </Text>
-                  {activeModifierLines.map((line) => (
-                    <Text key={line} size="xs" c={clubTokens.text.secondary}>
-                      {line}
+                  <Stack gap={3} ta="center">
+                    <ClubHeading order={2} size="h3" c={clubTokens.text.brass}>
+                      The bar is open.
+                    </ClubHeading>
+                  </Stack>
+                  <Stack gap={2}>
+                    <Text size="xs" tt="uppercase" fw={700} c={clubTokens.text.muted}>
+                      Club modifiers
                     </Text>
+                    {activeModifierLines.map((line) => (
+                      <Text key={line} size="xs" c={clubTokens.text.secondary}>
+                        {line}
+                      </Text>
+                    ))}
+                  </Stack>
+                  {activeSession ? (
+                    <Alert
+                      color={
+                        activeSession.gameId === "oubliette_no9"
+                          ? "yellow"
+                          : activeSession.gameId === "seven_year_itch"
+                            ? "orange"
+                            : "grape"
+                      }
+                      variant="light"
+                      title="Table still open"
+                      mt="xs"
+                    >
+                      <Text size="sm" c={clubTokens.text.secondary} mb="xs">
+                        You have an active {activeSession.gameId === "oubliette_no9" ? "Oubliette No. 9" : activeSession.gameId === "seven_year_itch" ? "7 Year Itch" : "Fateseal Silver"} session.
+                      </Text>
+                      <Group gap="xs" grow>
+                        <ClubButton
+                          size="xs"
+                          variant="filled"
+                          onClick={() => {
+                            const gameRoute =
+                              activeSession.gameId === "oubliette_no9"
+                                ? "/minigames/oubliette-no9"
+                                : activeSession.gameId === "seven_year_itch"
+                                  ? "/minigames/seven-year-itch"
+                                  : "/minigames/fateseal-silver";
+                            navigate(gameRoute);
+                          }}
+                        >
+                          Resume
+                        </ClubButton>
+                        <ClubButton size="xs" variant="subtle" color="red" onClick={openAbandon}>
+                          Abandon
+                        </ClubButton>
+                      </Group>
+                    </Alert>
+                  ) : null}
+
+                  <Divider color={clubTokens.surface.brassStroke} opacity={0.45} />
+
+                  {GAME_ENTRIES.map((game) => (
+                    <button key={game.id} type="button" className="club-menu-card__entry" onClick={() => openGameLanding(game)}>
+                      <span>
+                        <strong>{game.title}</strong>
+                        <small>{game.subtitle}</small>
+                      </span>
+                    </button>
                   ))}
-                </Stack>
-                {activeSession ? (
-                  <Alert
-                    color={
-                      activeSession.gameId === "oubliette_no9"
-                        ? "yellow"
-                        : activeSession.gameId === "seven_year_itch"
-                          ? "orange"
-                          : "grape"
-                    }
-                    variant="light"
-                    title="Table still open"
-                    mt="xs"
-                  >
-                    <Text size="sm" c={clubTokens.text.secondary} mb="xs">
-                      You have an active {activeSession.gameId === "oubliette_no9" ? "Oubliette No. 9" : activeSession.gameId === "seven_year_itch" ? "7 Year Itch" : "Fateseal Silver"} session.
-                    </Text>
-                    <Group gap="xs" grow>
-                      <ClubButton
-                        size="xs"
-                        variant="filled"
-                        onClick={() => {
-                          const gameRoute =
-                            activeSession.gameId === "oubliette_no9"
-                              ? "/minigames/oubliette-no9"
-                              : activeSession.gameId === "seven_year_itch"
-                                ? "/minigames/seven-year-itch"
-                                : "/minigames/fateseal-silver";
-                          navigate(gameRoute);
-                        }}
-                      >
-                        Resume
-                      </ClubButton>
-                      <ClubButton size="xs" variant="subtle" color="red" onClick={openAbandon}>
-                        Abandon
-                      </ClubButton>
-                    </Group>
-                  </Alert>
-                ) : null}
 
-                <Divider />
-
-                {GAME_ENTRIES.map((game) => (
-                  <button key={game.id} type="button" className="club-menu-card__entry" onClick={() => openGameLanding(game)}>
+                  <button type="button" className="club-menu-card__entry" onClick={openSettings}>
                     <span>
-                      <strong>{game.title}</strong>
-                      <small>{game.subtitle}</small>
+                      <strong>Settings</strong>
+                      <small>Music, sound, progress</small>
                     </span>
-                    <em>{game.buyIn.toLocaleString()}</em>
                   </button>
-                ))}
 
-                <button type="button" className="club-menu-card__entry" onClick={openSettings}>
-                  <span>
-                    <strong>Settings</strong>
-                    <small>Music, sound, progress</small>
-                  </span>
-                </button>
-                <button type="button" className="club-menu-card__entry" onClick={() => {}} aria-disabled="true">
-                  <span>
-                    <strong>Loans</strong>
-                    <small>Coming soon</small>
-                  </span>
-                </button>
-
-                <Text size="xs" c={clubTokens.text.muted} ta="center">
-                  {import.meta.env.DEV ? (
-                    <>
-                      Dev:{" "}
+                  <Text size="xs" c={clubTokens.text.muted} ta="center">
+                    {import.meta.env.DEV ? (
+                      <>
+                        Dev:{" "}
+                        <Link to="/__playground" style={{ color: clubTokens.text.brass }}>
+                          UI playground
+                        </Link>
+                        {" · "}
+                        <Text
+                          component="button"
+                          type="button"
+                          c="brass"
+                          td="underline"
+                          style={{ background: "none", border: 0, padding: 0, cursor: "pointer" }}
+                          onClick={() => setHasSave(!hasSave)}
+                        >
+                          Toggle save stub
+                        </Text>
+                      </>
+                    ) : (
                       <Link to="/__playground" style={{ color: clubTokens.text.brass }}>
                         UI playground
                       </Link>
-                      {" · "}
-                      <Text
-                        component="button"
-                        type="button"
-                        c="brass"
-                        td="underline"
-                        style={{ background: "none", border: 0, padding: 0, cursor: "pointer" }}
-                        onClick={() => setHasSave(!hasSave)}
-                      >
-                        Toggle save stub
-                      </Text>
-                    </>
-                  ) : (
-                    <Link to="/__playground" style={{ color: clubTokens.text.brass }}>
-                      UI playground
-                    </Link>
-                  )}
-                </Text>
-              </Stack>
+                    )}
+                  </Text>
+                </Stack>
               </ClubPanel>
 
-              {settlementFlash?.lastTable ? (
-                <ClubSettlementDock lastTable={settlementFlash.lastTable} reduceMotion={reduceMotion} />
-              ) : null}
+              <Stack gap="md" className="club-settlement-dock">
+                <ClubPanel maw={360} w="min(360px, 100%)" px="md" py="md">
+                  <Group justify="space-between" gap="md">
+                    <Text size="sm" c={clubTokens.text.secondary}>
+                      Club balance
+                    </Text>
+                    <Text fw={700} c={clubTokens.text.brass}>
+                      {clubBalance.toLocaleString()} credits
+                    </Text>
+                  </Group>
+                </ClubPanel>
+
+                <ClubPanel maw={360} w="min(360px, 100%)" px="md" py="md">
+                  <Group justify="space-between" gap="xs">
+                    <Text size="sm" c={clubTokens.text.secondary}>
+                      Tonight’s band
+                    </Text>
+                    <Text size="sm" fw={600}>
+                      {band}
+                    </Text>
+                  </Group>
+                </ClubPanel>
+
+                {settlementFlash?.lastTable ? (
+                  <ClubSettlementDock lastTable={settlementFlash.lastTable} reduceMotion={reduceMotion} />
+                ) : null}
+              </Stack>
             </div>
           </motion.section>
         )}

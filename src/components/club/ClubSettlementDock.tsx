@@ -54,7 +54,7 @@ export function ClubSettlementDock({ lastTable, reduceMotion }: ClubSettlementDo
 
   return (
     <motion.aside
-      className="club-settlement-dock"
+      className="club-settlement-dock-content"
       aria-label="Settlement summary"
       initial={reduceMotion ? false : { opacity: 0, y: 10, z: 0 }}
       animate={{ opacity: 1, y: 0, z: 0 }}

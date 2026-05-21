@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Box, Button, Group, Modal, Paper, Progress, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { Box, Group, Modal, Paper, Progress, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+import { ClubButton } from "@/components/ui/ClubButton";
 import { computeSevenYearItchReturn, type SevenYearItchShellBinding } from "@/game/sessionSettlement";
 import {
   HARDWAY_NUMBERS,
@@ -26,7 +27,7 @@ import {
   type RollLine,
 } from "./engine/craplessEngine";
 import { CraplessTableFelt } from "./components/CraplessTableFelt";
-import { DicePair3D } from "./components/DicePair3D";
+import { DieCube, rotationForValue } from "./components/DicePair3D";
 import { UnifiedGameHeader } from "@/components/ui/UnifiedGameHeader";
 import { GameSettingsModal } from "@/components/ui/GameSettingsModal";
 import { SevenYearItchOddsModal } from "./components/SevenYearItchOddsModal";
@@ -85,6 +86,35 @@ function pickWeightedWithoutReplacement<T extends { pullWeight: number }>(pool: 
   return out;
 }
 
+
+
+
+function getTargetSettleTransform(value: number, isDie2: boolean): string {
+  const baseRot = rotationForValue(value);
+  const rotMultiplierX = 2 + Math.floor(Math.random() * 3);
+  const rotMultiplierY = 2 + Math.floor(Math.random() * 3);
+  const rotMultiplierZ = 2 + Math.floor(Math.random() * 3);
+
+  const addX = rotMultiplierX * 360 * (isDie2 ? -1 : 1);
+  const addY = rotMultiplierY * 360 * (isDie2 ? -1 : 1);
+  const addZ = rotMultiplierZ * 360 * (isDie2 ? -1 : 1);
+
+  let rx = 0, ry = 0;
+  if (baseRot.includes("rotateX(")) {
+    const match = baseRot.match(/rotateX\((-?\d+)deg\)/);
+    if (match) rx = parseInt(match[1], 10);
+  }
+  if (baseRot.includes("rotateY(")) {
+    const match = baseRot.match(/rotateY\((-?\d+)deg\)/);
+    if (match) ry = parseInt(match[1], 10);
+  }
+
+  const finalX = rx + addX;
+  const finalY = ry + addY;
+  const finalZ = addZ;
+  return `rotateX(${finalX}deg) rotateY(${finalY}deg) rotateZ(${finalZ}deg)`;
+}
+
 export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
   const buyIn = props.settlement.buyIn;
   const tableRules = useMemo(() => resolveSevenYearItchGameMode(props.gameModeId), [props.gameModeId]);
@@ -112,7 +142,10 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
   const [lastD1, setLastD1] = useState(1);
   const [lastD2, setLastD2] = useState(1);
   const [diceRunActive, setDiceRunActive] = useState(false);
-  const [diceRunStyle, setDiceRunStyle] = useState<React.CSSProperties>({});
+  const [die1RunStyle, setDie1RunStyle] = useState<CSSProperties>({});
+  const [die2RunStyle, setDie2RunStyle] = useState<CSSProperties>({});
+  const [die1CubeStyle, setDie1CubeStyle] = useState<CSSProperties>({});
+  const [die2CubeStyle, setDie2CubeStyle] = useState<CSSProperties>({});
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [cashOutOpen, setCashOutOpen] = useState(false);
   const [settingsOpened, setSettingsOpened] = useState(false);
@@ -512,15 +545,59 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
       setLoreOpen(true);
       return;
     }
-    const startXvw = 10 + Math.random() * 72;
-    const deltaXvw = 62 - startXvw + (Math.random() * 16 - 8);
-    const deltaYvh = -38 - Math.random() * 12;
-    setDiceRunStyle({
-      left: `${startXvw.toFixed(2)}vw`,
+    const startX1 = 5 + Math.random() * 20;
+    const deltaX1 = 25 + Math.random() * 15;
+    const deltaY1 = -35 - Math.random() * 15;
+
+    const startX2 = 55 + Math.random() * 20;
+    const deltaX2 = -25 - Math.random() * 15;
+    const deltaY2 = -35 - Math.random() * 15;
+
+    setDie1RunStyle({
+      left: `${startX1.toFixed(2)}vw`,
       bottom: "7vh",
-      ["--yi-dx" as string]: `${deltaXvw.toFixed(2)}vw`,
-      ["--yi-dy" as string]: `${deltaYvh.toFixed(2)}vh`,
+      ["--yi-dx" as string]: `${deltaX1.toFixed(2)}vw`,
+      ["--yi-dy" as string]: `${deltaY1.toFixed(2)}vh`,
+      ["--yi-spin-35" as string]: `${(180 + Math.random() * 100).toFixed(1)}deg`,
+      ["--yi-spin-65" as string]: `${(400 + Math.random() * 150).toFixed(1)}deg`,
+      ["--yi-spin-85" as string]: `${(600 + Math.random() * 100).toFixed(1)}deg`,
+      ["--yi-spin-100" as string]: `${(720 + Math.random() * 90).toFixed(1)}deg`,
     });
+
+    setDie2RunStyle({
+      left: `${startX2.toFixed(2)}vw`,
+      bottom: "7vh",
+      ["--yi-dx" as string]: `${deltaX2.toFixed(2)}vw`,
+      ["--yi-dy" as string]: `${deltaY2.toFixed(2)}vh`,
+      ["--yi-spin-35" as string]: `${(-180 - Math.random() * 100).toFixed(1)}deg`,
+      ["--yi-spin-65" as string]: `${(-400 - Math.random() * 150).toFixed(1)}deg`,
+      ["--yi-spin-85" as string]: `${(-600 - Math.random() * 100).toFixed(1)}deg`,
+      ["--yi-spin-100" as string]: `${(-720 - Math.random() * 90).toFixed(1)}deg`,
+    });
+
+    const settle1 = getTargetSettleTransform(r.d1, false);
+    const settle2 = getTargetSettleTransform(r.d2, true);
+
+    setDie1CubeStyle({
+      ["--yi-rot-x1" as string]: `${(100 + Math.random() * 100).toFixed(1)}deg`,
+      ["--yi-rot-y1" as string]: `${(80 + Math.random() * 80).toFixed(1)}deg`,
+      ["--yi-rot-z1" as string]: `${(10 + Math.random() * 30).toFixed(1)}deg`,
+      ["--yi-rot-x2" as string]: `${(350 + Math.random() * 100).toFixed(1)}deg`,
+      ["--yi-rot-y2" as string]: `${(250 + Math.random() * 100).toFixed(1)}deg`,
+      ["--yi-rot-z2" as string]: `${(-10 - Math.random() * 20).toFixed(1)}deg`,
+      ["--yi-settle-transform" as string]: settle1,
+    });
+
+    setDie2CubeStyle({
+      ["--yi-rot-x1" as string]: `${(-100 - Math.random() * 100).toFixed(1)}deg`,
+      ["--yi-rot-y1" as string]: `${(-80 - Math.random() * 80).toFixed(1)}deg`,
+      ["--yi-rot-z1" as string]: `${(-10 - Math.random() * 30).toFixed(1)}deg`,
+      ["--yi-rot-x2" as string]: `${(-350 - Math.random() * 100).toFixed(1)}deg`,
+      ["--yi-rot-y2" as string]: `${(-250 - Math.random() * 100).toFixed(1)}deg`,
+      ["--yi-rot-z2" as string]: `${(10 + Math.random() * 20).toFixed(1)}deg`,
+      ["--yi-settle-transform" as string]: settle2,
+    });
+
     setDiceRunActive(true);
     const t1 = window.setTimeout(() => {
       setLastD1(r.d1);
@@ -542,7 +619,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
         Pick one favor before the cops cool down. Effects apply on upcoming rolls — read each card.
       </Text>
       {favorOfferKeep ? (
-        <Button
+        <ClubButton
           variant="outline"
           color="gray"
           onClick={() => {
@@ -551,7 +628,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
           }}
         >
           Keep existing favor{activeBonus ? ` — ${activeBonus.title}` : ""}
-        </Button>
+        </ClubButton>
       ) : null}
       {favorPicks.map((bonus) => (
         <Paper key={bonus.id} p="sm" withBorder radius="md" style={{ borderColor: "var(--7yi-amber-dim)", background: "var(--7yi-paper)" }}>
@@ -573,7 +650,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
                       ? "Multiplies the next non-seven payout; risky tables may still seize on a seven."
                       : "Multiplies the next non-seven payout that hits the layout."}
             </Text>
-            <Button
+            <ClubButton
               variant="light"
               color="orange"
               size="xs"
@@ -584,13 +661,13 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
               }}
             >
               Take this favor
-            </Button>
+            </ClubButton>
           </Stack>
         </Paper>
       ))}
-      <Button variant="subtle" color="gray" size="xs" onClick={() => setMainView("table")}>
+      <ClubButton variant="subtle" color="gray" size="xs" onClick={() => setMainView("table")}>
         Back to the table
-      </Button>
+      </ClubButton>
     </Stack>
   );
 
@@ -603,8 +680,11 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
     <Box className="seven-year-itch-root" data-testid="seven-year-itch-root">
       {diceRunActive ? (
         <div className="yi-diceOverlay" aria-hidden>
-          <div className="yi-diceOverlay-inner yi-diceOverlay-inner--roll" style={diceRunStyle}>
-            <DicePair3D d1={lastD1} d2={lastD2} rolling reduceMotion={false} />
+          <div className="yi-diceOverlay-inner yi-diceOverlay-inner--roll" style={die1RunStyle}>
+            <DieCube value={lastD1} rolling reduceMotion={false} animKey={rollCount} style={die1CubeStyle} />
+          </div>
+          <div className="yi-diceOverlay-inner yi-diceOverlay-inner--roll" style={die2RunStyle}>
+            <DieCube value={lastD2} rolling reduceMotion={false} animKey={rollCount + 17} style={die2CubeStyle} />
           </div>
         </div>
       ) : null}
@@ -624,7 +704,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
                   {lastRollText.split(" = ")[1]}
                 </div>
               )}
-              <Button
+              <ClubButton
                 type="button"
                 size="xs"
                 variant="filled"
@@ -636,7 +716,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
                 styles={{ label: { fontWeight: 700, color: clubTokens.surface.deepWalnut } }}
               >
                 📊 Odds
-              </Button>
+              </ClubButton>
             </Group>
           }
         />
@@ -709,7 +789,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
                       : loreState.body}
                   </Text>
                 </Stack>
-                <Button
+                <ClubButton
                   variant="subtle"
                   color="orange"
                   size="xs"
@@ -720,7 +800,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
                   style={{ flexShrink: 0 }}
                 >
                   Last story
-                </Button>
+                </ClubButton>
               </Group>
             </Paper>
 
@@ -762,18 +842,18 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
             <Paper radius="md" p="xs" withBorder style={{ borderColor: "var(--7yi-amber-dim)", background: "var(--7yi-paper)" }}>
               <Group justify="space-between" wrap="wrap" gap="xs">
                 {favorPicks.length > 0 ? (
-                  <Button variant="subtle" color="orange" size="xs" onClick={() => setMainView("favors")}>
+                  <ClubButton variant="subtle" color="orange" size="xs" onClick={() => setMainView("favors")}>
                     Favors
-                  </Button>
+                  </ClubButton>
                 ) : null}
-                <Button variant="subtle" color="gray" size="xs" onClick={() => setLogOpen(true)}>
+                <ClubButton variant="subtle" color="gray" size="xs" onClick={() => setLogOpen(true)}>
                   Rolls / results
-                </Button>
+                </ClubButton>
                 <Group gap="xs" wrap="wrap" justify="flex-end">
-                  <Button variant="subtle" color="gray" size="xs" onClick={() => setLeaveOpen(true)}>
+                  <ClubButton variant="subtle" color="gray" size="xs" onClick={() => setLeaveOpen(true)}>
                     Save and return later
-                  </Button>
-                  <Button
+                  </ClubButton>
+                  <ClubButton
                     variant={canCashOut ? "light" : "subtle"}
                     color="orange"
                     size="xs"
@@ -783,7 +863,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
                     title={canCashOut ? "Cash out and settle this table" : "Cash out unlocks when no point is active"}
                   >
                     Cash out
-                  </Button>
+                  </ClubButton>
                 </Group>
               </Group>
             </Paper>
@@ -826,7 +906,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
                 </Paper>
               </SimpleGrid>
               <Group grow wrap="wrap">
-                <Button
+                <ClubButton
                   color="orange"
                   onClick={() => {
                     beginNextHand();
@@ -835,8 +915,8 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
                   }}
                 >
                   Play next hand
-                </Button>
-                <Button
+                </ClubButton>
+                <ClubButton
                   variant="light"
                   color="gray"
                   disabled={!canCashOut}
@@ -848,7 +928,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
                   title={canCashOut ? "Settle and return to the club" : "Cash out unlocks when no point is active"}
                 >
                   Cash out
-                </Button>
+                </ClubButton>
               </Group>
             </Stack>
           ) : null}
@@ -903,9 +983,9 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
           <Text size="sm">
             The club will keep this table warm. Come back through the menu to resume this session without another buy-in.
           </Text>
-          <Button color="orange" onClick={props.onPauseToClub}>
+          <ClubButton color="orange" onClick={props.onPauseToClub}>
             Back to the bar
-          </Button>
+          </ClubButton>
         </Stack>
       </Modal>
 
@@ -915,10 +995,10 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
             There is no active point. Settle this table and return your eligible credits to the club wallet?
           </Text>
           <SimpleGrid cols={2} spacing="sm">
-            <Button variant="subtle" color="gray" onClick={() => setCashOutOpen(false)}>
+            <ClubButton variant="subtle" color="gray" onClick={() => setCashOutOpen(false)}>
               Cancel
-            </Button>
-            <Button
+            </ClubButton>
+            <ClubButton
               color="orange"
               onClick={() => {
                 setCashOutOpen(false);
@@ -929,7 +1009,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
               }}
             >
               Confirm cash out
-            </Button>
+            </ClubButton>
           </SimpleGrid>
         </Stack>
       </Modal>

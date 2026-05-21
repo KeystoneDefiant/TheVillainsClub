@@ -1,4 +1,4 @@
-import { Button } from "@mantine/core";
+import { ClubButton } from "@/components/ui/ClubButton";
 import { clubTokens } from "@/theme/clubTokens";
 import type { FailureStateType, GameState } from "../types";
 import { LOGO_URL } from "../config/assets";
@@ -32,19 +32,18 @@ export function GameHeader({
     failureState && gameState ? getFailureStateDescription(failureState, gameState) : null;
 
   const defaultExtraButtons = onShowPayoutTable ? (
-    <Button
+    <ClubButton
       type="button"
       size="xs"
       variant="filled"
-      color="yellow"
       radius="md"
       px="xs"
       onClick={onShowPayoutTable}
       title="Show payout table"
-      styles={{ label: { fontWeight: 700, color: clubTokens.surface.deepWalnut } }}
+      styles={{ label: { fontWeight: 700 } }}
     >
       💰
-    </Button>
+    </ClubButton>
   ) : null;
 
   const combinedExtraButtons = (

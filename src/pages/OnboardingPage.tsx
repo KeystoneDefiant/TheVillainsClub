@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Box, Button, Container, Stack, TextInput, Title, Text } from "@mantine/core";
+import { Box, Container, Stack, TextInput, Title, Text } from "@mantine/core";
+import { ClubButton } from "@/components/ui/ClubButton";
 import { useClubWallet } from "@/game/clubWalletStore";
 import { clubTokens } from "@/theme/clubTokens";
 import { motion } from "framer-motion";
@@ -84,22 +85,17 @@ export function OnboardingPage() {
                 }}
               />
 
-              <Button
+              <ClubButton
                 type="submit"
                 size="lg"
                 variant="filled"
-                color="red"
-                radius="md"
                 disabled={!name.trim()}
                 style={{
-                  fontFamily: "Georgia, serif",
                   minWidth: 200,
-                  background: clubTokens.text.accent,
-                  color: "#fff",
                 }}
               >
                 Enter the Club
-              </Button>
+              </ClubButton>
             </Stack>
           </form>
         </motion.div>

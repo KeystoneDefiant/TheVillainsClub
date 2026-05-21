@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Box, Button, Group, Modal, Text } from "@mantine/core";
+import { Box, Group, Modal, Text } from "@mantine/core";
+import { ClubButton } from "@/components/ui/ClubButton";
 import { clubTokens } from "@/theme/clubTokens";
 import { tutorialSlides } from "../config/tutorialConfig";
 import "./Tutorial.css";
@@ -89,23 +90,22 @@ export function Tutorial({ onClose }: TutorialProps) {
             {slideIndex + 1} of {tutorialSlides.length}
           </Text>
           <Group gap="sm" className="tutorial-nav">
-            <Button
+            <ClubButton
               type="button"
-              variant="default"
+              variant="outline"
               className="tutorial-btn tutorial-btn-secondary"
               onClick={goBack}
             >
               {isFirst ? "Back to Menu" : "Back"}
-            </Button>
-            <Button
+            </ClubButton>
+            <ClubButton
               type="button"
               variant="filled"
-              color="yellow"
               className="tutorial-btn tutorial-btn-primary"
               onClick={goNext}
             >
               {isLast ? "Done" : "Next"}
-            </Button>
+            </ClubButton>
           </Group>
         </div>
       </Box>

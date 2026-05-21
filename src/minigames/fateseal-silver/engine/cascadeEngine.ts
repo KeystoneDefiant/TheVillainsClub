@@ -162,6 +162,7 @@ function applyColumnPostPick(
   grid: FatesealSymbolId[][],
   colCtx: FatesealFillColumnContext | undefined,
   rng: Rng,
+  depth = 0,
 ): void {
   if (!colCtx) return;
   const n = grid.length;
@@ -169,7 +170,9 @@ function applyColumnPostPick(
   const deadK = Math.max(0, Math.min(colCtx.purchasedDeadColCount, n));
   const bonusDead = Math.max(0, Math.min(colCtx.bonusDeadColCount, n));
   
-  const chance = fatesealProgressionRules.purchasedReels.wildChancePerActiveReel * wildK;
+  const baseChance = fatesealProgressionRules.purchasedReels.wildChancePerActiveReel * wildK;
+  const decay = Math.pow(fatesealProgressionRules.purchasedReels.wildChanceDecayPerDepth, depth);
+  const chance = baseChance * decay;
 
   for (let r = 0; r < n; r++) {
     for (let c = 0; c < n; c++) {
@@ -187,6 +190,7 @@ export function fillGridRandom(
   pool: readonly FatesealPoolEntry[],
   rng: Rng,
   colCtx?: FatesealFillColumnContext,
+  depth = 0,
 ): void {
   const n = grid.length;
   const t = totalPoolWeight(pool);
@@ -195,7 +199,7 @@ export function fillGridRandom(
       grid[r]![c] = pickFromPool(pool, t, rng);
     }
   }
-  applyColumnPostPick(grid, colCtx, rng);
+  applyColumnPostPick(grid, colCtx, rng, depth);
 }
 
 function countScattersOnGrid(grid: FatesealSymbolId[][]): number {
@@ -480,7 +484,7 @@ function runCascadeStep(
   let g = applyRemovalMask(grid, remove);
   g = applyGravity(g);
   const filled = fillNullsFromPool(g, pool, rng);
-  applyColumnPostPick(filled, fillColCtx, rng);
+  applyColumnPostPick(filled, fillColCtx, rng, depth);
   return {
     grid: filled,
     stepPayout,
@@ -500,6 +504,7 @@ export function expandGridForBonusWave(
   pool: readonly FatesealPoolEntry[],
   rng: Rng,
   colCtx: FatesealFillColumnContext,
+  depth = 0,
 ): FatesealSymbolId[][] {
   const rowOff = newN - oldN;
   const g: FatesealSymbolId[][] = Array.from({ length: newN }, () =>
@@ -517,7 +522,7 @@ export function expandGridForBonusWave(
       g[r]![c] = pickFromPool(pool, t, rng);
     }
   }
-  applyColumnPostPick(g, colCtx, rng);
+  applyColumnPostPick(g, colCtx, rng, depth);
   return g;
 }
 
@@ -671,7 +676,7 @@ export function runSpin(
 
   let bonusWaveIdx = 0;
   if (!options?.skipInitialFill) {
-    fillGridRandom(grid, poolOpts(false), rng, colCtxForWave(0));
+    fillGridRandom(grid, poolOpts(false), rng, colCtxForWave(0), 0);
   }
 
   runOneCascadeLoop(false, 0);
@@ -683,9 +688,9 @@ export function runSpin(
     const fillPool = poolOpts(true);
     const waveCtx = colCtxForWave(bonusWaveIdx);
     if (targetN > grid.length) {
-      grid = expandGridForBonusWave(grid, grid.length, targetN, fillPool, rng, waveCtx);
+      grid = expandGridForBonusWave(grid, grid.length, targetN, fillPool, rng, waveCtx, globalDepth);
     } else {
-      fillGridRandom(grid, fillPool, rng, waveCtx);
+      fillGridRandom(grid, fillPool, rng, waveCtx, globalDepth);
     }
     runOneCascadeLoop(true, bonusWaveIdx);
   }

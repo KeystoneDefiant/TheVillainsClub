@@ -1,5 +1,6 @@
 import { Component, ReactNode, ErrorInfo } from "react";
-import { Box, Button, Center, Code, Paper, Stack, Text, Title } from "@mantine/core";
+import { Box, Center, Code, Paper, Stack, Text, Title } from "@mantine/core";
+import { ClubButton } from "@/components/ui/ClubButton";
 import { clubTokens } from "@/theme/clubTokens";
 
 interface ErrorBoundaryProps {
@@ -97,17 +98,17 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 </Box>
               )}
               <Stack gap="xs">
-                <Button variant="filled" color="yellow" onClick={this.handleReset} fullWidth>
+                <ClubButton variant="filled" onClick={this.handleReset} fullWidth>
                   Try again
-                </Button>
+                </ClubButton>
                 {this.props.onReturnToMenu && (
-                  <Button variant="light" color="gray" onClick={() => this.props.onReturnToMenu?.()} fullWidth>
+                  <ClubButton variant="light" onClick={() => this.props.onReturnToMenu?.()} fullWidth>
                     Return to menu
-                  </Button>
+                  </ClubButton>
                 )}
-                <Button variant="default" onClick={() => window.location.reload()} fullWidth>
+                <ClubButton variant="outline" onClick={() => window.location.reload()} fullWidth>
                   Reload page
-                </Button>
+                </ClubButton>
               </Stack>
             </Stack>
           </Paper>

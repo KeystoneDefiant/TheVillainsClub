@@ -58,30 +58,111 @@
   border: 2px solid var(--fs-felt-line);
   box-shadow: inset 0 0 42px rgba(0, 0, 0, 0.35);
   align-self: center;
-  width: min(100%, 440px);
+  width: 100%;
 }
 
 .fateseal-ritual-btn {
   appearance: none;
-  border: none;
-  border-radius: 8px;
-  padding: 9px 24px;
+  border-top: 2px solid rgba(199, 158, 87, 0.85);
+  border-bottom: 2px solid rgba(199, 158, 87, 0.85);
+  border-left: none;
+  border-right: none;
+  border-radius: 3px;
+  padding: 9px 28px;
+  margin: 0 8px;
+  font-family: "Outfit", "Inter", "Noto Sans", sans-serif;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   cursor: pointer;
-  color: #1a1220;
-  background: linear-gradient(180deg, #d4b8f0, #8e5aaf);
-  box-shadow:
-    0 3px 0 #432652,
-    0 6px 16px rgba(0, 0, 0, 0.25);
+  color: #ffffff;
+  background: radial-gradient(circle at center, #6a0b12 0%, #2e0508 55%, #100102 100%);
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.95), 0 0 4px rgba(0, 0, 0, 0.7);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.15), inset 0 0 0 1px rgba(199, 158, 87, 0.2), inset 0 0 6px rgba(0, 0, 0, 0.8), 0 4px 8px rgba(0, 0, 0, 0.6);
+  position: relative;
+  overflow: visible;
+  transition: transform 0.15s cubic-bezier(0.25, 0.8, 0.25, 1),
+              box-shadow 0.15s ease,
+              filter 0.15s ease,
+              background 0.15s ease,
+              border-color 0.15s ease;
+}
+
+.fateseal-ritual-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.2), inset 0 0 6px rgba(0, 0, 0, 0.8), 0 8px 16px rgba(0,0,0,0.55), 0 0 12px rgba(230, 20, 30, 0.7);
+  filter: brightness(1.15);
+  border-top-color: rgba(255, 235, 180, 1);
+  border-bottom-color: rgba(255, 235, 180, 1);
+  background: radial-gradient(circle at center, #a8101d 0%, #4a050a 60%, #150102 100%);
+}
+
+.fateseal-ritual-btn:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.9), 0 2px 6px rgba(0,0,0,0.4);
+  filter: brightness(0.92);
 }
 
 .fateseal-ritual-btn:disabled,
 .fateseal-ritual-btn[disabled] {
-  opacity: 0.42;
-  cursor: not-allowed;
-  box-shadow: none;
+  background: radial-gradient(circle at center, #1a1715 0%, #0f0d0c 75%, #050404 100%) !important;
+  color: rgba(100, 95, 90, 0.55) !important;
+  border-top: 2px solid rgba(60, 55, 50, 0.6) !important;
+  border-bottom: 2px solid rgba(60, 55, 50, 0.6) !important;
+  border-left: none !important;
+  border-right: none !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
+  filter: grayscale(1) brightness(0.55) !important;
+  text-shadow: none !important;
+  opacity: 1 !important;
+}
+
+.fateseal-ritual-btn::before {
+  content: "";
+  position: absolute;
+  left: -8px;
+  top: 0;
+  bottom: 0;
+  width: 16px;
+  z-index: 5;
+  pointer-events: none;
+  background: radial-gradient(circle at center, #2e0508 0%, #150204 40%, #8b6508 85%, #cf9e52 100%);
+  clip-path: polygon(0% 50%, 60% 0%, 100% 0%, 100% 100%, 60% 100%);
+  transition: all 0.15s ease;
+}
+
+.fateseal-ritual-btn::after {
+  content: "";
+  position: absolute;
+  right: -8px;
+  top: 0;
+  bottom: 0;
+  width: 16px;
+  z-index: 5;
+  pointer-events: none;
+  background: radial-gradient(circle at center, #2e0508 0%, #150204 40%, #8b6508 85%, #cf9e52 100%);
+  clip-path: polygon(100% 50%, 40% 0%, 0% 0%, 0% 100%, 40% 100%);
+  transition: all 0.15s ease;
+}
+
+.fateseal-ritual-btn:disabled::before {
+  background: radial-gradient(circle at center, #101010 0%, #080808 40%, #444444 85%, #666666 100%) !important;
+  filter: grayscale(1) brightness(0.4) !important;
+}
+
+.fateseal-ritual-btn:disabled::after {
+  background: radial-gradient(circle at center, #101010 0%, #080808 40%, #444444 85%, #666666 100%) !important;
+  filter: grayscale(1) brightness(0.4) !important;
+}
+
+.fateseal-ritual-btn:hover:not(:disabled)::before {
+  background: radial-gradient(circle at center, #540910 0%, #1d0305 40%, #a87e22 85%, #ffd700 100%);
+}
+
+.fateseal-ritual-btn:hover:not(:disabled)::after {
+  background: radial-gradient(circle at center, #540910 0%, #1d0305 40%, #a87e22 85%, #ffd700 100%);
 }
 
 /* Grid -------------------------------------------------- */
@@ -115,7 +196,7 @@
   border-radius: 6px;
   border: 1px solid rgba(168, 85, 247, 0.28);
   background: radial-gradient(circle at center, #1b1324 0%, #060408 100%);
-  box-shadow: inset 0 2px 3px rgba(255,255,255,0.03), inset 0 -3px 6px rgba(0,0,0,0.85), 0 3px 6px rgba(0,0,0,0.45);
+  box-shadow: inset 0 2px 3px rgba(255, 255, 255, 0.03), inset 0 -3px 6px rgba(0, 0, 0, 0.85), 0 3px 6px rgba(0, 0, 0, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -127,6 +208,18 @@
   transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
+.fateseal-symbol-icon {
+  width: 82%;
+  height: 82%;
+  color: inherit;
+  pointer-events: none;
+  transition: transform 0.22s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.fateseal-cell:hover:not(.fateseal-cell--void) .fateseal-symbol-icon {
+  transform: scale(1.06);
+}
+
 .fateseal-cell--void {
   background: radial-gradient(circle at center, #2b0c47 0%, #050208 100%);
   border-color: #a855f7;
@@ -136,11 +229,13 @@
 }
 
 @keyframes fateseal-void-pull {
+
   0%,
   100% {
     transform: scale(1);
     box-shadow: inset 0 0 12px rgba(168, 85, 247, 0.2), 0 0 8px rgba(168, 85, 247, 0.15);
   }
+
   50% {
     transform: scale(1.03);
     box-shadow: inset 0 0 22px rgba(168, 85, 247, 0.5), 0 0 15px rgba(168, 85, 247, 0.35);
@@ -153,13 +248,16 @@
 }
 
 @keyframes fateseal-void-vibe {
+
   0%,
   100% {
     transform: translate(0, 0);
   }
+
   25% {
     transform: translate(0.5px, -0.5px);
   }
+
   75% {
     transform: translate(-0.5px, 0.5px);
   }
@@ -192,6 +290,7 @@
       0 0 0 transparent;
     filter: brightness(1);
   }
+
   42% {
     transform: scale(1.06);
     box-shadow:
@@ -200,6 +299,7 @@
     filter: brightness(1.42);
     border-color: rgba(228, 230, 246, 0.55);
   }
+
   100% {
     transform: scale(1);
     filter: brightness(1.06);
@@ -219,6 +319,7 @@
     border-color: rgba(139, 28, 28, 0.35);
     text-shadow: 0 0 0 transparent;
   }
+
   35% {
     border-color: rgba(218, 80, 80, 0.85);
     text-shadow:
@@ -229,6 +330,7 @@
       inset 0 0 18px rgba(139, 28, 28, 0.5),
       0 0 16px rgba(180, 40, 52, 0.45);
   }
+
   100% {
     border-color: rgba(200, 208, 218, 0.35);
     text-shadow: 0 0 0 transparent;
@@ -254,10 +356,12 @@
     transform: translateY(-130%);
     opacity: 0;
   }
+
   60% {
     transform: translateY(8%);
     opacity: 1;
   }
+
   100% {
     transform: translateY(0);
     opacity: 1;
@@ -275,11 +379,13 @@
     transform: translateY(0);
     opacity: 1;
   }
+
   100% {
     transform: translateY(130%);
     opacity: 0;
   }
 }
+
 .fateseal-payout-flyoff {
   position: absolute;
   left: 50%;
@@ -302,10 +408,12 @@
     opacity: 0;
     transform: translate(-50%, 6px) scale(0.72);
   }
+
   14% {
     opacity: 1;
     transform: translate(-50%, -2px) scale(1.02);
   }
+
   100% {
     opacity: 0;
     transform: translate(-50%, -36px) scale(1.05);
@@ -331,6 +439,7 @@
     opacity: 0;
     filter: blur(6px);
   }
+
   to {
     opacity: 1;
     filter: blur(0);
@@ -342,15 +451,185 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .fateseal-cell--cascadePulse,
   .fateseal-cell--prophecyBloom,
   .fateseal-cell--dropIn,
   .fateseal-payout-flyoff {
     animation: none !important;
   }
+
   .fateseal-sympathetic-flash {
     animation: none;
     opacity: 1;
     filter: none;
   }
+}
+
+/* Crossroads Shop Refinement */
+.crossroads-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+
+.crossroads-item-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-radius: 6px;
+  padding: 8px 12px;
+  background: radial-gradient(circle at 50% 0%, rgba(38, 24, 20, 0.95) 0%, rgba(20, 12, 10, 0.98) 100%);
+  border: 1px solid rgba(199, 158, 87, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 3px 6px rgba(0, 0, 0, 0.4);
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  min-height: 0;
+}
+
+.crossroads-item-card:hover {
+  border-color: rgba(199, 158, 87, 0.45);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 5px 12px rgba(0, 0, 0, 0.5), 0 0 8px rgba(199, 158, 87, 0.12);
+  transform: translateY(-1px);
+}
+
+.crossroads-item-card::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  pointer-events: none;
+  z-index: 0;
+  transition: opacity 0.3s ease;
+}
+
+.crossroads-item-header {
+  font-family: Georgia, serif;
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: #f0e8db;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  z-index: 1;
+}
+
+.crossroads-item-desc {
+  font-size: 0.68rem;
+  color: #c7bdce;
+  line-height: 1.25;
+  margin-top: 2px;
+  margin-bottom: 6px;
+  z-index: 1;
+}
+
+.crossroads-item-action-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  margin-top: auto;
+  z-index: 1;
+}
+
+.crossroads-select {
+  width: 100%;
+  height: 26px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: #110907;
+  color: #f0e8db;
+  border: 1px solid rgba(199, 158, 87, 0.25);
+  outline: none;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.crossroads-select:hover:not(:disabled) {
+  border-color: rgba(199, 158, 87, 0.5);
+  background: #180e0b;
+}
+
+.crossroads-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.crossroads-select option {
+  background: #140c0a;
+  color: #f0e8db;
+}
+
+.crossroads-card-full {
+  grid-column: span 2;
+}
+
+/* Card variations with unique themed glows */
+.crossroads-card--omen {
+  border-color: rgba(155, 110, 200, 0.28);
+}
+
+.crossroads-card--omen:hover {
+  border-color: rgba(155, 110, 200, 0.55);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 5px 12px rgba(0, 0, 0, 0.5), 0 0 8px rgba(155, 110, 200, 0.18);
+}
+
+.crossroads-card--omen::before {
+  background: radial-gradient(circle at center, rgba(155, 110, 200, 0.05) 0%, transparent 60%);
+}
+
+.crossroads-card--wild {
+  border-color: rgba(196, 120, 45, 0.28);
+}
+
+.crossroads-card--wild:hover {
+  border-color: rgba(196, 120, 45, 0.55);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 5px 12px rgba(0, 0, 0, 0.5), 0 0 8px rgba(196, 120, 45, 0.18);
+}
+
+.crossroads-card--wild::before {
+  background: radial-gradient(circle at center, rgba(196, 120, 45, 0.05) 0%, transparent 60%);
+}
+
+.crossroads-card--dead {
+  border-color: rgba(148, 138, 163, 0.25);
+}
+
+.crossroads-card--dead:hover {
+  border-color: rgba(148, 138, 163, 0.55);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 5px 12px rgba(0, 0, 0, 0.5), 0 0 8px rgba(148, 138, 163, 0.15);
+}
+
+.crossroads-card--dead::before {
+  background: radial-gradient(circle at center, rgba(148, 138, 163, 0.04) 0%, transparent 60%);
+}
+
+.crossroads-card--mark {
+  border-color: rgba(120, 60, 180, 0.28);
+}
+
+.crossroads-card--mark:hover {
+  border-color: rgba(120, 60, 180, 0.55);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 5px 12px rgba(0, 0, 0, 0.5), 0 0 8px rgba(120, 60, 180, 0.18);
+}
+
+.crossroads-card--mark::before {
+  background: radial-gradient(circle at center, rgba(120, 60, 180, 0.05) 0%, transparent 60%);
+}
+
+.crossroads-card--tome {
+  border-color: rgba(185, 28, 40, 0.32);
+}
+
+.crossroads-card--tome:hover {
+  border-color: rgba(185, 28, 40, 0.6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 5px 12px rgba(0, 0, 0, 0.5), 0 0 10px rgba(185, 28, 40, 0.22);
+}
+
+.crossroads-card--tome::before {
+  background: radial-gradient(circle at center, rgba(185, 28, 40, 0.06) 0%, transparent 60%);
 }

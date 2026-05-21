@@ -261,4 +261,25 @@ describe("fateseal cascadeEngine", () => {
     const result = runSpin(s, () => 0.5, { skipInitialFill: true });
     expect(result.nextState.wildReelPaidSpinTimers).toEqual([3, 3]);
   });
+
+  it("fillGridRandom decays wild chance as depth increases", () => {
+    const pool = clonePool(fatesealDefaultSymbolPool);
+    // Remove "wild" from pool so any wilds on grid MUST come from applyColumnPostPick overrides
+    const cleanPool = pool.filter((e) => e.symbol !== "wild");
+    const colCtx = { bonusDeadColCount: 0, wildColCount: 3, purchasedDeadColCount: 0 };
+    
+    // If rng() always returns 0.01:
+    // - For depth 0: 0.01 < (0.20 * 3) = 0.60 -> all cells become wild.
+    // - For depth 10: 0.01 < (0.60 * 0.5^10) = 0.00058 -> no cells become wild.
+    const testGridDepth0 = Array.from({ length: 5 }, () => Array.from({ length: 5 }, () => "dagger" as const)) as any;
+    fillGridRandom(testGridDepth0, cleanPool, () => 0.01, colCtx, 0);
+    const countWildDepth0 = testGridDepth0.flat().filter((s: string) => s === "wild").length;
+    
+    const testGridDepth10 = Array.from({ length: 5 }, () => Array.from({ length: 5 }, () => "dagger" as const)) as any;
+    fillGridRandom(testGridDepth10, cleanPool, () => 0.01, colCtx, 10);
+    const countWildDepth10 = testGridDepth10.flat().filter((s: string) => s === "wild").length;
+    
+    expect(countWildDepth0).toBe(25);
+    expect(countWildDepth10).toBe(0);
+  });
 });

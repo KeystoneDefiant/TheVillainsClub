@@ -31,7 +31,7 @@ export const sevenYearItchGameConfig = {
     /** Field + Horn row (shown behind one-roll props when true). */
     showFieldAndHornSection: true,
     /** Rolls without a 7 before the favors shop offers new heat bonuses. */
-    heatRollsPerFavorOffer: 4,
+    heatRollsPerFavorOffer: 34,
     /** Max free-odds stake as a multiple of the current pass line stake (simplified table rule). */
     maxFreeOddsMultipleOfPass: 2,
     maxPassBetFractionOfBuyIn: 0.25 as number,
@@ -139,11 +139,11 @@ export type SevenYearItchHeatBonus = {
   pullWeight: number;
   effect: {
     type:
-      | "shield_next_seven"
-      | "next_non_seven_multiplier"
-      | "place_hit_multiplier"
-      | "risk_reward_multiplier"
-      | "free_divest";
+    | "shield_next_seven"
+    | "next_non_seven_multiplier"
+    | "place_hit_multiplier"
+    | "risk_reward_multiplier"
+    | "free_divest";
     value: number;
     risk?: "seven_forfeits_table";
   };

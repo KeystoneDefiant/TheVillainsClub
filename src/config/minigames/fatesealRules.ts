@@ -115,6 +115,8 @@ export const fatesealProgressionRules = {
   purchasedReels: {
     wildRitualSpins: 3,
     wildChancePerActiveReel: 0.20,
+    /** Decay rate for wild reel chance per cascade depth step. Set to 1.0 for no decay. */
+    wildChanceDecayPerDepth: 0.50,
     deadRitualSpins: 5,
     markedRitualSpins: 3,
     markedSymbolPayoutMultiplier: 1.5,

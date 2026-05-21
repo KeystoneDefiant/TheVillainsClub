@@ -5,6 +5,7 @@ import { resetShellGameProgress } from "@/game/resetShellGameProgress";
 import { ClubButton } from "./ClubButton";
 import { clubTokens } from "@/theme/clubTokens";
 
+
 interface GameSettingsModalProps {
   opened: boolean;
   onClose: () => void;
@@ -23,6 +24,8 @@ export function GameSettingsModal({ opened, onClose }: GameSettingsModalProps) {
     setSfxVolume,
     setRepeatSfxAttenuationPercent,
   } = useClubAudioStore();
+
+
 
   const [resetProgressArmed, setResetProgressArmed] = useState(false);
 
@@ -96,7 +99,7 @@ export function GameSettingsModal({ opened, onClose }: GameSettingsModalProps) {
             <Text size="xs" c={clubTokens.text.muted}>
               At the door, music starts at 30% of this setting and fades to full after you enter.
             </Text>
-            <Divider color={clubTokens.surface.brassStroke} />
+
             <Text size="sm" fw={600} c={clubTokens.text.brass} style={{ fontFamily: "Georgia, serif" }}>
               Progress
             </Text>

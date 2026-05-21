@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
-import { Box, Button, Group, Stack, Text, Title } from "@mantine/core";
+import { Box, Group, Stack, Text, Title } from "@mantine/core";
+import { ClubButton } from "./ClubButton";
 import { clubTokens } from "@/theme/clubTokens";
 
 export interface UnifiedGameHeaderProps {
@@ -110,27 +111,26 @@ export function UnifiedGameHeader({
         {/* Right Side: Action buttons */}
         <Group gap={6} wrap="nowrap" style={{ flexShrink: 0, marginLeft: "auto" }}>
           {onAbandonRun ? (
-            <Button
+            <ClubButton
               type="button"
               size="xs"
               variant="subtle"
-              color="red"
               radius="md"
               h={36}
               px="xs"
               onClick={onAbandonRun}
               title="Abandon run"
-              styles={{ root: { ...chipStyle, color: clubTokens.text.accent } }}
+              style={{ color: clubTokens.text.accent }}
             >
               Abandon
-            </Button>
+            </ClubButton>
           ) : null}
           {extraButtons}
           {onShowSettings ? (
-            <Button
+            <ClubButton
               type="button"
               size="xs"
-              variant="default"
+              variant="outline"
               radius="md"
               w={36}
               h={36}
@@ -138,10 +138,10 @@ export function UnifiedGameHeader({
               onClick={onShowSettings}
               title="Settings"
               aria-label="Open settings"
-              styles={{ root: { ...chipStyle, minWidth: 36 } }}
+              style={{ minWidth: 36 }}
             >
               ⚙️
-            </Button>
+            </ClubButton>
           ) : null}
         </Group>
       </Group>

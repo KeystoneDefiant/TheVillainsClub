@@ -32,14 +32,21 @@ describe("computeOublietteReturn", () => {
     expect(r.uncappedCredits).toBe(1_000_000);
   });
 
-  it("adds overachievement bonus per tier bar", () => {
+  it("adds overachievement bonus per tier bar but caps totalReturn at baseCap", () => {
     const oa = cfg.overachievement;
     const milestone = buyIn * (oa.capMultiple + oa.buyInSlab);
     const tierBar = oa.tierStepMultiple * milestone;
     const r = computeOublietteReturn(tierBar * 2 + 1, baseProfile);
     expect(r.tiers).toBe(2);
     expect(r.overachievementBonus).toBe(2 * oa.bonusMultipleOfBuyInPerTier * buyIn);
-    expect(r.totalReturn).toBe(r.basePayout + r.overachievementBonus);
+    expect(r.totalReturn).toBe(getOublietteBaseReturnCeiling(baseProfile));
+  });
+
+  it("strictly caps totalReturn at baseCap even with massive uncapped credits", () => {
+    const massiveCredits = 10_000_000;
+    const r = computeOublietteReturn(massiveCredits, baseProfile);
+    const expectedCap = getOublietteBaseReturnCeiling(baseProfile);
+    expect(r.totalReturn).toBe(expectedCap);
   });
 
   it("applies cap modifiers from settlement profile", () => {

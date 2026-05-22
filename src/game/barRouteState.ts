@@ -91,11 +91,12 @@ export function buildBarRouteStateFromReturn(
   settlement: OublietteSettlementProfile,
 ): BarRouteState {
   const maxWinCredits = getOublietteBaseReturnCeiling(settlement);
+  const totalReturn = Math.min(detail.totalReturn, maxWinCredits);
   return {
     lastTable: {
       gameId,
       buyIn,
-      totalReturn: detail.totalReturn,
+      totalReturn,
       tableRound: detail.tableRound ?? 0,
       tiers: detail.tiers,
       maxWinCredits,

@@ -41,8 +41,6 @@ import {
   applyCrossroadsDeadReel,
   applyCrossroadsOmenMark,
   applyCrossroadsWildReel,
-  faustianCreditGrant,
-  silverVisionCost,
   tomeCost,
   type CrossroadsChoice,
 } from "./engine/shopEngine";
@@ -257,7 +255,7 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [cashOutOpen, setCashOutOpen] = useState(false);
   const [settingsOpened, setSettingsOpened] = useState(false);
-  const [silverPick, setSilverPick] = useState<FatesealStandardId>("dagger");
+  const [silverPick] = useState<FatesealStandardId>("dagger");
   const [omenAddPick, setOmenAddPick] = useState<FatesealStandardId>("chalice");
   const [markPick, setMarkPick] = useState<FatesealStandardId>("dagger");
   const [cascadeOverlay, setCascadeOverlay] = useState<CascadeOverlay | null>(null);

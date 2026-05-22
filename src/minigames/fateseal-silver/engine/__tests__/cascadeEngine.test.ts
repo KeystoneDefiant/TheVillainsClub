@@ -8,13 +8,14 @@ import type { CascadeLogLine } from "../cascadeEngine";
 import {
   createInitialFatesealState,
   countProphecyAdjacencyEdges,
+  fillGridRandom,
   findClusterRemovalCells,
   meterTickFromScattersOnGrid,
   pickFromPool,
   runSpin,
   tickFifoReelTimers,
 } from "../cascadeEngine";
-import { clonePool, fatesealDefaultSymbolPool, totalPoolWeight } from "@/config/minigames/fatesealRules";
+import { clonePool, fatesealDefaultSymbolPool, totalPoolWeight, type FatesealSymbolId } from "@/config/minigames/fatesealRules";
 
 const zeroRng = () => 0;
 
@@ -271,11 +272,11 @@ describe("fateseal cascadeEngine", () => {
     // If rng() always returns 0.01:
     // - For depth 0: 0.01 < (0.20 * 3) = 0.60 -> all cells become wild.
     // - For depth 10: 0.01 < (0.60 * 0.5^10) = 0.00058 -> no cells become wild.
-    const testGridDepth0 = Array.from({ length: 5 }, () => Array.from({ length: 5 }, () => "dagger" as const)) as any;
+    const testGridDepth0 = Array.from({ length: 5 }, () => Array.from({ length: 5 }, () => "dagger" as FatesealSymbolId)) as FatesealSymbolId[][];
     fillGridRandom(testGridDepth0, cleanPool, () => 0.01, colCtx, 0);
     const countWildDepth0 = testGridDepth0.flat().filter((s: string) => s === "wild").length;
     
-    const testGridDepth10 = Array.from({ length: 5 }, () => Array.from({ length: 5 }, () => "dagger" as const)) as any;
+    const testGridDepth10 = Array.from({ length: 5 }, () => Array.from({ length: 5 }, () => "dagger" as FatesealSymbolId)) as FatesealSymbolId[][];
     fillGridRandom(testGridDepth10, cleanPool, () => 0.01, colCtx, 10);
     const countWildDepth10 = testGridDepth10.flat().filter((s: string) => s === "wild").length;
     

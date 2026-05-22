@@ -1,5 +1,4 @@
 import { ClubButton } from "@/components/ui/ClubButton";
-import { clubTokens } from "@/theme/clubTokens";
 import type { FailureStateType, GameState } from "../types";
 import { LOGO_URL } from "../config/assets";
 import { getFailureStateDescription } from "../utils/failureConditions";

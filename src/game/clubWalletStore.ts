@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { villainsGameDefaults } from "@/config/villainsGameDefaults";
 import { settleTableSession, startTableSession, type TableSession } from "./money";
+import { getOublietteBaseReturnCeiling } from "./sessionSettlement";
 import type { ClubTableReturnDetail } from "./sessionSettlement";
 
 export type StartClubSessionResult =
@@ -70,8 +71,10 @@ export const useClubWallet = create<ClubWalletState>()(
       endSession: (returned) => {
         const { clubBalance, activeSession } = get();
         if (!activeSession) return;
-        const total =
+        const rawTotal =
           typeof returned === "number" ? returned : Math.max(0, Math.floor(returned.totalReturn));
+        const baseCap = getOublietteBaseReturnCeiling(activeSession.settlement);
+        const total = Math.min(rawTotal, baseCap);
         const { clubBalance: next } = settleTableSession(clubBalance, activeSession, total);
         set({ clubBalance: next, activeSession: null });
       },

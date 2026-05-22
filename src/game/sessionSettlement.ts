@@ -152,7 +152,7 @@ export function computeOublietteReturn(
   const tierBar = oa.tierStepMultiple * milestone;
   const tiers = tierBar > 0 ? Math.floor(safe / tierBar) : 0;
   const overachievementBonus = tiers * oa.bonusMultipleOfBuyInPerTier * b;
-  const totalReturn = basePayout + overachievementBonus;
+  const totalReturn = Math.min(basePayout + overachievementBonus, baseCap);
 
   return {
     uncappedCredits: safe,

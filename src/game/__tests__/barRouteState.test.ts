@@ -52,6 +52,20 @@ describe("barRouteState", () => {
     expect(state.lastTable.maxWinCredits).toBeGreaterThan(0);
   });
 
+  it("buildBarRouteStateFromReturn caps totalReturn at maxWinCredits", () => {
+    const settlement = buildOublietteSettlementProfile(defaultBuyIn);
+    const maxWin = defaultBuyIn * 50; // 100000
+    const state = buildBarRouteStateFromReturn("oubliette_no9", defaultBuyIn, {
+      uncappedCredits: 1_000_000,
+      basePayout: 100_000,
+      overachievementBonus: 900_000,
+      tiers: 10,
+      totalReturn: 1_000_000,
+      tableRound: 32,
+    }, settlement);
+    expect(state.lastTable.totalReturn).toBe(maxWin);
+  });
+
   it("tableReturnTagline picks tier and round lines", () => {
     expect(
       tableReturnTagline({ gameId: "x", buyIn: defaultBuyIn, totalReturn: 0, tableRound: 1, tiers: 0 }),

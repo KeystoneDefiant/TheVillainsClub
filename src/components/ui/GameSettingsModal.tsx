@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Modal, Stack, Switch, Text, Slider, Divider, Alert, Group } from "@mantine/core";
+import { Modal, Stack, Switch, Text, Slider, Alert, Group } from "@mantine/core";
 import { useClubAudioStore } from "@/audio/clubAudioStore";
 import { resetShellGameProgress } from "@/game/resetShellGameProgress";
 import { ClubButton } from "./ClubButton";

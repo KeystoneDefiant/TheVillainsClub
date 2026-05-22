@@ -1,26 +1,24 @@
-import { ButtonHTMLAttributes } from 'react';
+import { ClubButton } from '@/components/ui/ClubButton';
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
-interface GameButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+interface GameButtonProps {
   variant?: ButtonVariant;
   size?: ButtonSize;
   fullWidth?: boolean;
   children: React.ReactNode;
+  disabled?: boolean;
+  onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
+  className?: string;
+  [key: string]: any;
 }
 
-const variantClasses: Record<ButtonVariant, string> = {
-  primary: 'btn-game btn-game-primary',
-  secondary: 'btn-game btn-game-secondary',
-  ghost: 'btn-game btn-game-ghost',
-  danger: 'btn-game btn-game-primary',
-};
-
-const sizeClasses: Record<ButtonSize, string> = {
-  sm: 'py-2 px-4 text-sm rounded-md',
-  md: 'py-3 px-6 text-base rounded-lg',
-  lg: 'py-4 px-8 text-lg rounded-xl',
+const variantMap: Record<ButtonVariant, "filled" | "light" | "outline"> = {
+  primary: 'filled',
+  secondary: 'light',
+  ghost: 'outline',
+  danger: 'filled',
 };
 
 export function GameButton({
@@ -33,19 +31,16 @@ export function GameButton({
   ...props
 }: GameButtonProps) {
   return (
-    <button
-      type="button"
-      className={`
-        ${variantClasses[variant]}
-        ${sizeClasses[size]}
-        ${fullWidth ? 'w-full' : ''}
-        oubliette-action-button
-        ${className ?? ''}
-      `}
+    <ClubButton
+      fancy
+      variant={variantMap[variant]}
+      size={size}
+      fullWidth={fullWidth}
       disabled={disabled}
+      className={`${className} oubliette-action-button`}
       {...props}
     >
       {children}
-    </button>
+    </ClubButton>
   );
 }

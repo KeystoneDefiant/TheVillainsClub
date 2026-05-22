@@ -132,7 +132,7 @@ code {
 
 .btn-game {
   position: relative;
-  font-family: "Outfit", "Inter", "Noto Sans", sans-serif;
+  font-family: "Montserrat", "Outfit", "Inter", sans-serif;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -155,28 +155,30 @@ code {
 }
 
 .btn-game:disabled {
-  background: radial-gradient(circle at center, #1a1715 0%, #0f0d0c 75%, #050404 100%) !important;
-  color: rgba(100, 95, 90, 0.55) !important;
-  border-top: 2px solid rgba(60, 55, 50, 0.6) !important;
-  border-bottom: 2px solid rgba(60, 55, 50, 0.6) !important;
+  background: radial-gradient(circle at center, #0c0a09 0%, #060505 75%, #000000 100%) !important;
+  color: rgba(100, 95, 90, 0.25) !important;
+  border-top: 2px solid rgba(60, 55, 50, 0.2) !important;
+  border-bottom: 2px solid rgba(60, 55, 50, 0.2) !important;
   border-left: none !important;
   border-right: none !important;
   cursor: not-allowed !important;
   transform: none !important;
   box-shadow: none !important;
-  filter: grayscale(1) brightness(0.55) !important;
+  filter: grayscale(1) brightness(0.35) contrast(0.8) blur(1.2px) !important;
   text-shadow: none !important;
-  opacity: 1 !important;
+  opacity: 0.35 !important;
 }
 
 .btn-game:disabled::before {
-  background: radial-gradient(circle at center, #101010 0%, #080808 40%, #444444 85%, #666666 100%) !important;
-  filter: grayscale(1) brightness(0.4) !important;
+  background: radial-gradient(circle at center, #050505 0%, #020202 40%, #202020 85%, #303030 100%) !important;
+  filter: grayscale(1) brightness(0.2) !important;
+  opacity: 0.2 !important;
 }
 
 .btn-game:disabled::after {
-  background: radial-gradient(circle at center, #101010 0%, #080808 40%, #444444 85%, #666666 100%) !important;
-  filter: grayscale(1) brightness(0.4) !important;
+  background: radial-gradient(circle at center, #050505 0%, #020202 40%, #202020 85%, #303030 100%) !important;
+  filter: grayscale(1) brightness(0.2) !important;
+  opacity: 0.2 !important;
 }
 
 /* Primary - crimson */
@@ -360,7 +362,7 @@ code {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45),
               inset 0 -1px 0 rgba(0, 0, 0, 0.5),
               0 4px 8px rgba(0, 0, 0, 0.6);
-  font-family: "Outfit", "Inter", "Noto Sans", sans-serif;
+  font-family: "Montserrat", "Outfit", "Inter", sans-serif;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -375,14 +377,14 @@ code {
 }
 
 .shop-btn-disabled {
-  background: rgba(30, 25, 22, 0.65) !important;
-  color: rgba(120, 115, 110, 0.6) !important;
-  border: 1px solid rgba(75, 70, 65, 0.45) !important;
+  background: rgba(15, 12, 10, 0.5) !important;
+  color: rgba(100, 95, 90, 0.25) !important;
+  border: 1px solid rgba(50, 45, 40, 0.25) !important;
   cursor: not-allowed !important;
   transform: none !important;
   box-shadow: none !important;
-  filter: grayscale(1) brightness(0.6) !important;
-  opacity: 1 !important;
+  filter: grayscale(1) brightness(0.4) blur(1px) !important;
+  opacity: 0.35 !important;
 }
 
 /* ============================================

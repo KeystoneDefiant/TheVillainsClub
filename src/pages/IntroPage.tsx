@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
-import { Box, Stack, Text } from "@mantine/core";
+import { Box, Stack } from "@mantine/core";
 import { AnimatePresence, motion } from "framer-motion";
 import { VcLogoIntroMark } from "@/components/intro/VcLogoIntroMark";
 import { VC_LOGO_GREY_LETTER_COUNT } from "@/components/intro/vcLogoIntroPaths";
 import { MenuHazeBackground } from "@/components/layout/MenuHazeBackground";
+import { ClubButton } from "@/components/ui/ClubButton";
 import { useClubFlowStore } from "@/game/clubFlowStore";
 import { useIntroToBarTransition } from "@/game/introToBarTransitionStore";
 import { useMotionPresetStore } from "@/motion/motionPresetStore";
@@ -77,11 +78,11 @@ export function IntroPage() {
   const introShellStyle: CSSProperties = instant
     ? { textAlign: "center", maxWidth: 920, backfaceVisibility: "hidden" }
     : {
-        textAlign: "center",
-        maxWidth: 920,
-        backfaceVisibility: "hidden",
-        ["--shell-intro-ease" as string]: `cubic-bezier(${preset.easing.join(",")})`,
-      };
+      textAlign: "center",
+      maxWidth: 920,
+      backfaceVisibility: "hidden",
+      ["--shell-intro-ease" as string]: `cubic-bezier(${preset.easing.join(",")})`,
+    };
 
   return (
     <Box
@@ -116,11 +117,11 @@ export function IntroPage() {
               instant
                 ? { opacity: 1, y: 0, z: 0, transition: { duration: 0 } }
                 : {
-                    opacity: 0,
-                    y: -12,
-                    z: 0,
-                    transition: { duration: preset.introFadeOut, ease: easing },
-                  }
+                  opacity: 0,
+                  y: -12,
+                  z: 0,
+                  transition: { duration: preset.introFadeOut, ease: easing },
+                }
             }
             transition={instant ? { duration: 0 } : { duration: preset.introTitleDuration, ease: easing }}
             style={introShellStyle}
@@ -148,14 +149,14 @@ export function IntroPage() {
                       ? { opacity: 1, scale: 1, filter: "drop-shadow(0 0 15px rgba(214, 97, 102, 0.4))" }
                       : phase === "hold"
                         ? {
-                            opacity: 1,
-                            scale: [1, 1.02, 1],
-                            filter: [
-                              "drop-shadow(0 0 15px rgba(214, 97, 102, 0.4))",
-                              "drop-shadow(0 0 30px rgba(214, 97, 102, 0.7))",
-                              "drop-shadow(0 0 15px rgba(214, 97, 102, 0.4))",
-                            ],
-                          }
+                          opacity: 1,
+                          scale: [1, 1.02, 1],
+                          filter: [
+                            "drop-shadow(0 0 15px rgba(214, 97, 102, 0.4))",
+                            "drop-shadow(0 0 30px rgba(214, 97, 102, 0.7))",
+                            "drop-shadow(0 0 15px rgba(214, 97, 102, 0.4))",
+                          ],
+                        }
                         : { opacity: 1, scale: 1, filter: "drop-shadow(0 0 15px rgba(214, 97, 102, 0.4))" }
                   }
                   transition={
@@ -167,19 +168,29 @@ export function IntroPage() {
               )}
             </Box>
             {phase === "prompt" ? (
-              <motion.button
-                type="button"
-                className="shell-intro-entry"
-                onClick={enterClub}
+              <motion.div
                 initial={instant ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={instant ? { duration: 0 } : { duration: 0.55, ease: easing }}
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  marginTop: "1.5rem",
+                }}
               >
-                <Text component="span" fz={{ base: "1rem", sm: "1.15rem" }}>
+                <p className="text-center">
+                  You have been expected.
+                </p>
+                <ClubButton
+                  onClick={enterClub}
+                  size="lg"
+                  style={{
+                    minWidth: 200,
+                  }}
+                >
                   Enter the Club
-                </Text>
-                <span className="shell-intro-entry__hint">Tap to step inside</span>
-              </motion.button>
+                </ClubButton>
+              </motion.div>
             ) : null}
           </motion.div>
         </AnimatePresence>

@@ -205,7 +205,7 @@ export function SevenYearItchOddsModal({ opened, onClose, placePayoutScale }: Se
 
         <Divider color={clubTokens.surface.brassStroke} />
 
-        <ClubButton onClick={onClose} variant="primary" size="md" fullWidth>
+        <ClubButton onClick={onClose} variant="filled" size="md" fullWidth>
           Back to felt
         </ClubButton>
       </Stack>

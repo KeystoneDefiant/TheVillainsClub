@@ -10,7 +10,7 @@ export function ClubHeading(props: ClubHeadingProps) {
     <Title
       c={c ?? clubTokens.text.primary}
       style={{
-        fontFamily: "Playfair Display, Georgia, serif",
+        fontFamily: "Cinzel, Georgia, serif",
         letterSpacing: "0.02em",
         ...style,
       }}

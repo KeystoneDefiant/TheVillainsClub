@@ -825,16 +825,16 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
                       <Group justify="center" gap="xs" wrap="wrap" mt="xs">
                         {engine.freeRitualSpinsLeft > 0 ? (
                           <Stack gap={6} align="center">
-                            <button
-                              type="button"
-                              className="fateseal-ritual-btn"
+                            <ClubButton
+                              fancy
+                              variant="filled"
                               data-testid="fateseal-ritual-spin"
                               aria-busy={busy}
                               disabled={busy || atCrossroads || engine.activeProphecy.length === 0}
                               onClick={() => handleSpin()}
                             >
                               Free ritual (spin)
-                            </button>
+                            </ClubButton>
                           </Stack>
                         ) : (
                           <Stack gap={8} align="center" style={{ position: "relative", width: "100%" }}>

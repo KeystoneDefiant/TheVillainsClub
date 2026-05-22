@@ -30,9 +30,9 @@ const brass: MantineColorsTuple = [
 export function buildClubTheme(override?: MantineThemeOverride) {
   return createTheme({
     primaryColor: "brass",
-    fontFamily: "Noto Sans, system-ui, -apple-system, Segoe UI, sans-serif",
+    fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, sans-serif",
     headings: {
-      fontFamily: "Playfair Display, Georgia, Times New Roman, serif",
+      fontFamily: "Cinzel, Georgia, Times New Roman, serif",
       fontWeight: "600",
       sizes: {
         h1: { fontSize: "2.75rem", lineHeight: "1.05" },

@@ -35,12 +35,15 @@ import { bandPublicUrl, bandsCatalog } from "@/config/bandsCatalog";
 import { ClubButton } from "@/components/ui/ClubButton";
 import { ClubHeading } from "@/components/ui/ClubHeading";
 import { ClubPanel } from "@/components/ui/ClubPanel";
+import { GameButton } from "@/minigames/oubliette-no9/components/GameButton";
 import { MenuHazeBackground } from "@/components/layout/MenuHazeBackground";
 import { defaultMotionPreset } from "@/motion/presets";
 import { useMotionPresetStore } from "@/motion/motionPresetStore";
 import { buildClubTheme } from "@/theme/clubTheme";
 import { clubTokens } from "@/theme/clubTokens";
 import { useThemeLab } from "@/dev/themeLabStore";
+import "@/minigames/oubliette-no9/styles/global.css";
+
 
 const radiusOptions = ["xs", "sm", "md", "lg", "xl"] as const;
 
@@ -219,7 +222,7 @@ export function UiPlayground() {
       <Stack p="md" pb="xl" gap="md" style={{ position: "relative", zIndex: 1, maxWidth: 1100, margin: "0 auto" }}>
         <Group justify="space-between" align="flex-end" wrap="wrap">
           <div>
-            <Title order={2} c={clubTokens.text.primary} ff="Playfair Display, Georgia, serif">
+            <Title order={2} c={clubTokens.text.primary} ff="Cinzel, Georgia, serif">
               UI Playground
             </Title>
             <Text c={clubTokens.text.muted} size="sm" maw={560}>
@@ -250,7 +253,7 @@ export function UiPlayground() {
               border: `1px solid ${clubTokens.surface.brassStroke}`,
             },
             header: { background: "transparent" },
-            title: { color: clubTokens.text.brass, fontFamily: "Playfair Display, Georgia, serif" },
+            title: { color: clubTokens.text.brass, fontFamily: "Cinzel, Georgia, serif" },
           }}
         >
           <Stack gap="md">
@@ -350,7 +353,7 @@ export function UiPlayground() {
               <ClubPanel>
                 <Stack gap="sm">
                   <ClubHeading order={3}>Typography</ClubHeading>
-                  <Text c={clubTokens.text.secondary}>Playfair for titles, Noto for chrome.</Text>
+                  <Text c={clubTokens.text.secondary}>Cinzel for titles, Montserrat for chrome.</Text>
                   <Text size="xs" tt="uppercase" c={clubTokens.text.muted} fw={600}>
                     Eyebrow label
                   </Text>
@@ -359,22 +362,33 @@ export function UiPlayground() {
 
               <ClubPanel>
                 <ClubHeading order={4} mb="sm">
-                  ClubButton matrix
+                  ClubButton matrix (Active vs. Disabled)
                 </ClubHeading>
+                <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="sm" mb="md">
+                  {/* Row 1 Headers */}
+                  <Text size="xs" fw={700} tt="uppercase" c="dimmed" style={{ gridColumn: "span 2" }}>Filled Variant</Text>
+                  <Text size="xs" fw={700} tt="uppercase" c="dimmed" style={{ gridColumn: "span 2" }}>Light Variant</Text>
+                  
+                  {/* Row 1 Buttons */}
+                  <ClubButton fullWidth variant="filled">Filled (Active)</ClubButton>
+                  <ClubButton fullWidth variant="filled" disabled>Filled (Disabled)</ClubButton>
+                  <ClubButton fullWidth variant="light">Light (Active)</ClubButton>
+                  <ClubButton fullWidth variant="light" disabled>Light (Disabled)</ClubButton>
+                  
+                  {/* Row 2 Headers */}
+                  <Text size="xs" fw={700} tt="uppercase" c="dimmed" style={{ gridColumn: "span 2" }}>Outline Variant</Text>
+                  <Text size="xs" fw={700} tt="uppercase" c="dimmed" style={{ gridColumn: "span 2" }}>Subtle Variant</Text>
+                  
+                  {/* Row 2 Buttons */}
+                  <ClubButton fullWidth variant="outline">Outline (Active)</ClubButton>
+                  <ClubButton fullWidth variant="outline" disabled>Outline (Disabled)</ClubButton>
+                  <ClubButton fullWidth variant="subtle" color="gray">Subtle (Active)</ClubButton>
+                  <ClubButton fullWidth variant="subtle" color="gray" disabled>Subtle (Disabled)</ClubButton>
+                </SimpleGrid>
+
+                <Divider my="md" label="Other States & Sizes" labelPosition="center" color={clubTokens.surface.brassStroke} opacity={0.25} />
+
                 <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
-                  <ClubButton fullWidth>Filled default</ClubButton>
-                  <ClubButton fullWidth variant="light">
-                    Light
-                  </ClubButton>
-                  <ClubButton fullWidth variant="subtle" color="gray">
-                    Subtle gray
-                  </ClubButton>
-                  <ClubButton fullWidth variant="outline">
-                    Outline
-                  </ClubButton>
-                  <ClubButton fullWidth disabled>
-                    Disabled
-                  </ClubButton>
                   <ClubButton fullWidth loading>
                     Loading
                   </ClubButton>
@@ -390,6 +404,100 @@ export function UiPlayground() {
                     Large lg
                   </ClubButton>
                 </SimpleGrid>
+              </ClubPanel>
+
+              <ClubPanel>
+                <ClubHeading order={4} mb="sm">
+                  Unified Fancy Button (Larger Oubliette Style) Matrix
+                </ClubHeading>
+                <Text size="sm" c={clubTokens.text.muted} mb="md">
+                  We have unified the Oubliette button design under the core polymorphic <code>ClubButton</code> using the <code>fancy</code> prop. All pages and games can now access this style. Below is a comparison of the legacy <code>GameButton</code> wrapper and the native <code>ClubButton fancy</code>.
+                </Text>
+                
+                <Stack gap="lg">
+                  <div>
+                    <Text size="xs" fw={700} tt="uppercase" c="dimmed" mb="xs">Button Sizing Comparison: GameButton wrapper vs. ClubButton fancy</Text>
+                    <Grid gutter="md" align="center">
+                      {/* Headers */}
+                      <Grid.Col span={4}>
+                        <Text size="xs" fw={700} c="dimmed">Size</Text>
+                      </Grid.Col>
+                      <Grid.Col span={4}>
+                        <Text size="xs" fw={700} c="dimmed">GameButton Wrapper</Text>
+                      </Grid.Col>
+                      <Grid.Col span={4}>
+                        <Text size="xs" fw={700} c="dimmed">ClubButton fancy</Text>
+                      </Grid.Col>
+
+                      {/* Large Row */}
+                      <Grid.Col span={4}>
+                        <Text size="sm" fw={600} c={clubTokens.text.secondary}>Large (Lg)</Text>
+                      </Grid.Col>
+                      <Grid.Col span={4}>
+                        <GameButton size="lg" fullWidth variant="primary">GameButton Lg</GameButton>
+                      </Grid.Col>
+                      <Grid.Col span={4}>
+                        <ClubButton fancy size="lg" fullWidth variant="filled">ClubButton fancy Lg</ClubButton>
+                      </Grid.Col>
+
+                      {/* Medium Row */}
+                      <Grid.Col span={4}>
+                        <Text size="sm" fw={600} c={clubTokens.text.secondary}>Medium (Md)</Text>
+                      </Grid.Col>
+                      <Grid.Col span={4}>
+                        <GameButton size="md" fullWidth variant="secondary">GameButton Md</GameButton>
+                      </Grid.Col>
+                      <Grid.Col span={4}>
+                        <ClubButton fancy size="md" fullWidth variant="light">ClubButton fancy Md</ClubButton>
+                      </Grid.Col>
+
+                      {/* Small Row */}
+                      <Grid.Col span={4}>
+                        <Text size="sm" fw={600} c={clubTokens.text.secondary}>Small (Sm)</Text>
+                      </Grid.Col>
+                      <Grid.Col span={4}>
+                        <GameButton size="sm" fullWidth variant="ghost">GameButton Sm</GameButton>
+                      </Grid.Col>
+                      <Grid.Col span={4}>
+                        <ClubButton fancy size="sm" fullWidth variant="outline">ClubButton fancy Sm</ClubButton>
+                      </Grid.Col>
+
+                      {/* Disabled Row */}
+                      <Grid.Col span={4}>
+                        <Text size="sm" fw={600} c={clubTokens.text.secondary}>Disabled (Md)</Text>
+                      </Grid.Col>
+                      <Grid.Col span={4}>
+                        <GameButton size="md" fullWidth variant="primary" disabled>Wrapper Disabled</GameButton>
+                      </Grid.Col>
+                      <Grid.Col span={4}>
+                        <ClubButton fancy size="md" fullWidth variant="filled" disabled>Fancy Disabled</ClubButton>
+                      </Grid.Col>
+                    </Grid>
+                  </div>
+
+                  <Divider color={clubTokens.surface.brassStroke} opacity={0.15} />
+
+                  <div>
+                    <Text size="xs" fw={700} tt="uppercase" c="dimmed" mb="xs">ClubButton fancy Variants (Active vs. Disabled)</Text>
+                    <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="sm">
+                      <Text size="xs" fw={700} tt="uppercase" c="dimmed" style={{ gridColumn: "span 2" }}>Filled Variant (Crimson)</Text>
+                      <Text size="xs" fw={700} tt="uppercase" c="dimmed" style={{ gridColumn: "span 2" }}>Light Variant (Gold)</Text>
+
+                      <ClubButton fancy fullWidth variant="filled" size="md">Filled Active</ClubButton>
+                      <ClubButton fancy fullWidth variant="filled" size="md" disabled>Filled Disabled</ClubButton>
+                      <ClubButton fancy fullWidth variant="light" size="md">Light Active</ClubButton>
+                      <ClubButton fancy fullWidth variant="light" size="md" disabled>Light Disabled</ClubButton>
+
+                      <Text size="xs" fw={700} tt="uppercase" c="dimmed" style={{ gridColumn: "span 2", marginTop: "8px" }}>Outline Variant</Text>
+                      <Text size="xs" fw={700} tt="uppercase" c="dimmed" style={{ gridColumn: "span 2", marginTop: "8px" }}>Subtle Variant</Text>
+
+                      <ClubButton fancy fullWidth variant="outline" size="md">Outline Active</ClubButton>
+                      <ClubButton fancy fullWidth variant="outline" size="md" disabled>Outline Disabled</ClubButton>
+                      <ClubButton fancy fullWidth variant="subtle" size="md">Subtle Active</ClubButton>
+                      <ClubButton fancy fullWidth variant="subtle" size="md" disabled>Subtle Disabled</ClubButton>
+                    </SimpleGrid>
+                  </div>
+                </Stack>
               </ClubPanel>
 
               <ClubPanel>

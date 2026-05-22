@@ -287,7 +287,7 @@ export function Shop({
               <span style={{ color: 'var(--game-text-muted)' }}>Current: {handCount}</span>
             </div>
             <p className="mb-4" style={{ color: 'var(--game-text-muted)' }}>Add 5 Parallel Hands</p>
-            <button
+            <GameButton
               onClick={() =>
                 attemptPurchase(
                   calculateBundleCost(5),
@@ -297,12 +297,14 @@ export function Shop({
                 )
               }
               disabled={credits < calculateBundleCost(5) || isPurchased('parallel-hands-bundle-5')}
-              className={`w-full py-3 px-4 rounded-lg font-bold transition-colors mt-auto ${credits >= calculateBundleCost(5) && !isPurchased('parallel-hands-bundle-5') ? 'shop-btn-enabled' : 'shop-btn-disabled'}`}
+              variant="secondary"
+              size="md"
+              fullWidth
             >
               {isPurchased('parallel-hands-bundle-5')
                 ? 'Already Purchased'
                 : `${formatCredits(calculateBundleCost(5))} Credits`}
-            </button>
+            </GameButton>
           </div>
         );
       case 'parallel-hands-bundle-10':
@@ -316,7 +318,7 @@ export function Shop({
               <span style={{ color: 'var(--game-text-muted)' }}>Current: {handCount}</span>
             </div>
             <p className="mb-4" style={{ color: 'var(--game-text-muted)' }}>Add 10 Parallel Hands</p>
-            <button
+            <GameButton
               onClick={() =>
                 attemptPurchase(
                   calculateBundleCost(10),
@@ -328,12 +330,14 @@ export function Shop({
               disabled={
                 credits < calculateBundleCost(10) || isPurchased('parallel-hands-bundle-10')
               }
-              className={`w-full py-3 px-4 rounded-lg font-bold transition-colors mt-auto ${credits >= calculateBundleCost(10) && !isPurchased('parallel-hands-bundle-10') ? 'shop-btn-enabled' : 'shop-btn-disabled'}`}
+              variant="secondary"
+              size="md"
+              fullWidth
             >
               {isPurchased('parallel-hands-bundle-10')
                 ? 'Already Purchased'
                 : `${formatCredits(calculateBundleCost(10))} Credits`}
-            </button>
+            </GameButton>
           </div>
         );
       case 'parallel-hands-bundle-25':
@@ -347,7 +351,7 @@ export function Shop({
               <span style={{ color: 'var(--game-text-muted)' }}>Current: {handCount}</span>
             </div>
             <p className="mb-4" style={{ color: 'var(--game-text-muted)' }}>Add 25 Parallel Hands</p>
-            <button
+            <GameButton
               onClick={() =>
                 attemptPurchase(
                   calculateBundleCost(25),
@@ -359,12 +363,14 @@ export function Shop({
               disabled={
                 credits < calculateBundleCost(25) || isPurchased('parallel-hands-bundle-25')
               }
-              className={`w-full py-3 px-4 rounded-lg font-bold transition-colors mt-auto ${credits >= calculateBundleCost(25) && !isPurchased('parallel-hands-bundle-25') ? 'shop-btn-enabled' : 'shop-btn-disabled'}`}
+              variant="secondary"
+              size="md"
+              fullWidth
             >
               {isPurchased('parallel-hands-bundle-25')
                 ? 'Already Purchased'
                 : `${formatCredits(calculateBundleCost(25))} Credits`}
-            </button>
+            </GameButton>
           </div>
         );
       case 'parallel-hands-bundle-50':
@@ -378,7 +384,7 @@ export function Shop({
               <span style={{ color: 'var(--game-text-muted)' }}>Current: {handCount}</span>
             </div>
             <p className="mb-4" style={{ color: 'var(--game-text-muted)' }}>Add 50 Parallel Hands</p>
-            <button
+            <GameButton
               onClick={() =>
                 attemptPurchase(
                   calculateBundleCost(50),
@@ -390,12 +396,14 @@ export function Shop({
               disabled={
                 credits < calculateBundleCost(50) || isPurchased('parallel-hands-bundle-50')
               }
-              className={`w-full py-3 px-4 rounded-lg font-bold transition-colors mt-auto ${credits >= calculateBundleCost(50) && !isPurchased('parallel-hands-bundle-50') ? 'shop-btn-enabled' : 'shop-btn-disabled'}`}
+              variant="secondary"
+              size="md"
+              fullWidth
             >
               {isPurchased('parallel-hands-bundle-50')
                 ? 'Already Purchased'
                 : `${formatCredits(calculateBundleCost(50))} Credits`}
-            </button>
+            </GameButton>
           </div>
         );
       case 'parallel-hands-bundle-100':
@@ -409,7 +417,7 @@ export function Shop({
               <span style={{ color: 'var(--game-text-muted)' }}>Current: {handCount}</span>
             </div>
             <p className="mb-4" style={{ color: 'var(--game-text-muted)' }}>Add 100 Parallel Hands</p>
-            <button
+            <GameButton
               onClick={() =>
                 attemptPurchase(
                   calculateBundleCost(100),
@@ -421,12 +429,14 @@ export function Shop({
               disabled={
                 credits < calculateBundleCost(100) || isPurchased('parallel-hands-bundle-100')
               }
-              className={`w-full py-3 px-4 rounded-lg font-bold transition-colors mt-auto ${credits >= calculateBundleCost(100) && !isPurchased('parallel-hands-bundle-100') ? 'shop-btn-enabled' : 'shop-btn-disabled'}`}
+              variant="secondary"
+              size="md"
+              fullWidth
             >
               {isPurchased('parallel-hands-bundle-100')
                 ? 'Already Purchased'
                 : `${formatCredits(calculateBundleCost(100))} Credits`}
-            </button>
+            </GameButton>
           </div>
         );
       case 'parallel-hands-bundle-250':
@@ -440,7 +450,7 @@ export function Shop({
               <span style={{ color: 'var(--game-text-muted)' }}>Current: {handCount}</span>
             </div>
             <p className="mb-4" style={{ color: 'var(--game-text-muted)' }}>Add 250 Parallel Hands</p>
-            <button
+            <GameButton
               onClick={() =>
                 attemptPurchase(
                   calculateBundleCost(250),
@@ -452,12 +462,14 @@ export function Shop({
               disabled={
                 credits < calculateBundleCost(250) || isPurchased('parallel-hands-bundle-250')
               }
-              className={`w-full py-3 px-4 rounded-lg font-bold transition-colors mt-auto ${credits >= calculateBundleCost(250) && !isPurchased('parallel-hands-bundle-250') ? 'shop-btn-enabled' : 'shop-btn-disabled'}`}
+              variant="secondary"
+              size="md"
+              fullWidth
             >
               {isPurchased('parallel-hands-bundle-250')
                 ? 'Already Purchased'
                 : `${formatCredits(calculateBundleCost(250))} Credits`}
-            </button>
+            </GameButton>
           </div>
         );
       case 'parallel-hands-bundle-500':
@@ -471,7 +483,7 @@ export function Shop({
               <span style={{ color: 'var(--game-text-muted)' }}>Current: {handCount}</span>
             </div>
             <p className="mb-4" style={{ color: 'var(--game-text-muted)' }}>Add 500 Parallel Hands</p>
-            <button
+            <GameButton
               onClick={() =>
                 attemptPurchase(
                   calculateBundleCost(500),
@@ -483,12 +495,14 @@ export function Shop({
               disabled={
                 credits < calculateBundleCost(500) || isPurchased('parallel-hands-bundle-500')
               }
-              className={`w-full py-3 px-4 rounded-lg font-bold transition-colors mt-auto ${credits >= calculateBundleCost(500) && !isPurchased('parallel-hands-bundle-500') ? 'shop-btn-enabled' : 'shop-btn-disabled'}`}
+              variant="secondary"
+              size="md"
+              fullWidth
             >
               {isPurchased('parallel-hands-bundle-500')
                 ? 'Already Purchased'
                 : `${formatCredits(calculateBundleCost(500))} Credits`}
-            </button>
+            </GameButton>
           </div>
         );
       case 'parallel-hands-bundle-1000':
@@ -502,7 +516,7 @@ export function Shop({
               <span style={{ color: 'var(--game-text-muted)' }}>Current: {handCount}</span>
             </div>
             <p className="mb-4" style={{ color: 'var(--game-text-muted)' }}>Add 1000 Parallel Hands</p>
-            <button
+            <GameButton
               onClick={() =>
                 attemptPurchase(
                   calculateBundleCost(1000),
@@ -514,12 +528,14 @@ export function Shop({
               disabled={
                 credits < calculateBundleCost(1000) || isPurchased('parallel-hands-bundle-1000')
               }
-              className={`w-full py-3 px-4 rounded-lg font-bold transition-colors mt-auto ${credits >= calculateBundleCost(1000) && !isPurchased('parallel-hands-bundle-1000') ? 'shop-btn-enabled' : 'shop-btn-disabled'}`}
+              variant="secondary"
+              size="md"
+              fullWidth
             >
               {isPurchased('parallel-hands-bundle-1000')
                 ? 'Already Purchased'
                 : `${formatCredits(calculateBundleCost(1000))} Credits`}
-            </button>
+            </GameButton>
           </div>
         );
       case 'dead-card':
@@ -538,20 +554,22 @@ export function Shop({
               Add a card that doesn't count toward your hand to your deck. Receive{' '}
               {formatCredits(currentMode.shop.deadCard.creditReward)} credits
             </p>
-            <button
+            <GameButton
               onClick={() => {
                 onAddDeadCard();
                 markPurchased('dead-card');
               }}
               disabled={deadCards.length >= gameConfig.deadCardLimit || isPurchased('dead-card')}
-              className={`w-full py-3 px-4 rounded-lg font-bold transition-colors mt-auto ${deadCards.length < gameConfig.deadCardLimit && !isPurchased('dead-card') ? 'shop-btn-enabled' : 'shop-btn-disabled'}`}
+              variant="secondary"
+              size="md"
+              fullWidth
             >
               {isPurchased('dead-card')
                 ? 'Already Purchased'
                 : deadCards.length >= gameConfig.deadCardLimit
                   ? 'Maximum Dead Cards Reached'
                   : `Gain ${formatCredits(currentMode.shop.deadCard.creditReward)} Credits`}
-            </button>
+            </GameButton>
           </div>
         );
       case 'wild-card':
@@ -570,7 +588,7 @@ export function Shop({
             <p className="mb-4" style={{ color: 'var(--game-text-muted)' }}>
               Add a card that counts as any rank and suit (max {currentMode.shop.wildCard.maxCount})
             </p>
-            <button
+            <GameButton
               onClick={() =>
                 attemptPurchase(wildCardCost, creditsNeededForNextRound, 'wild-card', onAddWildCard)
               }
@@ -579,12 +597,14 @@ export function Shop({
                 wildCardCount >= currentMode.shop.wildCard.maxCount ||
                 isPurchased('wild-card')
               }
-              className={`w-full py-3 px-4 rounded-lg font-bold transition-colors mt-auto ${credits >= wildCardCost && wildCardCount < currentMode.shop.wildCard.maxCount && !isPurchased('wild-card') ? 'shop-btn-enabled' : 'shop-btn-disabled'}`}
+              variant="secondary"
+              size="md"
+              fullWidth
             >
               {isPurchased('wild-card')
                 ? 'Already Purchased'
                 : `${formatCredits(wildCardCost)} Credits${wildCardCount >= currentMode.shop.wildCard.maxCount ? ' (Max)' : ''}`}
-            </button>
+            </GameButton>
           </div>
         );
       case 'extra-draw':
@@ -599,7 +619,7 @@ export function Shop({
             <p className="mb-4" style={{ color: 'var(--game-text-muted)' }}>
               Adds an additonal draw phase after you hold cards.
             </p>
-            <button
+            <GameButton
               onClick={() =>
                 attemptPurchase(
                   extraDrawCost,
@@ -613,12 +633,14 @@ export function Shop({
                 extraDrawPurchased ||
                 isPurchased('extra-draw')
               }
-              className={`w-full py-3 px-4 rounded-lg font-bold transition-colors mt-auto ${credits >= extraDrawCost && !extraDrawPurchased && !isPurchased('extra-draw') ? 'shop-btn-enabled' : 'shop-btn-disabled'}`}
+              variant="secondary"
+              size="md"
+              fullWidth
             >
               {isPurchased('extra-draw') || extraDrawPurchased
                 ? 'Already Purchased'
                 : `${formatCredits(extraDrawCost)} Credits`}
-            </button>
+            </GameButton>
           </div>
         );
       case 'extra-card-in-hand':
@@ -631,7 +653,7 @@ export function Shop({
               </span>
             </div>
             <p className="mb-4" style={{ color: 'var(--game-text-muted)' }}>Deals an additional card during your draw phase.</p>
-            <button
+            <GameButton
               onClick={() =>
                 attemptPurchase(
                   extraCardInHandCost,
@@ -645,14 +667,16 @@ export function Shop({
                 extraCardsInHand >= currentMode.shop.extraCardInHand.maxPurchases ||
                 isPurchased('extra-card-in-hand')
               }
-              className={`w-full py-3 px-4 rounded-lg font-bold transition-colors mt-auto ${credits >= extraCardInHandCost && extraCardsInHand < currentMode.shop.extraCardInHand.maxPurchases && !isPurchased('extra-card-in-hand') ? 'shop-btn-enabled' : 'shop-btn-disabled'}`}
+              variant="secondary"
+              size="md"
+              fullWidth
             >
               {extraCardsInHand >= currentMode.shop.extraCardInHand.maxPurchases
                 ? 'Max Purchased'
                 : isPurchased('extra-card-in-hand')
                   ? 'Purchased This Visit'
                   : `${formatCredits(extraCardInHandCost)} Credits`}
-            </button>
+            </GameButton>
           </div>
         );
       case 'remove-single-dead-card':
@@ -665,7 +689,7 @@ export function Shop({
               </span>
             </div>
             <p className="mb-4" style={{ color: 'var(--game-text-muted)' }}>Permanently remove one dead card from deck</p>
-            <button
+            <GameButton
               onClick={() =>
                 attemptPurchase(
                   singleDeadCardRemovalCost,
@@ -679,14 +703,16 @@ export function Shop({
                 deadCards.length === 0 ||
                 isPurchased('remove-single-dead-card')
               }
-              className={`w-full py-3 px-4 rounded-lg font-bold transition-colors mt-auto ${credits >= singleDeadCardRemovalCost && deadCards.length > 0 && !isPurchased('remove-single-dead-card') ? 'shop-btn-enabled' : 'shop-btn-disabled'}`}
+              variant="secondary"
+              size="md"
+              fullWidth
             >
               {isPurchased('remove-single-dead-card')
                 ? 'Already Purchased'
                 : deadCards.length === 0
                   ? 'No dead cards'
                   : `${formatCredits(singleDeadCardRemovalCost)} Credits`}
-            </button>
+            </GameButton>
           </div>
         );
       case 'remove-all-dead-cards':
@@ -697,7 +723,7 @@ export function Shop({
               <span style={{ color: 'var(--game-text-muted)' }}>{deadCards.length} total</span>
             </div>
             <p className="mb-4" style={{ color: 'var(--game-text-muted)' }}>Remove all {deadCards.length} dead cards at once</p>
-            <button
+            <GameButton
               onClick={() =>
                 attemptPurchase(
                   allDeadCardsRemovalCost,
@@ -711,12 +737,14 @@ export function Shop({
                 deadCards.length === 0 ||
                 isPurchased('remove-all-dead-cards')
               }
-              className={`w-full py-3 px-4 rounded-lg font-bold transition-colors mt-auto ${credits >= allDeadCardsRemovalCost && deadCards.length > 0 && !isPurchased('remove-all-dead-cards') ? 'shop-btn-enabled' : 'shop-btn-disabled'}`}
+              variant="secondary"
+              size="md"
+              fullWidth
             >
               {isPurchased('remove-all-dead-cards')
                 ? 'Already Purchased'
                 : `${formatCredits(allDeadCardsRemovalCost)} Credits`}
-            </button>
+            </GameButton>
           </div>
         );
       case 'devils-deal-chance':
@@ -732,7 +760,7 @@ export function Shop({
               Increase chance by {devilsDealConfig.chanceIncreasePerPurchase}% per purchase
             </p>
             <p className="text-sm mb-4" style={{ color: 'var(--game-text-dim)' }}>Current chance: {effectiveChance}%</p>
-            <button
+            <GameButton
               onClick={() =>
                 attemptPurchase(
                   devilsDealChanceCost,
@@ -746,14 +774,16 @@ export function Shop({
                 devilsDealChancePurchases >= devilsDealConfig.maxChancePurchases ||
                 isPurchased('devils-deal-chance')
               }
-              className={`w-full py-3 px-4 rounded-lg font-bold transition-colors mt-auto ${credits >= devilsDealChanceCost && devilsDealChancePurchases < devilsDealConfig.maxChancePurchases && !isPurchased('devils-deal-chance') ? 'shop-btn-enabled' : 'shop-btn-disabled'}`}
+              variant="secondary"
+              size="md"
+              fullWidth
             >
               {isPurchased('devils-deal-chance')
                 ? 'Already Purchased'
                 : devilsDealChancePurchases >= devilsDealConfig.maxChancePurchases
                   ? 'Maximum Purchases Reached'
                   : `${formatCredits(devilsDealChanceCost)} Credits`}
-            </button>
+            </GameButton>
           </div>
         ) : null;
       case 'devils-deal-cost-reduction':
@@ -771,7 +801,7 @@ export function Shop({
             <p className="text-sm mb-4" style={{ color: 'var(--game-text-dim)' }}>
               Current cost: {effectiveCostPercent}% of payout
             </p>
-            <button
+            <GameButton
               onClick={() =>
                 attemptPurchase(
                   devilsDealCostReductionCost,
@@ -785,14 +815,16 @@ export function Shop({
                 devilsDealCostReductionPurchases >= devilsDealConfig.maxCostReductionPurchases ||
                 isPurchased('devils-deal-cost-reduction')
               }
-              className={`w-full py-3 px-4 rounded-lg font-bold transition-colors mt-auto ${credits >= devilsDealCostReductionCost && devilsDealCostReductionPurchases < devilsDealConfig.maxCostReductionPurchases && !isPurchased('devils-deal-cost-reduction') ? 'shop-btn-enabled' : 'shop-btn-disabled'}`}
+              variant="secondary"
+              size="md"
+              fullWidth
             >
               {isPurchased('devils-deal-cost-reduction')
                 ? 'Already Purchased'
                 : devilsDealCostReductionPurchases >= devilsDealConfig.maxCostReductionPurchases
                   ? 'Maximum Purchases Reached'
                   : `${formatCredits(devilsDealCostReductionCost)} Credits`}
-            </button>
+            </GameButton>
           </div>
         ) : null;
       default:

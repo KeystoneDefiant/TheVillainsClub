@@ -1,4 +1,5 @@
 import { Text } from "@mantine/core";
+import { ClubButton } from "@/components/ui/ClubButton";
 import type { CraplessTableState, TableBets } from "../engine/craplessEngine";
 import {
   ALL_HOP_KEYS,
@@ -151,9 +152,14 @@ export function CraplessTableFelt({
         ) : (
           <DicePair3D d1={lastD1} d2={lastD2} rolling={diceRolling} reduceMotion={reduceMotion} />
         )}
-        <button type="button" className="yi-felt-rollBtn" disabled={!canRoll || diceRolling} onClick={onRoll}>
+        <ClubButton
+          fancy
+          variant="filled"
+          disabled={!canRoll || diceRolling}
+          onClick={onRoll}
+        >
           Roll
-        </button>
+        </ClubButton>
       </div>
 
       <div className="yi-felt-oddsPassStack">

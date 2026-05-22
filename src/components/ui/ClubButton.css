@@ -1,0 +1,425 @@
+/* Custom gothic skeuomorphic club button styling */
+
+.club-btn {
+  position: relative !important;
+  overflow: visible !important;
+  font-family: "Montserrat", "Outfit", "Inter", sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  margin: 0 8px !important;
+  transition: transform 0.15s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.15s ease, filter 0.15s ease, background 0.15s ease, border-color 0.15s ease !important;
+  height: auto !important;
+  min-height: var(--button-height, 36px) !important;
+}
+
+.club-btn[data-full-width],
+.club-btn.mantine-Button-fullWidth {
+  width: calc(100% - 16px) !important;
+}
+
+.club-btn .mantine-Button-inner {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: inherit !important;
+  height: auto !important;
+  width: 100% !important;
+  overflow: visible !important;
+}
+
+.club-btn .mantine-Button-label {
+  white-space: normal !important;
+  word-break: break-word !important;
+  text-align: center !important;
+  display: block !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  line-height: 1.25 !important;
+}
+
+/* Default non-fancy sizing and padding */
+.club-btn:not(.club-btn-fancy) {
+  border-radius: 3px !important;
+  padding: 4px 28px !important;
+}
+
+/* Fancy sizing, rounding and auto-height */
+.club-btn-fancy {
+  height: auto !important;
+  line-height: normal !important;
+}
+
+.club-btn-fancy-xs {
+  border-radius: 4px !important;
+  padding: 6px 12px !important;
+  font-size: 12px !important;
+}
+
+.club-btn-fancy-sm {
+  border-radius: 6px !important;
+  padding: 8px 16px !important;
+  font-size: 14px !important;
+}
+
+.club-btn-fancy-md {
+  border-radius: 8px !important;
+  padding: 12px 24px !important;
+  font-size: 16px !important;
+}
+
+.club-btn-fancy-lg {
+  border-radius: 12px !important;
+  padding: 16px 32px !important;
+  font-size: 18px !important;
+}
+
+.club-btn-fancy-xl {
+  border-radius: 16px !important;
+  padding: 20px 40px !important;
+  font-size: 20px !important;
+}
+
+/* Variant base styles */
+.club-btn-filled {
+  background: radial-gradient(circle at center, #6a0b12 0%, #2e0508 55%, #100102 100%) !important;
+  color: #ffffff !important;
+  border-top: 2px solid rgba(199, 158, 87, 0.85) !important;
+  border-bottom: 2px solid rgba(199, 158, 87, 0.85) !important;
+  border-left: none !important;
+  border-right: none !important;
+  font-weight: 700 !important;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.95), 0 0 4px rgba(0, 0, 0, 0.7) !important;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.15), inset 0 0 0 1px rgba(199, 158, 87, 0.2), inset 0 0 6px rgba(0, 0, 0, 0.8), 0 4px 8px rgba(0, 0, 0, 0.6) !important;
+}
+
+.club-btn-light {
+  background: radial-gradient(circle at center, #2d2621 0%, #171210 70%, #0a0807 100%) !important;
+  color: rgba(240, 230, 210, 0.9) !important;
+  border-top: 2px solid rgba(199, 158, 87, 0.85) !important;
+  border-bottom: 2px solid rgba(199, 158, 87, 0.85) !important;
+  border-left: none !important;
+  border-right: none !important;
+  font-weight: 700 !important;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.95), 0 0 3px rgba(0, 0, 0, 0.7) !important;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.08), inset 0 0 0 1px rgba(199, 158, 87, 0.15), inset 0 0 6px rgba(0, 0, 0, 0.8), 0 4px 8px rgba(0, 0, 0, 0.6) !important;
+}
+
+.club-btn-outline {
+  background: radial-gradient(circle at center, #1b1e20 0%, #0d0f10 70%, #050607 100%) !important;
+  color: rgba(200, 205, 210, 0.95) !important;
+  border-top: 2px solid rgba(140, 145, 150, 0.7) !important;
+  border-bottom: 2px solid rgba(140, 145, 150, 0.7) !important;
+  border-left: none !important;
+  border-right: none !important;
+  font-weight: 700 !important;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.95) !important;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.08), inset 0 0 0 1px rgba(140, 145, 150, 0.15), inset 0 0 6px rgba(0, 0, 0, 0.8), 0 2px 4px rgba(0, 0, 0, 0.4) !important;
+}
+
+.club-btn-subtle {
+  background: transparent !important;
+  color: #c7bdce !important;
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
+  font-weight: 600 !important;
+}
+
+/* Hover States (when not disabled or loading) */
+.club-btn:hover:not([data-loading]):not(:disabled):not([data-disabled]) {
+  transform: translateY(-2px) !important;
+  filter: brightness(1.15) !important;
+}
+
+.club-btn-filled:hover:not([data-loading]):not(:disabled):not([data-disabled]) {
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.2), inset 0 0 6px rgba(0, 0, 0, 0.8), 0 8px 16px rgba(0, 0, 0, 0.55), 0 0 12px rgba(230, 20, 30, 0.7) !important;
+  background: radial-gradient(circle at center, #a8101d 0%, #4a050a 60%, #150102 100%) !important;
+  border-top-color: rgba(255, 235, 180, 1) !important;
+  border-bottom-color: rgba(255, 235, 180, 1) !important;
+}
+
+.club-btn-light:hover:not([data-loading]):not(:disabled):not([data-disabled]) {
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.12), inset 0 0 6px rgba(0, 0, 0, 0.8), 0 8px 16px rgba(0, 0, 0, 0.55), 0 0 12px rgba(220, 120, 30, 0.5) !important;
+  background: radial-gradient(circle at center, #42352b 0%, #1c1511 65%, #0a0807 100%) !important;
+  border-top-color: rgba(255, 235, 180, 1) !important;
+  border-bottom-color: rgba(255, 235, 180, 1) !important;
+}
+
+.club-btn-outline:hover:not([data-loading]):not(:disabled):not([data-disabled]) {
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.12), inset 0 0 6px rgba(0, 0, 0, 0.8), 0 6px 12px rgba(0, 0, 0, 0.45), 0 0 10px rgba(140, 145, 150, 0.45) !important;
+  background: radial-gradient(circle at center, #2b3034 0%, #131618 70%, #070809 100%) !important;
+  border-top-color: rgba(255, 255, 255, 0.9) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.club-btn-subtle:hover:not([data-loading]):not(:disabled):not([data-disabled]) {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: #f0e8db !important;
+}
+
+/* Active States */
+.club-btn:active:not([data-loading]):not(:disabled):not([data-disabled]) {
+  transform: translateY(1px) !important;
+  filter: brightness(0.92) !important;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.9), 0 2px 6px rgba(0, 0, 0, 0.4) !important;
+}
+
+.club-btn-subtle:active:not([data-loading]):not(:disabled):not([data-disabled]) {
+  box-shadow: none !important;
+}
+
+/* Disabled States Base (Applies via both native :disabled and Mantine [data-disabled]) */
+.club-btn:disabled,
+.club-btn[data-disabled],
+.club-btn.mantine-Button-root:disabled,
+.club-btn.mantine-Button-root[data-disabled] {
+  cursor: not-allowed !important;
+  pointer-events: auto !important;
+  transform: none !important;
+  filter: grayscale(0.4) brightness(0.7) contrast(0.9) !important;
+  opacity: 0.7 !important;
+  border-left: none !important;
+  border-right: none !important;
+}
+
+/* Filled disabled */
+.club-btn.club-btn-filled:disabled,
+.club-btn.club-btn-filled[data-disabled],
+.club-btn.mantine-Button-root.club-btn-filled:disabled,
+.club-btn.mantine-Button-root.club-btn-filled[data-disabled] {
+  background: radial-gradient(circle at center, #35080c 0%, #1c0305 60%, #0d0102 100%) !important;
+  border-top: 2px solid rgba(199, 158, 87, 0.35) !important;
+  border-bottom: 2px solid rgba(199, 158, 87, 0.35) !important;
+  color: rgba(220, 210, 190, 0.45) !important;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.9) !important;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.05), inset 0 0 0 1px rgba(199, 158, 87, 0.1), inset 0 0 6px rgba(0, 0, 0, 0.8), 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Light disabled */
+.club-btn.club-btn-light:disabled,
+.club-btn.club-btn-light[data-disabled],
+.club-btn.mantine-Button-root.club-btn-light:disabled,
+.club-btn.mantine-Button-root.club-btn-light[data-disabled] {
+  background: radial-gradient(circle at center, #1c1815 0%, #100d0b 70%, #070605 100%) !important;
+  border-top: 2px solid rgba(199, 158, 87, 0.3) !important;
+  border-bottom: 2px solid rgba(199, 158, 87, 0.3) !important;
+  color: rgba(220, 210, 190, 0.45) !important;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.9) !important;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.05), inset 0 0 0 1px rgba(199, 158, 87, 0.1), inset 0 0 6px rgba(0, 0, 0, 0.8), 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Outline disabled */
+.club-btn.club-btn-outline:disabled,
+.club-btn.club-btn-outline[data-disabled],
+.club-btn.mantine-Button-root.club-btn-outline:disabled,
+.club-btn.mantine-Button-root.club-btn-outline[data-disabled] {
+  background: radial-gradient(circle at center, #121415 0%, #090a0b 70%, #040405 100%) !important;
+  border-top: 2px solid rgba(140, 145, 150, 0.3) !important;
+  border-bottom: 2px solid rgba(140, 145, 150, 0.3) !important;
+  color: rgba(200, 205, 210, 0.45) !important;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.9) !important;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.05), inset 0 0 0 1px rgba(140, 145, 150, 0.1), inset 0 0 6px rgba(0, 0, 0, 0.8), 0 2px 4px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Subtle disabled */
+.club-btn.club-btn-subtle:disabled,
+.club-btn.club-btn-subtle[data-disabled],
+.club-btn.mantine-Button-root.club-btn-subtle:disabled,
+.club-btn.mantine-Button-root.club-btn-subtle[data-disabled] {
+  background: transparent !important;
+  color: rgba(199, 189, 206, 0.4) !important;
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
+}
+
+/* Disabled inner content styling (unblurred, clear legibility) */
+.club-btn:disabled .mantine-Button-inner,
+.club-btn[data-disabled] .mantine-Button-inner,
+.club-btn:disabled .mantine-Button-label,
+.club-btn[data-disabled] .mantine-Button-label,
+.club-btn:disabled .mantine-Button-section,
+.club-btn[data-disabled] .mantine-Button-section {
+  filter: none !important;
+  opacity: 0.85 !important;
+}
+
+/* Side-cap Chevron elements */
+.club-btn .club-btn-chevron {
+  position: absolute !important;
+  top: -2px !important;
+  bottom: -2px !important;
+  width: 16px !important;
+  z-index: 5 !important;
+  pointer-events: none !important;
+  transition: all 0.15s ease !important;
+  opacity: 1 !important;
+}
+
+.club-btn .club-btn-chevron-left {
+  left: -8px !important;
+  right: calc(100% - 8px) !important;
+  clip-path: polygon(0% 50%, 60% 0%, 100% 0%, 100% 100%, 60% 100%) !important;
+}
+
+.club-btn .club-btn-chevron-right {
+  right: -8px !important;
+  left: calc(100% - 8px) !important;
+  clip-path: polygon(100% 50%, 40% 0%, 0% 0%, 0% 100%, 40% 100%) !important;
+}
+
+/* Chevron variant fills */
+.club-btn-filled .club-btn-chevron {
+  background: radial-gradient(circle at center, #2e0508 0%, #150204 40%, #8b6508 85%, #cf9e52 100%) !important;
+}
+
+.club-btn-light .club-btn-chevron {
+  background: radial-gradient(circle at center, #14100e 0%, #080605 40%, #8b6508 85%, #cf9e52 100%) !important;
+}
+
+.club-btn-outline .club-btn-chevron {
+  background: radial-gradient(circle at center, #0f1011 0%, #060607 40%, #8c9196 85%, #cfd2d6 100%) !important;
+}
+
+/* Subtle has no chevrons */
+.club-btn-subtle .club-btn-chevron {
+  display: none !important;
+}
+
+/* Chevron Hovers */
+.club-btn-filled:hover:not([data-loading]):not(:disabled):not([data-disabled]) .club-btn-chevron {
+  background: radial-gradient(circle at center, #540910 0%, #1d0305 40%, #a87e22 85%, #ffd700 100%) !important;
+}
+
+.club-btn-light:hover:not([data-loading]):not(:disabled):not([data-disabled]) .club-btn-chevron {
+  background: radial-gradient(circle at center, #221510 0%, #0a0807 40%, #a87e22 85%, #ffd700 100%) !important;
+}
+
+.club-btn-outline:hover:not([data-loading]):not(:disabled):not([data-disabled]) .club-btn-chevron {
+  background: radial-gradient(circle at center, #131618 0%, #0a0b0c 40%, #b3b8bd 85%, #ffffff 100%) !important;
+}
+
+/* Disabled chevrons styling */
+.club-btn-filled:disabled .club-btn-chevron,
+.club-btn-filled[data-disabled] .club-btn-chevron {
+  background: radial-gradient(circle at center, #1c0305 0%, #0d0102 40%, #5c4015 85%, #7a5822 100%) !important;
+  opacity: 0.5 !important;
+}
+
+.club-btn-light:disabled .club-btn-chevron,
+.club-btn-light[data-disabled] .club-btn-chevron {
+  background: radial-gradient(circle at center, #100d0b 0%, #070605 40%, #5c4015 85%, #7a5822 100%) !important;
+  opacity: 0.5 !important;
+}
+
+.club-btn-outline:disabled .club-btn-chevron,
+.club-btn-outline[data-disabled] .club-btn-chevron {
+  background: radial-gradient(circle at center, #090a0b 0%, #040405 40%, #5c5f63 85%, #75797f 100%) !important;
+  opacity: 0.5 !important;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 600px) {
+  .club-btn {
+    font-size: 12px !important;
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+    margin: 0 6px !important;
+  }
+
+  .club-btn[data-full-width],
+  .club-btn.mantine-Button-fullWidth {
+    width: calc(100% - 12px) !important;
+  }
+
+  .club-btn .club-btn-chevron {
+    width: 12px !important;
+  }
+
+  .club-btn .club-btn-chevron-left {
+    left: -6px !important;
+    right: calc(100% - 6px) !important;
+  }
+
+  .club-btn .club-btn-chevron-right {
+    right: -6px !important;
+    left: calc(100% - 6px) !important;
+  }
+
+  .club-btn-fancy-xs {
+    font-size: 10px !important;
+    padding: 4px 6px !important;
+  }
+
+  .club-btn-fancy-sm {
+    font-size: 11px !important;
+    padding: 5px 10px !important;
+  }
+
+  .club-btn-fancy-md {
+    font-size: 13px !important;
+    padding: 6px 14px !important;
+  }
+
+  .club-btn-fancy-lg {
+    font-size: 15px !important;
+    padding: 10px 20px !important;
+  }
+
+  .club-btn-fancy-xl {
+    font-size: 17px !important;
+    padding: 12px 26px !important;
+  }
+}
+
+@media (max-width: 400px) {
+  .club-btn {
+    font-size: 11px !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+    letter-spacing: 0.03em !important;
+    margin: 0 5px !important;
+  }
+
+  .club-btn[data-full-width],
+  .club-btn.mantine-Button-fullWidth {
+    width: calc(100% - 10px) !important;
+  }
+
+  .club-btn .club-btn-chevron {
+    width: 10px !important;
+  }
+
+  .club-btn .club-btn-chevron-left {
+    left: -5px !important;
+    right: calc(100% - 5px) !important;
+  }
+
+  .club-btn .club-btn-chevron-right {
+    right: -5px !important;
+    left: calc(100% - 5px) !important;
+  }
+
+  .club-btn-fancy-xs {
+    font-size: 9px !important;
+    padding: 3px 5px !important;
+  }
+
+  .club-btn-fancy-sm {
+    font-size: 10px !important;
+    padding: 4px 8px !important;
+  }
+
+  .club-btn-fancy-md {
+    font-size: 12px !important;
+    padding: 5px 12px !important;
+  }
+
+  .club-btn-fancy-lg {
+    font-size: 14px !important;
+    padding: 8px 16px !important;
+  }
+
+  .club-btn-fancy-xl {
+    font-size: 16px !important;
+    padding: 10px 20px !important;
+  }
+}

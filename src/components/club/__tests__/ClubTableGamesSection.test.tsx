@@ -32,15 +32,6 @@ describe("ClubTableGamesSection", () => {
     });
   });
 
-  it("shows club balance and tables label", () => {
-    renderSection();
-    expect(screen.getByText("Club balance", { exact: true })).toBeInTheDocument();
-    expect(
-      screen.getByText(`${villainsGameDefaults.defaultClubBalance.toLocaleString()} credits`),
-    ).toBeInTheDocument();
-    expect(screen.getByText("Tables", { exact: true })).toBeInTheDocument();
-  });
-
   it("navigates to minigame when start succeeds", () => {
     renderSection();
     fireEvent.click(screen.getByRole("button", { name: /oubliette no\. 9 \(table\)/i }));

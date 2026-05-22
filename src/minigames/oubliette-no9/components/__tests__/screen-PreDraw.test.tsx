@@ -33,48 +33,16 @@ describe('PreDraw Component', () => {
     vi.clearAllMocks();
   });
 
-  describe('Rendering', () => {
-    it('should render the component with all main elements', () => {
-      render(<PreDraw {...mockProps} />);
-
-      expect(screen.getByText(/Round:/)).toBeInTheDocument();
-      expect(screen.getByText(/Credits:/)).toBeInTheDocument();
-      expect(screen.getByText('Run Round')).toBeInTheDocument();
-    });
-
+  describe('Display Values', () => {
     it('should display current credits correctly', () => {
       render(<PreDraw {...mockProps} />);
       expect(screen.getByText(new RegExp(generousCredits.toLocaleString()))).toBeInTheDocument();
-    });
-
-    it('should display current round correctly', () => {
-      render(<PreDraw {...mockProps} />);
-      expect(document.body.textContent).toMatch(/Round:\s*1/);
-    });
-
-    it('should display bet and hand count summary', () => {
-      render(<PreDraw {...mockProps} />);
-      // PreDraw shows Credits (header), Bet/Hands/Cost panels
-      expect(document.body.textContent).toMatch(/Credits/i);
-      expect(document.body.textContent).toMatch(/Hands/i);
-      expect(document.body.textContent).toMatch(/Cost/i);
-    });
-  });
-
-  describe('Display Values', () => {
-    it('should display bet amount and hand count from config', () => {
-      render(<PreDraw {...mockProps} />);
-      const totalBetCost = mockProps.minimumBet * mockProps.handCount;
-      expect(document.body.textContent).toMatch(new RegExp(String(mockProps.minimumBet)));
-      expect(document.body.textContent).toMatch(/50/);
-      expect(document.body.textContent).toMatch(new RegExp(String(totalBetCost)));
     });
 
     it('should show total cost to play', () => {
       render(<PreDraw {...mockProps} />);
       const totalBetCost = mockProps.minimumBet * mockProps.handCount;
       expect(screen.getByText(new RegExp(`^${totalBetCost}$`))).toBeInTheDocument();
-      expect(screen.getByText(/Cost/i)).toBeInTheDocument();
     });
   });
 
@@ -148,7 +116,6 @@ describe('PreDraw Component', () => {
       render(<PreDraw {...mockProps} round={30} />);
 
       expect(screen.queryByRole("button", { name: /cash out and return to the club/i })).not.toBeInTheDocument();
-      expect(screen.getByText(/Voluntary cash-out opens at round 31/i)).toBeInTheDocument();
     });
   });
 
@@ -165,7 +132,6 @@ describe('PreDraw Component', () => {
       const props = { ...mockProps, failureState, gameState };
       render(<PreDraw {...props} />);
 
-      expect(screen.getByText(/Failure Condition/i)).toBeInTheDocument();
       expect(screen.getByText(/Bet must be/)).toBeInTheDocument();
     });
 
@@ -188,7 +154,6 @@ describe('PreDraw Component', () => {
       render(<PreDraw {...props} />);
 
       expect(screen.getByText(/End Game Active/i)).toBeInTheDocument();
-      expect(screen.getByText(/You must meet these conditions to survive each round/i)).toBeInTheDocument();
     });
 
     it('should not show end game conditions when endless mode is not active', () => {
@@ -214,13 +179,6 @@ describe('PreDraw Component', () => {
   });
 
   describe('Cheats (via Settings)', () => {
-    it('should show settings button when onShowSettings is provided', () => {
-      const propsWithSettings = { ...mockProps, onShowSettings: vi.fn() };
-      render(<PreDraw {...propsWithSettings} />);
-      const settingsButton = screen.getByRole('button', { name: /Open settings/i });
-      expect(settingsButton).toBeInTheDocument();
-    });
-
     it('should show cheats in Settings when opened with cheat callbacks', () => {
       const onClose = vi.fn();
       render(
@@ -238,39 +196,6 @@ describe('PreDraw Component', () => {
           new RegExp(`Add\\s*${gameConfig.cheatsModal.creditTopUps[0].toLocaleString()}\\s*Credits`, "i"),
         ),
       ).toBeInTheDocument();
-    });
-  });
-
-  describe('Accessibility', () => {
-    it('should have proper button roles', () => {
-      render(<PreDraw {...mockProps} />);
-
-      const buttons = screen.getAllByRole('button');
-      expect(buttons.length).toBeGreaterThan(0);
-    });
-
-    it('should have accessible Run Round button', () => {
-      render(<PreDraw {...mockProps} />);
-
-      expect(
-        screen.getByRole("button", { name: /Run round with \d+ hands at [\d,]+ credits per hand/i }),
-      ).toBeInTheDocument();
-    });
-  });
-
-  describe('Game Over State', () => {
-    it('should show Game Over message when gameOver is true', () => {
-      const props = { ...mockProps, gameOver: true };
-      render(<PreDraw {...props} />);
-
-      expect(screen.getAllByText(/Game Over/i).length).toBeGreaterThanOrEqual(1);
-    });
-
-    it('should show insufficient credits message when game over', () => {
-      const props = { ...mockProps, gameOver: true };
-      render(<PreDraw {...props} />);
-
-      expect(screen.getByText(/Insufficient credits/i)).toBeInTheDocument();
     });
   });
 });

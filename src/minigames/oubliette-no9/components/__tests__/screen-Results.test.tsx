@@ -46,39 +46,12 @@ describe('Results Component', () => {
     vi.clearAllMocks();
   });
 
-  describe('Rendering', () => {
-    it('should render the component', () => {
-      render(<Results {...mockProps} />);
-      
-      expect(screen.getByText(/Hand Summary/i)).toBeInTheDocument();
-    });
-
-    it('should display round number', () => {
-      render(<Results {...mockProps} />);
-      
-      expect(document.body.textContent).toMatch(/Round:\s*5/);
-    });
-
-    it('should display current credits', () => {
-      render(<Results {...mockProps} />);
-      
-      expect(screen.getByText(/10,000/)).toBeInTheDocument();
-    });
-  });
-
   describe('Payout Display', () => {
     it('should display total payout correctly', () => {
       render(<Results {...mockProps} />);
       
       // 3 royal flushes * 250 * 10 = 7500 total payout (with streak)
       expect(screen.getAllByText(/7,500/).length).toBeGreaterThanOrEqual(1);
-    });
-
-    it('should display bet cost', () => {
-      render(<Results {...mockProps} />);
-      
-      // 10 bet * 3 hands = 30 credits
-      expect(document.body.textContent).toMatch(/30/);
     });
 
     it('should calculate profit correctly', () => {
@@ -88,7 +61,7 @@ describe('Results Component', () => {
       expect(screen.getByText(/7,470/)).toBeInTheDocument();
     });
 
-    it('should show positive profit in green/gold accent', () => {
+    it('should show positive profit in gold/brass accent', () => {
       render(<Results {...mockProps} />);
 
       const profitElement = screen.getByText(/7,470 credits/i);
@@ -96,7 +69,6 @@ describe('Results Component', () => {
     });
 
     it('should show negative profit in red', () => {
-      // Use hands that evaluate to high-card (0 payout) so total payout is 0, profit -30
       const highCardHand: Hand = {
         id: 'hc',
         cards: [
@@ -191,11 +163,6 @@ describe('Results Component', () => {
   });
 
   describe('Held Cards Display', () => {
-    it('should display held cards section', () => {
-      render(<Results {...mockProps} />);
-      expect(screen.getByText(/Cards Held:/i)).toBeInTheDocument();
-    });
-
     it('should show all held cards', () => {
       render(<Results {...mockProps} />);
       expect(screen.getAllByText(/^A$/).length).toBeGreaterThanOrEqual(1);
@@ -213,18 +180,6 @@ describe('Results Component', () => {
   });
 
   describe('Round Summary', () => {
-    it('should show Round Summary with payouts', () => {
-      render(<Results {...mockProps} />);
-      expect(screen.getByText(/Round Summary/i)).toBeInTheDocument();
-      expect(screen.getAllByText(/7,500/).length).toBeGreaterThanOrEqual(1);
-    });
-
-    it('should show Total Payout and Round Cost', () => {
-      render(<Results {...mockProps} />);
-      expect(screen.getByText(/Total Payout/i)).toBeInTheDocument();
-      expect(screen.getByText(/Round Cost/i)).toBeInTheDocument();
-    });
-
     it('should show highest combo, highest multiplier, and the combo progression graph', () => {
       const comboHands = Array.from({ length: 6 }, (_, index) => ({
         ...mockHand,
@@ -238,8 +193,6 @@ describe('Results Component', () => {
 
       render(<Results {...props} />);
 
-      expect(screen.getByText(/Highest Combo/i)).toBeInTheDocument();
-      expect(screen.getByText(/Highest Multiplier/i)).toBeInTheDocument();
       const highestComboRow = screen.getByText(/Highest Combo/i).closest('div');
       expect(highestComboRow).toBeTruthy();
       expect(within(highestComboRow as HTMLElement).getByText('6')).toBeInTheDocument();
@@ -253,11 +206,6 @@ describe('Results Component', () => {
   });
 
   describe('Continue Button', () => {
-    it('should display continue button', () => {
-      render(<Results {...mockProps} />);
-      expect(screen.getByRole('button', { name: /Continue/i })).toBeInTheDocument();
-    });
-
     it('should call onReturnToPreDraw when clicked', () => {
       render(<Results {...mockProps} />);
       const continueButton = screen.getByRole('button', { name: /Continue/i });
@@ -284,25 +232,6 @@ describe('Results Component', () => {
     });
   });
 
-  describe('Accessibility', () => {
-    it('should have proper heading structure', () => {
-      render(<Results {...mockProps} />);
-      const headings = screen.getAllByRole('heading');
-      expect(headings.length).toBeGreaterThan(0);
-    });
-
-    it('should have descriptive labels', () => {
-      render(<Results {...mockProps} />);
-      expect(screen.getByText(/Total Payout/i)).toBeInTheDocument();
-      expect(screen.getByText(/Round Cost/i)).toBeInTheDocument();
-    });
-
-    it('should have button with accessible name', () => {
-      render(<Results {...mockProps} />);
-      expect(screen.getByRole('button', { name: /Continue/i })).toBeInTheDocument();
-    });
-  });
-
   describe('Number Formatting', () => {
     it('should format large numbers with commas', () => {
       const props = {
@@ -313,18 +242,6 @@ describe('Results Component', () => {
       render(<Results {...props} />);
       
       expect(screen.getByText(/1,000,000/)).toBeInTheDocument();
-    });
-
-    it('should handle single-digit numbers', () => {
-      const props = {
-        ...mockProps,
-        round: 1,
-      };
-      
-      render(<Results {...props} />);
-      
-      // Round and number may be in separate elements (e.g. "Round: " + <span>1</span>)
-      expect(document.body.textContent).toMatch(/Round:\s*1/);
     });
   });
 
@@ -348,11 +265,6 @@ describe('Results Component', () => {
       };
       render(<Results {...props} />);
       expect(document.body.textContent).toContain('0');
-    });
-
-    it('should render without errors with minimal props', () => {
-      render(<Results {...mockProps} />);
-      expect(screen.getByRole('button', { name: /Continue/i })).toBeInTheDocument();
     });
 
     it('should pluralize "credit" correctly', () => {

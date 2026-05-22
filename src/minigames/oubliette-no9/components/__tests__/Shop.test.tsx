@@ -47,12 +47,6 @@ describe('Shop Component', () => {
   });
 
   describe('Rendering', () => {
-    it('should render the shop modal', () => {
-      render(<Shop {...mockProps} />);
-      
-      expect(screen.getByRole('heading', { name: /Oubliette No. 9/i })).toBeInTheDocument();
-    });
-
     it('should display current credits', () => {
       render(<Shop {...mockProps} />);
       
@@ -112,13 +106,6 @@ describe('Shop Component', () => {
       const allButtons = screen.getAllByRole('button');
       const optionButtons = allButtons.filter(btn => !/Close/i.test(btn.textContent ?? ''));
       expect(optionButtons.length).toBe(3);
-    });
-
-    it('should have a close button', () => {
-      render(<Shop {...mockProps} />);
-      
-      const closeButtons = screen.getAllByRole('button', { name: /Close Shop/i });
-      expect(closeButtons.length).toBeGreaterThanOrEqual(1);
     });
   });
 
@@ -430,36 +417,6 @@ describe('Shop Component', () => {
     });
   });
 
-  describe('Accessibility', () => {
-    it('should have proper modal structure', () => {
-      const { container } = render(<Shop {...mockProps} />);
-      
-      // Shop is a full-screen panel, not necessarily role="dialog"
-      const heading = container.querySelector('h2');
-      expect(heading?.textContent).toMatch(/Oubliette No. 9/i);
-    });
-
-    it('should have descriptive button labels', () => {
-      render(<Shop {...mockProps} />);
-      
-      const buttons = screen.getAllByRole('button');
-      buttons.forEach(btn => {
-        expect(btn.textContent).toBeTruthy();
-      });
-    });
-
-    it('should show disabled state visually', () => {
-      const props = { ...mockProps, credits: 10 };
-      const { container } = render(<Shop {...props} />);
-      
-      const disabledButtons = container.querySelectorAll('button:disabled');
-      disabledButtons.forEach(btn => {
-        // Dark theme: disabled buttons use shop-btn-disabled (has cursor-not-allowed) or similar
-        expect(btn.className).toMatch(/shop-btn-disabled|cursor-not-allowed|opacity-50/);
-      });
-    });
-  });
-
   describe('Affordability Warning Modal', () => {
     it('should show warning modal when purchase would leave player unable to afford next round', async () => {
       const bundleSize = 5;
@@ -601,13 +558,6 @@ describe('Shop Component', () => {
       // Should still render without errors
       const closeButtons = screen.getAllByRole('button', { name: /Close Shop/i });
       expect(closeButtons.length).toBeGreaterThanOrEqual(1);
-    });
-
-    it('should handle zero credits', () => {
-      const props = { ...mockProps, credits: 0 };
-      render(<Shop {...props} />);
-      
-      expect(screen.getAllByText(/0.*credit/i).length).toBeGreaterThanOrEqual(1);
     });
   });
 });

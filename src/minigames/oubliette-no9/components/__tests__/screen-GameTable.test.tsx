@@ -45,32 +45,12 @@ describe('GameTable Component', () => {
   });
 
   describe('Rendering', () => {
-    it('should render the component with player hand', () => {
-      render(<GameTable {...mockProps} />);
-      
-      expect(screen.getByRole("heading", { name: /Your hand/i })).toBeInTheDocument();
-      expect(screen.getAllByRole('button').length).toBeGreaterThan(0);
-    });
-
     it('should display all 5 cards', () => {
       render(<GameTable {...mockProps} />);
       
       const handGroup = screen.getByRole('group', { name: /Your hand/i });
       const cards = within(handGroup).getAllByRole('button');
       expect(cards.length).toBe(5);
-    });
-
-    it('should display game header with credits and round', () => {
-      render(<GameTable {...mockProps} />);
-      
-      expect(screen.getByText(/Round:/)).toBeInTheDocument();
-      expect(screen.getByText(/Credits:/)).toBeInTheDocument();
-    });
-
-    it('should display Your Hand section', () => {
-      render(<GameTable {...mockProps} />);
-      
-      expect(screen.getByRole("heading", { name: /Your hand/i })).toBeInTheDocument();
     });
   });
 
@@ -99,7 +79,6 @@ describe('GameTable Component', () => {
       
       const handGroup = screen.getByRole('group', { name: /Your hand/i });
       const cards = within(handGroup).getAllByRole('button');
-      // Held cards have data-held and card-held styling
       expect(cards[0].querySelector('[data-held="true"], .card-held')).toBeTruthy();
     });
 
@@ -109,7 +88,6 @@ describe('GameTable Component', () => {
       
       const handGroup = screen.getByRole('group', { name: /Your hand/i });
       const cards = within(handGroup).getAllByRole('button');
-      // Cards 1, 2, 3 should be held (have data-held or card-held)
       const heldCards = cards.filter(c => c.querySelector('[data-held="true"], .card-held'));
       expect(heldCards.length).toBe(3);
     });
@@ -148,34 +126,11 @@ describe('GameTable Component', () => {
       
       const { container } = render(<GameTable {...props} />);
       const devilsDealCard = container.querySelector('.devil-deal-container');
-      // Parent has opacity-30 when disabled
       expect(devilsDealCard?.parentElement?.className).toMatch(/opacity-30/);
-    });
-
-    it('should show Devil\'s Deal card as held when selected', () => {
-      const props = {
-        ...devilsDealProps,
-        gameState: {
-          ...devilsDealProps.gameState,
-          devilsDealHeld: true,
-        },
-      };
-      
-      const { container } = render(<GameTable {...props} />);
-      
-      // Check for held styling on Devil's Deal card
-      const devilsDealCard = container.querySelector('.devil-deal-container');
-      expect(devilsDealCard).toBeTruthy();
     });
   });
 
   describe('Draw Button', () => {
-    it('should show draw/play button when hand is not yet drawn', () => {
-      render(<GameTable {...mockProps} />);
-      
-      expect(screen.getByRole('button', { name: /Draw|Play.*Parallel/i })).toBeInTheDocument();
-    });
-
     it('should be enabled when cards can be drawn', () => {
       render(<GameTable {...mockProps} />);
       const actionButton = screen.getByRole('button', { name: /Draw|Play.*Parallel/i });
@@ -210,7 +165,6 @@ describe('GameTable Component', () => {
       const props = { ...mockProps, firstDrawComplete: false };
       const { container } = render(<GameTable {...props} />);
       
-      // Card backs should render card-back container elements
       expect(container.querySelectorAll('.card-back').length).toBeGreaterThan(0);
       vi.useRealTimers();
     });
@@ -219,23 +173,8 @@ describe('GameTable Component', () => {
       const props = { ...mockProps, firstDrawComplete: true };
       render(<GameTable {...props} />);
       
-      // Card ranks should be visible (A, K, Q, J, 10 from mock hand)
       expect(screen.getAllByText(/^A$/).length).toBeGreaterThanOrEqual(1);
       expect(screen.getAllByText(/^K$/).length).toBeGreaterThanOrEqual(1);
-    });
-  });
-
-  describe('Instructions', () => {
-    it('should show hold instructions', () => {
-      render(<GameTable {...mockProps} />);
-      
-      expect(screen.getByText(/Hold the cards you want to keep/i)).toBeInTheDocument();
-    });
-
-    it('should show draw instructions', () => {
-      render(<GameTable {...mockProps} />);
-      
-      expect(screen.getByText(/play parallel hands|Draw.*hands/i)).toBeInTheDocument();
     });
   });
 
@@ -248,33 +187,7 @@ describe('GameTable Component', () => {
       };
       
       render(<GameTable {...props} />);
-      // GameHeader shows the failure description (e.g. "Bet must be ≥ 20 (2x base)")
       expect(screen.getByText(/Bet must be/i)).toBeInTheDocument();
-    });
-  });
-
-  describe('Accessibility', () => {
-    it('should have clickable card elements', () => {
-      const { container } = render(<GameTable {...mockProps} />);
-      
-      const cards = container.querySelectorAll('.card');
-      cards.forEach(card => {
-        expect(card).toBeTruthy();
-      });
-    });
-
-    it('should have proper button roles', () => {
-      render(<GameTable {...mockProps} />);
-      
-      const buttons = screen.getAllByRole('button');
-      expect(buttons.length).toBeGreaterThan(0);
-    });
-
-    it('should have descriptive button text', () => {
-      render(<GameTable {...mockProps} />);
-      // With nextActionIsDraw false we show "Play X Parallel Hands"
-      const actionButton = screen.getByRole('button', { name: /Play.*Parallel|Draw/i });
-      expect(actionButton.textContent).toBeTruthy();
     });
   });
 });

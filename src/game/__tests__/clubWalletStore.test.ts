@@ -22,7 +22,7 @@ describe("clubWalletStore forfeitActiveSession", () => {
         drinkId: "club_table",
         buyIn,
         sessionWallet: buyIn,
-        settlement: buildOublietteSettlementProfile(buyIn),
+        settlement: buildOublietteSettlementProfile(buyIn, new Date("2026-01-01")),
       },
     });
     useClubWallet.getState().forfeitActiveSession();
@@ -49,7 +49,7 @@ describe("clubWalletStore endSession", () => {
 
   it("credits the capped amount when session is ended", () => {
     const buyIn = 2000;
-    const baseProfile = buildOublietteSettlementProfile(buyIn);
+    const baseProfile = buildOublietteSettlementProfile(buyIn, new Date("2026-01-01"));
     
     useClubWallet.setState({
       clubBalance: 8000,
@@ -76,7 +76,7 @@ describe("clubWalletStore endSession", () => {
 
   it("strictly enforces return ceiling cap even if ended with massive return details", () => {
     const buyIn = 2000;
-    const baseProfile = buildOublietteSettlementProfile(buyIn);
+    const baseProfile = buildOublietteSettlementProfile(buyIn, new Date("2026-01-01"));
     
     useClubWallet.setState({
       clubBalance: 8000,
@@ -103,7 +103,7 @@ describe("clubWalletStore endSession", () => {
 
   it("strictly enforces return ceiling cap when ending session with a raw number exceeding baseCap", () => {
     const buyIn = 2000;
-    const baseProfile = buildOublietteSettlementProfile(buyIn);
+    const baseProfile = buildOublietteSettlementProfile(buyIn, new Date("2026-01-01"));
     
     useClubWallet.setState({
       clubBalance: 8000,

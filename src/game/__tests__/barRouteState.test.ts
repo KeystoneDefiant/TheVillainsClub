@@ -35,7 +35,7 @@ describe("barRouteState", () => {
   });
 
   it("buildBarRouteStateFromReturn copies detail fields and max win ceiling", () => {
-    const settlement = buildOublietteSettlementProfile(defaultBuyIn);
+    const settlement = buildOublietteSettlementProfile(defaultBuyIn, new Date("2026-01-01"));
     const state = buildBarRouteStateFromReturn("oubliette_no9", defaultBuyIn, {
       uncappedCredits: 200,
       basePayout: 50,
@@ -53,7 +53,7 @@ describe("barRouteState", () => {
   });
 
   it("buildBarRouteStateFromReturn caps totalReturn at maxWinCredits", () => {
-    const settlement = buildOublietteSettlementProfile(defaultBuyIn);
+    const settlement = buildOublietteSettlementProfile(defaultBuyIn, new Date("2026-01-01"));
     const maxWin = defaultBuyIn * 50; // 100000
     const state = buildBarRouteStateFromReturn("oubliette_no9", defaultBuyIn, {
       uncappedCredits: 1_000_000,

@@ -1,8 +1,7 @@
 import { Title } from "@mantine/core";
 import { clubTokens } from "@/theme/clubTokens";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type ClubHeadingProps = Record<string, any>;
+export type ClubHeadingProps = React.ComponentPropsWithoutRef<typeof Title>;
 
 export function ClubHeading(props: ClubHeadingProps) {
   const { c, style, ...rest } = props;

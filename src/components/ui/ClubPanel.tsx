@@ -1,8 +1,7 @@
 import { Paper } from "@mantine/core";
 import { clubTokens } from "@/theme/clubTokens";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type ClubPanelProps = Record<string, any>;
+export type ClubPanelProps = React.ComponentPropsWithoutRef<typeof Paper>;
 
 export function ClubPanel(props: ClubPanelProps) {
   const { styles, style, children, ...rest } = props;

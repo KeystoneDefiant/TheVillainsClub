@@ -1,17 +1,11 @@
-import { ClubButton } from '@/components/ui/ClubButton';
+import { ClubButton, ClubButtonProps } from '@/components/ui/ClubButton';
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
-interface GameButtonProps {
+export interface GameButtonProps extends Omit<ClubButtonProps, 'variant' | 'size'> {
   variant?: ButtonVariant;
   size?: ButtonSize;
-  fullWidth?: boolean;
-  children: React.ReactNode;
-  disabled?: boolean;
-  onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
-  className?: string;
-  [key: string]: any;
 }
 
 const variantMap: Record<ButtonVariant, "filled" | "light" | "outline"> = {

@@ -68,12 +68,6 @@ export const fatesealCascadePayoutScale = 0.00935 as const;
  */
 export const fatesealCascadeMultipliers = [1, 1, 2, 3, 4, 6] as const;
 
-/**
- * Legacy §3C cluster size (3) — **non-prophecy** clears now use
- * {@link fatesealProgressionRules.linking.minOrthogonalRunForNonProphecyRemoval}. Kept for older
- * references / docs parity.
- */
-export const fatesealAdjacentMinRun = 3;
 
 /**
  * TODO.md Fateseal backlog — tunables for engine/UI work in progress.
@@ -113,21 +107,16 @@ export const fatesealProgressionRules = {
     bonusRoundIndexTrigger: 4,
   },
   purchasedReels: {
-    wildRitualSpins: 3,
     wildChancePerActiveReel: 0.20,
     /** Decay rate for wild reel chance per cascade depth step. Set to 1.0 for no decay. */
     wildChanceDecayPerDepth: 0.50,
-    deadRitualSpins: 5,
-    markedRitualSpins: 3,
     markedSymbolPayoutMultiplier: 1.5,
-    /** Payout scaling multiplier per symbol as the count of active omens increases (1, 2, 3, 4+). */
-    omenScalingFactors: [1.0, 0.7, 0.55, 0.45],
+    /** Payout scaling multiplier per symbol as the count of active omens increases (1, 2, 3, 4). */
+    omenScalingFactors: [1.15, 0.5, 0.3, 0.15],
     /** Free Ritual spins (zero bet) do not decrement Crossroads wild/dead/mark spin timers. */
     bonusSpinsExcludeFromReelDecay: true,
   },
   bonusGrid: {
-    extraRowsPerBonusTier: 1,
-    extraColsPerBonusTier: 1,
     maxGridSize: 9,
   },
 } as const;
@@ -222,61 +211,23 @@ export function resolveFatesealGameMode(modeId: string | undefined): FatesealGam
   return getCurrentFatesealGameMode();
 }
 
-/** Default table stakes for engines / scripts when no session is present. */
-export const fatesealTableConfig: FatesealGameModeConfig = getCurrentFatesealGameMode();
-
-/**
- * §4 Crossroads — costs scale with buy-in so the shop stays legible across stakes.
- * Payout / grant values are **proposals** from Monte Carlo tuning (see scripts/sim-fateseal.mts).
- */
-export const fatesealCrossroadsOffers = {
-  faustianBargain: {
-    /** Credits granted immediately (floor of buy-in × ratio). */
-    creditRatioOfBuyIn: 0.12,
-    /** Voids permanently appended to the symbol pool weight list. */
-    voidsAdded: 3,
-  },
-  silverVision: {
-    costRatioOfBuyIn: 0.2,
-    /** Replaces one chosen standard's pool entries with wild for the rest of the session. */
-  },
-  forbiddenTome: {
-    costRatioOfBuyIn: 0.1,
-    /** Doubles effective scatter weight for the next N spins (§4 table). */
-    boostedSpins: 3,
-  },
-} as const;
-
 /**
  * TODO.md Crossroads — absolute-credit SKUs (reel counters are stored on session state; column
  * gravity / dead-column behavior is not simulated in the cascade engine yet).
  */
 export const fatesealCrossroadsNewShop = {
   addOmenSymbol: {
-    firstPurchaseCredits: 3500,
-    extraPurchaseCredits: 2500,
-    /** Extra symbols that can be bought this visit (sealed omen + extras, max 4 total). */
-    maxPurchasesThisVisit: 3,
-  },
-  wildReel: {
-    costCredits: 5000,
-    maxActive: 3,
-  },
-  deadReel: {
-    grantCreditsOnTake: 1500,
-    maxActive: 3,
-  },
-  omenMark: {
-    costCredits: 4000,
-    maxActive: 1,
+    costs: [3500, 6000, 12000],
+    /** Extra symbols that can be bought this session (sealed omen + extras, max 4 total). */
+    maxExtraPurchases: 3,
   },
 } as const;
 
-/** Credits for the next “add omen symbol” purchase this visit (`alreadyPurchased` in 0..max-1). */
-export function crossroadsNextOmenAdditionCostCredits(alreadyPurchasedThisVisit: number): number {
+/** Credits for the next “add omen symbol” purchase this session (`alreadyPurchased` in 0..max-1). */
+export function crossroadsNextOmenAdditionCostCredits(alreadyPurchased: number): number {
   const c = fatesealCrossroadsNewShop.addOmenSymbol;
-  if (alreadyPurchasedThisVisit >= c.maxPurchasesThisVisit) return Number.POSITIVE_INFINITY;
-  return c.firstPurchaseCredits + c.extraPurchaseCredits * alreadyPurchasedThisVisit;
+  if (alreadyPurchased >= c.maxExtraPurchases) return Number.POSITIVE_INFINITY;
+  return c.costs[alreadyPurchased] ?? Number.POSITIVE_INFINITY;
 }
 
 /** Weighted pool row used for drops / shop bookkeeping. */
@@ -312,3 +263,31 @@ export function totalPoolWeight(pool: readonly FatesealPoolEntry[]): number {
 export function clonePool(pool: readonly FatesealPoolEntry[]): FatesealPoolEntry[] {
   return pool.map((e) => ({ ...e }));
 }
+
+/** Configurable wagers for Fateseal Silver (TODO.md) */
+export const fatesealWagerLevels = [100, 200, 500, 1000] as const;
+
+/** "Unsettle the Spirits" (Wild Reel) configurations */
+export const fatesealUnsettleSpiritsConfig = {
+  durationSpins: 5,
+  costRatioOfBank: 0.75,
+  minPrice: 6500,
+  betSize: 250,
+} as const;
+
+/** "Faustian Bargain" (Dead Reel) configurations */
+export const fatesealFaustianBargainConfig = {
+  creditRatioOfBuyIn: 0.75,
+  durationSpinsPerLevel: 5,
+  lockedBetSize: 250,
+  maxLevel: 3,
+} as const;
+
+/** "Vassago's Gambit" configurations */
+export const fatesealVassagoGambitConfig = {
+  costRatioOfBank: 0.90,
+  minPrice: 10000,
+  betSize: 250,
+} as const;
+
+

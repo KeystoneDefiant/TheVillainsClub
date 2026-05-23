@@ -1,75 +1,26 @@
 # TO DO
 
-## Fixes
+## Fateseal Changes
 
-- If a game is in progress, make sure the player can abandon the run from the bar menu
+- Let's change the wagers. Minimum bet at 100, then 200, then 500, then 1000. These values should be configurable in the game's config json file.
 
-- Add an Abandon Run button to the top bar in each game. Abandoning the run will not pay out anything back to the player and will forefeit their buy in.
+- Let's change the options at the crossroads:
+    - Offer a new prophecy symbol at random, not from a drop down. If the player is at their maximum, do not show this option. Reflect what extra prophey symbols have been purchased at the Altar screen by highlighting them in purple and giving them the same shimmer effect that the void symbols have.
+    - Only one wild reel slot powerup can be active at a time, you no longer should be able to stack them. Change the name to "Unsettle the Spirits". Change the description to "Unsettle the spirits and activate a alchemical transmogrification for the next 5 spins, drastically increasing the likelihood of wild symbols appearing on the reels." The cost should be 75% of the player's bank, with a minimum price of 6500. While this is active, the betting buttons on the main screen are replaced with a new button that says "Unsettle The Spirits". Clicking this button does not cost credits, and the bet size is set to 250. After this bonus is used, the betting returns to normal.
+    - Dead Reel Boon should be renamed to "Faustian Bargain". The description should now read "Temporarily sell part of your vision for immediate profit. Bet size is locked to 250 and you cannot cash out while your vision is in this state. Each level adds another column of blindness, lasting 5 turns each." Then a line break, and then "Active x/3, Timers: y"
+    - Omen Mark should be removed
+    - The Forbidden Tome should be turned into a toggle switch. The description should read "Increase all bet sizes by 25% for a 25% higher chance of summoning scatter symbols."
+    - Add a new option called "Vassago's Gambit". The description should read "Make an offering to Vassago, the Prince of Prophecy. Trigger a scatter bonus on your next vision." The cost should be 90% of the player's bank, with a minimum price of 10000. While this is active, the betting buttons on the main screen are replaced with a new button that says "Vassago Grants You Vision". Clicking this button does not cost credits, and the bet size is set to 250. After this bonus is used, the betting returns to normal. The next spin will have a guaranteed scatter bonus, but the scatters do not count toward the crossroads.
+    - All of these values should be configurable in the game's configuration json file.
 
-## Intro Animation
+- Wilds should not remove scatter tiles
 
-- Refine the animation a bit more. I'm ok with you taking liberties with it and coming up with something neat with drawing in the red logo and the grey logotype and doing an interesting transition between the intro and the bar screen.
+- Make sure the betting button block expands to the width of the containing parent so that the buttons don't wrap when possible.
 
-- Allow for different animations for this intro screen. Keep the current one, add your new one, and randomize them each launch. Give the ability to make more animations and add them into the rotation.
+- Make the betting buttons the same width so that if wrapping does occur on smaller screens, the layout remains asthetically pleasing
 
-## Onboarding
+- THe payout indicator during a spin changes to +0 a moment before it disappears. 
 
-- If the player is new, add an onboarding step after the logo animation that introduces the club and games, asks the user for their name (which is held in their account and can be referenced as desired). After the logo zooms in, keep the background red, fade in a black gradient from the bottom at 90% opacity to the top at 10% opacity. After onboarding is complete, fade out to the bar menu.
+- During a cascade, make sure symbols are actually falling to the lowest possible slot in the column. There are instances where a symbol remains in the space even though a match was made under it.
 
-- If the player resets their account in settings, perform the reset and then refresh the page to restart onboarding.
-
-## Oubilette
-
-- Ensure that the game over check is correctly checking the next round's requirements
-
-- Ensure that the store's "Next Round Cost" number is accurate to the next round - refer to the number the game over check is looking at and show that.
-
-- Ensure that the top bar in the shop screen conforms to the top bar used in the rest of the games. We will probably need to move some UI elements around, and that's fine. Make your best effort to lay out the shop screen in a way that's slick and clean and responsive. We want all shop items on screen, including all buttons and the close shop button. We also want to bubble up the "credits required for next round" text.
-
-## 7 Year
-
-- Heat goes up in relation to amount of bets in the field, not number of rolls. 1 bet is one unit of heat, grows per roll, store fires at 36 heat units. This should be expressed in the game's config
-
-- Improve the dice rolling animation. Each die should animate uniquely and bounce off of the sides of the screen. The roll itself should be accurate to the die faces that are actually rolled. When the roll is resolved, slide the dice off of the screen.
-
-- Rename pass line to "initial investment", remove flat odds bet.
-
-- Limit place wagers to 3x pass line bet. This should be expressed in the game's config.
-
-- "Look The other way" should have a reduced chance of showing up if the player's current wallet size is over their buy in
-
-## Fateseal
-
-- Remove the post-spin summary screen
-
-- Ensure that when matches are removed from the grid, all symbols above that symbol being removed fall down the column and that this is animated smoothly. Some symbols are not dropping down when matches are made under them.
-
-- Slow the animation speed of symbols being removed and symbols falling
-
-- Show a running total of money won during this spin, animated counting up in a rolling reel style. This should fade in over top of the bet buttons, and the bet buttons fade out once the spin starts. When the spin is complete, this should remain for .75 seconds, and then crossfade back to the betting buttons
-
-- When a new spin is started, clear the grid of symbols by dropping them out from the bottom of the grid in a casading column animation - as the first column nears 25% completion of the animation, start the second column, etc etc.
-
-- Purchased Wilds only add the chance for the wild symbol to appear, not grant a full reel of wilds
-
-- Remove the spinner animation while the spin is active
-
-- Free ritual meter should be removed
-
-- Crossroads status display should be a small progress bar that fills as bonus symbols hit. Have the color pulse light purple and then back down to the normal purple color used in the game as it animates when changed.
-
-- Remove the Recent Lines section in the left bar
-
-- Any additional omen symbols removes payout. For instance, when one symbol is selected, payout is 15% of the bet size. 2 symbols active pays 10% of the bet size, 3 symbols is 5%. This should be expressed in the game configuration 
-
-- 4 symbols needed to activate bonus mode, not 5
-
-- Non-selected matches grant 0.5x. This should be expressed in the game configuration.
-
-- Minimum bet is 100 credits. This should be expressed in the game configuration.
-
-- If the dead reels are in play, the minimum bet button is disabled, forcing the player to gamble more
-
-- 1/2 bank bet amount is not correct
-
-- Bet buttons should be in their own section under the grid and table readout 
+- Show the timer in the center of void symbols with the time remaining on that column. For instance, if 3 void reels are in play, the first void reel would have the number 3 in the middle of the symbol if there are 3 spins remaining until it is removed. It should share the same shimmer effect that the rest of the void symbol has.

@@ -1,14 +1,11 @@
 import type { FatesealStandardId } from "@/config/minigames/fatesealRules";
 import {
-  clonePool,
+  fatesealUnsettleSpiritsConfig,
+  fatesealFaustianBargainConfig,
+  fatesealVassagoGambitConfig,
   crossroadsNextOmenAdditionCostCredits,
-  fatesealCrossroadsNewShop,
-  fatesealCrossroadsOffers,
-  fatesealProgressionRules,
 } from "@/config/minigames/fatesealRules";
 import type { FatesealEngineState } from "./cascadeEngine";
-
-export type CrossroadsChoice = "faustian_bargain" | "silver_vision" | "forbidden_tome";
 
 export type ApplyShopResult =
   | { ok: true; nextState: FatesealEngineState; creditsDelta: number }
@@ -17,96 +14,20 @@ export type ApplyShopResult =
       reason: "insufficient_credits" | "invalid_pick" | "at_capacity" | "duplicate_symbol";
     };
 
-export function applyCrossroads(
-  state: FatesealEngineState,
-  choice: CrossroadsChoice,
-  silverPick: FatesealStandardId | null,
-  buyIn: number,
-): ApplyShopResult {
-  const pool = clonePool(state.symbolPool);
-  let wallet = state.sessionWallet;
-  let silverTarget = state.silverVisionTarget;
-  let tomeSpins = state.tomeSpinsLeft;
-
-  if (choice === "faustian_bargain") {
-    const grant = Math.max(0, Math.floor(buyIn * fatesealCrossroadsOffers.faustianBargain.creditRatioOfBuyIn));
-    for (let i = 0; i < fatesealCrossroadsOffers.faustianBargain.voidsAdded; i++) {
-      pool.push({ symbol: "void", weight: 8 });
-    }
-    wallet += grant;
-    return {
-      ok: true,
-      creditsDelta: grant,
-      nextState: {
-        ...state,
-        symbolPool: pool,
-        sessionWallet: wallet,
-      },
-    };
-  }
-
-  if (choice === "silver_vision") {
-    if (!silverPick) return { ok: false, reason: "invalid_pick" };
-    const cost = Math.max(0, Math.floor(buyIn * fatesealCrossroadsOffers.silverVision.costRatioOfBuyIn));
-    if (wallet < cost) return { ok: false, reason: "insufficient_credits" };
-    silverTarget = silverPick;
-    wallet -= cost;
-    for (const e of pool) {
-      if (e.symbol === silverPick) e.symbol = "wild";
-    }
-    return {
-      ok: true,
-      creditsDelta: -cost,
-      nextState: {
-        ...state,
-        symbolPool: pool,
-        sessionWallet: wallet,
-        silverVisionTarget: silverTarget,
-      },
-    };
-  }
-
-  const cost = Math.max(0, Math.floor(buyIn * fatesealCrossroadsOffers.forbiddenTome.costRatioOfBuyIn));
-  if (wallet < cost) return { ok: false, reason: "insufficient_credits" };
-  wallet -= cost;
-  tomeSpins = fatesealCrossroadsOffers.forbiddenTome.boostedSpins;
-  return {
-    ok: true,
-    creditsDelta: -cost,
-    nextState: {
-      ...state,
-      sessionWallet: wallet,
-      tomeSpinsLeft: tomeSpins,
-    },
-  };
-}
-
-export function faustianCreditGrant(buyIn: number): number {
-  return Math.max(0, Math.floor(buyIn * fatesealCrossroadsOffers.faustianBargain.creditRatioOfBuyIn));
-}
-
-export function silverVisionCost(buyIn: number): number {
-  return Math.max(0, Math.floor(buyIn * fatesealCrossroadsOffers.silverVision.costRatioOfBuyIn));
-}
-
-export function tomeCost(buyIn: number): number {
-  return Math.max(0, Math.floor(buyIn * fatesealCrossroadsOffers.forbiddenTome.costRatioOfBuyIn));
-}
-
-/** Extra prophecy symbol (paid credits). `alreadyPurchasedThisVisit` counts successful buys this Crossroads visit (0 = first price tier). */
+/** Purchase random extra prophecy symbol */
 export function applyCrossroadsAddOmenSymbol(
   state: FatesealEngineState,
   symbol: FatesealStandardId,
-  alreadyPurchasedThisVisit: number,
 ): ApplyShopResult {
-  const maxSyms = 1 + fatesealCrossroadsNewShop.addOmenSymbol.maxPurchasesThisVisit;
+  const maxSyms = 4;
   if (state.activeProphecy.length >= maxSyms) {
     return { ok: false, reason: "at_capacity" };
   }
   if (state.activeProphecy.includes(symbol)) {
     return { ok: false, reason: "duplicate_symbol" };
   }
-  const cost = crossroadsNextOmenAdditionCostCredits(alreadyPurchasedThisVisit);
+  const alreadyPurchasedCount = state.purchasedExtraProphecies?.length ?? 0;
+  const cost = crossroadsNextOmenAdditionCostCredits(alreadyPurchasedCount);
   if (!Number.isFinite(cost)) {
     return { ok: false, reason: "at_capacity" };
   }
@@ -120,72 +41,88 @@ export function applyCrossroadsAddOmenSymbol(
       ...state,
       sessionWallet: state.sessionWallet - cost,
       activeProphecy: [...state.activeProphecy, symbol],
+      purchasedExtraProphecies: [...(state.purchasedExtraProphecies ?? []), symbol],
     },
   };
 }
 
-export function applyCrossroadsWildReel(state: FatesealEngineState): ApplyShopResult {
-  const { costCredits, maxActive } = fatesealCrossroadsNewShop.wildReel;
-  const spins = fatesealProgressionRules.purchasedReels.wildRitualSpins;
-  if (state.wildReelPaidSpinTimers.length >= maxActive) {
+/** "Unsettle the Spirits" (Wild Reel) Cost */
+export function unsettleSpiritsCost(bank: number): number {
+  return Math.max(
+    fatesealUnsettleSpiritsConfig.minPrice,
+    Math.floor(bank * fatesealUnsettleSpiritsConfig.costRatioOfBank),
+  );
+}
+
+/** Activate "Unsettle the Spirits" */
+export function applyCrossroadsUnsettleSpirits(state: FatesealEngineState): ApplyShopResult {
+  const cost = unsettleSpiritsCost(state.sessionWallet);
+  const spins = fatesealUnsettleSpiritsConfig.durationSpins;
+  if (state.wildReelPaidSpinTimers.length >= 1) {
     return { ok: false, reason: "at_capacity" };
   }
-  if (state.sessionWallet < costCredits) {
+  if (state.sessionWallet < cost) {
     return { ok: false, reason: "insufficient_credits" };
   }
   return {
     ok: true,
-    creditsDelta: -costCredits,
+    creditsDelta: -cost,
     nextState: {
       ...state,
-      sessionWallet: state.sessionWallet - costCredits,
-      wildReelPaidSpinTimers: [...state.wildReelPaidSpinTimers, spins],
+      sessionWallet: state.sessionWallet - cost,
+      wildReelPaidSpinTimers: [spins],
     },
   };
 }
 
-/** Grants credits and records a dead-reel slot (column behavior TBD in cascade). */
-export function applyCrossroadsDeadReel(state: FatesealEngineState): ApplyShopResult {
-  const { grantCreditsOnTake, maxActive } = fatesealCrossroadsNewShop.deadReel;
-  const spins = fatesealProgressionRules.purchasedReels.deadRitualSpins;
+/** "Faustian Bargain" (Dead Reel) Grant */
+export function faustianBargainGrant(buyIn: number): number {
+  return Math.max(0, Math.floor(buyIn * fatesealFaustianBargainConfig.creditRatioOfBuyIn));
+}
+
+/** Accept "Faustian Bargain" level */
+export function applyCrossroadsFaustianBargain(state: FatesealEngineState): ApplyShopResult {
+  const grant = faustianBargainGrant(state.buyIn);
+  const spins = fatesealFaustianBargainConfig.durationSpinsPerLevel;
+  const maxActive = fatesealFaustianBargainConfig.maxLevel;
   if (state.deadReelPaidSpinTimers.length >= maxActive) {
     return { ok: false, reason: "at_capacity" };
   }
   return {
     ok: true,
-    creditsDelta: grantCreditsOnTake,
+    creditsDelta: grant,
     nextState: {
       ...state,
-      sessionWallet: state.sessionWallet + grantCreditsOnTake,
+      sessionWallet: state.sessionWallet + grant,
       deadReelPaidSpinTimers: [...state.deadReelPaidSpinTimers, spins],
     },
   };
 }
 
-/** Marks one **active** prophecy standard for a cascade payout multiplier when it appears in a prophecy hit. */
-export function applyCrossroadsOmenMark(
-  state: FatesealEngineState,
-  symbol: FatesealStandardId,
-): ApplyShopResult {
-  const { costCredits, maxActive } = fatesealCrossroadsNewShop.omenMark;
-  const markSpins = fatesealProgressionRules.purchasedReels.markedRitualSpins;
-  if (maxActive < 1 || state.markedOmenSymbol != null) {
+/** "Vassago's Gambit" Cost */
+export function vassagoGambitCost(bank: number): number {
+  return Math.max(
+    fatesealVassagoGambitConfig.minPrice,
+    Math.floor(bank * fatesealVassagoGambitConfig.costRatioOfBank),
+  );
+}
+
+/** Activate "Vassago's Gambit" */
+export function applyCrossroadsVassagoGambit(state: FatesealEngineState): ApplyShopResult {
+  if (state.vassagoActive) {
     return { ok: false, reason: "at_capacity" };
   }
-  if (!state.activeProphecy.includes(symbol)) {
-    return { ok: false, reason: "invalid_pick" };
-  }
-  if (state.sessionWallet < costCredits) {
+  const cost = vassagoGambitCost(state.sessionWallet);
+  if (state.sessionWallet < cost) {
     return { ok: false, reason: "insufficient_credits" };
   }
   return {
     ok: true,
-    creditsDelta: -costCredits,
+    creditsDelta: -cost,
     nextState: {
       ...state,
-      sessionWallet: state.sessionWallet - costCredits,
-      markedOmenSymbol: symbol,
-      markedOmenPaidSpinsLeft: markSpins,
+      sessionWallet: state.sessionWallet - cost,
+      vassagoActive: true,
     },
   };
 }

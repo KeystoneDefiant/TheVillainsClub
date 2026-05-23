@@ -8,6 +8,8 @@ import { isBarRouteState } from "@/game/barRouteState";
 import { buildFatesealSettlementProfile } from "@/game/sessionSettlement";
 import { buildClubTheme } from "@/theme/clubTheme";
 import { FatesealSilverPage } from "./FatesealSilverPage";
+import { diffDropInKeys } from "@/minigames/fateseal-silver/App";
+import type { FatesealSymbolId } from "@/config/minigames/fatesealRules";
 
 /** Surfaces the router `location.state` so the test can assert the
  *  settlement payload survived the cash-out → /bar redirect. */
@@ -100,5 +102,47 @@ describe("FatesealSilverPage", () => {
     });
     expect(screen.queryByText("Menu fallback")).not.toBeInTheDocument();
     expect(useClubWallet.getState().activeSession).toBeNull();
+  });
+});
+
+describe("diffDropInKeys", () => {
+  it("includes cells where symbol changes", () => {
+    const before: FatesealSymbolId[][] = [
+      ["dagger", "chalice"],
+      ["goat", "eye"],
+    ];
+    const after: FatesealSymbolId[][] = [
+      ["dagger", "chalice"],
+      ["serpent", "eye"],
+    ];
+    const result = diffDropInKeys(before, after);
+    expect(result.has("0,0")).toBe(false);
+    expect(result.has("1,0")).toBe(true); // goat -> serpent
+  });
+
+  it("includes cells above a matched/removed cell in the same column even if symbol is identical", () => {
+    const before: FatesealSymbolId[][] = [
+      ["dagger", "chalice"],
+      ["goat", "eye"],
+      ["goat", "moon"],
+    ];
+    const after: FatesealSymbolId[][] = [
+      ["dagger", "chalice"],
+      ["goat", "eye"],
+      ["goat", "moon"],
+    ];
+    // Remove the bottom-most goat in column 0 (row 2)
+    const removals = new Set(["2,0"]);
+    const result = diffDropInKeys(before, after, removals);
+
+    // In column 0, row 2 is matched, so rows 0, 1, 2 should all be included because they fall/shift down
+    expect(result.has("0,0")).toBe(true);
+    expect(result.has("1,0")).toBe(true);
+    expect(result.has("2,0")).toBe(true);
+
+    // Column 1 had no removals, so no cells in column 1 should be included
+    expect(result.has("0,1")).toBe(false);
+    expect(result.has("1,1")).toBe(false);
+    expect(result.has("2,1")).toBe(false);
   });
 });

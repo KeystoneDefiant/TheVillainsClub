@@ -6,6 +6,7 @@ interface FatesealSymbolIconProps {
   size?: number | string;
   className?: string;
   style?: React.CSSProperties;
+  timerValue?: number | null;
 }
 
 export function FatesealSymbolIcon({
@@ -13,6 +14,7 @@ export function FatesealSymbolIcon({
   size = "100%",
   className,
   style,
+  timerValue,
 }: FatesealSymbolIconProps) {
   // outer sketchy circles
   const renderOuterCircles = () => (
@@ -429,7 +431,7 @@ export function FatesealSymbolIcon({
               fill="none"
             />
             {/* The diagonal void slash (null ∅ look) */}
-            <path d="M 22,78 L 78,22" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+            <path d="M 22,78 L 78,22" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" opacity={timerValue != null ? 0.25 : 1} />
             {/* Central spiraling vortex */}
             <path
               d="M 50,50 Q 52,48 50,46 Q 46,46 47,52 Q 52,55 54,48 Q 50,41 44,45 Q 41,54 50,57 Q 60,54 58,42 Q 50,33 40,40 Q 33,52 46,62 Q 62,60 62,45"
@@ -437,10 +439,26 @@ export function FatesealSymbolIcon({
               strokeWidth="1.5"
               fill="none"
               strokeLinecap="round"
+              opacity={timerValue != null ? 0.15 : 1}
             />
             {/* Small crack details */}
             <path d="M 27,27 L 33,33" stroke="currentColor" strokeWidth="1.2" opacity="0.6" />
             <path d="M 73,73 L 67,67" stroke="currentColor" strokeWidth="1.2" opacity="0.6" />
+            {timerValue != null && (
+              <text
+                x="50"
+                y="50"
+                textAnchor="middle"
+                dominantBaseline="central"
+                fill="currentColor"
+                fontSize="38"
+                fontWeight="900"
+                fontFamily="Georgia, serif"
+                style={{ pointerEvents: "none" }}
+              >
+                {timerValue}
+              </text>
+            )}
           </>
         );
 

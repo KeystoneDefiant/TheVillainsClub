@@ -51,6 +51,12 @@ export type FatesealEngineState = {
   markedOmenSymbol: FatesealStandardId | null;
   /** Paid spins remaining for the active omen mark (see `markedRitualSpins`). */
   markedOmenPaidSpinsLeft: number;
+  /** Extra prophecy symbols purchased at the Crossroads. */
+  purchasedExtraProphecies: readonly FatesealStandardId[];
+  /** Flag showing Vassago's Gambit is active (guarantees a scatter bonus wave, scatters don't count toward Crossroads). */
+  vassagoActive: boolean;
+  /** Flag showing whether the Forbidden Tome toggle switch is active (+25% bets, +25% scatter weight). */
+  tomeToggleActive: boolean;
 };
 
 export type CascadeLogLine =
@@ -127,6 +133,7 @@ export function buildEffectivePool(
     silverVisionTarget: FatesealStandardId | null;
     /** In-spin bonus append waves (TODO.md) use the same wild weight nudge as legacy banked free ritual. */
     inFreeRitualCascadeWave?: boolean;
+    tomeToggleActive?: boolean;
   },
 ): FatesealPoolEntry[] {
   const p = clonePool(pool);
@@ -138,6 +145,11 @@ export function buildEffectivePool(
   if (opts.tomeSpinsLeft > 0) {
     for (const e of p) {
       if (e.symbol === "scatter") e.weight *= 2;
+    }
+  }
+  if (opts.tomeToggleActive) {
+    for (const e of p) {
+      if (e.symbol === "scatter") e.weight *= 1.25;
     }
   }
   if (opts.freeRitualSpinsLeft > 0 || opts.inFreeRitualCascadeWave) {
@@ -177,7 +189,7 @@ function applyColumnPostPick(
   for (let r = 0; r < n; r++) {
     for (let c = 0; c < n; c++) {
       let sym = grid[r]![c]!;
-      if (wildK > 0 && sym !== "void" && rng() < chance) sym = "wild";
+      if (wildK > 0 && sym !== "void" && sym !== "scatter" && rng() < chance) sym = "wild";
       if (c >= n - deadK) sym = "void";
       if (c < bonusDead) sym = "void";
       grid[r]![c] = sym;
@@ -366,17 +378,10 @@ function applyGravity(g: NullableGrid): NullableGrid {
   const n = g.length;
   const out: NullableGrid = Array.from({ length: n }, () => Array.from({ length: n }, () => null));
   for (let c = 0; c < n; c++) {
-    for (let r = 0; r < n; r++) {
-      if (g[r]![c] === "void") {
-        out[r]![c] = "void";
-      }
-    }
     let writeRow = n - 1;
     for (let r = n - 1; r >= 0; r--) {
       const cell = g[r]![c];
-      if (cell === "void") {
-        writeRow = r - 1;
-      } else if (cell != null) {
+      if (cell != null) {
         out[writeRow]![c] = cell;
         writeRow--;
       }
@@ -572,6 +577,9 @@ export function createInitialFatesealState(
     deadReelPaidSpinTimers: [],
     markedOmenSymbol: null,
     markedOmenPaidSpinsLeft: 0,
+    purchasedExtraProphecies: [],
+    vassagoActive: false,
+    tomeToggleActive: false,
   };
 }
 
@@ -592,8 +600,29 @@ export function runSpin(
     return emptyResult();
   }
 
-  const useFreeSpin = state.freeRitualSpinsLeft > 0;
-  const bet = useFreeSpin ? 0 : state.baseBet;
+  const isVassago = state.vassagoActive;
+  const isUnsettle = state.wildReelPaidSpinTimers.length > 0;
+  const isFaustian = state.deadReelPaidSpinTimers.length > 0;
+
+  let bet = state.baseBet;
+  let activeBetSize = state.baseBet;
+
+  if (isVassago || isUnsettle) {
+    bet = 0;
+    activeBetSize = 250;
+  } else if (isFaustian) {
+    bet = 250;
+    activeBetSize = 250;
+  } else {
+    const useFreeSpin = state.freeRitualSpinsLeft > 0;
+    if (useFreeSpin) {
+      bet = 0;
+    } else {
+      bet = state.tomeToggleActive ? Math.floor(state.baseBet * 1.25) : state.baseBet;
+    }
+    activeBetSize = state.tomeToggleActive ? Math.floor(state.baseBet * 1.25) : state.baseBet;
+  }
+
   if (state.sessionWallet < bet) {
     log.push({ kind: "insufficient_funds" });
     return emptyResult();
@@ -609,7 +638,10 @@ export function runSpin(
   const baseSim = options?.forBaseRitualSim === true;
 
   let grid = state.grid.map((row) => [...row]);
-  let bonusQueue = 0;
+  let bonusQueue = isVassago ? 1 : 0;
+  if (isVassago) {
+    log.push({ kind: "scatter_ritual_started", spins: fatesealScatterRitual.freeSpinsGranted });
+  }
   let ritualTriggersThisSpin = 0;
   let totalPayout = 0;
   const cascadeKeyframes: CascadeKeyframe[] = [];
@@ -621,6 +653,7 @@ export function runSpin(
       freeRitualSpinsLeft: state.freeRitualSpinsLeft,
       silverVisionTarget: state.silverVisionTarget,
       inFreeRitualCascadeWave: inBonusWave,
+      tomeToggleActive: state.tomeToggleActive,
     });
 
   const colCtxForWave = (bonusDeadColCount: number): FatesealFillColumnContext => {
@@ -649,7 +682,7 @@ export function runSpin(
     const maxSteps = 200;
     for (let s = 0; s < maxSteps; s++) {
       const gridBeforeRemoval = grid.map((row) => [...row]);
-      const step = runCascadeStep(grid, state, effPool, rng, globalDepth, fillCtx);
+      const step = runCascadeStep(grid, { ...state, baseBet: activeBetSize }, effPool, rng, globalDepth, fillCtx);
       grid = step.grid;
       if (step.removed === 0) break;
       totalPayout += step.stepPayout;
@@ -697,13 +730,14 @@ export function runSpin(
 
   const symCfg = fatesealProgressionRules.sympatheticVibrations;
   if (!baseSim && ritualTriggersThisSpin >= symCfg.bonusRoundIndexTrigger) {
-    const sympatheticPayout = Math.floor(symCfg.payoutMultipleOfBaseBet * state.baseBet);
+    const sympatheticPayout = Math.floor(symCfg.payoutMultipleOfBaseBet * activeBetSize);
     totalPayout += sympatheticPayout;
     log.push({ kind: "sympathetic_vibrations", payout: sympatheticPayout });
   }
 
   wallet += totalPayout;
 
+  const useFreeSpin = state.freeRitualSpinsLeft > 0;
   if (useFreeSpin) {
     freeRitualSpinsLeft = Math.max(0, freeRitualSpinsLeft - 1);
   }
@@ -712,8 +746,8 @@ export function runSpin(
   let deadReelPaidSpinTimers = state.deadReelPaidSpinTimers;
   let markedOmenPaidSpinsLeft = state.markedOmenPaidSpinsLeft;
   let markedOmenSymbol = state.markedOmenSymbol;
-  const decayThisSpin =
-    bet > 0 || !fatesealProgressionRules.purchasedReels.bonusSpinsExcludeFromReelDecay;
+  const isFreeSpinsExcluded = useFreeSpin && fatesealProgressionRules.purchasedReels.bonusSpinsExcludeFromReelDecay;
+  const decayThisSpin = !isFreeSpinsExcluded && ((bet > 0 || isVassago || isUnsettle) || !fatesealProgressionRules.purchasedReels.bonusSpinsExcludeFromReelDecay);
   if (decayThisSpin) {
     wildReelPaidSpinTimers = tickFifoReelTimers(wildReelPaidSpinTimers);
     deadReelPaidSpinTimers = tickFifoReelTimers(deadReelPaidSpinTimers);
@@ -734,7 +768,10 @@ export function runSpin(
   const tomeSpinsLeft = state.tomeSpinsLeft > 0 ? state.tomeSpinsLeft - 1 : 0;
 
   const crossroadsThreshold = fatesealProgressionRules.crossroads.scatterSymbolsToTriggerShop;
-  let crossroadsBonusAccum = state.crossroadsBonusAccum + scatters;
+  let crossroadsBonusAccum = state.crossroadsBonusAccum;
+  if (!isVassago) {
+    crossroadsBonusAccum += scatters;
+  }
   let crossroadsGate = false;
   if (crossroadsBonusAccum >= crossroadsThreshold) {
     crossroadsGate = true;
@@ -758,6 +795,7 @@ export function runSpin(
     deadReelPaidSpinTimers,
     markedOmenSymbol,
     markedOmenPaidSpinsLeft,
+    vassagoActive: false,
   };
 
   return {

@@ -530,3 +530,30 @@
 .crossroads-card--tome::before {
   background: radial-gradient(circle at center, rgba(185, 28, 40, 0.06) 0%, transparent 60%);
 }
+
+/* Altar screen extra prophecy highlighting */
+.fateseal-altar-extra-purchased {
+  border: 1px solid #a855f7 !important;
+  background: radial-gradient(circle at center, #2b0c47 0%, #050208 100%) !important;
+  color: #e9d5ff !important;
+  animation: fateseal-void-pull 2.8s ease-in-out infinite;
+  text-align: center !important;
+  padding: 6px 4px !important;
+  border-radius: 8px !important;
+}
+
+/* Bet button layout styling */
+.fateseal-bet-buttons-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 100%;
+}
+
+.fateseal-bet-button {
+  flex: 1 1 100px;
+  min-width: 100px;
+  text-align: center;
+}

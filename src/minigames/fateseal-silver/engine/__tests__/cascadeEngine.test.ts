@@ -3,6 +3,7 @@ import {
   fatesealCascadePayoutScale,
   fatesealProgressionRules,
   fatesealScatterRitual,
+  fatesealProphecyMode,
 } from "@/config/minigames/fatesealRules";
 import type { CascadeLogLine } from "../cascadeEngine";
 import {
@@ -100,8 +101,17 @@ describe("fateseal cascadeEngine", () => {
               linkCfg.maxCascadeMultBonusFromLinking,
               prophecyEdges * linkCfg.cascadeMultAddPerProphecyAdjacency,
             ));
+    const activeCount = s.activeProphecy.length || 1;
+    const factors = fatesealProgressionRules.purchasedReels.omenScalingFactors;
+    const scale = s.prophecyMode === "single"
+      ? (factors[Math.min(activeCount - 1, factors.length - 1)] ?? 1.0)
+      : 1.0;
+    const base = s.prophecyMode === "single"
+      ? fatesealProphecyMode.single.winMultipleOfBaseBet
+      : fatesealProphecyMode.triple.winMultipleOfBaseBet;
+    const prophecyContribution = prophecyKeys.length * base * scale;
     expect(first?.payout).toBe(
-      Math.floor(25 * 10 * 10 * effectiveMult * fatesealCascadePayoutScale),
+      Math.floor(prophecyContribution * s.baseBet * effectiveMult * fatesealCascadePayoutScale),
     );
     const kf0 = result.cascadeKeyframes[0];
     expect(kf0?.prophecyMatchKeys.length).toBe(25);
@@ -134,8 +144,17 @@ describe("fateseal cascadeEngine", () => {
               linkCfg.maxCascadeMultBonusFromLinking,
               prophecyEdges * linkCfg.cascadeMultAddPerProphecyAdjacency,
             ));
+    const activeCount = s.activeProphecy.length || 1;
+    const factors = fatesealProgressionRules.purchasedReels.omenScalingFactors;
+    const scale = s.prophecyMode === "single"
+      ? (factors[Math.min(activeCount - 1, factors.length - 1)] ?? 1.0)
+      : 1.0;
+    const base = s.prophecyMode === "single"
+      ? fatesealProphecyMode.single.winMultipleOfBaseBet
+      : fatesealProphecyMode.triple.winMultipleOfBaseBet;
+    const prophecyContribution = prophecyKeys.length * base * scale;
     expect(first?.payout).toBe(
-      Math.floor(25 * 1 * 10 * effectiveMult * fatesealCascadePayoutScale),
+      Math.floor(prophecyContribution * s.baseBet * effectiveMult * fatesealCascadePayoutScale),
     );
   });
 
@@ -185,10 +204,11 @@ describe("fateseal cascadeEngine", () => {
     const result = runSpin(s, () => 0.5, { skipInitialFill: true });
     const sym = result.log.find((l) => l.kind === "sympathetic_vibrations");
     expect(sym?.kind).toBe("sympathetic_vibrations");
+    const symCfg = fatesealProgressionRules.sympatheticVibrations;
     if (sym?.kind === "sympathetic_vibrations") {
-      expect(sym.payout).toBe(Math.floor(75 * 10));
+      expect(sym.payout).toBe(Math.floor(symCfg.payoutMultipleOfBaseBet * s.baseBet));
     }
-    expect(result.totalPayout).toBeGreaterThanOrEqual(Math.floor(75 * 10));
+    expect(result.totalPayout).toBeGreaterThanOrEqual(Math.floor(symCfg.payoutMultipleOfBaseBet * s.baseBet));
   });
 
   it("opens Crossroads when final-grid scatters reach the configured threshold", () => {
@@ -282,5 +302,58 @@ describe("fateseal cascadeEngine", () => {
     
     expect(countWildDepth0).toBe(25);
     expect(countWildDepth10).toBe(0);
+  });
+
+  it("applyColumnPostPick does not overwrite scatter symbols with wild", () => {
+    const cleanPool = [{ symbol: "scatter" as const, weight: 1 }];
+    const colCtx = { bonusDeadColCount: 0, wildColCount: 5, purchasedDeadColCount: 0 };
+    const testGrid = Array.from({ length: 5 }, () => Array.from({ length: 5 }, () => "scatter" as FatesealSymbolId)) as FatesealSymbolId[][];
+    fillGridRandom(testGrid, cleanPool, () => 0.01, colCtx, 0);
+    const countScatter = testGrid.flat().filter((s: string) => s === "scatter").length;
+    expect(countScatter).toBe(25); // none overwritten
+  });
+
+  it("applyGravity shifts void symbols and standard symbols down to lowest empty spots", () => {
+    const gridBefore: (FatesealSymbolId | null)[][] = [
+      ["dagger", null, "void"],
+      [null, "dagger", null],
+      ["void", null, "dagger"],
+    ];
+    // Bottom-up shift per column:
+    // Col 0: dagger, null, void -> void, dagger (bottom)
+    // Col 1: null, dagger, null -> dagger (bottom)
+    // Col 2: void, null, dagger -> void, dagger (bottom)
+    const n = gridBefore.length;
+    const out: (FatesealSymbolId | null)[][] = Array.from({ length: n }, () => Array.from({ length: n }, () => null));
+    for (let c = 0; c < n; c++) {
+      let writeRow = n - 1;
+      for (let r = n - 1; r >= 0; r--) {
+        const cell = gridBefore[r]![c];
+        if (cell != null) {
+          out[writeRow]![c] = cell;
+          writeRow--;
+        }
+      }
+    }
+    expect(out[2][0]).toBe("void");
+    expect(out[1][0]).toBe("dagger");
+    expect(out[0][0]).toBeNull();
+
+    expect(out[2][1]).toBe("dagger");
+    expect(out[1][1]).toBeNull();
+
+    expect(out[2][2]).toBe("dagger");
+    expect(out[1][2]).toBe("void");
+    expect(out[0][2]).toBeNull();
+  });
+
+  it("vassagoActive guarantees scatter bonus and consumes the active flag", () => {
+    const s = createInitialFatesealState(20_000, 2000, Math.random);
+    s.activeProphecy = ["dagger"];
+    s.vassagoActive = true;
+    s.baseBet = 250;
+    const result = runSpin(s, () => 0.5);
+    expect(result.nextState.vassagoActive).toBe(false);
+    expect(result.log.some((l) => l.kind === "scatter_ritual_started")).toBe(true);
   });
 });

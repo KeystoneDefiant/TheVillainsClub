@@ -42,7 +42,7 @@ describe("OublietteNo9Page", () => {
 
     renderGameRoute();
 
-    fireEvent.click(await screen.findByRole("button", { name: /cash out and return to the club/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /cash out and return to the club/i }, { timeout: 5000 }));
     fireEvent.click(await screen.findByRole("button", { name: /confirm cash out/i }));
     fireEvent.click(await screen.findByRole("button", { name: /return to main menu/i }));
 

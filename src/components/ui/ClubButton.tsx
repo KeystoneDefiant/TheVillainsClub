@@ -1,12 +1,14 @@
-import { Button } from "@mantine/core";
+import React from "react";
+import { Button, ButtonProps } from "@mantine/core";
 import "./ClubButton.css";
 
-export type ClubButtonProps = React.ComponentPropsWithoutRef<typeof Button> & {
+export type ClubButtonProps<C extends React.ElementType = "button"> = ButtonProps & {
   fancy?: boolean;
-};
+  component?: C;
+} & Omit<React.ComponentPropsWithoutRef<C>, keyof ButtonProps | "component">;
 
-export function ClubButton(props: ClubButtonProps) {
-  const { variant = "filled", fancy, size, styles, style, className, disabled, onClick, children, ...rest } = props;
+export function ClubButton<C extends React.ElementType = "button">(props: ClubButtonProps<C>) {
+  const { variant = "filled", fancy, size, styles, style, className, disabled, onClick, children, component, ...rest } = props;
 
   const isFancy = !!fancy;
 
@@ -20,7 +22,7 @@ export function ClubButton(props: ClubButtonProps) {
     .filter(Boolean)
     .join(" ");
 
-  const handleClick = (e: React.MouseEvent) => {
+  const handleClick = (e: React.MouseEvent<HTMLElement>) => {
     if (disabled) {
       e.preventDefault();
       e.stopPropagation();
@@ -33,6 +35,8 @@ export function ClubButton(props: ClubButtonProps) {
 
   return (
     <Button
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      component={component as any}
       variant={variant === "filled" ? "filled" : variant === "light" ? "light" : variant === "outline" ? "outline" : "subtle"}
       color="brass"
       radius={isFancy ? undefined : "xs"}

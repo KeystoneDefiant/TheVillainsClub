@@ -1,7 +1,9 @@
-import { Paper } from "@mantine/core";
+import React from "react";
+import { Paper, PaperProps } from "@mantine/core";
 import { clubTokens } from "@/theme/clubTokens";
 
-export type ClubPanelProps = React.ComponentPropsWithoutRef<typeof Paper>;
+export type ClubPanelProps = PaperProps &
+  Omit<React.ComponentPropsWithoutRef<"div">, keyof PaperProps>;
 
 export function ClubPanel(props: ClubPanelProps) {
   const { styles, style, children, ...rest } = props;

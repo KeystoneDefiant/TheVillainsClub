@@ -8,7 +8,8 @@ Each agent session that does more than a trivial typo-only pass should **before 
 
 1. **`AGENTS.md`** — When commands, ports, devcontainer behavior, CI, Playwright/Electron flows, or agent-facing expectations change, update this file so the next run matches reality.
 2. **Documentation** — When behavior, milestones, or contracts shift: **`PLAN.md` → Current status** (and other `PLAN.md` sections as needed); **`docs/architecture.md`** when module boundaries or data flow change; any other doc the work makes wrong or obsolete. Do not add new markdown files unless the user asked for them.
-3. **Tests** — Add or adjust **Vitest** for deterministic logic you change. Run **`npm run lint`**, **`npm run test`**, and **`npm run typecheck`** when you touched code.
+3. **Tests and Verification** — Add or adjust **Vitest** for deterministic logic you change. You MUST run the full verification suite with **`npm run testall`** (which runs `lint`, `typecheck`, and all tests) after all major edits and before finishing.
+
 
 ### Tests and tunable values
 
@@ -68,7 +69,8 @@ The **Agent cycle checklist** below is the same bar, itemized.
 - [ ] Update **`AGENTS.md`** (this file) when run commands, ports, devcontainer behavior, CI, or agent expectations change.
 - [ ] Update **`docs/architecture.md`** when module boundaries or data contracts change.
 - [ ] Add or adjust **Vitest** tests under `src/` for deterministic rules and regressions you might introduce.
-- [ ] Run **`npm run lint`**, **`npm run test`**, and **`npm run typecheck`** before handoff when code changed.
+- [ ] Run **`npm run testall`** (or `npm run lint && npm run typecheck && npm run test`) after all major edits and before finishing.
+
 - [ ] Keep **`content/*.json`** valid JSON where the app parses them; JSONC files cannot be parsed by `JSON.parse` until converted or stripped.
 
 ## CI (GitHub Actions)

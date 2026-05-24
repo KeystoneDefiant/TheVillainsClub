@@ -59,7 +59,7 @@ export type FatesealProphecyModeKey = keyof typeof fatesealProphecyMode;
  * symbolic multipliers alone. Re-tune with `npm run sim:fateseal`.
  */
 /** Monte Carlo (see `npm run sim:fateseal` with `FATESEAL_SIM_BASE_ONLY=1`) targets ~88–95% payout/paid bet. */
-export const fatesealCascadePayoutScale = 0.00935 as const;
+export const fatesealCascadePayoutScale = 0.0082 as const;
 
 /**
  * §3C step 3 — payout uses a per-cascade multiplier that rises with chain depth.
@@ -79,7 +79,7 @@ export const fatesealProgressionRules = {
      * Crossroads opens after this many **scatter** symbols land on the **final
      * settled grid** of completed spins (v1 stand-in for “bonus symbols revealed”).
      */
-    scatterSymbolsToTriggerShop: 4,
+    scatterSymbolsToTriggerShop: 6,
   },
   linking: {
     /** Non–actively-prophesied standards need this many orthogonally linked tiles to clear. */
@@ -89,7 +89,7 @@ export const fatesealProgressionRules = {
      * cascade step multiplier (before `fatesealCascadePayoutScale`), capped by `maxCascadeMultBonusFromLinking`.
      * Used only when {@link usePowProphecyLinkingForCascadeMult} is false.
      */
-    cascadeMultAddPerProphecyAdjacency: 0.06,
+    cascadeMultAddPerProphecyAdjacency: 0.2,
     /** Upper bound on the sum added to the depth cascade mult from prophecy linking (additive mode). */
     maxCascadeMultBonusFromLinking: 5,
     /**
@@ -112,7 +112,7 @@ export const fatesealProgressionRules = {
     wildChanceDecayPerDepth: 0.50,
     markedSymbolPayoutMultiplier: 1.5,
     /** Payout scaling multiplier per symbol as the count of active omens increases (1, 2, 3, 4). */
-    omenScalingFactors: [1.15, 0.5, 0.3, 0.15],
+    omenScalingFactors: [1.2, 0.45, 0.25, 0.15],
     /** Free Ritual spins (zero bet) do not decrement Crossroads wild/dead/mark spin timers. */
     bonusSpinsExcludeFromReelDecay: true,
   },
@@ -122,7 +122,7 @@ export const fatesealProgressionRules = {
 } as const;
 
 /** Pool weight for scatter drops — lower = rarer bonus (TODO.md). */
-export const fatesealScatterSymbolPoolWeight = 0.68 as const;
+export const fatesealScatterSymbolPoolWeight = 0.7 as const;
 
 /** §3A / §5 — Scatter meter ticks mid-cascade for Sympathetic accumulation; meter fires that enqueue bonus append waves log `scatter_ritual_started` (see `runSpin`). */
 export const fatesealScatterRitual = {

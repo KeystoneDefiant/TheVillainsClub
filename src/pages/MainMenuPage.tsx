@@ -593,7 +593,7 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
                                     {game.title}
                                   </Title>
                                 </Stack>
-                                <Group grow wrap="nowrap" gap="xs" style={{ minWidth: 400 }}>
+                                <Group grow wrap="nowrap" gap="xs" style={{ width: "100%" }}>
                                   <ClubButton variant="light" size="xs" onClick={openRules} fullWidth>
                                     Tutorial
                                   </ClubButton>

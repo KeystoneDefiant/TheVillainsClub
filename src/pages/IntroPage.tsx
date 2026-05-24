@@ -12,6 +12,8 @@ import { useMotionPresetStore } from "@/motion/motionPresetStore";
 import { usePrefersReducedMotion } from "@/motion/usePrefersReducedMotion";
 import { useClubWallet } from "@/game/clubWalletStore";
 
+import rawQuips from "../../content/quips.json";
+
 export function IntroPage() {
   const navigate = useNavigate();
   const preset = useMotionPresetStore((s) => s.preset);
@@ -21,6 +23,20 @@ export function IntroPage() {
   const [phase, setPhase] = useState<"enter" | "hold" | "prompt">("enter");
   const [skipped, setSkipped] = useState(false);
   const [variant] = useState<"A" | "B">(() => (Math.random() > 0.5 ? "A" : "B"));
+
+  const entryMessage = useMemo(() => {
+    try {
+      const q = rawQuips as Record<string, unknown>;
+      const messages = (q.entry_messaage || q.entry_message) as string[] | undefined;
+      if (Array.isArray(messages) && messages.length > 0) {
+        const idx = Math.floor(Math.random() * messages.length);
+        return messages[idx];
+      }
+    } catch {
+      // Fallback
+    }
+    return "You have been expected.";
+  }, []);
 
   const greyCount = VC_LOGO_GREY_LETTER_COUNT;
   const greyRevealDelaySec = useMemo(
@@ -75,12 +91,38 @@ export function IntroPage() {
   const easing = preset.easing;
   const instant = reduceMotion;
 
+  const textVariants = {
+    hidden: { clipPath: "inset(0 100% 0 0)", opacity: 0.5 },
+    visible: {
+      clipPath: "inset(0 0% 0 0)",
+      opacity: 1,
+      transition: {
+        duration: 1.4,
+        ease: [0.76, 0, 0.24, 1] as [number, number, number, number],
+      },
+    },
+  };
+
+  const buttonVariants = {
+    hidden: { opacity: 0, y: 12 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 1.0,
+        ease: [0.76, 0, 0.24, 1] as [number, number, number, number],
+        delay: 1.0,
+      },
+    },
+  };
+
   const introShellStyle: CSSProperties = instant
-    ? { textAlign: "center", maxWidth: 920, backfaceVisibility: "hidden" }
+    ? { textAlign: "center", maxWidth: 920, backfaceVisibility: "hidden", position: "relative" }
     : {
       textAlign: "center",
       maxWidth: 920,
       backfaceVisibility: "hidden",
+      position: "relative",
       ["--shell-intro-ease" as string]: `cubic-bezier(${preset.easing.join(",")})`,
     };
 
@@ -112,7 +154,11 @@ export function IntroPage() {
           <motion.div
             key="intro"
             initial={instant ? { opacity: 1, y: 0, z: 0 } : { opacity: 0, y: 16, z: 0 }}
-            animate={{ opacity: 1, y: 0, z: 0 }}
+            animate={
+              phase === "prompt"
+                ? { opacity: 1, y: -90, z: 0 }
+                : { opacity: 1, y: 0, z: 0 }
+            }
             exit={
               instant
                 ? { opacity: 1, y: 0, z: 0, transition: { duration: 0 } }
@@ -123,10 +169,16 @@ export function IntroPage() {
                   transition: { duration: preset.introFadeOut, ease: easing },
                 }
             }
-            transition={instant ? { duration: 0 } : { duration: preset.introTitleDuration, ease: easing }}
+            transition={
+              instant
+                ? { duration: 0 }
+                : phase === "prompt"
+                  ? { duration: 1.2, ease: [0.76, 0, 0.24, 1] as [number, number, number, number] }
+                  : { duration: preset.introTitleDuration, ease: easing }
+            }
             style={introShellStyle}
           >
-            <Box mb="sm" className={`shell-intro-logo ${phase === "prompt" ? "shell-intro-logo--raised" : ""}`}>
+            <Box mb="sm" className="shell-intro-logo">
               {variant === "A" ? (
                 <VcLogoIntroMark
                   scale={1}
@@ -169,27 +221,47 @@ export function IntroPage() {
             </Box>
             {phase === "prompt" ? (
               <motion.div
-                initial={instant ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={instant ? { duration: 0 } : { duration: 0.55, ease: easing }}
+                initial={instant ? "visible" : "hidden"}
+                animate="visible"
                 style={{
+                  position: "absolute",
+                  top: "calc(100% + 2.5rem)",
+                  left: "50%",
+                  transform: "translateX(-50%)",
                   display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
                   justifyContent: "center",
-                  marginTop: "1.5rem",
+                  gap: "1.5rem",
+                  width: "100vw",
                 }}
               >
-                <p className="text-center">
-                  You have been expected.
-                </p>
-                <ClubButton
-                  onClick={enterClub}
-                  size="lg"
+                <motion.p
+                  className="text-center"
+                  variants={instant ? {} : textVariants}
                   style={{
-                    minWidth: 200,
+                    margin: 0,
+                    fontSize: "1.4rem",
+                    color: "rgba(248, 231, 183, 0.9)",
+                    letterSpacing: "0.08em",
+                    fontFamily: "Cinzel, Georgia, Times New Roman, serif",
+                    textShadow: "0 0 10px rgba(248, 231, 183, 0.3)",
+                    fontWeight: 500,
                   }}
                 >
-                  Enter the Club
-                </ClubButton>
+                  {entryMessage}
+                </motion.p>
+                <motion.div variants={instant ? {} : buttonVariants}>
+                  <ClubButton
+                    onClick={enterClub}
+                    size="lg"
+                    style={{
+                      minWidth: 200,
+                    }}
+                  >
+                    Enter the Club
+                  </ClubButton>
+                </motion.div>
               </motion.div>
             ) : null}
           </motion.div>

@@ -9,7 +9,7 @@ import type { BandCatalogEntry } from "@/config/bandsCatalog";
 
 /** House band plays on shell screens and continues uninterrupted into minigames. */
 function shellHouseMusicRoute(pathname: string): boolean {
-  return pathname === "/" || pathname === "/menu" || pathname === "/bar" || pathname.startsWith("/minigames/");
+  return pathname === "/" || pathname === "/onboarding" || pathname === "/menu" || pathname === "/bar" || pathname.startsWith("/minigames/");
 }
 
 function shuffleInPlace<T>(arr: T[], rng: () => number): T[] {

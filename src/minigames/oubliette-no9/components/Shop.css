@@ -97,3 +97,10 @@
     background-position: 100% 100%;
   }
 }
+
+/* Align purchase buttons to the bottom of the card and horizontally center them */
+.oubliette-shop-card-wrap .game-panel .oubliette-action-button {
+  margin-top: auto !important;
+  align-self: center !important;
+}
+

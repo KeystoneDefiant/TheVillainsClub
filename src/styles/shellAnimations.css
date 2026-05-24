@@ -288,7 +288,8 @@
 
 .club-landing__threshold,
 .club-landing__menu,
-.club-landing__game {
+.club-landing__game,
+.club-landing__settlement {
   position: relative;
   z-index: 4;
   min-height: 100vh;
@@ -298,7 +299,8 @@
   box-sizing: border-box;
 }
 
-.club-landing__threshold {
+.club-landing__threshold,
+.club-landing__settlement {
   justify-content: center;
 }
 
@@ -340,24 +342,29 @@
   margin: 0;
 }
 
-.club-landing__shelves {
+.club-landing__backsplash {
   position: absolute;
   inset: 0;
   z-index: 1;
   opacity: 0;
   transition: opacity 0.75s ease;
-  background:
-    radial-gradient(circle at 18% 22%, rgba(211, 149, 70, 0.26) 0 8px, transparent 9px 100%),
-    radial-gradient(circle at 36% 20%, rgba(118, 38, 46, 0.34) 0 7px, transparent 8px 100%),
-    radial-gradient(circle at 58% 24%, rgba(211, 149, 70, 0.2) 0 9px, transparent 10px 100%),
-    radial-gradient(circle at 78% 19%, rgba(62, 104, 72, 0.28) 0 8px, transparent 9px 100%),
-    linear-gradient(90deg, transparent 0 10%, rgba(127, 75, 31, 0.18) 10% 11%, transparent 11% 26%, rgba(127, 75, 31, 0.18) 26% 27%, transparent 27% 44%, rgba(127, 75, 31, 0.18) 44% 45%, transparent 45% 65%, rgba(127, 75, 31, 0.18) 65% 66%, transparent 66%),
-    repeating-linear-gradient(0deg, transparent 0 76px, rgba(141, 87, 39, 0.42) 77px 82px, transparent 83px 150px);
+  background-color: #170b07; /* Luxurious dark mahogany red-brown */
+  background-image: 
+    /* Heavy cinematic vignette focusing lighting on active menu cards */
+    radial-gradient(circle at 50% 45%, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.88) 100%),
+    /* Fine fabric weave texture lines */
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.12) 0 1px, transparent 1px 2px),
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.12) 0 1px, transparent 1px 2px),
+    /* Exquisite repeating Gothic/Victorian fine filigree lacy scrollwork SVG */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cpath d='M60 0 C65 15, 80 20, 85 35 C90 50, 80 60, 60 60 C40 60, 30 50, 35 35 C40 20, 55 15, 60 0 Z M60 20 C62 26, 70 30, 72 38 C74 46, 68 50, 60 50 C52 50, 46 46, 48 38 C50 30, 58 26, 60 20 Z M30 30 C32 38, 42 42, 42 55 C42 68, 32 72, 30 80 C28 72, 18 68, 18 55 C18 42, 28 38, 30 30 Z M90 30 C92 38, 102 42, 102 55 C102 68, 92 72, 90 80 C88 72, 78 68, 78 55 C78 42, 88 38, 90 30 Z M60 60 C65 75, 80 80, 85 95 C90 110, 80 120, 60 120 C40 120, 30 110, 35 95 C40 80, 55 75, 60 60 Z M60 80 C58 86, 50 90, 48 98 C46 106, 52 110, 60 110 C68 110, 74 106, 72 98 C70 90, 62 86, 60 80 Z' fill='%234d2813' fill-opacity='0.22' fill-rule='evenodd'/%3E%3C/svg%3E");
+  background-size: auto, 2px 2px, 2px 2px, 120px 120px;
+  background-repeat: no-repeat, repeat, repeat, repeat;
+  overflow: hidden;
 }
 
-.club-landing--entered .club-landing__shelves {
+.club-landing--entered .club-landing__backsplash {
   opacity: 1;
-  animation: club-bottle-glow 6s ease-in-out infinite, club-backlight-cycle 16s ease-in-out infinite;
+  animation: club-backlight-cycle 16s ease-in-out infinite;
 }
 
 .club-landing__bar {
@@ -367,12 +374,183 @@
   right: -4vw;
   bottom: -4px;
   height: clamp(128px, 25vh, 260px);
+  background: linear-gradient(180deg, #241108 0%, #100602 100%);
+  box-shadow: 0 -22px 50px rgba(0, 0, 0, 0.95);
+  overflow: hidden;
+}
+
+/* Polished Rounded 3D Chicago Wooden Bar Rail (Armrest) */
+.club-landing__bar::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 36px;
   background:
-    linear-gradient(180deg, rgba(255, 211, 128, 0.18), transparent 30%),
-    repeating-linear-gradient(90deg, rgba(92, 45, 20, 0.95) 0 44px, rgba(115, 61, 28, 0.95) 45px 88px),
-    linear-gradient(180deg, #6d3a1d, #32170d);
-  border-top: 5px solid rgba(216, 161, 81, 0.52);
-  box-shadow: 0 -22px 50px rgba(0, 0, 0, 0.46);
+    /* Specular highlight streak (glossy reflection on the roll curve) */
+    linear-gradient(180deg, transparent 15px, rgba(255, 235, 190, 0.28) 15px, rgba(255, 235, 190, 0.1) 18px, transparent 19px),
+    /* Fine horizontal wood fiber lines */
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.06) 0 1px, transparent 1px 3px, rgba(255, 255, 255, 0.03) 3px 4px, transparent 4px 6px),
+    /* Organic wood grain growth ring waves */
+    radial-gradient(ellipse at 30% -120px, rgba(0, 0, 0, 0.15) 0%, transparent 60%),
+    radial-gradient(ellipse at 75% -80px, rgba(0, 0, 0, 0.12) 0%, transparent 50%),
+    /* The main 3D wood molding profile gradient */
+    linear-gradient(180deg, 
+      #ab673c 0%,       /* Upper lip highlight */
+      #7a3a18 12%,      /* Bevel edge */
+      #351403 22%,      /* Shadowed groove (cove) */
+      #59260d 32%,      /* Cove transition */
+      #964e21 45%,      /* Main roll top highlight */
+      #6b300f 65%,      /* Main roll body */
+      #361201 88%,      /* Bottom roll shadow */
+      #170600 100%      /* Under-rail deep edge */
+    );
+  border-top: 1px solid rgba(255, 255, 255, 0.32);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.95);
+  box-shadow: 
+    0 6px 14px rgba(0, 0, 0, 0.95), 
+    inset 0 2px 3px rgba(255, 255, 255, 0.32), 
+    inset 0 -2px 6px rgba(0, 0, 0, 0.85);
+  z-index: 6;
+}
+
+/* Warm Golden LED Under-Rail Glow */
+.bar-apron-glow {
+  position: absolute;
+  top: 36px;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: linear-gradient(180deg, 
+    rgba(248, 187, 85, 0.25) 0%, 
+    rgba(214, 115, 25, 0.05) 50%, 
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 4;
+}
+
+/* Wainscoting Panels Container */
+.club-landing__bar-apron {
+  position: absolute;
+  top: 36px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  gap: clamp(8px, 1.8vw, 18px);
+  padding: clamp(10px, 2vh, 18px) clamp(16px, 6vw, 48px) clamp(28px, 5vh, 48px);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Recessed Wood Wainscoting Panel */
+.bar-apron-panel {
+  flex: 1 1 0%;
+  max-width: 110px;
+  min-width: 32px;
+  height: 100%;
+  background: 
+    /* Repeating vertical wood fibers */
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.05) 0 1px, transparent 1px 4px),
+    /* Soft vertical shadow highlights */
+    radial-gradient(ellipse at 50% 0%, rgba(0, 0, 0, 0.15) 0%, transparent 80%),
+    /* Wainscoting board color */
+    linear-gradient(180deg, #3c1e0e 0%, #1e0d05 100%);
+  border-radius: 4px;
+  border: 1px solid #140702;
+  box-shadow:
+    /* Deep inner wainscoting recessed panel shadow */
+    inset 0 8px 16px rgba(0, 0, 0, 0.9),
+    inset 0 -6px 10px rgba(0, 0, 0, 0.85),
+    /* Subtle bevel highlights on wainscoting outer border */
+    inset 0 1px 1px rgba(255, 255, 255, 0.05),
+    /* External shadow */
+    0 4px 6px rgba(0, 0, 0, 0.4);
+  position: relative;
+}
+
+/* Gold Brass Rivet/Tack detailing on the wainscoting */
+.bar-apron-panel::before {
+  content: "";
+  position: absolute;
+  top: clamp(6px, 1.2vh, 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: clamp(5px, 0.8vw, 7px);
+  height: clamp(5px, 0.8vw, 7px);
+  background: radial-gradient(circle at 35% 35%, #ffe79a 0%, #b88f34 70%, #5c4111 100%);
+  border-radius: 50%;
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.7),
+    0 0 1px rgba(255, 231, 154, 0.3);
+  opacity: 0.85;
+}
+
+/* Polished Gold Brass Footrest Rail */
+.bar-brass-footrest {
+  position: absolute;
+  bottom: clamp(6px, 1.2vh, 14px);
+  left: 0;
+  right: 0;
+  height: clamp(10px, 2vh, 16px);
+  z-index: 5;
+  pointer-events: none;
+}
+
+/* The Horizontal Brass Footrest Bar */
+.footrest-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: clamp(6px, 1.2vh, 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: linear-gradient(180deg, 
+    #ffffff 0%,       /* spec reflection */
+    #ffe79a 20%,      /* brass shine */
+    #d4a237 50%,      /* solid brass gold */
+    #885d0d 80%,      /* shadow */
+    #301f02 100%      /* bottom occlusion */
+  );
+  box-shadow: 
+    0 4px 8px rgba(0, 0, 0, 0.9),
+    inset 0 1px 1px rgba(255, 255, 255, 0.4);
+  border-radius: 5px;
+}
+
+/* Bracket Support Collars */
+.footrest-support {
+  position: absolute;
+  bottom: 0;
+  width: clamp(10px, 1.5vw, 14px);
+  height: 100%;
+  background: linear-gradient(90deg, 
+    #4a330a 0%,
+    #b88f34 25%,
+    #ffe79a 50%,
+    #a87d25 75%,
+    #3d2703 100%
+  );
+  border-radius: 2px;
+  box-shadow: 
+    2px 2px 4px rgba(0, 0, 0, 0.6),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2);
+}
+
+.footrest-support--left {
+  left: 12%;
+}
+.footrest-support--mid-left {
+  left: 36%;
+}
+.footrest-support--mid-right {
+  left: 64%;
+}
+.footrest-support--right {
+  left: 88%;
 }
 
 .oubliette-standalone {
@@ -488,11 +666,11 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .club-landing__shelves {
+  .club-landing__backsplash {
     transition: none;
   }
 
-  .club-landing--entered .club-landing__shelves {
+  .club-landing--entered .club-landing__backsplash {
     animation: none;
   }
 }

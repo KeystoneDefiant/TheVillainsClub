@@ -7,6 +7,7 @@ import {
   fatesealProphecyMode,
   fatesealProgressionRules,
   fatesealScatterRitual,
+  fatesealVassagoGambitConfig,
   getCurrentFatesealGameMode,
   type FatesealGameModeConfig,
   type FatesealPoolEntry,
@@ -134,6 +135,7 @@ export function buildEffectivePool(
     /** In-spin bonus append waves (TODO.md) use the same wild weight nudge as legacy banked free ritual. */
     inFreeRitualCascadeWave?: boolean;
     tomeToggleActive?: boolean;
+    vassagoActive?: boolean;
   },
 ): FatesealPoolEntry[] {
   const p = clonePool(pool);
@@ -155,6 +157,13 @@ export function buildEffectivePool(
   if (opts.freeRitualSpinsLeft > 0 || opts.inFreeRitualCascadeWave) {
     for (const e of p) {
       if (e.symbol === "wild") e.weight += fatesealScatterRitual.freeRitualWildWeightBoost;
+    }
+  }
+  if (opts.vassagoActive) {
+    for (const e of p) {
+      if (e.symbol === "scatter") {
+        e.weight *= fatesealVassagoGambitConfig.scatterChanceMultiplier;
+      }
     }
   }
   return p;
@@ -654,12 +663,14 @@ export function runSpin(
       silverVisionTarget: state.silverVisionTarget,
       inFreeRitualCascadeWave: inBonusWave,
       tomeToggleActive: state.tomeToggleActive,
+      vassagoActive: isVassago,
     });
 
   const colCtxForWave = (bonusDeadColCount: number): FatesealFillColumnContext => {
     const n = grid.length;
+    const effectiveBonusDead = isVassago ? Math.max(0, bonusDeadColCount - 1) : bonusDeadColCount;
     return {
-      bonusDeadColCount: Math.min(bonusDeadColCount, n),
+      bonusDeadColCount: Math.min(effectiveBonusDead, n),
       wildColCount: Math.min(state.wildReelPaidSpinTimers.length, n),
       purchasedDeadColCount: Math.min(state.deadReelPaidSpinTimers.length, n),
     };

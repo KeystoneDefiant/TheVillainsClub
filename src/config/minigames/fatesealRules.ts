@@ -66,7 +66,7 @@ export const fatesealCascadePayoutScale = 0.0082 as const;
  * Index 0 = first evaluation after a spin / inflow; further cascades use successive entries (clamped).
  * Softer ramp than early prototypes — pairs with {@link fatesealCascadePayoutScale}.
  */
-export const fatesealCascadeMultipliers = [1, 1, 2, 3, 4, 6] as const;
+export const fatesealCascadeMultipliers = [1, 1, 2, 3, 4, 6] as readonly number[];
 
 
 /**
@@ -112,7 +112,7 @@ export const fatesealProgressionRules = {
     wildChanceDecayPerDepth: 0.50,
     markedSymbolPayoutMultiplier: 1.5,
     /** Payout scaling multiplier per symbol as the count of active omens increases (1, 2, 3, 4). */
-    omenScalingFactors: [1.2, 0.45, 0.25, 0.15],
+    omenScalingFactors: [1.2, 0.45, 0.3, 0.15] as readonly number[],
     /** Free Ritual spins (zero bet) do not decrement Crossroads wild/dead/mark spin timers. */
     bonusSpinsExcludeFromReelDecay: true,
   },
@@ -288,6 +288,7 @@ export const fatesealVassagoGambitConfig = {
   costRatioOfBank: 0.90,
   minPrice: 10000,
   betSize: 250,
+  scatterChanceMultiplier: 1.5,
 } as const;
 
 

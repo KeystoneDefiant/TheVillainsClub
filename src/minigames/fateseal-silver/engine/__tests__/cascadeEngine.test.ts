@@ -15,6 +15,7 @@ import {
   pickFromPool,
   runSpin,
   tickFifoReelTimers,
+  buildEffectivePool,
 } from "../cascadeEngine";
 import { clonePool, fatesealDefaultSymbolPool, totalPoolWeight, type FatesealSymbolId } from "@/config/minigames/fatesealRules";
 
@@ -355,5 +356,33 @@ describe("fateseal cascadeEngine", () => {
     const result = runSpin(s, () => 0.5);
     expect(result.nextState.vassagoActive).toBe(false);
     expect(result.log.some((l) => l.kind === "scatter_ritual_started")).toBe(true);
+  });
+
+  it("vassagoActive increases the chance of scatters by 50% in buildEffectivePool", () => {
+    const pool = [{ symbol: "scatter" as const, weight: 1 }];
+    const eff = buildEffectivePool(pool, {
+      tomeSpinsLeft: 0,
+      freeRitualSpinsLeft: 0,
+      silverVisionTarget: null,
+      vassagoActive: true,
+    });
+    const scatterPool = eff.find((e) => e.symbol === "scatter");
+    expect(scatterPool?.weight).toBe(1.5);
+  });
+
+  it("vassagoActive makes the extra reel a normal reel with symbols instead of void", () => {
+    const s = createInitialFatesealState(20_000, 2000, Math.random);
+    s.activeProphecy = ["dagger"];
+    s.vassagoActive = true;
+    s.baseBet = 250;
+    const result = runSpin(s, () => 0.5);
+    const bonusKeyframes = result.cascadeKeyframes.filter((kf) => kf.gridBeforeRemoval.length === 6);
+    expect(bonusKeyframes.length).toBeGreaterThan(0);
+    for (const kf of bonusKeyframes) {
+      // Column 0 should not be all void.
+      const col0Symbols = kf.gridBeforeRemoval.map((row) => row[0]);
+      const allVoid = col0Symbols.every((sym) => sym === "void");
+      expect(allVoid).toBe(false);
+    }
   });
 });

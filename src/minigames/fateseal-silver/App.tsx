@@ -255,6 +255,33 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
     return () => window.clearTimeout(t);
   }, [sympatheticFlash, reduceMotion]);
 
+  // Auto-cashout if the player cannot afford the minimum bet size or their forced Faustian bet
+  useEffect(() => {
+    if (busy || phase === "crossroads") return;
+    if (engine.freeRitualSpinsLeft > 0 || engine.vassagoActive) return;
+
+    const isFaustian = engine.deadReelPaidSpinTimers.length > 0;
+    const requiredBet = isFaustian ? 250 : tableRules.minBaseBet;
+
+    if (engine.sessionWallet < requiredBet) {
+      props.onReturnToClubMenu?.({
+        ...computeFatesealReturn(engine.sessionWallet, props.settlement),
+        tableRound: engine.spinCount,
+      });
+    }
+  }, [
+    busy,
+    phase,
+    engine.sessionWallet,
+    engine.freeRitualSpinsLeft,
+    engine.vassagoActive,
+    engine.deadReelPaidSpinTimers.length,
+    engine.spinCount,
+    tableRules.minBaseBet,
+    props.onReturnToClubMenu,
+    props.settlement,
+  ]);
+
   const clearCascadeTimers = useCallback(() => {
     cascadeTimersRef.current.forEach((id) => window.clearTimeout(id));
     cascadeTimersRef.current = [];

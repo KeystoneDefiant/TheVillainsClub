@@ -17,51 +17,79 @@ export function SommelierLiveGuide({
 }: SommelierLiveGuideProps) {
   const steps = useMemo(() => sommelierTutorialCatalog[gameId] || [], [gameId]);
   const [activeStep, setActiveStep] = useState(0);
-  const [spotlightRect, setSpotlightRect] = useState<{
+  // One rect per highlighted element; the dim mask uses the bounding envelope.
+  const [spotlightRects, setSpotlightRects] = useState<{
     left: number;
     top: number;
     width: number;
     height: number;
-  } | null>(null);
+  }[]>([]);
 
+  const retryTimerRef = useRef<number | null>(null);
   const stepsRef = useRef(steps);
   stepsRef.current = steps;
+  // Keep a stable ref to onStepChange so effects don't need it as a dependency
+  const onStepChangeRef = useRef(onStepChange);
+  onStepChangeRef.current = onStepChange;
 
-  const updateSpotlight = useCallback(() => {
-    const selector = stepsRef.current[activeStep]?.highlightSelector;
-    if (!selector) {
-      setSpotlightRect(null);
+  const updateSpotlight = useCallback((retry: number | unknown = 0) => {
+    const retryCount = typeof retry === "number" ? retry : 0;
+
+    if (retryTimerRef.current !== null) {
+      window.clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = null;
+    }
+
+    const raw = stepsRef.current[activeStep]?.highlightSelector;
+    if (!raw) {
+      setSpotlightRects([]);
       return;
     }
 
-    const el = document.querySelector(selector);
-    if (!el) {
-      setSpotlightRect(null);
+    const selectors = Array.isArray(raw) ? raw : [raw];
+    const rects: { left: number; top: number; width: number; height: number }[] = [];
+
+    for (const sel of selectors) {
+      for (const el of document.querySelectorAll(sel)) {
+        const r = el.getBoundingClientRect();
+        // Check both existence and visibility to prevent highlighting hidden dummy/transitioning elements
+        if (r.width > 0 || r.height > 0) {
+          rects.push({ left: r.left, top: r.top, width: r.width, height: r.height });
+        }
+      }
+    }
+
+    // If elements are not yet mounted or visible in the DOM (e.g. during a screen transition),
+    // poll and retry measuring up to 25 times (2.5 seconds total) before giving up.
+    if (rects.length === 0 && retryCount < 25) {
+      retryTimerRef.current = window.setTimeout(() => {
+        updateSpotlight(retryCount + 1);
+      }, 100);
       return;
     }
 
-    const rect = el.getBoundingClientRect();
-    setSpotlightRect({
-      left: rect.left,
-      top: rect.top,
-      width: rect.width,
-      height: rect.height,
-    });
+    setSpotlightRects(rects);
   }, [activeStep]);
 
-  // Sync mock state & spotlight on step change
+  // Sync mock state & spotlight on step change.
   useEffect(() => {
     const currentStep = steps[activeStep];
     if (currentStep) {
-      if (onStepChange) {
-        onStepChange(currentStep.mockState || {});
+      onStepChangeRef.current?.(currentStep.mockState || {});
+      // Reset any active timers and start measuring
+      if (retryTimerRef.current !== null) {
+        window.clearTimeout(retryTimerRef.current);
+        retryTimerRef.current = null;
       }
-      // Wait a frame for React to render mock layouts before measuring spotlight coordinates
-      const timer = window.setTimeout(updateSpotlight, 50);
-      return () => window.clearTimeout(timer);
+      updateSpotlight(0);
     }
-    return undefined;
-  }, [activeStep, steps, onStepChange, updateSpotlight]);
+    return () => {
+      if (retryTimerRef.current !== null) {
+        window.clearTimeout(retryTimerRef.current);
+        retryTimerRef.current = null;
+      }
+    };
+  }, [activeStep, steps, updateSpotlight]);
 
   // Listen to resize and scroll to keep spotlight aligned
   useEffect(() => {
@@ -77,7 +105,7 @@ export function SommelierLiveGuide({
     if (activeStep < steps.length - 1) {
       setActiveStep((prev) => prev + 1);
     } else {
-      if (onStepChange) onStepChange(null);
+      onStepChangeRef.current?.(null);
       onClose();
     }
   };
@@ -89,7 +117,7 @@ export function SommelierLiveGuide({
   };
 
   const handleExit = () => {
-    if (onStepChange) onStepChange(null);
+    onStepChangeRef.current?.(null);
     onClose();
   };
 
@@ -105,23 +133,64 @@ export function SommelierLiveGuide({
         pointerEvents: "none",
       }}
     >
-      {/* 1. Viewport dimming mask with gold cutout spotlight */}
-      <div
-        style={{
-          position: "absolute",
-          zIndex: 9001,
-          pointerEvents: "none",
-          left: spotlightRect ? spotlightRect.left : -9999,
-          top: spotlightRect ? spotlightRect.top : -9999,
-          width: spotlightRect ? spotlightRect.width : 0,
-          height: spotlightRect ? spotlightRect.height : 0,
-          borderRadius: 8,
-          boxShadow: spotlightRect
-            ? `0 0 0 9999px rgba(5, 5, 8, 0.78), 0 0 0 2px ${clubTokens.surface.brassStroke}, 0 0 16px 4px rgba(199, 158, 87, 0.45)`
-            : "0 0 0 9999px rgba(5, 5, 8, 0.78)",
-          transition: "all 0.28s cubic-bezier(0.22, 1, 0.36, 1)",
-        }}
-      />
+      {/* 1. Viewport dimming mask with bounding-envelope cutout */}
+      {(() => {
+        // Compute bounding envelope across all highlighted rects
+        const envelope =
+          spotlightRects.length > 0
+            ? spotlightRects.reduce(
+                (acc, r) => ({
+                  left: Math.min(acc.left, r.left),
+                  top: Math.min(acc.top, r.top),
+                  right: Math.max(acc.right, r.left + r.width),
+                  bottom: Math.max(acc.bottom, r.top + r.height),
+                }),
+                { left: spotlightRects[0].left, top: spotlightRects[0].top, right: spotlightRects[0].left + spotlightRects[0].width, bottom: spotlightRects[0].top + spotlightRects[0].height },
+              )
+            : null;
+        const env = envelope
+          ? { left: envelope.left, top: envelope.top, width: envelope.right - envelope.left, height: envelope.bottom - envelope.top }
+          : null;
+
+        return (
+          <div
+            style={{
+              position: "absolute",
+              zIndex: 9001,
+              pointerEvents: "none",
+              left: env ? env.left : -9999,
+              top: env ? env.top : -9999,
+              width: env ? env.width : 0,
+              height: env ? env.height : 0,
+              borderRadius: 8,
+              boxShadow: env
+                ? `0 0 0 9999px rgba(5, 5, 8, 0.78), 0 0 0 2px ${clubTokens.surface.brassStroke}, 0 0 16px 4px rgba(199, 158, 87, 0.45)`
+                : "0 0 0 9999px rgba(5, 5, 8, 0.78)",
+              transition: "all 0.28s cubic-bezier(0.22, 1, 0.36, 1)",
+            }}
+          />
+        );
+      })()}
+
+      {/* 1b. Individual bright rings for each highlighted element (when >1) */}
+      {spotlightRects.length > 1 &&
+        spotlightRects.map((r, i) => (
+          <div
+            key={i}
+            style={{
+              position: "absolute",
+              zIndex: 9002,
+              pointerEvents: "none",
+              left: r.left,
+              top: r.top,
+              width: r.width,
+              height: r.height,
+              borderRadius: 8,
+              boxShadow: `0 0 0 2px ${clubTokens.surface.brassStroke}, 0 0 12px 2px rgba(199, 158, 87, 0.55)`,
+              transition: "all 0.28s cubic-bezier(0.22, 1, 0.36, 1)",
+            }}
+          />
+        ))}
 
       {/* 2. Pazillus Dialogue Card */}
       <Box
@@ -132,7 +201,7 @@ export function SommelierLiveGuide({
           transform: "translateX(-50%)",
           width: "calc(100% - 32px)",
           maxWidth: 600,
-          zIndex: 9002,
+          zIndex: 9003,
           pointerEvents: "auto",
         }}
       >
@@ -200,6 +269,7 @@ export function SommelierLiveGuide({
                 fontStyle: "italic",
                 lineHeight: 1.45,
                 minHeight: 48,
+                whiteSpace: "pre-line",
               }}
             >
               "{currentStep.dialogue}"

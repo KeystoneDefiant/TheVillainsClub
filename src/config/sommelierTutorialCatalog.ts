@@ -21,18 +21,18 @@ export const sommelierTutorialCatalog: Record<string, SommelierTutorialStep[]> =
   oubliette_no9: [
     {
       title: "Welcome to Oubliette No. 9",
-      dialogue: "Welcome to the table, friend. I am Pazillus A. Rabellum, the club's sommelier. Oubliette No. 9 is a rustic, full-bodied video-poker blend. You need a pair of Jacks or better to win. Anything less will leave you with a mouthful of bitter vinegar.",
+      dialogue: "Welcome to the table, friend. I am Pazillus A. Rabellum, the club's sommelier. \n\nOubliette No. 9 is a rustic, full-bodied video-poker blend. This is The Villains Club's first game, and its staple for most of our patronage. Quite a popular choice, I must admit.",
       highlightSelector: "#preDraw-screen"
     },
     {
       title: "The Entrance Toll",
-      dialogue: "To run a round, you must pay the ante, which increases automatically each round. Ensure your credit balance can withstand the wagers, or the house will immediately spit you out as a bankrupt amateur.",
+      dialogue: "To run a round, you must pay the ante, which increases automatically each round. Ensure your credit balance can withstand the wagers, or the house will immediately spit you out as a bankrupt amateur. \n\nThe round's bet cost is multiplied by the amount of hands you have (we'll get to this in a moment), which gives you the total cost for your next round.",
       highlightSelector: "[id=\"preDraw-screen\"] .game-panel-muted",
       mockState: { screen: "game", gamePhase: "preDraw", credits: 500, betAmount: 10, minimumBet: 10, handCount: 5, selectedHandCount: 5 }
     },
     {
       title: "Sorting the Grapes",
-      dialogue: "Five cards are dealt to you. Decide which ones are worth holding and discard the rest. Think of it as sorting sweet grapes from rotten skins. Select carefully before making the draw. Should you need it, a payout table is available at the top of the screen. And should you not know your poker hands, what a delightfully expensive way to learn.",
+      dialogue: "Five cards are dealt to you. Decide which ones are worth holding and discard the rest. Think of it as sorting sweet grapes from rotten skins.\n\nYou need a pair of Jacks or better to win. Anything less will leave you with a mouthful of bitter vinegar. \n\nSelect carefully before making the draw - once you play the hand, there is no undo. \n\nShould you need it, a payout table is available at the top of the screen. And should you not know your poker hands, what a delightfully expensive way to learn.",
       highlightSelector: ".oubliette-play-stack",
       mockState: {
         screen: "game",
@@ -54,7 +54,7 @@ export const sommelierTutorialCatalog: Record<string, SommelierTutorialStep[]> =
     },
     {
       title: "Parallel Decanting",
-      dialogue: "Once you draw, the deck is decanted into multiple Parallel Hands. Your held cards are played against multiple decks, giving you so many flavors on a single hand. Should you hold a winning hand from the outset, your payouts will amplified via our combo multiplier. The more winning hands played, the higher the multiplier goes. The higher the multiplier, the higher your winnings. But, I suppose you could also look at it as the potential for higher losses on a bad hand as well. Depends if your glass is half full or half empty... I suppose that's why we're all here at the club. ",
+      dialogue: "Once you draw, the deck is decanted into multiple Parallel Hands. Your held cards are played against multiple decks, giving you a variety of flavors from just a single hand. \n\nShould you hold a winning hand from the outset, your payouts will amplified via our combo multiplier. The more winning hands played, the higher the multiplier goes. The higher the multiplier, the higher your winnings. \n\nHowever, the more hands you have, the more expensive every round becomes. There is a balance to maintaining the ever-growing bet size and giving yourself the best odds to make credits to stay in the game.",
       highlightSelector: ".oubliette-play-area",
       mockState: {
         screen: "game",
@@ -88,7 +88,7 @@ export const sommelierTutorialCatalog: Record<string, SommelierTutorialStep[]> =
     },
     {
       title: "The Cellar Shop",
-      dialogue: "Between rounds, you will visit my shop. You can buy additional parallel hands, wild cards, more cards drawn at the start of the round, an extra draw step, and dead cards. Dead cards are quite the interesting varietal; we pay you money for taking them, however they count as no suit or rank. It simply fills up room in your deck and these dead cards will always find their way into your hand at the worst possible moments. Much like certain people we may have in our lives. I digress. You can also pay to have these troublesome cards removed from your deck at a later time, should the option to do so appear in the shop.",
+      dialogue: "Between rounds, you will visit my shop.\n\nYou can buy additional parallel hands, wild cards, more cards drawn at the start of the round, an extra draw step, and dead cards. \n\nDead cards are quite the interesting varietal; you are paid credits for taking them into your deck, however they count as no suit or rank. It simply fills up room in your deck and these dead cards will always find their way into your hand at the worst possible moments. \n\nMuch like certain people we may have in our lives. I digress. \n\nYou can also pay to have these troublesome cards removed from your deck at a later time, should the option to do so appear in the shop.",
       highlightSelector: ".oubliette-shop-card-wrap",
       mockState: {
         screen: "game",
@@ -108,20 +108,19 @@ export const sommelierTutorialCatalog: Record<string, SommelierTutorialStep[]> =
       highlightSelector: ".oubliette-shop-card-wrap",
       mockState: {
         screen: "game",
-        // showShopNextRound: true,
+        showShopNextRound: true,
         credits: 300,
         handCount: 5,
         selectedHandCount: 5,
         selectedShopOptions: [
           "wild-card",
-          "parallel-hands-bundle-5"
+          "parallel-hands-bundle-500"
         ]
       }
     },
     {
       title: "The End Game",
-      dialogue: "Should you find yourself making it to round 30, we have quite the digestif waiting for you. While you have technically 'won', we here at the Club always wish to see overachievement. As such, we present you with a unique challenge. Generally, we will ask you to win 25% of your hands, then 30%, and so on, until you no longer can meet our criteria. Nothing untoward will happen if you fail at this state, simply a test of your strategy, skill, and luck with the cards.",
-      highlightSelector: ".oubliette-shop-card-wrap",
+      dialogue: "Should you find yourself making it to round 30, we have quite the digestif waiting for you. \n\nWhile you have technically 'won', we here at the Club always wish to see overachievement. As such, we present you with a unique challenge. \n\nGenerally, we will ask you to win 25% of your hands, then 30%, and so on, until you no longer can meet our criteria. Nothing untoward will happen if you fail at this state, simply a test of your strategy, skill, and luck with the cards.\n\nWith that, I believe our tasting for this game has come to a conclusion. I bid you good luck, happy wagering, and I'll be by later to check on your wine glass.",
       mockState: {
         screen: "game",
         // showShopNextRound: true,
@@ -138,36 +137,35 @@ export const sommelierTutorialCatalog: Record<string, SommelierTutorialStep[]> =
   seven_year_itch: [
     {
       title: "The Green Felt Racket - Seven Year Itch",
-      dialogue: "Welcome to the table, friend. I am Pazillus A. Rabellum, the club's sommelier. Ah, the green wool felt of craps... an unpredictable, exciting game of dice and daring. This is 7 Year Itch, a version of craps that removes some of the more... let's call them 'unnecessary' notes of the game, and refines the rules in to a more palatable experience. I will guide you through this volatile noir flight, but do keep up and feel free to make tasting notes. \n\n For the craps players here, this is a twist on crapless craps rules.",
+      dialogue: "Welcome to the table, friend. I am Pazillus A. Rabellum, the club's sommelier. \n\nAh, the green wool felt of craps... an unpredictable, exciting game of dice and daring. This is 7 Year Itch, a version of craps that removes some of the more... let's call them 'unnecessary' notes of the game, and refines the rules in to a more palatable experience. I will guide you through this volatile noir flight, but do keep up and feel free to make tasting notes. \n\n For the craps players here, this is a twist on crapless craps rules.",
       highlightSelector: ".seven-year-itch-root"
     },
     {
       title: "The Seed Investment",
-      dialogue: "In 7 Year Itch, you are investing in a business that deals with trade of a more illicit flavour. For this to work in our city, we of course need a business to act as a front for the rest of our enterprise. The seed investment covers this cost. You may bet as much as you like, but remember that the taller the tower, the more disastrous the fall. Be sure to save some money for where the real work happens. After you place your desired investment, we roll the dice. Should a 7 be rolled, the front business is a success and we don't even need to get into the mire of our more seedy activities. Your investment is doubled and returned to you, then we repeat the process until we roll anything but a 7. \n\n For our craps-playing friends in the crowd, this is the come-out roll, and you are placing a wager on the pass line.",
+      dialogue: "In 7 Year Itch, you are investing in a business that deals with trade of a more illicit flavour. \n\nFor this to work in our city, we of course need a business to act as a front for the rest of our enterprise. The seed investment covers this cost. \n\nYou may bet as much as you like, but remember that the taller the tower, the more disastrous the fall. Be sure to save some money for where the real work happens. \n\n After you place your desired investment, we roll the dice. Should a 7 be rolled, the front business is a success and we don't even need to get into the mire of our more seedy activities. Your investment is doubled and returned to you, then we repeat the process until we roll anything but a 7. \n\n For our craps-playing friends in the crowd, this is the come-out roll, and you are placing a wager on the pass line.",
       highlightSelector: ".yi-felt-pass",
       mockState: { table: { phase: "comeOut", point: null }, bets: { passLine: 100 } }
     },
     {
       title: "Active Case Files",
-      dialogue: "The number rolled in the previous step determines our main focus of business, but it's also the business that the police have started investigating. Should they bust this part of our business, our entire enterprise will fall to the ground like a disappointing glass of wine. \n\n If a 7 is rolled right now, the police crack down on our business, and we lose all money invested. Should we roll a 6, as in this example, we get away scot free, all money on the felt is returned, and our seed investment is doubled and returned to us. The front is cleanly shut down, the cops are off of our back, and we may start over with a brand new front. Our primary business will remain highlighted, so you don't need to remember.",
-      highlightSelector: ".yi-felt-placeArc",
+      dialogue: "The number rolled in the previous step determines our main focus of business, but it's also the business that the police have started investigating. Should they bust this part of our business, our entire enterprise will fall to the ground like a disappointing glass of wine. \n\n If a 7 is rolled right now, the police crack down on our business, and we lose all money invested. \n\nShould we roll a 6, as in this example, we get away scot free, all money on the felt is returned, and our seed investment is doubled and returned to us. The front is cleanly shut down, the cops are off of our back, and we may start over with a brand new front. Our primary business will remain highlighted, so you don't need to remember.",
       mockState: { table: { phase: "point", point: 6 }, bets: { passLine: 100 } }
     },
     {
       title: "Diversification",
-      dialogue: "As you can see here, we have many options for business diversification. Each number corresponds to a different type of business we have our fingers in, and each one can be invested in individually. When the dice are rolled, if they land on a number that we have invested in, we will see a return on our investment. Some businesses pay out less frequently, mathematically-speaking, such as the 2 and 12 - or more often, in the case of a 6 or 8. \n\n The returns on these are adjusted accordingly; the less frequent numbers will pay far more than more common numbers. In our example here, you can see that we have invested in the 2, the 6, and the 8, and the returns are noted on the felt. You can always refer to the 'Odds' button at the top of the screen for the payout structure. \n\n For our craps enthusiasts at this tasting, these are simply place bets.",
+      dialogue: "As you can see here, we have many options for business diversification. \n\n Each number corresponds to a different type of business we have our fingers in, and each one can be invested in individually. When the dice are rolled, if they land on a number that we have invested in, we will see a return on our investment. \n\n The returns on these are adjusted according to how often they would be rolled, mathematically-speaking; the less frequent numbers will pay far more than more common numbers. \n\nIn our example here, you can see that we have invested in the 2, the 6, and the 8, and the returns are noted on the felt. You can always refer to the 'Odds' button at the top of the screen for the payout structure. \n\n For our craps enthusiasts at this tasting, these are simply place bets.",
       highlightSelector: ".yi-felt-placeArc",
       mockState: { table: { phase: "point", point: 6 }, bets: { passLine: 100, place: { 2: 50, 6: 50, 8: 50 } } }
     },
     {
       title: "Divestment",
-      dialogue: "Should the heat feel like it's too much, click the Divest button. This will return all money invested in the various businesses, but your seed investment is locked down. You may re-invest, but after a divestment your returns will be lower until the start of the next hand. A savvy businessperson knows when to cut and run, but the streets know a chicken when it clucks. \n\n Speaking of, please do try our chicken marinara this evening, it's impeccable. Please ask if you need a wine pairing recommendation.",
+      dialogue: "Should the heat feel like it's too much, click the Divest button. \n\nThis will return all money invested in the various businesses, but your seed investment is locked down. You may re-invest after a divestment, but your returns will be lower until the start of the next hand. \n\nA savvy businessperson knows when to cut and run, but the street knows a chicken when it clucks. \n\n Speaking of, please do try our chicken marinara this evening, it's impeccable. Please ask if you need a wine pairing recommendation.",
       highlightSelector: ".yi-felt-divest-container",
       mockState: { table: { phase: "point", point: 6, hasUsedDivest: true }, bets: { passLine: 100 } }
     },
     {
       title: "Heat",
-      dialogue: "A good wine should never be hot in most cases, but here in 7 Year Itch, heat can be a good thing. For every bet placed on the felt, we add tension to the operation. The more you have on the felt, the more heat you generate. Every roll, we add to the heat meter at the top of the table. When this fills, you may select from an offering of favors that can increase our payouts, allow us a cleaner divestment, or even give us a second chance after rolling a 7. Big bets mean bigger chances to win, but also bigger falls when the wrong people come knocking at your office door.\n\nThat should be everything you need to know! Best of luck, and I will be around should you need advice or another glass or bottle.",
+      dialogue: "A good wine should never be hot in most cases, but here in 7 Year Itch, heat can be a good thing. \n\nFor every bet placed on the felt, we add tension to the operation. The more you have on the felt, the more heat you generate. Every roll, we add to the heat meter at the top of the table. \n\nWhen this fills, you may select from an offering of favors that can increase our payouts, allow us a clean divestment with no downside, or even give us a second chance after rolling a 7. \n\nBig bets mean bigger chances to win, but also bigger falls when the wrong people come knocking at your office door.\n\nThat should be everything you need to know! Best of luck, and I will be around should you need advice or another bottle.",
       highlightSelector: ".yi-felt-heat-meter",
       mockState: { table: { phase: "point", point: 6, hasUsedDivest: true, heat: 24, }, bets: { passLine: 100 } }
     }
@@ -175,19 +173,33 @@ export const sommelierTutorialCatalog: Record<string, SommelierTutorialStep[]> =
   fateseal_silver: [
     {
       title: "Welcome to Fateseal Silver, The Occult Altar",
-      dialogue: "Welcome to the altar, friend. I am Pazillus A. Rabellum, the club's sommelier. The only demons here are the tannins in this bottle of Rioja; fear not. In Fateseal Silver, you will use your foresight to choose the correct sigils to align with, and then converse with the spirits through it to bring you fortune. Or ruin. Both are entirely possible, but that's why we're here, no? This game effectively plays like a slot machine, but instead of hoping any symbol lines up on the reels, we pick a specific symbol and hope to see it as many times as possible.",
-      highlightSelector: "[data-testid^=\"fateseal-pick-\"]",
+      dialogue: "Welcome to the altar, friend. I am Pazillus A. Rabellum, the club's sommelier. The only demons here are the tannins in this bottle of Rioja; fear not. \n\nIn Fateseal Silver, you will use your foresight to choose the correct sigils to align with, and then converse with the spirits through it to bring you fortune. Or ruin. Both are entirely possible, but that's why we're here, no? \n\nThis game effectively plays like a slot machine, but instead of hoping any symbol lines up on the reels, we pick a specific symbol and hope to see it as many times as possible.",
       mockState: { phase: "altar", picks: [] }
     },
     {
       title: "Sealing the Prophecy",
-      dialogue: "First, you will choose an omen to align yourself with. One is not better than any other. Simply choose what you are drawn to. This sigil will be what pays out when we get to the ritual. Every time it shows up in your vision, you will be rewarded with credits, and the more it shows up, the more you win. When you are happy with your selection, move on to the ritual. You may always return here and change your preferred omen whenever you wish.",
-      highlightSelector: "[data-testid=\"fateseal-seal-prophecy\"]",
+      dialogue: "First, you will choose an omen to align yourself with. One is not better than any other. Simply choose what you are drawn to. This sigil will be what pays out when we get to the ritual. \n\nEvery time it shows up in your vision, you will be rewarded with credits, and the more it shows up, the more you win. \n\nWhen you are happy with your selection, move on to the ritual. You may always return here and change your preferred omen whenever you wish.",
+      highlightSelector: "[data-testid=\"fateseal-seal-prophecy\"], [data-testid^=\"fateseal-pick-\"]",
       mockState: { phase: "altar", picks: ["dagger"] }
     },
     {
       title: "The Ritual Grid",
-      dialogue: "Do you smell that? The faint smell of fresh lemongrass, ozone, and a hint of brimstone? Refreshing, and dare I say, bracing. \n\nThis is our ritual grid, where the spirits come to converse with the living. Now that you are aligned to an omen sigil, you may hear the whisperings of those gamblers who have found their way near the veil and chosen to stay for a round or two. Truly, they have nothing better to do. On the grid are many omen sigils - if your selected sigil is on the grid, it is removed, you are paid, and more sigils are added in their place. Connected sigils pay more, so hope the spirits figure out how to stand in a straight line. As I've been told, the wine in the afterlife is quite potent!",
+      dialogue: "Do you smell that? The faint smell of fresh lemongrass, ozone, and a hint of brimstone? Refreshing, and dare I say, bracing. \n\nThis is our ritual grid, where the spirits come to converse with the living. Now that you are aligned to an omen sigil, you may hear the whisperings of those gamblers who have found their way near the veil and chosen to stay for a round or two. Truly, they have nothing better to do. \n\nOn the grid are many omen sigils - if your selected sigil is on the grid, it is removed, you are paid, and more sigils are added in their place. Connected sigils pay more, so hope the spirits figure out how to stand in a straight line. As I've been told, the wine in the afterlife is quite potent!",
+      highlightSelector: ".fateseal-grid",
+      mockState: {
+        phase: "ritual",
+        grid: [
+          ["scatter", "scatter", "goat", "chalice", "wild"],
+          ["dagger", "chalice", "dagger", "dagger", "serpent"],
+          ["dagger", "scatter", "chalice", "goat", "dagger"],
+          ["dagger", "dagger", "dagger", "wild", "dagger"],
+          ["void", "dagger", "dagger", "dagger", "scatter"]
+        ]
+      }
+    },
+    {
+      title: "The Symbols",
+      dialogue: "You may also see other sigils in your vision, such as the 'Scatter', seen in the upper left corner. The 'Wild', seen in the upper left corner, and the 'Void', seen in the lower left. \n\nScatters don't count for anything, but the more you get, the closer to The Crossroads you will find yourself - a place where the veil is thinnest, and you may make a deal with the spirits. \n\nWild sigils count as any sigil, as you may imagine. \n\nVoid sigils count as nothing, and are usually the result of selling part of your vision, which we'll get to in a moment. Just know these are... less than ideal to have in your ritual.",
       highlightSelector: ".fateseal-grid",
       mockState: {
         phase: "ritual",
@@ -202,9 +214,9 @@ export const sommelierTutorialCatalog: Record<string, SommelierTutorialStep[]> =
     },
     {
       title: "The Wagers",
-      dialogue: "Befriend the spirits with an offering of credits and start the ritual. The larger your bet, the higher your payout per symbol. You may also see other sigils in your vision, such as the 'Scatter', seen in the upper left corner. The 'Wild', seen in the upper left corner, and the 'Void', seen in the lower left. Scatters don't count for anything, but the more you get, the closer to The Crossroads you will find yourself - a place where the veil is thinnest, and you may make a deal with the spirits. Wild sigils count as any sigil, as you may imagine, and Void sigils count as nothing, and are usually the result of selling part of your vision, which we'll get to in a moment. Just know these are... less than ideal to have in your ritual.",
+      dialogue: "Befriend the spirits with an offering of credits and start the ritual. The larger your bet, the higher your payout per symbol.\n\n For our more discerning gamblers here at this tasting, the RTP is around 92-95%, all depending on what the proprietor has been doing to the math. Between you and I, he's a complete dumbass. I'm unsure he even knows what he's doing and he's out here mucking around with sprits and... oh, the wine is talking again. Please pardon me.",
       highlightSelector: ".fateseal-bet-buttons-container",
-      mockState: { phase: "ritual", engine: { sessionWallet: 1000, baseBet: 100 } }
+      mockState: { phase: "ritual", engine: { sessionWallet: 1000 } }
     },
     {
       title: "The Crossroads",

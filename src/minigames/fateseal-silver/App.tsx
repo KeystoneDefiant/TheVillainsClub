@@ -17,6 +17,7 @@ import { computeFatesealReturn, type FatesealShellBinding } from "@/game/session
 import { UnifiedGameHeader } from "@/components/ui/UnifiedGameHeader";
 import { GameSettingsModal } from "@/components/ui/GameSettingsModal";
 import { ClubButton } from "@/components/ui/ClubButton";
+import { SommelierLiveGuide } from "@/components/ui/SommelierLiveGuide";
 import {
   FATESEAL_STANDARD_SYMBOLS,
   crossroadsNextOmenAdditionCostCredits,
@@ -218,16 +219,41 @@ function fatesealPhasePresence(reduceMotion: boolean) {
   };
 }
 
+interface FatesealMockState {
+  engine?: Partial<FatesealEngineState>;
+  grid?: FatesealSymbolId[][];
+  phase?: FatesealPhase;
+  picks?: FatesealStandardId[];
+}
+
 export function FatesealSilverRoot(props: FatesealShellBinding) {
-  const buyIn = props.settlement.buyIn;
+  const { onReturnToClubMenu, settlement } = props;
+  const buyIn = settlement.buyIn;
   const tableRules = useMemo(() => resolveFatesealGameMode(props.gameModeId), [props.gameModeId]);
   const reduceMotion = usePrefersReducedMotion();
-  const [engine, setEngine] = useState<FatesealEngineState>(() =>
+  const [realEngine, setEngine] = useState<FatesealEngineState>(() =>
     createInitialFatesealState(props.sessionCredits, buyIn, Math.random, resolveFatesealGameMode(props.gameModeId)),
   );
-  const [phase, setPhase] = useState<FatesealPhase>("altar");
+  const [realPhase, setPhase] = useState<FatesealPhase>("altar");
+  const [realPicks, setPicks] = useState<FatesealStandardId[]>([]);
+
+  const [showTutorial, setShowTutorial] = useState(props.isTutorial ?? false);
+  const [mockState, setMockState] = useState<FatesealMockState | null>(null);
+
+  const engine = useMemo(() => {
+    let base = realEngine;
+    if (mockState?.engine) {
+      base = { ...base, ...mockState.engine };
+    }
+    if (mockState?.grid) {
+      base = { ...base, grid: mockState.grid };
+    }
+    return base;
+  }, [realEngine, mockState]);
+
+  const phase = mockState?.phase ?? realPhase;
   const atCrossroads = phase === "crossroads";
-  const [picks, setPicks] = useState<FatesealStandardId[]>([]);
+  const picks = mockState?.picks ?? realPicks;
   const [busy, setBusy] = useState(false);
   const [currentSpinRollingPayout, setCurrentSpinRollingPayout] = useState(0);
   const [sympatheticFlash, setSympatheticFlash] = useState<{ payout: number; id: number } | null>(null);
@@ -264,8 +290,8 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
     const requiredBet = isFaustian ? 250 : tableRules.minBaseBet;
 
     if (engine.sessionWallet < requiredBet) {
-      props.onReturnToClubMenu?.({
-        ...computeFatesealReturn(engine.sessionWallet, props.settlement),
+      onReturnToClubMenu?.({
+        ...computeFatesealReturn(engine.sessionWallet, settlement),
         tableRound: engine.spinCount,
       });
     }
@@ -278,8 +304,8 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
     engine.deadReelPaidSpinTimers.length,
     engine.spinCount,
     tableRules.minBaseBet,
-    props.onReturnToClubMenu,
-    props.settlement,
+    onReturnToClubMenu,
+    settlement,
   ]);
 
   const clearCascadeTimers = useCallback(() => {
@@ -728,21 +754,35 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
           onShowSettings={() => setSettingsOpened(true)}
           onAbandonRun={props?.onAbandonRun}
           extraButtons={
-            phase !== "altar" ? (
+            <Group gap="xs" wrap="nowrap">
               <ClubButton
                 type="button"
                 size="xs"
                 variant="filled"
-                color="grape"
+                color="orange"
                 radius="md"
                 px="xs"
-                onClick={goToAltarFromRitual}
-                title="Return to prophecy altar"
-                styles={{ label: { fontWeight: 700, color: clubTokens.text.primary } }}
+                onClick={() => setShowTutorial(true)}
+                title="How to play"
               >
-                🔮 Altar
+                📖 How to Play
               </ClubButton>
-            ) : null
+              {phase !== "altar" ? (
+                <ClubButton
+                  type="button"
+                  size="xs"
+                  variant="filled"
+                  color="grape"
+                  radius="md"
+                  px="xs"
+                  onClick={goToAltarFromRitual}
+                  title="Return to prophecy altar"
+                  styles={{ label: { fontWeight: 700, color: clubTokens.text.primary } }}
+                >
+                  🔮 Altar
+                </ClubButton>
+              ) : null}
+            </Group>
           }
         />
 
@@ -1267,6 +1307,16 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
           </Stack>
         </Box>
       ) : null}
+      {showTutorial && (
+        <SommelierLiveGuide
+          gameId="fateseal_silver"
+          onStepChange={(mock) => setMockState(mock as FatesealMockState | null)}
+          onClose={() => {
+            setShowTutorial(false);
+            setMockState(null);
+          }}
+        />
+      )}
     </Box>
   );
 }

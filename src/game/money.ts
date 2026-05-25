@@ -20,6 +20,7 @@ export type TableSession = {
    * Persisted with the session so resume uses the same merged config as buy-in.
    */
   gameModeId?: string;
+  isTutorial?: boolean;
   /** Last resumable round / roll marker reported by a minigame. */
   progressRound?: number;
   /** Oubliette state snapshot for resuming without another buy-in. */

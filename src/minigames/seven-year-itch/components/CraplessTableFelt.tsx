@@ -146,22 +146,6 @@ export function CraplessTableFelt({
         </div>
       ) : null}
 
-      <div className="yi-felt-diceDock">
-        {hideInlineDice ? (
-          <div className="yi-felt-dicePlaceholder" aria-hidden />
-        ) : (
-          <DicePair3D d1={lastD1} d2={lastD2} rolling={diceRolling} reduceMotion={reduceMotion} />
-        )}
-        <ClubButton
-          fancy
-          variant="filled"
-          disabled={!canRoll || diceRolling}
-          onClick={onRoll}
-        >
-          Roll
-        </ClubButton>
-      </div>
-
       <div className="yi-felt-oddsPassStack">
         {showGrid ? (
           <button
@@ -196,25 +180,11 @@ export function CraplessTableFelt({
             onPassSecondary();
           }}
         >
-          <span className="yi-felt-pass-label">Come Out Pass</span>
+          <span className="yi-felt-pass-label">Seed Investment</span>
           <span className="yi-felt-pass-amount">{bets.passLine > 0 ? bets.passLine : "—"}</span>
           <span className="yi-felt-chipHint">+{chip} · right-click −{chip}</span>
           {passLocked ? <span className="yi-felt-pass-lock">Locked — point in play</span> : null}
         </button>
-
-        {showGrid ? (
-          <button
-            type="button"
-            className="yi-felt-divest"
-            data-testid="felt-divest"
-            disabled={!canDivest}
-            onClick={onDivest}
-            title={canDivest ? "Return all bets except pass (once per hand)" : "Already divested this hand"}
-          >
-            <span className="yi-felt-divest-label">Divest</span>
-            <span className="yi-felt-divest-meta">Pull back non-pass</span>
-          </button>
-        ) : null}
       </div>
 
       {showGrid ? (
@@ -304,6 +274,45 @@ export function CraplessTableFelt({
           ) : null}
         </details>
       ) : null}
+
+      <div className="yi-felt-controls">
+        <div className="yi-felt-divest-container">
+          {showGrid ? (
+            <ClubButton
+              fancy
+              variant="light"
+              size="sm"
+              data-testid="felt-divest"
+              disabled={!canDivest}
+              onClick={onDivest}
+              title={canDivest ? "Return all bets except pass (once per hand)" : "Already divested this hand"}
+            >
+              Divest
+            </ClubButton>
+          ) : (
+            <div className="yi-felt-divest-placeholder" aria-hidden />
+          )}
+        </div>
+
+        <div className="yi-felt-dice-container">
+          {hideInlineDice ? (
+            <div className="yi-felt-dicePlaceholder" aria-hidden />
+          ) : (
+            <DicePair3D d1={lastD1} d2={lastD2} rolling={diceRolling} reduceMotion={reduceMotion} />
+          )}
+        </div>
+
+        <div className="yi-felt-roll-container">
+          <ClubButton
+            fancy
+            variant="filled"
+            disabled={!canRoll || diceRolling}
+            onClick={onRoll}
+          >
+            Roll
+          </ClubButton>
+        </div>
+      </div>
     </div>
   );
 }

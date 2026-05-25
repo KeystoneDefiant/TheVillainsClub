@@ -117,11 +117,18 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
   const location = useLocation();
   const preset = useMotionPresetStore((s) => s.preset);
   const reduceMotion = usePrefersReducedMotion();
-  const { clubBalance, hasSave, setHasSave, activeSession, startSession, forfeitActiveSession } = useClubWallet();
+  const {
+    clubBalance,
+    hasSave,
+    setHasSave,
+    activeSession,
+    startSession,
+    forfeitActiveSession,
+    startTutorialSession,
+  } = useClubWallet();
   const hasEnteredClub = useClubFlowStore((s) => s.hasEnteredClub);
   const setHasEnteredClub = useClubFlowStore((s) => s.setHasEnteredClub);
   const [settingsOpened, { open: openSettings, close: closeSettings }] = useDisclosure(false);
-  const [rulesOpened, { open: openRules, close: closeRules }] = useDisclosure(false);
   const [abandonOpened, { open: openAbandon, close: closeAbandon }] = useDisclosure(false);
   const [resetProgressArmed, setResetProgressArmed] = useState(false);
   const [selectedGame, setSelectedGame] = useState<GameMenuEntry | null>(null);
@@ -289,7 +296,6 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
     return n > 0 ? `+${s}` : `−${s}`;
   }, []);
 
-  const activeGame = selectedGame ?? GAME_ENTRIES[0];
   const entered = forceEntered || hasEnteredClub;
 
   return (
@@ -594,7 +600,16 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
                                   </Title>
                                 </Stack>
                                 <Group grow wrap="nowrap" gap="xs" style={{ width: "100%" }}>
-                                  <ClubButton variant="light" size="xs" onClick={openRules} fullWidth>
+                                  <ClubButton
+                                    variant="light"
+                                    size="xs"
+                                    disabled={Boolean(activeSession)}
+                                    onClick={() => {
+                                      startTutorialSession(game.id);
+                                      navigate(game.route);
+                                    }}
+                                    fullWidth
+                                  >
                                     Tutorial
                                   </ClubButton>
                                   <ClubButton variant="light" size="xs" onClick={() => setSelectedGame(null)} fullWidth>
@@ -692,20 +707,7 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
         )}
       </AnimatePresence>
 
-      <Modal opened={rulesOpened} onClose={closeRules} title={`${activeGame.title} rules`} centered>
-        <Stack gap="sm">
-          <Text size="sm">
-            Buy in once from your club balance. Table credits stay inside the session until the game reaches a settlement.
-          </Text>
-          <Text size="sm">
-            {activeGame.id === "seven_year_itch"
-              ? "7 Year Itch uses crapless rules: 7 wins on come-out, any other total opens the case, and heat builds every four rolls."
-              : activeGame.id === "fateseal_silver"
-                ? "Fateseal Silver is a 5×5 cascading slot: seal a prophecy, watch the stone tablet shatter and refill, and bargain at the Crossroads every third spin."
-                : "Oubliette No. 9 is the club’s poker roguelike table: build hands, survive rounds, and cash out when the run resolves."}
-          </Text>
-        </Stack>
-      </Modal>
+
 
       <Modal opened={settingsOpened} onClose={closeSettings} title="Settings" centered size="md">
         <Stack gap="md">

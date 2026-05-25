@@ -2,7 +2,12 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { villainsGameDefaults } from "@/config/villainsGameDefaults";
 import { settleTableSession, startTableSession, type TableSession } from "./money";
-import { getOublietteBaseReturnCeiling } from "./sessionSettlement";
+import {
+  getOublietteBaseReturnCeiling,
+  buildOublietteSettlementProfile,
+  buildSevenYearItchSettlementProfile,
+  buildFatesealSettlementProfile,
+} from "./sessionSettlement";
 import type { ClubTableReturnDetail } from "./sessionSettlement";
 
 export type StartClubSessionResult =
@@ -21,6 +26,7 @@ type ClubWalletState = {
     settlement: TableSession["settlement"];
     gameModeId?: string;
   }) => StartClubSessionResult;
+  startTutorialSession: (gameId: string) => void;
   updateActiveSessionProgress: (
     patch: Partial<Pick<TableSession, "progressRound" | "oublietteState">>,
   ) => void;
@@ -63,6 +69,27 @@ export const useClubWallet = create<ClubWalletState>()(
         });
         return { ok: true };
       },
+      startTutorialSession: (gameId) => {
+        const { activeSession } = get();
+        if (activeSession) return;
+        const settlement =
+          gameId === "oubliette_no9"
+            ? buildOublietteSettlementProfile(1000)
+            : gameId === "fateseal_silver"
+              ? buildFatesealSettlementProfile(1000)
+              : buildSevenYearItchSettlementProfile(1000);
+        set({
+          activeSession: {
+            gameId,
+            drinkId: "tutorial",
+            buyIn: 1000,
+            sessionWallet: 1000,
+            gameModeId: "house",
+            isTutorial: true,
+            settlement,
+          },
+        });
+      },
       updateActiveSessionProgress: (patch) => {
         const { activeSession } = get();
         if (!activeSession) return;
@@ -71,6 +98,10 @@ export const useClubWallet = create<ClubWalletState>()(
       endSession: (returned) => {
         const { clubBalance, activeSession } = get();
         if (!activeSession) return;
+        if (activeSession.isTutorial) {
+          set({ activeSession: null });
+          return;
+        }
         const rawTotal =
           typeof returned === "number" ? returned : Math.max(0, Math.floor(returned.totalReturn));
         const baseCap = getOublietteBaseReturnCeiling(activeSession.settlement);

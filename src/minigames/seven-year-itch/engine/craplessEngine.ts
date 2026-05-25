@@ -289,31 +289,48 @@ export function resolveRoll(table: CraplessTableState, bets: TableBets, roll: Di
       walletDelta += bets.freeOdds + pr;
       lines.push({ kind: "win", text: `Free odds rake in ${(bets.freeOdds + pr).toLocaleString()} credits.` });
     }
-    const newPlace = { ...bets.place };
-    const plOnPoint = bets.place[pt] ?? 0;
-    if (plOnPoint > 0) {
-      const ret = placeBetScaledReturn(pt, plOnPoint, table.placePayoutScale);
-      const profit = ret - plOnPoint;
-      walletDelta += profit;
-      lines.push({
-        kind: "win",
-        text:
-          table.placePayoutScale < 1
-            ? `Place on ${pt} — ${profit.toLocaleString()} credits profit after skim (stake rides).`
-            : `Place on ${pt} — ${profit.toLocaleString()} credits profit (stake rides).`,
-      });
+
+    // Process and refund/payout place bets
+    for (const [key, amount] of Object.entries(bets.place)) {
+      const pk = Number(key) as PointNumber;
+      if (amount > 0) {
+        if (pk === pt) {
+          const ret = placeBetScaledReturn(pt, amount, table.placePayoutScale);
+          walletDelta += ret;
+          lines.push({
+            kind: "win",
+            text:
+              table.placePayoutScale < 1
+                ? `Place on ${pt} is won: paid ${ret.toLocaleString()} credits after skim.`
+                : `Place on ${pt} is won: paid ${ret.toLocaleString()} credits.`,
+          });
+        } else {
+          walletDelta += amount;
+          lines.push({
+            kind: "win",
+            text: `Refunded place bet on ${pk}: ${amount.toLocaleString()} credits returned.`,
+          });
+        }
+      }
     }
-    lines.push({ kind: "neutral", text: "Point is made. New come-out — set your pass." });
-    const cleared = emptyAllBets();
+
+    // Process and refund hardways remaining
+    for (const [key, amount] of Object.entries(nb.hardways)) {
+      if (amount > 0) {
+        walletDelta += amount;
+        lines.push({
+          kind: "win",
+          text: `Refunded hardway bet on ${key}: ${amount.toLocaleString()} credits returned.`,
+        });
+      }
+    }
+
+    lines.push({ kind: "neutral", text: "Point is made. Felt cleared and got square. New come-out." });
     return {
       roll,
       nextTable: newComeOutTable(),
       walletDelta,
-      nextBets: {
-        ...cleared,
-        place: newPlace,
-        hardways: { ...nb.hardways },
-      },
+      nextBets: emptyAllBets(),
       lines,
     };
   }

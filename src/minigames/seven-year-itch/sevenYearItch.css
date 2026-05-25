@@ -227,12 +227,40 @@
   text-transform: uppercase;
 }
 
-.yi-felt-diceDock {
+.yi-felt-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  margin-top: 10px;
+  padding: 6px 0 2px;
+}
+
+.yi-felt-divest-container,
+.yi-felt-roll-container {
+  flex: 1;
+  display: flex;
+}
+
+.yi-felt-divest-container {
+  justify-content: flex-start;
+}
+
+.yi-felt-roll-container {
+  justify-content: flex-end;
+}
+
+.yi-felt-divest-placeholder {
+  width: 120px;
+  height: 38px;
+}
+
+.yi-felt-dice-container {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 14px;
-  padding: 4px 0 6px;
+  flex-shrink: 0;
 }
 
 .yi-felt-dicePlaceholder {
@@ -245,40 +273,6 @@
   grid-template-columns: 1fr 1fr;
 }
 
-.yi-felt-divest {
-  grid-column: 1 / -1;
-  border-radius: 8px;
-  padding: 7px 9px;
-  border: 1px dashed var(--7yi-felt-line);
-  background: rgba(80, 40, 20, 0.2);
-  color: #e8dfd4;
-  cursor: pointer;
-  display: grid;
-  gap: 1px;
-  text-align: left;
-}
-
-.yi-felt-divest:hover:not(:disabled) {
-  border-color: var(--7yi-amber);
-}
-
-.yi-felt-divest:disabled {
-  opacity: 0.25 !important;
-  cursor: not-allowed;
-  filter: blur(0.8px);
-}
-
-.yi-felt-divest-label {
-  font-size: 0.58rem;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: rgba(232, 223, 212, 0.6);
-}
-
-.yi-felt-divest-meta {
-  font-size: 0.62rem;
-  color: rgba(232, 223, 212, 0.48);
-}
 
 .yi-felt-odds,
 .yi-felt-pass {

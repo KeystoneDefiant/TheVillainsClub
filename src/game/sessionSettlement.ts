@@ -38,6 +38,7 @@ export type OublietteShellBinding = {
   savedState?: Partial<OublietteGameState>;
   onReturnToClubMenu?: (detail: ClubTableReturnDetail) => void;
   onAbandonRun?: () => void;
+  isTutorial?: boolean;
 };
 
 /** Props for 7 Year Itch (Crapless) — settlement shape matches {@link OublietteSettlementProfile}. */
@@ -49,6 +50,7 @@ export type SevenYearItchShellBinding = {
   onReturnToClubMenu?: (detail: ClubTableReturnDetail) => void;
   onPauseToClub?: () => void;
   onAbandonRun?: () => void;
+  isTutorial?: boolean;
 };
 
 /** Props for Fateseal Silver — settlement shape matches {@link OublietteSettlementProfile}. */
@@ -60,6 +62,7 @@ export type FatesealShellBinding = {
   onReturnToClubMenu?: (detail: ClubTableReturnDetail) => void;
   onPauseToClub?: () => void;
   onAbandonRun?: () => void;
+  isTutorial?: boolean;
 };
 
 export function buildOublietteSettlementProfile(buyIn: number, now: Date = new Date()): OublietteSettlementProfile {

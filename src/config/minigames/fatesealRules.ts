@@ -112,7 +112,7 @@ export const fatesealProgressionRules = {
     wildChanceDecayPerDepth: 0.50,
     markedSymbolPayoutMultiplier: 1.5,
     /** Payout scaling multiplier per symbol as the count of active omens increases (1, 2, 3, 4). */
-    omenScalingFactors: [1.2, 0.45, 0.3, 0.15] as readonly number[],
+    omenScalingFactors: [1.2, 0.4, 0.25, 0.1] as readonly number[],
     /** Free Ritual spins (zero bet) do not decrement Crossroads wild/dead/mark spin timers. */
     bonusSpinsExcludeFromReelDecay: true,
   },

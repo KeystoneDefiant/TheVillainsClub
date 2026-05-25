@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties }
 import { Box, Group, Modal, Paper, Progress, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 import { ClubButton } from "@/components/ui/ClubButton";
 import { computeSevenYearItchReturn, type SevenYearItchShellBinding } from "@/game/sessionSettlement";
+import { SommelierLiveGuide } from "@/components/ui/SommelierLiveGuide";
 import {
   HARDWAY_NUMBERS,
   POINT_NUMBERS,
@@ -15,7 +16,7 @@ import {
 } from "@/config/minigames/sevenYearItchRules";
 import { pickSevenYearItchRollStory } from "@/config/minigames/sevenYearItchRollStories";
 import { usePrefersReducedMotion } from "@/motion/usePrefersReducedMotion";
-import { clubTokens } from "@/theme/clubTokens";
+
 import {
   initialBets,
   initialTableState,
@@ -23,6 +24,7 @@ import {
   rollDice,
   totalOnLayout,
   type CraplessTableState,
+  type TableBets,
   type DiceRoll,
   type RollLine,
 } from "./engine/craplessEngine";
@@ -115,6 +117,12 @@ function getTargetSettleTransform(value: number, isDie2: boolean): string {
   return `rotateX(${finalX}deg) rotateY(${finalY}deg) rotateZ(${finalZ}deg)`;
 }
 
+interface SevenYearItchMockState {
+  balance?: number;
+  table?: Partial<CraplessTableState>;
+  bets?: Partial<TableBets>;
+}
+
 export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
   const buyIn = props.settlement.buyIn;
   const tableRules = useMemo(() => resolveSevenYearItchGameMode(props.gameModeId), [props.gameModeId]);
@@ -122,9 +130,22 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
   const heatRollsPerFavorOffer = tableRules.heatRollsPerFavorOffer;
   const showFieldHorn = tableRules.showFieldAndHornSection;
   const reduceMotion = usePrefersReducedMotion();
-  const [balance, setBalance] = useState(props.sessionCredits);
-  const [table, setTable] = useState(initialTableState);
-  const [bets, setBets] = useState(initialBets);
+  const [realBalance, setBalance] = useState(props.sessionCredits);
+  const [realTable, setTable] = useState(initialTableState);
+  const [realBets, setBets] = useState(initialBets);
+
+  const [showTutorial, setShowTutorial] = useState(props.isTutorial ?? false);
+  const [mockState, setMockState] = useState<SevenYearItchMockState | null>(null);
+
+  const balance = mockState?.balance ?? realBalance;
+  const table = useMemo(() => {
+    if (!mockState?.table) return realTable;
+    return { ...realTable, ...mockState.table };
+  }, [realTable, mockState]);
+  const bets = useMemo(() => {
+    if (!mockState?.bets) return realBets;
+    return { ...realBets, ...mockState.bets };
+  }, [realBets, mockState]);
   const [feed, setFeed] = useState<RollLine[]>([]);
   const [rollCount, setRollCount] = useState(0);
   const [heatRolls, setHeatRolls] = useState(0);
@@ -138,7 +159,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
     title: "The Investigation",
     body: "Put money on the Come Out Pass and roll. Seven wins on the open; anything else sets the point.",
   });
-  const [lastRollText, setLastRollText] = useState("—");
+
   const [lastD1, setLastD1] = useState(1);
   const [lastD2, setLastD2] = useState(1);
   const [diceRunActive, setDiceRunActive] = useState(false);
@@ -196,7 +217,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
   const pickHeatChoices = useCallback(() => {
     const excludeId = activeBonus?.id;
     const pool = excludeId ? sevenYearItchHeatBonuses.filter((b) => b.id !== excludeId) : [...sevenYearItchHeatBonuses];
-    
+
     let adjustedPool = pool;
     if (wealth > buyIn) {
       adjustedPool = pool.map((b) =>
@@ -225,16 +246,16 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
   const removePassChip = useCallback(() => {
     if (passLocked) return;
     if (bets.passLine <= 0) return;
-    
+
     let next = Math.max(0, bets.passLine - chip);
-    
+
     const maxPlaceStake = Object.values(bets.place).reduce((max, val) => Math.max(max, val ?? 0), 0);
     const minRequiredPass = Math.ceil(maxPlaceStake / 3);
-    
+
     if (next < minRequiredPass) {
       next = minRequiredPass;
     }
-    
+
     if (next === bets.passLine) return;
 
     const d = bets.passLine - next;
@@ -265,11 +286,11 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
     (pk: PointNumber) => {
       if (table.phase !== "point") return;
       const old = bets.place[pk] ?? 0;
-      
+
       const maxPlaceLimit = bets.passLine * 3;
       const walletCap = old + balance;
       const cap = Math.min(walletCap, maxPlaceLimit);
-      
+
       const next = Math.min(old + chip, cap);
       if (next <= old) return;
       const d = next - old;
@@ -462,7 +483,6 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
       setBalance(balBefore + walletDelta);
       setTable(nextTable);
       setBets(nextBets);
-      setLastRollText(`${r.d1} + ${r.d2} = ${r.total}`);
       setLastD1(r.d1);
       setLastD2(r.d2);
       setFeed((f) => [...bonusLines, ...(shieldAbsorbsSeven ? [] : res.lines), ...f].slice(0, 28));
@@ -475,13 +495,22 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
           title: "Seven — waved through",
           body: `${storyLine} The favor clears the warrant; the felt stands untouched for now.`,
         });
+      } else if (r.total === 7) {
+        if (currentTable.phase === "comeOut") {
+          setLoreState({
+            title: "Legitimate Business Succeeds",
+            body: `${storyLine} Smooth sailing. The payout is cleared and the house moves clean.`,
+          });
+        } else {
+          setLoreState({
+            title: "The Bust",
+            body: `${storyLine} Sirens rake the alley — every exposed chip is evidence.`,
+          });
+        }
       } else {
         setLoreState({
-          title: r.total === 7 ? "The Bust" : `${r.total}: ${racket?.name ?? "Street Business"}`,
-          body:
-            r.total === 7
-              ? `${storyLine} Sirens rake the alley — every exposed chip is evidence.`
-              : `${storyLine} ${racket?.story ?? ""}`.trim(),
+          title: `${r.total}: ${racket?.name ?? "Street Business"}`,
+          body: `${storyLine} ${racket?.story ?? ""}`.trim(),
         });
       }
 
@@ -616,7 +645,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
   const favorSelectionBody = (
     <Stack gap="sm">
       <Text size="sm" c="dimmed">
-        Pick one favor before the cops cool down. Effects apply on upcoming rolls — read each card.
+        Pick one favor while the cops cool down. Effects apply on upcoming roll.
       </Text>
       {favorOfferKeep ? (
         <ClubButton
@@ -699,11 +728,6 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
           onAbandonRun={props?.onAbandonRun}
           extraButtons={
             <Group gap="xs" wrap="nowrap">
-              {lastRollText !== "—" && (
-                <div className="seven-year-itch-rollBadge" aria-label="Last roll" data-testid="roll-badge">
-                  {lastRollText.split(" = ")[1]}
-                </div>
-              )}
               <ClubButton
                 type="button"
                 size="xs"
@@ -713,7 +737,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
                 px="xs"
                 onClick={() => setOddsOpened(true)}
                 title="Show payout table"
-                styles={{ label: { fontWeight: 700, color: clubTokens.surface.deepWalnut } }}
+                styles={{ label: { fontWeight: 700 } }}
               >
                 📊 Odds
               </ClubButton>
@@ -729,7 +753,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
             style={{ borderColor: "var(--7yi-amber-dim)", background: "var(--7yi-paper)", flex: 1, minHeight: 0, overflow: "auto" }}
           >
             <Title order={3} size="h4" c="var(--7yi-amber)" mb="sm" style={{ fontFamily: "Georgia, serif" }}>
-              Favors — heat shop
+              Favors
             </Title>
             {favorSelectionBody}
           </Paper>
@@ -759,7 +783,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
                 <Text fw={700}>{(wealth - buyIn).toLocaleString()}</Text>
               </Paper>
               <Paper radius="md" p="xs" withBorder style={{ borderColor: "var(--7yi-amber-dim)", background: "var(--7yi-paper)" }}>
-                <Group justify="space-between" wrap="nowrap">
+                <Group justify="space-between" wrap="nowrap" className="yi-felt-heat-meter">
                   <Text size="xs" c="dimmed">
                     Heat
                   </Text>
@@ -1020,6 +1044,16 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
         onClose={() => setOddsOpened(false)}
         placePayoutScale={table.placePayoutScale}
       />
+      {showTutorial && (
+        <SommelierLiveGuide
+          gameId="seven_year_itch"
+          onStepChange={(mock) => setMockState(mock as SevenYearItchMockState | null)}
+          onClose={() => {
+            setShowTutorial(false);
+            setMockState(null);
+          }}
+        />
+      )}
     </Box>
   );
 }

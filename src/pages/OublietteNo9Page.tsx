@@ -13,6 +13,7 @@ import { OUBLIETTE_STANDALONE_ROUTE } from "@/config/standaloneLanding";
 import { resolveOublietteGameMode } from "@/config/minigames/oublietteNo9GameRules";
 import { OublietteGameModeProvider } from "@/minigames/oubliette-no9/OublietteGameModeContext";
 
+
 import "@/minigames/oubliette-no9/styles/global.css";
 
 const OublietteNo9Root = lazy(() => import("@/minigames/oubliette-no9/App"));
@@ -87,6 +88,7 @@ export function OublietteNo9Page({ standalone = false }: OublietteNo9PageProps) 
       savedState,
       onReturnToClubMenu: handleReturnToClub,
       onAbandonRun: handleAbandonRun,
+      isTutorial: activeSession.isTutorial,
     };
   }, [activeSession, handleReturnToClub, handleAbandonRun]);
 
@@ -114,6 +116,7 @@ export function OublietteNo9Page({ standalone = false }: OublietteNo9PageProps) 
         transform: "translate3d(0, 0, 0)",
         backfaceVisibility: "hidden",
         opacity: reduceMotion ? 1 : undefined,
+        backgroundColor: clubTokens.surface.deepWalnut,
         ...(reduceMotion ? {} : { ["--shell-route-fade-dur" as string]: "0.35s" }),
       }}
     >

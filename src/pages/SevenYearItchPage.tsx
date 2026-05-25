@@ -8,6 +8,7 @@ import { useClubWallet } from "@/game/clubWalletStore";
 import { usePrefersReducedMotion } from "@/motion/usePrefersReducedMotion";
 import { clubTokens } from "@/theme/clubTokens";
 
+
 import "@/minigames/seven-year-itch/sevenYearItch.css";
 
 const SevenYearItchRoot = lazy(() =>
@@ -67,6 +68,7 @@ export function SevenYearItchPage() {
       onReturnToClubMenu: handleReturnToClub,
       onAbandonRun: handleAbandonRun,
       onPauseToClub: () => navigate("/bar", { replace: true }),
+      isTutorial: activeSession.isTutorial,
     };
   }, [activeSession, handleReturnToClub, handleAbandonRun, navigate]);
 
@@ -83,6 +85,7 @@ export function SevenYearItchPage() {
         transform: "translate3d(0, 0, 0)",
         backfaceVisibility: "hidden",
         opacity: reduceMotion ? 1 : undefined,
+        background: "radial-gradient(ellipse at 50% 0%, rgba(196, 120, 45, 0.12), transparent 55%), #14100c",
         ...(reduceMotion ? {} : { ["--shell-route-fade-dur" as string]: "0.35s" }),
       }}
     >

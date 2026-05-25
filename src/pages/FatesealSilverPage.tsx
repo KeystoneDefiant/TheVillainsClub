@@ -8,6 +8,7 @@ import { useClubWallet } from "@/game/clubWalletStore";
 import { usePrefersReducedMotion } from "@/motion/usePrefersReducedMotion";
 import { clubTokens } from "@/theme/clubTokens";
 
+
 import "@/minigames/fateseal-silver/fatesealSilver.css";
 
 const FatesealSilverRoot = lazy(() =>
@@ -67,6 +68,7 @@ export function FatesealSilverPage() {
       onReturnToClubMenu: handleReturnToClub,
       onAbandonRun: handleAbandonRun,
       onPauseToClub: () => navigate("/bar", { replace: true }),
+      isTutorial: activeSession.isTutorial,
     };
   }, [activeSession, handleReturnToClub, handleAbandonRun, navigate]);
 
@@ -83,6 +85,7 @@ export function FatesealSilverPage() {
         transform: "translate3d(0, 0, 0)",
         backfaceVisibility: "hidden",
         opacity: reduceMotion ? 1 : undefined,
+        background: "radial-gradient(ellipse at 50% 0%, rgba(155, 110, 200, 0.14), transparent 55%), #14100c",
         ...(reduceMotion ? {} : { ["--shell-route-fade-dur" as string]: "0.35s" }),
       }}
     >

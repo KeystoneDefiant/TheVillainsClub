@@ -20,8 +20,8 @@ const ParallelHandsAnimation = lazy(() => import('./components/screen-ParallelHa
 const Shop = lazy(() => import('./components/Shop').then(m => ({ default: m.Shop })));
 const GameOver = lazy(() => import('./components/screen-GameOver').then(m => ({ default: m.GameOver })));
 const Credits = lazy(() => import('./components/Credits').then(m => ({ default: m.Credits })));
-const Tutorial = lazy(() => import('./components/Tutorial').then(m => ({ default: m.Tutorial })));
 const Settings = lazy(() => import('./components/Settings').then(m => ({ default: m.Settings })));
+import { SommelierLiveGuide } from "@/components/ui/SommelierLiveGuide";
 
 export function OublietteNo9Root(props?: OublietteShellBinding) {
   // Intentionally depend on shell fields, not the whole props object (parent may pass a new object each render).
@@ -44,7 +44,7 @@ export function OublietteNo9Root(props?: OublietteShellBinding) {
   ]);
   /* eslint-enable react-hooks/exhaustive-deps */
   const [showCredits, setShowCredits] = useState(false);
-  const [showTutorial, setShowTutorial] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(props?.isTutorial ?? false);
   const [showSettings, setShowSettings] = useState(false);
   const [payoutTableState, setPayoutTableState] = useState<'closed' | 'open' | 'closing'>('closed');
 
@@ -128,6 +128,7 @@ export function OublietteNo9Root(props?: OublietteShellBinding) {
     updateStreakCounter,
     setAnimationSpeed,
     setCardTheme,
+    setMockState,
   } = useGameState(shellBinding ?? null);
 
   const updateActiveSessionProgress = useClubWallet((s) => s.updateActiveSessionProgress);
@@ -174,11 +175,14 @@ export function OublietteNo9Root(props?: OublietteShellBinding) {
       )}
 
       {showTutorial && (
-        <Suspense fallback={<LoadingSpinner />}>
-          <div className="modal-enter">
-            <Tutorial onClose={() => setShowTutorial(false)} />
-          </div>
-        </Suspense>
+        <SommelierLiveGuide
+          gameId="oubliette_no9"
+          onStepChange={setMockState}
+          onClose={() => {
+            setShowTutorial(false);
+            setMockState(null);
+          }}
+        />
       )}
 
       {state.screen === 'game' && state.gamePhase === 'preDraw' && !state.showShopNextRound && (

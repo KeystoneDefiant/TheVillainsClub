@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, startTransition } from "react";
+import { useState, useCallback, useRef, startTransition, useMemo } from "react";
 import type { OublietteShellBinding } from "@/game/sessionSettlement";
 import { computeOublietteReturn } from "@/game/sessionSettlement";
 import { GameState, GameOverReason, HandRank, Card } from "../types";
@@ -102,10 +102,16 @@ export function useGameState(shellBinding?: OublietteShellBinding | null) {
   shellRef.current = shellBinding;
 
   const [state, setState] = useState<GameState>(() => createInitialState(shellBinding ?? null, mode));
+  const [mockState, setMockState] = useState<Partial<GameState> | null>(null);
+
+  const mergedState = useMemo(() => {
+    if (!mockState) return state;
+    return { ...state, ...mockState };
+  }, [state, mockState]);
 
   // Use specialized hooks for different action types
-  const gameActions = useGameActions(state, setState);
-  const shopActions = useShopActions(state, setState);
+  const gameActions = useGameActions(mergedState, setState);
+  const shopActions = useShopActions(mergedState, setState);
   const { playSound, resetRoundSoundCounts } = useThemeAudio();
 
   const openShop = useCallback(() => {
@@ -334,29 +340,22 @@ export function useGameState(shellBinding?: OublietteShellBinding | null) {
   }, [mode]);
 
   /**
-   * End the current run and show game over summary screen.
-   * Preserves stats (round, totalEarnings, credits) for display.
-   * @param reason - Why the run ended; if omitted, uses state.gameOverReason or 'voluntary'
+   * End the current run and return to the club menu / bar settlement.
+   * Directly invokes the shell's onReturnToClubMenu if available.
+   * @param reason - Why the run ended
    */
-  const endRun = useCallback((reason?: GameOverReason) => {
-    setState((prev) => ({
-      ...prev,
-      screen: 'gameOver',
-      gamePhase: 'preDraw',
-      gameOver: true,
-      gameOverReason: reason ?? prev.gameOverReason ?? 'voluntary',
-      playerHand: [],
-      heldIndices: [],
-      parallelHands: [],
-      additionalHandsBought: 0,
-      drawsCompletedThisRound: 0,
-      showShopNextRound: false,
-      selectedShopOptions: [],
-      creditsAtShopOpen: null,
-      prevRoundMinimumBet: null,
-      shopDisplayBetAmount: null,
-    }));
-  }, []);
+  const endRun = useCallback(() => {
+    startTransition(() => {
+      setState((prev) => {
+        const shell = shellRef.current;
+        if (shell?.onReturnToClubMenu && shell.settlement) {
+          const detail = computeOublietteReturn(prev.credits, shell.settlement);
+          shell.onReturnToClubMenu({ ...detail, tableRound: prev.round });
+        }
+        return createInitialState(shellRef.current ?? null, mode);
+      });
+    });
+  }, [mode]);
 
   const buyAnotherHand = useCallback(() => {
     setState((prev) => {
@@ -599,7 +598,8 @@ export function useGameState(shellBinding?: OublietteShellBinding | null) {
   }, []);
 
   return {
-    state,
+    state: mergedState,
+    setMockState,
     // Game actions
     ...gameActions,
     // Shop actions

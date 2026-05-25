@@ -142,13 +142,13 @@ export const sommelierTutorialCatalog: Record<string, SommelierTutorialStep[]> =
     },
     {
       title: "The Seed Investment",
-      dialogue: "In 7 Year Itch, you are investing in a business that deals with trade of a more illicit flavour. \n\nFor this to work in our city, we of course need a business to act as a front for the rest of our enterprise. The seed investment covers this cost. \n\nYou may bet as much as you like, but remember that the taller the tower, the more disastrous the fall. Be sure to save some money for where the real work happens. \n\n After you place your desired investment, we roll the dice. Should a 7 be rolled, the front business is a success and we don't even need to get into the mire of our more seedy activities. Your investment is doubled and returned to you, then we repeat the process until we roll anything but a 7. \n\n For our craps-playing friends in the crowd, this is the come-out roll, and you are placing a wager on the pass line.",
+      dialogue: "In 7 Year Itch, you are investing in a business that deals with trade of a more illicit flavour. \n\nFor this to work in our city, we of course need a business to act as a front for the rest of our enterprise. The seed investment covers this cost. \n\nYou may bet as much as you like, but remember that the taller the tower, the more disastrous the fall. Be sure to save some money for where the real work happens. \n\n After you place your desired investment, we roll the dice. Should a 7 be rolled, the front business is a success and we don't even need to get into the mire of our more seedy activities. Your investment wins even money and returned to you, then we repeat the process until we roll anything but a 7. \n\n For our craps-playing friends in the crowd, this is the come-out roll, and you are placing a wager on the pass line.",
       highlightSelector: ".yi-felt-pass",
       mockState: { table: { phase: "comeOut", point: null }, bets: { passLine: 100 } }
     },
     {
       title: "Active Case Files",
-      dialogue: "The number rolled in the previous step determines our main focus of business, but it's also the business that the police have started investigating. Should they bust this part of our business, our entire enterprise will fall to the ground like a disappointing glass of wine. \n\n If a 7 is rolled right now, the police crack down on our business, and we lose all money invested. \n\nShould we roll a 6, as in this example, we get away scot free, all money on the felt is returned, and our seed investment is doubled and returned to us. The front is cleanly shut down, the cops are off of our back, and we may start over with a brand new front. Our primary business will remain highlighted, so you don't need to remember.",
+      dialogue: "The number rolled in the previous step determines our main focus of business, but it's also the business that the police have started investigating. Should they bust this part of our business, our entire enterprise will fall to the ground like a disappointing glass of wine. \n\n If a 7 is rolled right now, the police crack down on our business, and we lose all money invested. \n\nShould we roll a 6, as in this example, we get away scot free, all money on the felt is returned, and our seed investment wins even money. The front is cleanly shut down, the cops are off of our back, and we may start over with a brand new front. Our primary business will remain highlighted, so you need not remember.",
       mockState: { table: { phase: "point", point: 6 }, bets: { passLine: 100 } }
     },
     {
@@ -161,13 +161,13 @@ export const sommelierTutorialCatalog: Record<string, SommelierTutorialStep[]> =
       title: "Divestment",
       dialogue: "Should the heat feel like it's too much, click the Divest button. \n\nThis will return all money invested in the various businesses, but your seed investment is locked down. You may re-invest after a divestment, but your returns will be lower until the start of the next hand. \n\nA savvy businessperson knows when to cut and run, but the street knows a chicken when it clucks. \n\n Speaking of, please do try our chicken marinara this evening, it's impeccable. Please ask if you need a wine pairing recommendation.",
       highlightSelector: ".yi-felt-divest-container",
-      mockState: { table: { phase: "point", point: 6, hasUsedDivest: true }, bets: { passLine: 100 } }
+      mockState: { table: { phase: "point", point: 6, hasUsedDivest: false }, bets: { passLine: 100, place: { 2: 50, 6: 50, 8: 50 } } }
     },
     {
       title: "Heat",
       dialogue: "A good wine should never be hot in most cases, but here in 7 Year Itch, heat can be a good thing. \n\nFor every bet placed on the felt, we add tension to the operation. The more you have on the felt, the more heat you generate. Every roll, we add to the heat meter at the top of the table. \n\nWhen this fills, you may select from an offering of favors that can increase our payouts, allow us a clean divestment with no downside, or even give us a second chance after rolling a 7. \n\nBig bets mean bigger chances to win, but also bigger falls when the wrong people come knocking at your office door.\n\nThat should be everything you need to know! Best of luck, and I will be around should you need advice or another bottle.",
       highlightSelector: ".yi-felt-heat-meter",
-      mockState: { table: { phase: "point", point: 6, hasUsedDivest: true, heat: 24, }, bets: { passLine: 100 } }
+      mockState: { table: { phase: "point", point: 6, hasUsedDivest: true, heat: 24, }, bets: { passLine: 100, place: { 2: 50, 6: 50, 8: 50 } } }
     }
   ],
   fateseal_silver: [
@@ -199,7 +199,7 @@ export const sommelierTutorialCatalog: Record<string, SommelierTutorialStep[]> =
     },
     {
       title: "The Symbols",
-      dialogue: "You may also see other sigils in your vision, such as the 'Scatter', seen in the upper left corner. The 'Wild', seen in the upper left corner, and the 'Void', seen in the lower left. \n\nScatters don't count for anything, but the more you get, the closer to The Crossroads you will find yourself - a place where the veil is thinnest, and you may make a deal with the spirits. \n\nWild sigils count as any sigil, as you may imagine. \n\nVoid sigils count as nothing, and are usually the result of selling part of your vision, which we'll get to in a moment. Just know these are... less than ideal to have in your ritual.",
+      dialogue: "You may also see other sigils in your vision, such as the 'Scatter', seen in the upper left corner. The 'Wild', seen in the upper right corner, and the 'Void', seen in the lower left. \n\nScatters don't count for anything, but the more you get, the closer to The Crossroads you will find yourself - a place where the veil is thinnest, and you may make a deal with the spirits. If you happen to have 4 on the board at the same time, I've heard something interesting happens. \n\nWild sigils count as any sigil, as you may imagine. \n\nVoid sigils count as nothing, and are usually the result of selling part of your vision, which we'll get to in a moment. Just know these are... less than ideal to have in your ritual.",
       highlightSelector: ".fateseal-grid",
       mockState: {
         phase: "ritual",
@@ -214,7 +214,7 @@ export const sommelierTutorialCatalog: Record<string, SommelierTutorialStep[]> =
     },
     {
       title: "The Wagers",
-      dialogue: "Befriend the spirits with an offering of credits and start the ritual. The larger your bet, the higher your payout per symbol.\n\n For our more discerning gamblers here at this tasting, the RTP is around 92-95%, all depending on what the proprietor has been doing to the math. Between you and I, he's a complete dumbass. I'm unsure he even knows what he's doing and he's out here mucking around with sprits and... oh, the wine is talking again. Please pardon me.",
+      dialogue: "Befriend the spirits with an offering of credits and start the ritual. The larger your bet, the higher your payout per symbol.\n\n For our more discerning gamblers here at this tasting, the RTP is around 92-95%, all depending on what the proprietor has been doing to the math. Between you and I, he's a complete idiot. I'm unsure he even knows what he's doing and he's out here mucking around with sprits and... oh, the wine is talking again. Please pardon me.",
       highlightSelector: ".fateseal-bet-buttons-container",
       mockState: { phase: "ritual", engine: { sessionWallet: 1000 } }
     },

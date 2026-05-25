@@ -755,7 +755,7 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
           onAbandonRun={props?.onAbandonRun}
           extraButtons={
             <Group gap="xs" wrap="nowrap">
-              <ClubButton
+              {/* <ClubButton
                 type="button"
                 size="xs"
                 variant="filled"
@@ -766,7 +766,7 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
                 title="How to play"
               >
                 📖 How to Play
-              </ClubButton>
+              </ClubButton> */}
               {phase !== "altar" ? (
                 <ClubButton
                   type="button"

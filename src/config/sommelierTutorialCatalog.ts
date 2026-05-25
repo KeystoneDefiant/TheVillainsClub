@@ -137,7 +137,7 @@ export const sommelierTutorialCatalog: Record<string, SommelierTutorialStep[]> =
   ],
   seven_year_itch: [
     {
-      title: "The Green Felt Racket",
+      title: "The Green Felt Racket - Seven Year Itch",
       dialogue: "Welcome to the table, friend. I am Pazillus A. Rabellum, the club's sommelier. Ah, the green wool felt of craps... an unpredictable, exciting game of dice and daring. This is 7 Year Itch, a version of craps that removes some of the more... let's call them 'unnecessary' notes of the game, and refines the rules in to a more palatable experience. I will guide you through this volatile noir flight, but do keep up and feel free to make tasting notes. \n\n For the craps players here, this is a twist on crapless craps rules.",
       highlightSelector: ".seven-year-itch-root"
     },
@@ -174,41 +174,41 @@ export const sommelierTutorialCatalog: Record<string, SommelierTutorialStep[]> =
   ],
   fateseal_silver: [
     {
-      title: "The Occult Altar",
-      dialogue: "Welcome to the altar, friend. I am Pazillus A. Rabellum, the club's sommelier. Step up to the Fateseal Altar. Here, you will use your foresight to choose the correct sigils to align with, and then converse with the spirits through it to bring you fortune. Or ruin. Both are entirely possible, but that's why we're here, no?",
+      title: "Welcome to Fateseal Silver, The Occult Altar",
+      dialogue: "Welcome to the altar, friend. I am Pazillus A. Rabellum, the club's sommelier. The only demons here are the tannins in this bottle of Rioja; fear not. In Fateseal Silver, you will use your foresight to choose the correct sigils to align with, and then converse with the spirits through it to bring you fortune. Or ruin. Both are entirely possible, but that's why we're here, no? This game effectively plays like a slot machine, but instead of hoping any symbol lines up on the reels, we pick a specific symbol and hope to see it as many times as possible.",
       highlightSelector: "[data-testid^=\"fateseal-pick-\"]",
       mockState: { phase: "altar", picks: [] }
     },
     {
       title: "Sealing the Prophecy",
-      dialogue: "First, you will choose an omen to align yourself with.One is not better than another.",
+      dialogue: "First, you will choose an omen to align yourself with. One is not better than any other. Simply choose what you are drawn to. This sigil will be what pays out when we get to the ritual. Every time it shows up in your vision, you will be rewarded with credits, and the more it shows up, the more you win. When you are happy with your selection, move on to the ritual. You may always return here and change your preferred omen whenever you wish.",
       highlightSelector: "[data-testid=\"fateseal-seal-prophecy\"]",
       mockState: { phase: "altar", picks: ["dagger"] }
     },
     {
       title: "The Ritual Grid",
-      dialogue: "The ritual grid. Obsidian runestones cascade down from the void core. Matching clusters shatter in stepped cascades, shifting gravity to make space for new elements.",
+      dialogue: "Do you smell that? The faint smell of fresh lemongrass, ozone, and a hint of brimstone? Refreshing, and dare I say, bracing. \n\nThis is our ritual grid, where the spirits come to converse with the living. Now that you are aligned to an omen sigil, you may hear the whisperings of those gamblers who have found their way near the veil and chosen to stay for a round or two. Truly, they have nothing better to do. On the grid are many omen sigils - if your selected sigil is on the grid, it is removed, you are paid, and more sigils are added in their place. Connected sigils pay more, so hope the spirits figure out how to stand in a straight line. As I've been told, the wine in the afterlife is quite potent!",
       highlightSelector: ".fateseal-grid",
       mockState: {
         phase: "ritual",
         grid: [
-          ["void", "scatter", "dagger", "chalice", "dagger"],
-          ["dagger", "chalice", "dagger", "dagger", "dagger"],
-          ["dagger", "dagger", "chalice", "dagger", "dagger"],
-          ["dagger", "dagger", "dagger", "chalice", "dagger"],
-          ["dagger", "dagger", "dagger", "dagger", "dagger"]
+          ["scatter", "scatter", "goat", "chalice", "wild"],
+          ["dagger", "chalice", "dagger", "dagger", "serpent"],
+          ["dagger", "scatter", "chalice", "goat", "dagger"],
+          ["dagger", "dagger", "dagger", "wild", "dagger"],
+          ["void", "dagger", "dagger", "dagger", "scatter"]
         ]
       }
     },
     {
       title: "The Wagers",
-      dialogue: "Select your wager stakes. Higher bets summon scatter symbols, filling your progress meter and paving the way to the Crossroads.",
+      dialogue: "Befriend the spirits with an offering of credits and start the ritual. The larger your bet, the higher your payout per symbol. You may also see other sigils in your vision, such as the 'Scatter', seen in the upper left corner. The 'Wild', seen in the upper left corner, and the 'Void', seen in the lower left. Scatters don't count for anything, but the more you get, the closer to The Crossroads you will find yourself - a place where the veil is thinnest, and you may make a deal with the spirits. Wild sigils count as any sigil, as you may imagine, and Void sigils count as nothing, and are usually the result of selling part of your vision, which we'll get to in a moment. Just know these are... less than ideal to have in your ritual.",
       highlightSelector: ".fateseal-bet-buttons-container",
       mockState: { phase: "ritual", engine: { sessionWallet: 1000, baseBet: 100 } }
     },
     {
       title: "The Crossroads",
-      dialogue: "The Crossroads. An exclusive cellar shop where you trade wagers for wild reels, dead reels, or make a Faustian bargain. Select your curated deal, or walk away uncorked.",
+      dialogue: "You've found yourself in the Crossroads, a rare place where the veil between our world and the spirit realm is at its thinnest. The spirits are eager to bargain, but you must be wary. The choices you make here will have lasting impacts on the rest of your session. \n\nYou may pay the spirits to align an additional omen to your vision, increasing the sigils that pay out when they appear, but decreasing their overall worth.\n\nYou may also take a Faustian bargain, wherein you sell part of your vision in exchange for credits. Your vision will return after a few spins, but be warned that the bargain can be taken multiple times, and your vision will become extremely narrow. And we all know about people with a narrow vision on the world, yes?\n\nFinally, you may invest a large portion of your bankroll on high risk bonus modes - these can make or break your run, so be sure you consider your options before taking one. Personally, I'd cash out at that point and have a glass of Syrah, but that is your prerogative.",
       highlightSelector: "[data-testid=\"fateseal-crossroads-root\"]",
       mockState: { phase: "crossroads", offeredOmen: "goat", engine: { sessionWallet: 500 } }
     }

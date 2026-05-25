@@ -888,10 +888,10 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
                           const singleButtonLabel = engine.freeRitualSpinsLeft > 0
                             ? "Free ritual (spin)"
                             : engine.vassagoActive
-                            ? "Vassago Grants You Vision"
-                            : engine.wildReelPaidSpinTimers.length > 0
-                            ? "Unsettle The Spirits"
-                            : null;
+                              ? "Vassago Grants You Vision"
+                              : engine.wildReelPaidSpinTimers.length > 0
+                                ? "Unsettle The Spirits"
+                                : null;
 
                           if (singleButtonLabel) {
                             return (
@@ -984,7 +984,7 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
                                     />
                                   </Group>
                                   <Text size="10px" c="dimmed" ta="center" style={{ lineHeight: 1.2 }}>
-                                    Increase all bet sizes by 25% for a 25% higher chance of summoning scatter symbols.
+                                    Increase all bet sizes by 25% for a higher chance of summoning scatter symbols.
                                   </Text>
                                 </Stack>
                               )}
@@ -1121,7 +1121,7 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
                       The Crossroads
                     </Title>
                     <Text size="xs" c="dimmed">
-                      Enough scatters landed to open the threshold. Acquire credit rites or the legacy pact.
+                      Enough scatters landed to open the threshold.
                     </Text>
                   </Stack>
 
@@ -1134,7 +1134,7 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
                           <div className="crossroads-item-desc" style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px" }}>
                             <FatesealSymbolIcon symbol={offeredOmen} size={24} />
                             <Text size="xs" c="dimmed">
-                              Offer: {fatesealSymbolLore[offeredOmen]?.title ?? offeredOmen}. Add to active prophecies. Max {addOmenShop.maxSymbols}.
+                              Offer: {fatesealSymbolLore[offeredOmen]?.title ?? offeredOmen}. Add sigil to active prophecies, giving you more symbols that will pay out. Max {addOmenShop.maxSymbols}.
                             </Text>
                           </div>
                         </div>
@@ -1162,7 +1162,7 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
                           <Text size="xs" c="dimmed">
                             {unsettleSpiritsShop.active
                               ? `Wild Reel active: ${unsettleSpiritsShop.timers[0]} spins left.`
-                              : `Sets bet size to 250, spins are free for ${unsettleSpiritsShop.spins} spins. Wild reel column activated.`}
+                              : `High Risk. Minimum of 6,000 credits. Sets bet size to 250, spins are free for ${unsettleSpiritsShop.spins} spins. Wild symbols are more prevalent.`}
                           </Text>
                         </div>
                       </div>
@@ -1188,8 +1188,8 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
                         <div className="crossroads-item-desc" style={{ marginTop: "4px" }}>
                           <Text size="xs" c="dimmed">
                             {faustianBargainShop.activeLevels > 0
-                              ? `Dead Reels active: Level ${faustianBargainShop.activeLevels} (${faustianBargainShop.timers.join(", ")} spins left).`
-                              : `Earn immediate credits. Sets bet size to 250, locks cash-out, blocks right column with dead reels for ${faustianBargainShop.spins} spins per level.`}
+                              ? `Void Reels active: Level ${faustianBargainShop.activeLevels} (${faustianBargainShop.timers.join(", ")} spins left).`
+                              : `Sell a portion of your vision temporarily in exchange for immediate credits. Sets bet size to 250, locks cash-out, and blocks the rightmost column with void reels for ${faustianBargainShop.spins} spins per level.`}
                           </Text>
                           {faustianBargainShop.activeLevels > 0 && (
                             <Text size="10px" c="red" style={{ marginTop: "2px" }}>

@@ -1,6 +1,6 @@
 {
   "interlude_chance_between_tracks": 0.38,
-  "bands": [  
+  "bands": [
     {
       "id": "buckmiller",
       "display_name": "The Buck Miller Band",
@@ -65,7 +65,6 @@
       "asset_root": "audio/bands/pillowcase",
       "music_files": [
         "Dust and Bone.mp3",
-        "Faded Portraits.mp3",
         "Ghostly Echoes.mp3",
         "Shadow Play.mp3",
         "Static Haze.mp3"

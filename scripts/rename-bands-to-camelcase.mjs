@@ -10,23 +10,36 @@ const __dirname = path.dirname(__filename);
 /**
  * Convert a string to camelCase
  * Handles spaces, underscores, and hyphens as delimiters
+ * Preserves existing camelCase
  */
 function toCamelCase(str) {
-  return str
-    .replace(/\.[^.]+$/, (ext) => ext) // Preserve extension
-    .replace(/\.mp3$/, '') // Remove .mp3 temporarily
+  const ext = str.match(/\.[^.]+$/)?.[0] || '';
+  const baseName = str.slice(0, str.length - ext.length);
+  
+  // If it's already camelCase, don't convert
+  if (baseName === baseName.replace(/[\s_-]/g, '') && /[a-z]+[A-Z]/.test(baseName)) {
+    return str; // Already camelCase
+  }
+  
+  return baseName
     .split(/[\s_-]+/)
     .map((word, index) => {
       if (index === 0) return word.toLowerCase();
       return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
     })
-    .join('') + '.mp3'; // Add .mp3 back
+    .join('') + ext;
 }
 
 /**
  * Convert directory name to camelCase
+ * Preserves existing camelCase
  */
 function dirToCamelCase(str) {
+  // If it's already camelCase, don't convert
+  if (str === str.replace(/[\s_-]/g, '') && /[a-z]+[A-Z]/.test(str)) {
+    return str; // Already camelCase
+  }
+  
   return str
     .split(/[\s_-]+/)
     .map((word, index) => {
@@ -106,12 +119,18 @@ async function main() {
       const newFilePath = path.join(newDirPath, newFileName);
 
       try {
-        fs.copyFileSync(oldFilePath, newFilePath);
-        console.log(`    📄 ${musicFile} → ${newFileName}`);
+        // Only process if the new name is different from the old name
+        if (musicFile !== newFileName) {
+          // Use renameSync which handles case changes on case-insensitive filesystems
+          fs.renameSync(oldFilePath, newFilePath);
+          console.log(`    📄 ${musicFile} → ${newFileName}`);
+        } else {
+          console.log(`    ℹ️  ${musicFile} (no change needed)`);
+        }
         newMusicFiles.push(newFileName);
       } catch (err) {
-        console.error(`    ❌ Error copying file: ${err.message}`);
-        newMusicFiles.push(musicFile); // Keep original if copy fails
+        console.error(`    ❌ Error renaming file: ${err.message}`);
+        newMusicFiles.push(musicFile); // Keep original if rename fails
       }
     }
 

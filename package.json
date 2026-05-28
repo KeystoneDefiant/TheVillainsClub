@@ -23,6 +23,7 @@
     "dist:electron:win": "npm run build && electron-builder --win dir --publish never",
     "dist:electron:mac": "npm run build && electron-builder --mac dir --publish never",
     "workspace:update": "bash scripts/workspace-update.sh",
+    "rename-bands:camelcase": "node scripts/rename-bands-to-camelcase.mjs",
     "testall": "npm run lint && npm run typecheck && npm run test"
   },
   "dependencies": {

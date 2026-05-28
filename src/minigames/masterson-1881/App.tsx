@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import {
   Box,
-  Grid,
   Group,
   Stack,
   Text,
@@ -356,60 +355,74 @@ export function MastertonRoot({
     );
   };
 
-  return (
-    <GameScaleContainer
-      designWidth={1280}
-      designHeight={800}
-      transformOrigin="center top"
-      alignItems="flex-start"
+  // Detect mobile viewport to disable auto-scaling and stack player cards below
+  const isMobileLayout = typeof window !== "undefined" && window.innerWidth < 768;
+
+  const gameContent = (
+    <Box
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "flex-start",
+        gap: "12px",
+        height: isMobileLayout ? "auto" : "100%",
+        padding: "1rem",
+        boxSizing: "border-box",
+      }}
     >
+      {/* Header */}
+      <UnifiedGameHeader
+        gameTitle="Masterton 1881"
+        walletAmount={sessionCredits}
+        currentRound={engine.spinCount}
+        roundLabel="Spin"
+        onShowSettings={() => setShowSettings(true)}
+        onAbandonRun={onAbandonRun}
+        extraButtons={
+          <>
+            <ClubButton
+              size="xs"
+              variant="outline"
+              onClick={() => setShowTutorial(true)}
+            >
+              How to Play
+            </ClubButton>
+            {engine.phase === "BETTING" && (
+              <ClubButton
+                size="xs"
+                variant="fancy"
+                onClick={handleCashOut}
+              >
+                Cash Out
+              </ClubButton>
+            )}
+          </>
+        }
+      />
+
+      {/* Main Dashboard Grid */}
       <Box
         style={{
           display: "flex",
-          flexDirection: "column",
-          justifyContent: "flex-start",
+          flexDirection: isMobileLayout ? "column" : "row",
           gap: "12px",
-          height: "100%",
-          padding: "1rem",
-          boxSizing: "border-box",
+          flex: 1,
+          minHeight: 0,
         }}
       >
-        {/* Header */}
-        <UnifiedGameHeader
-          gameTitle="Masterton 1881"
-          walletAmount={sessionCredits}
-          currentRound={engine.spinCount}
-          roundLabel="Spin"
-          onShowSettings={() => setShowSettings(true)}
-          onAbandonRun={onAbandonRun}
-          extraButtons={
-            <>
-              <ClubButton
-                size="xs"
-                variant="outline"
-                onClick={() => setShowTutorial(true)}
-              >
-                How to Play
-              </ClubButton>
-              {engine.phase === "BETTING" && (
-                <ClubButton
-                  size="xs"
-                  variant="fancy"
-                  onClick={handleCashOut}
-                >
-                  Cash Out
-                </ClubButton>
-              )}
-            </>
-          }
-        />
-
-        {/* Main Dashboard Grid (Structured to match heights perfectly) */}
-        <Grid gutter="md" style={{ flex: 1, minHeight: 0, height: 680 }}>
-          {/* Left Column: Playfield, Wheel & Action Deck */}
-          <Grid.Col span={8} style={{ display: "flex", flexDirection: "column", gap: "12px", height: "100%", minHeight: 0 }}>
-            {/* Walnut Felt Layout Matrix */}
-            <Stack className="masterson-felt-board" p="sm" style={{ flex: 1, minHeight: 0, justifyContent: "center" }}>
+        {/* Left Column: Playfield, Wheel & Action Deck */}
+        <Box
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "12px",
+            flex: isMobileLayout ? "unset" : "0 0 66.666%",
+            width: isMobileLayout ? "100%" : undefined,
+            minHeight: 0,
+          }}
+        >
+          {/* Walnut Felt Layout Matrix */}
+          <Stack className="masterson-felt-board" p="sm" style={{ flex: isMobileLayout ? "unset" : 1, minHeight: 0, justifyContent: "center" }}>
 
               {/* Board grid */}
               <Box style={{ display: "flex", gap: "4px", justifyContent: "center", alignItems: "stretch" }}>
@@ -545,7 +558,7 @@ export function MastertonRoot({
               </Box>
             </Stack>
 
-            {/* Slide-down SVG Roulette Wheel Panel (Displays bottom third only) */}
+            {/* Slide-down SVG Roulette Wheel Panel (Displays bottom arc only) */}
             <Box
               className={`masterson-wheel-slide-panel ${engine.phase === "SPINNING" ? "spinning" : ""}`}
               style={{
@@ -572,7 +585,7 @@ export function MastertonRoot({
                   viewBox="0 0 100 100"
                   style={{
                     position: "absolute",
-                    top: "-225px", // Center is shifted above the box to crop only bottom third
+                    top: "-195px", // Shifted up less so the bottom arc is clearly visible
                     left: "50%",
                     transform: `translateX(-50%)`,
                     width: "480px",
@@ -627,7 +640,7 @@ export function MastertonRoot({
                     viewBox="0 0 100 100"
                     style={{
                       position: "absolute",
-                      top: "-225px",
+                      top: "-195px",
                       left: "50%",
                       transform: "translateX(-50%) rotate(-90deg)", // aligned to top center
                       width: "480px",
@@ -667,7 +680,7 @@ export function MastertonRoot({
                   viewBox="0 0 100 100"
                   style={{
                     position: "absolute",
-                    top: "-225px",
+                    top: "-195px",
                     left: "50%",
                     transform: "translateX(-50%)",
                     width: "480px",
@@ -821,152 +834,195 @@ export function MastertonRoot({
                 </ClubButton>
               )}
             </Group>
-          </Grid.Col>
+        </Box>
 
-          {/* Right Column: Active Seat Cards & Table House Ledger (Perfectly matching Left height) */}
-          <Grid.Col span={4} style={{ display: "flex", flexDirection: "column", gap: "12px", height: "100%", minHeight: 0 }}>
-            {/* Seat Monitors */}
-            <Stack id="seat-monitors" className="masterson-ledger-panel" p="sm" style={{ flex: 1, minHeight: 0 }} gap="xs">
-              <Title order={5} ta="center" c={clubTokens.text.brass} style={{ fontFamily: "Georgia, serif" }}>
-                Active Seats
-              </Title>
-              <ScrollArea style={{ flex: 1 }} scrollbarSize={6}>
-                <Stack gap="xs">
-                  {Array.from({ length: 4 }).map((_, seatIdx) => {
-                    const seatId = `Seat ${seatIdx + 1}`;
-                    const bettor = engine.activeBettors.find((b) => b.id === seatId);
+        {/* Right Column / Mobile-Bottom: Active Seat Cards & Table House Ledger */}
+        <Box
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "12px",
+            flex: isMobileLayout ? "unset" : "0 0 33.333%",
+            width: isMobileLayout ? "100%" : undefined,
+            minHeight: 0,
+          }}
+        >
+          {/* Seat Monitors */}
+          <Stack id="seat-monitors" className="masterson-ledger-panel" p="sm" style={{ flex: isMobileLayout ? "unset" : 1, minHeight: 0 }} gap="xs">
+            <Title order={5} ta="center" c={clubTokens.text.brass} style={{ fontFamily: "Georgia, serif" }}>
+              Active Seats
+            </Title>
+            <ScrollArea style={{ flex: 1 }} scrollbarSize={6}>
+              <Stack gap="xs">
+                {Array.from({ length: 4 }).map((_, seatIdx) => {
+                  const seatId = `Seat ${seatIdx + 1}`;
+                  const bettor = engine.activeBettors.find((b) => b.id === seatId);
 
-                    if (!bettor) {
-                      return (
-                        <Group key={seatId} justify="space-between" p={8} style={{ border: "1px dashed rgba(255,255,255,0.1)", borderRadius: 6 }}>
-                          <Text size="xs" c="dimmed">Seat {seatIdx + 1} (Empty)</Text>
-                        </Group>
-                      );
-                    }
-
-                    const isHighSuspicion = bettor.current_suspicion >= bettor.max_suspicion - 1;
-                    const isCracked = bettor.current_suspicion >= bettor.max_suspicion;
-                    const liquidHeightPct = Math.min(100, Math.max(10, (bettor.current_suspicion / bettor.max_suspicion) * 100));
-
-                    const isFlashing = neonFlashSeat === seatId;
-                    const seatColor = SEAT_COLORS[seatId] || "#ffe066";
-
-                    // Win / Loss Recap badge for this spin
-                    const recapAmount = recapVisible ? engine.roundRecaps[seatId] : null;
-
+                  if (!bettor) {
                     return (
-                      <Stack key={seatId} gap={0}>
-                        <Group
-                          justify="space-between"
-                          wrap="nowrap"
-                          p={8}
-                          className={isFlashing ? "masterson-seat-flash" : undefined}
+                      <Group key={seatId} justify="space-between" p={8} style={{ border: "1px dashed rgba(255,255,255,0.1)", borderRadius: 6 }}>
+                        <Text size="xs" c="dimmed">Seat {seatIdx + 1} (Empty)</Text>
+                      </Group>
+                    );
+                  }
+
+                  const isHighSuspicion = bettor.current_suspicion >= bettor.max_suspicion - 1;
+                  const isCracked = bettor.current_suspicion >= bettor.max_suspicion;
+                  const liquidHeightPct = Math.min(100, Math.max(10, (bettor.current_suspicion / bettor.max_suspicion) * 100));
+
+                  const isFlashing = neonFlashSeat === seatId;
+                  const seatColor = SEAT_COLORS[seatId] || "#ffe066";
+
+                  // Win / Loss Recap badge for this spin
+                  const recapAmount = recapVisible ? engine.roundRecaps[seatId] : null;
+                  // Session cumulative total for this seat
+                  const sessionNet = engine.sessionTotals[seatId] ?? 0;
+
+                  return (
+                    <Stack key={seatId} gap={0}>
+                      <Group
+                        justify="space-between"
+                        wrap="nowrap"
+                        p={8}
+                        className={isFlashing ? "masterson-seat-flash" : undefined}
+                        style={{
+                          background: "rgba(255,255,255,0.02)",
+                          border: isFlashing ? `1.5px solid ${seatColor}` : "1px solid rgba(255,255,255,0.05)",
+                          borderRadius: 6,
+                          position: "relative",
+                          transition: "all 0.3s ease",
+                        }}
+                      >
+                        {/* Seat colored dot */}
+                        <Box
                           style={{
-                            background: "rgba(255,255,255,0.02)",
-                            border: isFlashing ? `1.5px solid ${seatColor}` : "1px solid rgba(255,255,255,0.05)",
-                            borderRadius: 6,
-                            position: "relative",
-                            transition: "all 0.3s ease",
+                            position: "absolute",
+                            top: 6,
+                            left: 6,
+                            width: 6,
+                            height: 6,
+                            borderRadius: "50%",
+                            background: seatColor,
+                          }}
+                        />
+
+                        <Stack gap={2} style={{ flex: 1, minWidth: 0, paddingLeft: 8 }}>
+                          <Text size="xs" fw={700} c="white" truncate>{bettor.name}</Text>
+                          <Text size="10px" c="dimmed">{bettor.strategy.replace(/_/g, " ")}</Text>
+                          {/* Session Win/Loss — sits between name/strategy and suspicion gauge */}
+                          <Group gap={4} align="center">
+                            <Text size="xs" c={clubTokens.text.brass} fw={700}>${bettor.chips.toLocaleString()}</Text>
+                            {engine.spinCount > 1 && (
+                              <Text
+                                size="10px"
+                                fw={800}
+                                c={sessionNet > 0 ? "#4caf50" : sessionNet < 0 ? "#ef5350" : "dimmed"}
+                                style={{ letterSpacing: "0.04em" }}
+                              >
+                                ({sessionNet > 0 ? `+${sessionNet.toLocaleString()}` : sessionNet.toLocaleString()})
+                              </Text>
+                            )}
+                          </Group>
+                        </Stack>
+
+                        {/* Covert Whiskey Glass Gauge */}
+                        <Stack gap={1} align="center">
+                          <div
+                            className={`masterson-whiskey-glass ${isHighSuspicion ? "condensed" : ""} ${isCracked ? "cracked" : ""}`}
+                            title={`Suspicion: ${bettor.current_suspicion}/${bettor.max_suspicion}`}
+                          >
+                            <div
+                              className="masterson-whiskey-liquid"
+                              style={{ height: `${liquidHeightPct}%` }}
+                            />
+                            <div className="masterson-whiskey-condensation" />
+                          </div>
+                          <Text size="10px" c="dimmed">Suspicion</Text>
+                        </Stack>
+                      </Group>
+
+                      {/* Recap visual overlay badge */}
+                      {recapAmount !== null && recapAmount !== undefined && (
+                        <Box
+                          style={{
+                            display: "flex",
+                            justifyContent: "flex-end",
+                            paddingTop: "2px",
+                            paddingRight: "8px",
                           }}
                         >
-                          {/* Seat colored dot */}
-                          <Box
+                          <Text
+                            size="10px"
+                            fw={800}
+                            c={recapAmount > 0 ? "#2e7d32" : recapAmount < 0 ? "#d32f2f" : "dimmed"}
                             style={{
-                              position: "absolute",
-                              top: 6,
-                              left: 6,
-                              width: 6,
-                              height: 6,
-                              borderRadius: "50%",
-                              background: seatColor,
-                            }}
-                          />
-
-                          <Stack gap={2} style={{ flex: 1, minWidth: 0, paddingLeft: 8 }}>
-                            <Text size="xs" fw={700} c="white" truncate>{bettor.name}</Text>
-                            <Text size="10px" c="dimmed">{bettor.strategy.replace(/_/g, " ")}</Text>
-                            <Text size="xs" fw={700} c={clubTokens.text.brass}>${bettor.chips.toLocaleString()}</Text>
-                          </Stack>
-
-                          {/* Covert Whiskey Glass Gauge */}
-                          <Stack gap={1} align="center">
-                            <div
-                              className={`masterson-whiskey-glass ${isHighSuspicion ? "condensed" : ""} ${isCracked ? "cracked" : ""}`}
-                              title={`Suspicion: ${bettor.current_suspicion}/${bettor.max_suspicion}`}
-                            >
-                              <div
-                                className="masterson-whiskey-liquid"
-                                style={{ height: `${liquidHeightPct}%` }}
-                              />
-                              <div className="masterson-whiskey-condensation" />
-                            </div>
-                            <Text size="10px" c="dimmed">Suspicion</Text>
-                          </Stack>
-                        </Group>
-
-                        {/* Recap visual overlay badge */}
-                        {recapAmount !== null && recapAmount !== undefined && (
-                          <Box
-                            style={{
-                              display: "flex",
-                              justifyContent: "flex-end",
-                              paddingTop: "2px",
-                              paddingRight: "8px",
+                              textShadow: "0 0 4px rgba(0,0,0,0.6)",
                             }}
                           >
-                            <Text
-                              size="10px"
-                              fw={800}
-                              c={recapAmount > 0 ? "#2e7d32" : recapAmount < 0 ? "#d32f2f" : "dimmed"}
-                              style={{
-                                textShadow: "0 0 4px rgba(0,0,0,0.6)",
-                              }}
-                            >
-                              {recapAmount > 0 ? `+${recapAmount.toLocaleString()}` : recapAmount < 0 ? recapAmount.toLocaleString() : "+$0"}
-                            </Text>
-                          </Box>
-                        )}
-                      </Stack>
-                    );
-                  })}
-                </Stack>
-              </ScrollArea>
-            </Stack>
+                            {recapAmount > 0 ? `+${recapAmount.toLocaleString()}` : recapAmount < 0 ? recapAmount.toLocaleString() : "+$0"}
+                          </Text>
+                        </Box>
+                      )}
+                    </Stack>
+                  );
+                })}
+              </Stack>
+            </ScrollArea>
+          </Stack>
 
-            {/* Table House Ledger (Balanced Sidebar placement) */}
-            <Stack id="table-house-ledger" className="masterson-ledger-panel" p="sm" justify="center" align="center" style={{ height: 110, flexShrink: 0 }}>
-              <Text size="xs" c="dimmed">TABLE HOUSE LEDGER</Text>
-              <Title order={4} className="masterson-text-brass" style={{ fontFamily: "Georgia, serif" }}>
-                ${engine.tableHouseLedger.toLocaleString()}
-              </Title>
-              <Text size="xs" c="white">
-                Croupier Commission ({engine.commissionRate}%):{" "}
-                <Text span c="yellow" fw={700}>
-                  ${engine.accumulatedCommission.toLocaleString()}
-                </Text>
+          {/* Table House Ledger (Balanced Sidebar placement) */}
+          <Stack id="table-house-ledger" className="masterson-ledger-panel" p="sm" justify="center" align="center" style={{ height: 110, flexShrink: 0 }}>
+            <Text size="xs" c="dimmed">TABLE HOUSE LEDGER</Text>
+            <Title order={4} className="masterson-text-brass" style={{ fontFamily: "Georgia, serif" }}>
+              ${engine.tableHouseLedger.toLocaleString()}
+            </Title>
+            <Text size="xs" c="white">
+              Croupier Commission ({engine.commissionRate}%):{" "}
+              <Text span c="yellow" fw={700}>
+                ${engine.accumulatedCommission.toLocaleString()}
               </Text>
-            </Stack>
-          </Grid.Col>
-        </Grid>
-
-        {/* Settings Modal */}
-        <GameSettingsModal
-          opened={showSettings}
-          onClose={() => setShowSettings(false)}
-        />
-
-        {/* Interactive Sommelier Live Guide */}
-        {showTutorial && (
-          <SommelierLiveGuide
-            gameId="masterton_1881"
-            onStepChange={(mock) => setMockState(mock)}
-            onClose={() => {
-              setShowTutorial(false);
-              setMockState(null);
-            }}
-          />
-        )}
+            </Text>
+          </Stack>
+        </Box>
       </Box>
+
+      {/* Settings Modal */}
+      <GameSettingsModal
+        opened={showSettings}
+        onClose={() => setShowSettings(false)}
+      />
+
+      {/* Interactive Sommelier Live Guide */}
+      {showTutorial && (
+        <SommelierLiveGuide
+          gameId="masterton_1881"
+          onStepChange={(mock) => setMockState(mock)}
+          onClose={() => {
+            setShowTutorial(false);
+            setMockState(null);
+          }}
+        />
+      )}
+    </Box>
+  );
+
+  // Mobile: render without auto-scaling
+  if (isMobileLayout) {
+    return (
+      <Box style={{ width: "100%", overflowY: "auto", minHeight: "100vh", background: "#0c0a08" }}>
+        {gameContent}
+      </Box>
+    );
+  }
+
+  return (
+    <GameScaleContainer
+      designWidth={1280}
+      designHeight={800}
+      transformOrigin="center top"
+      alignItems="flex-start"
+    >
+      {gameContent}
     </GameScaleContainer>
   );
 }

@@ -29,6 +29,7 @@ export function useMastertonEngine() {
   const [consecutiveRigCount, setConsecutiveRigCount] = useState<number>(0);
   const [spinResult, setSpinResult] = useState<RouletteNumberInfo | null>(null);
   const [roundRecaps, setRoundRecaps] = useState<Record<string, number>>({});
+  const [sessionTotals, setSessionTotals] = useState<Record<string, number>>({});
 
   // Table House Ledger: net profit / loss of the table
   const [tableHouseLedger, setTableHouseLedger] = useState<number>(0);
@@ -51,6 +52,7 @@ export function useMastertonEngine() {
     setActiveBettors(Array.from({ length: 4 }, (_, i) => generateRandomBettor(i + 1)));
     setCurrentBets({});
     setRoundRecaps({});
+    setSessionTotals({});
     setSelectedRig({ severity: "none", target: null });
     setConsecutiveRigCount(0);
     setSpinResult(null);
@@ -366,6 +368,13 @@ export function useMastertonEngine() {
     setActiveBettors(nextActiveBettors);
     setNotifications(newNotifications);
     setRoundRecaps(recaps);
+    setSessionTotals((prev) => {
+      const next = { ...prev };
+      Object.entries(recaps).forEach(([seatId, net]) => {
+        next[seatId] = (next[seatId] ?? 0) + net;
+      });
+      return next;
+    });
     setPhase("EVALUATION");
   }, [phase, spinCount, activeBettors, currentBets, selectedRig, consecutiveRigCount, tableHouseLedger, commissionRate, spinResult]);
 
@@ -406,5 +415,6 @@ export function useMastertonEngine() {
     nextSpinTurn,
     resetGame,
     roundRecaps,
+    sessionTotals,
   };
 }

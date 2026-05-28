@@ -63,4 +63,17 @@ export const villainsGameDefaults = {
       bonusMultipleOfBuyInPerTier: 5,
     },
   },
+
+  /** Masterton 1881 — reverse roulette rigging sim. */
+  masterson1881: {
+    defaultBuyIn: 2000,
+    defaultGameModeId: "normalGame" as const,
+    maxReturnMultipleOfBuyIn: 50,
+    overachievement: {
+      capMultiple: 50,
+      buyInSlab: 1,
+      tierStepMultiple: 5,
+      bonusMultipleOfBuyInPerTier: 5,
+    },
+  },
 } as const;

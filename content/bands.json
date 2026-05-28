@@ -39,7 +39,7 @@
     },
     {
       "id": "feints",
-      "display_name": "Feints",
+      "display_name": "The Feints",
       "asset_root": "audio/bands/feints",
       "music_files": [
         "aColdTrail.mp3",
@@ -90,15 +90,9 @@
         "keysUnderGlass.mp3",
         "lastLightInTheFoyer.mp3",
         "lurkingInTheLowEnd.mp3",
-        "lurkingInTheLowEnd.mp3",
-        "midnightShadows.mp3",
         "midnightShadows.mp3",
         "portraitOfAnAfternoon.mp3",
         "sinisterNoirShadows.mp3",
-        "sinisterNoirShadows.mp3",
-        "theDefiantCase.mp3",
-        "theRelentlessPulse.mp3",
-        "theSilentTail.mp3",
         "theDefiantCase.mp3",
         "theRelentlessPulse.mp3",
         "theSilentTail.mp3"

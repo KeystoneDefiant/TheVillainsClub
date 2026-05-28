@@ -7,6 +7,7 @@ import {
   buildOublietteSettlementProfile,
   buildSevenYearItchSettlementProfile,
   buildFatesealSettlementProfile,
+  buildMastersonSettlementProfile,
 } from "./sessionSettlement";
 import type { ClubTableReturnDetail } from "./sessionSettlement";
 
@@ -77,7 +78,9 @@ export const useClubWallet = create<ClubWalletState>()(
             ? buildOublietteSettlementProfile(1000)
             : gameId === "fateseal_silver"
               ? buildFatesealSettlementProfile(1000)
-              : buildSevenYearItchSettlementProfile(1000);
+              : gameId === "masterson_1881"
+                ? buildMastersonSettlementProfile(1000)
+                : buildSevenYearItchSettlementProfile(1000);
         set({
           activeSession: {
             gameId,

@@ -1,3 +1,29 @@
+# New game - Masterton 1881
+
+## Concept
+
+A Double Zero roulette game where the player is the croupier. The goal is to keep bettors involved and betting, but the player has the ability to rig the wheel in various ways to cause bettors to lose. The player keeps a percentage of what the house makes. The player has a limited amount of spins before their shift is over. When the player rigs the wheel, bettors will get wise to the fact that the game is rigged and will leave the table and reduce the amount other bettors at the table bet until their suspicion level drops.
+
+The player can rig the wheel in a number of ways and the way they do it will affect how much suspicion is raised. The player can rig the wheel to stop on Red, Black, Even, Odd, 1-18, or 19-36 to raise a small amount of suspicion. The player can rig the wheel to stop on a column or a dozen, causing a medium amount of suspicion. Finally, the player can rig the wheel to stop on a specific number, causing a large amount of suspicion. If a bettor wins due to a rig, they will still become suspicious, but only 40% of what they would have if they had lost.
+
+## Logic and Rules
+
+There can be a maximum of 4 bettors at the table at any given time. THe starting amount of bettors is randomized between 1-4. Each bettor will use a different betting strategy - D'Lambert, Martingale, Random Bets, Random 1:1 bets, Hedges, Low Risk Grinds, and High Risk. Each bettor will come to the table with a random amount of chips between 5,000 and 200,000. Each bettor will have a hidden set of stats that determine their maximum suspicion (4-10), how much they're willing to lose overall (Random number between 50% and 100%), how many times in a row they're willing to lose before they leave (random number between 2-10), how often they will double their bet size (0-100%), and how apt they are to leave if another player leaves the table due to suspicion (0-100%).
+
+The player has 30 spins to make as much money for the house as possible by causing bettors to lose. The table's total win/loss is tracked. At the end of the session, the player will earn a percentage of the total winnings from the house. If the player breaks even or loses money, they lose their buy-in to the game.
+
+To start, the player will earn back 10% of what they make. For every quarter of their total spins, they will add an additional 5% to that payout percentage. If no bettors are at the table, a final random check is made where the player has a 25% chance of getting a single bettor to show up.
+
+If a bettor leaves the table, every spin, there is a 15% chance a new player will fill a seat. Only one seat will be filled at a time.
+
+Suspicion levels have an initial base number - low suspicion rigging will inflict 2 points of suspicion, medium suspicion rigging will inflict 3 points of suspicion, and high suspicion rigging will inflict 5 points of suspicion. If a bettor wins on a rigged spin, they will only amass 40% of the suspicion that they otherwise would have, rounded down but a minimum of 1. The suspicion values increase by 20%, rounded up, for each rigged spin done in a row.  
+
+## Development Notes
+
+- All percentages and variables will be expressed in a configuration file, much like the rest of the games in this project.
+
+- The game will have a fully working double zero roulette layout and a working roulette wheel that animates during the spin.
+
 # Technical Specification: Masterton 1881 (Reverse Roulette Rigging Sim)
 
 ## 1. Project Overview

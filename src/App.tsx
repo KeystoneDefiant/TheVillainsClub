@@ -12,6 +12,7 @@ import { OublietteNo9Page } from "@/pages/OublietteNo9Page";
 import { OublietteNo9LandingPage } from "@/pages/OublietteNo9LandingPage";
 import { SevenYearItchPage } from "@/pages/SevenYearItchPage";
 import { FatesealSilverPage } from "@/pages/FatesealSilverPage";
+import { MastertonPage } from "@/pages/MastertonPage";
 import { OnboardingPage } from "@/pages/OnboardingPage";
 import { UiPlayground } from "@/dev/UiPlayground";
 import { ShellBandMusicHost } from "@/audio/useShellBandMusic";
@@ -39,6 +40,7 @@ export default function App() {
           <Route path="/minigames/oubliette-no9" element={<OublietteNo9Page />} />
           <Route path="/minigames/seven-year-itch" element={<SevenYearItchPage />} />
           <Route path="/minigames/fateseal-silver" element={<FatesealSilverPage />} />
+          <Route path="/minigames/masterson-1881" element={<MastertonPage />} />
           <Route path="/__playground" element={<UiPlayground />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

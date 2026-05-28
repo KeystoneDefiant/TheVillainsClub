@@ -7,6 +7,8 @@ export interface GameScaleContainerProps {
   designHeight?: number;
   maxScale?: number;
   minScale?: number;
+  transformOrigin?: string;
+  alignItems?: string;
 }
 
 export function GameScaleContainer({
@@ -15,6 +17,8 @@ export function GameScaleContainer({
   designHeight = 760,
   maxScale = 2.5,
   minScale = 0.35,
+  transformOrigin = "center center",
+  alignItems = "center",
 }: GameScaleContainerProps) {
   const [scale, setScale] = useState(1);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -47,7 +51,7 @@ export function GameScaleContainer({
     <Box
       style={{
         display: "flex",
-        alignItems: "center",
+        alignItems: alignItems,
         justifyContent: "center",
         width: "100%",
         height: "100%",
@@ -62,7 +66,7 @@ export function GameScaleContainer({
           width: designWidth,
           height: designHeight,
           transform: `scale(${scale})`,
-          transformOrigin: "center center",
+          transformOrigin: transformOrigin,
           flexShrink: 0,
           display: "flex",
           flexDirection: "column",

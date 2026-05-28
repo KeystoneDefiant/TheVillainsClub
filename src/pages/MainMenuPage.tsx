@@ -39,15 +39,17 @@ import {
   buildFatesealSettlementProfile,
   buildOublietteSettlementProfile,
   buildSevenYearItchSettlementProfile,
+  buildMastersonSettlementProfile,
   getFatesealBaseReturnCeiling,
   getOublietteBaseReturnCeiling,
   getSevenYearItchBaseReturnCeiling,
+  getMastersonBaseReturnCeiling,
 } from "@/game/sessionSettlement";
 import { useMotionPresetStore } from "@/motion/motionPresetStore";
 import { usePrefersReducedMotion } from "@/motion/usePrefersReducedMotion";
 import { clubTokens } from "@/theme/clubTokens";
 
-type GameKey = "oubliette_no9" | "seven_year_itch" | "fateseal_silver";
+type GameKey = "oubliette_no9" | "seven_year_itch" | "fateseal_silver" | "masterson_1881";
 
 type GameMenuEntry = {
   id: GameKey;
@@ -83,6 +85,14 @@ const GAME_ENTRIES: GameMenuEntry[] = [
     buyIn: villainsGameDefaults.fatesealSilver.defaultBuyIn,
     rulesets: [{ value: "silver", label: "House Fateseal" }],
   },
+  {
+    id: "masterson_1881",
+    title: "Masterton 1881",
+    subtitle: "Corrupt Roulette Croupier Rigging Simulation",
+    route: "/minigames/masterson-1881",
+    buyIn: villainsGameDefaults.masterson1881.defaultBuyIn,
+    rulesets: [{ value: "normalGame", label: "House rules" }],
+  },
 ];
 
 function gameReturnCeiling(game: GameMenuEntry): number {
@@ -91,6 +101,9 @@ function gameReturnCeiling(game: GameMenuEntry): number {
   }
   if (game.id === "fateseal_silver") {
     return getFatesealBaseReturnCeiling(buildFatesealSettlementProfile(game.buyIn));
+  }
+  if (game.id === "masterson_1881") {
+    return getMastersonBaseReturnCeiling(buildMastersonSettlementProfile(game.buyIn));
   }
   return getSevenYearItchBaseReturnCeiling(buildSevenYearItchSettlementProfile(game.buyIn));
 }
@@ -223,13 +236,17 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
           ? buildOublietteSettlementProfile(game.buyIn)
           : game.id === "fateseal_silver"
             ? buildFatesealSettlementProfile(game.buyIn)
-            : buildSevenYearItchSettlementProfile(game.buyIn);
+            : game.id === "masterson_1881"
+              ? buildMastersonSettlementProfile(game.buyIn)
+              : buildSevenYearItchSettlementProfile(game.buyIn);
       const drinkId =
         game.id === "oubliette_no9"
           ? "club_table"
           : game.id === "fateseal_silver"
             ? "fateseal_silver"
-            : "seven_year_itch";
+            : game.id === "masterson_1881"
+              ? "masterson_1881"
+              : "seven_year_itch";
       const result = startSession({
         gameId: game.id,
         drinkId,
@@ -267,6 +284,7 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
       oubliette_no9: "Oubliette Number 9",
       seven_year_itch: "7 Year Itch",
       fateseal_silver: "Fateseal Silver",
+      masterson_1881: "Masterton 1881",
     };
     return GAME_TITLE[settlementFlash.lastTable.gameId] ?? settlementFlash.lastTable.gameId.replace(/_/g, " ");
   }, [settlementFlash]);
@@ -501,14 +519,24 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
                                   ? "yellow"
                                   : activeSession.gameId === "seven_year_itch"
                                     ? "orange"
-                                    : "grape"
+                                    : activeSession.gameId === "fateseal_silver"
+                                      ? "grape"
+                                      : "yellow"
                               }
                               variant="light"
                               title="Table still open"
                               mt="xs"
                             >
                               <Text size="sm" c={clubTokens.text.secondary} mb="xs">
-                                You have an active {activeSession.gameId === "oubliette_no9" ? "Oubliette No. 9" : activeSession.gameId === "seven_year_itch" ? "7 Year Itch" : "Fateseal Silver"} session.
+                                You have an active {
+                                  activeSession.gameId === "oubliette_no9"
+                                    ? "Oubliette No. 9"
+                                    : activeSession.gameId === "seven_year_itch"
+                                      ? "7 Year Itch"
+                                      : activeSession.gameId === "fateseal_silver"
+                                        ? "Fateseal Silver"
+                                        : "Masterton 1881"
+                                } session.
                               </Text>
                               <Group gap="xs" grow>
                                 <ClubButton
@@ -520,7 +548,9 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
                                         ? "/minigames/oubliette-no9"
                                         : activeSession.gameId === "seven_year_itch"
                                           ? "/minigames/seven-year-itch"
-                                          : "/minigames/fateseal-silver";
+                                          : activeSession.gameId === "fateseal_silver"
+                                            ? "/minigames/fateseal-silver"
+                                            : "/minigames/masterson-1881";
                                     navigate(gameRoute);
                                   }}
                                 >
@@ -651,7 +681,9 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
                                       ? "Oubliette No. 9"
                                       : activeSession.gameId === "seven_year_itch"
                                         ? "7 Year Itch"
-                                        : "Fateseal Silver"
+                                        : activeSession.gameId === "fateseal_silver"
+                                          ? "Fateseal Silver"
+                                          : "Masterton 1881"
                                   }. You must resume or abandon it before starting a new game.
                                 </Alert>
                               ) : null}

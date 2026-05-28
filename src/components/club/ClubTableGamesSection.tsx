@@ -8,9 +8,11 @@ import {
   buildFatesealSettlementProfile,
   buildOublietteSettlementProfile,
   buildSevenYearItchSettlementProfile,
+  buildMastersonSettlementProfile,
   getFatesealBaseReturnCeiling,
   getOublietteBaseReturnCeiling,
   getSevenYearItchBaseReturnCeiling,
+  getMastersonBaseReturnCeiling,
 } from "@/game/sessionSettlement";
 import { useClubWallet } from "@/game/clubWalletStore";
 import { clubTokens } from "@/theme/clubTokens";
@@ -39,6 +41,7 @@ export function ClubTableGamesSection() {
   const [startingOubliette, setStartingOubliette] = useState(false);
   const [starting7yi, setStarting7yi] = useState(false);
   const [startingFateseal, setStartingFateseal] = useState(false);
+  const [startingMasterson, setStartingMasterson] = useState(false);
   const [sessionError, setSessionError] = useState<string | null>(null);
 
   const oublietteBuyIn = villainsGameDefaults.oublietteNo9.defaultBuyIn;
@@ -66,6 +69,16 @@ export function ClubTableGamesSection() {
   const fatesealReturnCeiling = useMemo(
     () => getFatesealBaseReturnCeiling(fatesealSettlementPreview),
     [fatesealSettlementPreview],
+  );
+
+  const mastersonBuyIn = villainsGameDefaults.masterson1881.defaultBuyIn;
+  const mastersonSettlementPreview = useMemo(
+    () => buildMastersonSettlementProfile(mastersonBuyIn),
+    [mastersonBuyIn],
+  );
+  const mastersonReturnCeiling = useMemo(
+    () => getMastersonBaseReturnCeiling(mastersonSettlementPreview),
+    [mastersonSettlementPreview],
   );
 
   const startOubliette = () => {
@@ -161,12 +174,45 @@ export function ClubTableGamesSection() {
     navigate("/minigames/fateseal-silver");
   };
 
+  const startMasterson = () => {
+    setSessionError(null);
+    if (activeSession?.gameId === "masterson_1881") {
+      navigate("/minigames/masterson-1881");
+      return;
+    }
+    if (activeSession) {
+      setSessionError(startSessionErrorMessage("session_active"));
+      return;
+    }
+    if (clubBalance < mastersonBuyIn) {
+      setSessionError(startSessionErrorMessage("insufficient_funds"));
+      return;
+    }
+    setStartingMasterson(true);
+    const settlement = buildMastersonSettlementProfile(mastersonBuyIn);
+    const result = startSession({
+      gameId: "masterson_1881",
+      drinkId: "masterson_1881",
+      buyIn: mastersonBuyIn,
+      settlement,
+      gameModeId: villainsGameDefaults.masterson1881.defaultGameModeId,
+    });
+    if (!result.ok) {
+      setSessionError(startSessionErrorMessage(result.reason));
+      setStartingMasterson(false);
+      return;
+    }
+    navigate("/minigames/masterson-1881");
+  };
+
   const canAffordOubliette = clubBalance >= oublietteBuyIn;
   const canAfford7yi = clubBalance >= sevenYearItchBuyIn;
   const canAffordFateseal = clubBalance >= fatesealBuyIn;
+  const canAffordMasterson = clubBalance >= mastersonBuyIn;
   const oublietteSessionOpen = activeSession?.gameId === "oubliette_no9";
   const sevenYearItchSessionOpen = activeSession?.gameId === "seven_year_itch";
   const fatesealSessionOpen = activeSession?.gameId === "fateseal_silver";
+  const mastersonSessionOpen = activeSession?.gameId === "masterson_1881";
   const anyTableOpen = Boolean(activeSession);
 
   return (
@@ -223,6 +269,18 @@ export function ClubTableGamesSection() {
         </Alert>
       ) : null}
 
+      {mastersonSessionOpen ? (
+        <Alert color="yellow" variant="light" title="Table still open">
+          You have an active Masterton 1881 session. Step back in or settle it.
+          <ClubButton fullWidth mt="sm" variant="filled" color="yellow" onClick={() => navigate("/minigames/masterson-1881")}>
+            Resume Masterton 1881
+          </ClubButton>
+          <ClubButton fullWidth mt="xs" variant="subtle" color="red" onClick={openAbandon}>
+            Abandon table…
+          </ClubButton>
+        </Alert>
+      ) : null}
+
       {sessionError ? (
         <Alert color="red" variant="light" title="Cannot start table" onClose={() => setSessionError(null)} withCloseButton>
           {sessionError}
@@ -271,6 +329,21 @@ export function ClubTableGamesSection() {
       <Text size="xs" c={clubTokens.text.muted} style={{ lineHeight: 1.45 }}>
         Buy-in {fatesealBuyIn.toLocaleString()} credits. Cascading ritual grid — return to the club capped near{" "}
         {fatesealReturnCeiling.toLocaleString()} credits before overachievement.
+      </Text>
+
+      <ClubButton
+        fullWidth
+        variant="light"
+        color="yellow"
+        disabled={!canAffordMasterson || anyTableOpen || startingMasterson}
+        loading={startingMasterson}
+        onClick={startMasterson}
+      >
+        Masterton 1881 (reverse roulette)
+      </ClubButton>
+      <Text size="xs" c={clubTokens.text.muted} style={{ lineHeight: 1.45 }}>
+        Buy-in {mastersonBuyIn.toLocaleString()} credits. Croupier rigging simulator — return to the club capped near{" "}
+        {mastersonReturnCeiling.toLocaleString()} credits before overachievement.
       </Text>
 
       <Modal opened={abandonOpened} onClose={closeAbandon} title="Abandon this table?" centered>

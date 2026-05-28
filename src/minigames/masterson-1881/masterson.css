@@ -1,0 +1,239 @@
+:root {
+  --masterson-walnut: #3d2516;
+  --masterson-walnut-dark: #26160c;
+  --masterson-velvet-felt: #1a4d2e;
+  --masterson-velvet-felt-dark: #12351f;
+  --masterson-brass: #e6b834;
+  --masterson-brass-dark: #b88d1d;
+  --masterson-red: #d32f2f;
+  --masterson-black: #1a1a1a;
+  --masterson-whiskey-amber: #e69138;
+}
+
+/* Base fade-in for page transitions */
+.shell-route-fade-in {
+  animation: masterson-fade-in 0.35s ease-out forwards;
+}
+
+@keyframes masterson-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.99) translate3d(0, 4px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translate3d(0, 0, 0);
+  }
+}
+
+/* Glassmorphic/Walnut Panels */
+.masterson-felt-board {
+  background: radial-gradient(circle at center, var(--masterson-velvet-felt), var(--masterson-velvet-felt-dark));
+  border: 12px solid var(--masterson-walnut);
+  border-radius: 16px;
+  box-shadow: 
+    inset 0 0 40px rgba(0, 0, 0, 0.8),
+    0 12px 28px rgba(0, 0, 0, 0.6);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Beautiful Roulette Board Matrix Layout */
+.masterson-grid-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.1rem;
+  border: 1px solid rgba(230, 184, 52, 0.25);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  user-select: none;
+  box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.05), 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.masterson-grid-cell:hover {
+  filter: brightness(1.25);
+  box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.25), 0 4px 8px rgba(0, 0, 0, 0.4);
+  border-color: var(--masterson-brass);
+}
+
+.masterson-grid-cell.number {
+  aspect-ratio: 1;
+}
+
+.masterson-grid-cell.outside {
+  aspect-ratio: auto;
+}
+
+.masterson-grid-cell.green {
+  background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
+  color: #ffffff;
+  border-color: rgba(76, 175, 80, 0.3);
+}
+
+.masterson-grid-cell.red {
+  background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
+  color: #ffffff;
+  border-color: rgba(244, 67, 54, 0.3);
+}
+
+.masterson-grid-cell.black {
+  background: linear-gradient(135deg, #2a2a2a 0%, #151515 100%);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.masterson-grid-cell.active-rig {
+  border: 2px solid var(--masterson-brass) !important;
+  box-shadow: 0 0 12px var(--masterson-brass), inset 0 0 6px rgba(255, 255, 255, 0.2) !important;
+  animation: masterson-rig-glow 1.5s infinite alternate;
+}
+
+@keyframes masterson-rig-glow {
+  from {
+    box-shadow: 0 0 8px var(--masterson-brass), inset 0 0 4px rgba(255, 255, 255, 0.15);
+  }
+  to {
+    box-shadow: 0 0 16px var(--masterson-brass), inset 0 0 8px rgba(255, 255, 255, 0.3);
+  }
+}
+
+/* Sliding SVG Wheel Container Panel */
+.masterson-wheel-slide-panel {
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease, margin 0.4s ease;
+  margin-top: 0;
+  overflow: hidden;
+}
+
+.masterson-wheel-slide-panel.spinning {
+  max-height: 180px;
+  opacity: 1;
+  margin-top: 6px;
+}
+
+/* Seat card last-minute wagers neon flash */
+.masterson-seat-flash {
+  animation: mastersonSeatPulse 0.8s ease-in-out forwards;
+}
+
+@keyframes mastersonSeatPulse {
+  0% {
+    box-shadow: 0 0 0px transparent;
+    filter: brightness(1);
+  }
+  30% {
+    box-shadow: 0 0 12px var(--masterson-brass);
+    filter: brightness(1.3);
+  }
+  100% {
+    box-shadow: 0 0 0px transparent;
+    filter: brightness(1);
+  }
+}
+
+/* Whiskey Glass Suspicion Gauge */
+.masterson-whiskey-glass {
+  width: 32px;
+  height: 42px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top: none;
+  border-radius: 2px 2px 8px 8px;
+  position: relative;
+  background: rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s ease;
+}
+
+.masterson-whiskey-liquid {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, #7f4f24, var(--masterson-whiskey-amber));
+  transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.2);
+}
+
+.masterson-whiskey-condensation {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.4) 0%, transparent 80%);
+  opacity: 0;
+  mix-blend-mode: overlay;
+  transition: opacity 0.5s ease;
+}
+
+.masterson-whiskey-glass.condensed .masterson-whiskey-condensation {
+  opacity: 0.85;
+}
+
+.masterson-whiskey-glass.cracked {
+  animation: masterson-glass-crack 0.4s ease forwards;
+  border-color: rgba(211, 47, 47, 0.6);
+}
+
+@keyframes masterson-glass-crack {
+  0% { transform: scale(1) rotate(0deg); }
+  20% { transform: scale(1.1) rotate(-5deg); }
+  40% { transform: scale(0.9) rotate(5deg); }
+  60% { transform: scale(1.05) rotate(-2deg); }
+  80% { transform: scale(0.95) rotate(2deg); }
+  100% { transform: scale(1) rotate(0deg); filter: grayscale(0.5) contrast(1.2); }
+}
+
+/* Elegant HUD Ledger styling */
+.masterson-ledger-panel {
+  background: linear-gradient(135deg, #1f1a16, #14110e);
+  border: 1px solid var(--masterson-walnut);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.masterson-text-brass {
+  color: var(--masterson-brass);
+  font-family: 'Outfit', sans-serif;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Chevrons & Polymorphic button additions */
+.masterson-croupier-controls {
+  background: #191411;
+  border-top: 2px solid var(--masterson-walnut);
+  box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* Covert tutorial slides overlay */
+.masterson-tutorial-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.masterson-tutorial-box {
+  width: 90%;
+  max-width: 600px;
+  background: radial-gradient(circle at top, #2e1d13, #140d08);
+  border: 3px solid var(--masterson-brass);
+  border-radius: 16px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.8);
+  overflow: hidden;
+}

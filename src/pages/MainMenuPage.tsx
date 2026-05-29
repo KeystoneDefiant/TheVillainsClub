@@ -88,7 +88,7 @@ const GAME_ENTRIES: GameMenuEntry[] = [
   {
     id: "masterson_1881",
     title: "Masterton 1881",
-    subtitle: "Corrupt Roulette Croupier Rigging Simulation",
+    subtitle: "Run a Roulette Game or Run a Scam - It's All The Same.",
     route: "/minigames/masterson-1881",
     buyIn: villainsGameDefaults.masterson1881.defaultBuyIn,
     rulesets: [{ value: "normalGame", label: "House rules" }],

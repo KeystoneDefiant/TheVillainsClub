@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
 import { villainsGameDefaults } from "@/config/villainsGameDefaults";
 import * as specials from "./specialsResolver";
+import * as barBandOverrideStore from "@/audio/barBandOverrideStore";
 import {
   buildFatesealSettlementProfile,
   buildOublietteSettlementProfile,
@@ -98,6 +99,7 @@ describe("buildSevenYearItchSettlementProfile", () => {
   });
 
   it("computeSevenYearItchReturn matches Oubliette cap math", () => {
+    vi.spyOn(barBandOverrideStore, "effectiveBandIndexForBarDate").mockReturnValue(-1);
     const cfg = villainsGameDefaults.sevenYearItch;
     const profile = {
       buyIn: cfg.defaultBuyIn,
@@ -129,6 +131,7 @@ describe("buildFatesealSettlementProfile", () => {
   });
 
   it("computeFatesealReturn matches Oubliette cap math", () => {
+    vi.spyOn(barBandOverrideStore, "effectiveBandIndexForBarDate").mockReturnValue(-1);
     const cfg = villainsGameDefaults.fatesealSilver;
     const profile = {
       buyIn: cfg.defaultBuyIn,
@@ -137,5 +140,31 @@ describe("buildFatesealSettlementProfile", () => {
       overachievement: { ...cfg.overachievement },
     };
     expect(computeFatesealReturn(8000, profile).totalReturn).toBe(computeOublietteReturn(8000, profile).totalReturn);
+  });
+});
+
+describe("sessionSettlement band modifiers", () => {
+  it("scales payouts and caps when a matching band modifier is active", () => {
+    // Force active band to Velvet and Dust (index 5), which grants fateseal_silver +10%
+    vi.spyOn(barBandOverrideStore, "effectiveBandIndexForBarDate").mockReturnValue(5);
+
+    const cfg = villainsGameDefaults.fatesealSilver;
+    const profile = {
+      buyIn: 1000,
+      maxReturnMultipleOfBuyIn: 3,
+      capModifierProduct: 1,
+      overachievement: { ...cfg.overachievement },
+    };
+
+    // Fateseal Silver: base return ceiling normally is 3000. Under Velvet, it scales by +10% to 3300.
+    // Uncapped payout 2000 scaled by +10% is 2200.
+    const r = computeFatesealReturn(2000, profile);
+    expect(r.uncappedCredits).toBe(2200);
+    expect(r.basePayout).toBe(2200);
+    expect(r.totalReturn).toBe(2200);
+
+    // Uncapped payout 4000 scaled by +10% is 4400. Caps at Velvet's 3300.
+    const rCap = computeFatesealReturn(4000, profile);
+    expect(rCap.totalReturn).toBe(3300);
   });
 });

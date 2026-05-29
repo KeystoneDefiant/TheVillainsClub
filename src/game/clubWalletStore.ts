@@ -107,7 +107,7 @@ export const useClubWallet = create<ClubWalletState>()(
         }
         const rawTotal =
           typeof returned === "number" ? returned : Math.max(0, Math.floor(returned.totalReturn));
-        const baseCap = getOublietteBaseReturnCeiling(activeSession.settlement);
+        const baseCap = getOublietteBaseReturnCeiling(activeSession.settlement, activeSession.gameId);
         const total = Math.min(rawTotal, baseCap);
         const { clubBalance: next } = settleTableSession(clubBalance, activeSession, total);
         set({ clubBalance: next, activeSession: null });

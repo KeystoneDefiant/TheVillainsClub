@@ -45,11 +45,15 @@ export function generateRandomBettor(seatIndex: number): BettorProfile {
   
   // Starting chips between 5,000 and 200,000 in whole $500 increments
   const initial_chips = Math.round((Math.random() * (200000 - 5000) + 5000) / 500) * 500;
-  const max_suspicion = Math.floor(Math.random() * (10 - 4) + 4); // 4 to 10
+  const minSusp = mastersonGameConfig.min_bettor_max_suspicion;
+  const maxSusp = mastersonGameConfig.max_bettor_max_suspicion;
+  const max_suspicion = Math.floor(Math.random() * (maxSusp - minSusp) + minSusp);
   const loss_tolerance_pct = parseFloat((Math.random() * (1.00 - 0.50) + 0.50).toFixed(2)); // 0.50 to 1.00
   const max_consecutive_losses = Math.floor(Math.random() * (10 - 2) + 2); // 2 to 10
   const double_bet_frequency = parseFloat(Math.random().toFixed(2));
-  const herd_mentality_pct = parseFloat(Math.random().toFixed(2));
+  const minHerd = mastersonGameConfig.min_bettor_herd_mentality_pct;
+  const maxHerd = mastersonGameConfig.max_bettor_herd_mentality_pct;
+  const herd_mentality_pct = parseFloat((Math.random() * (maxHerd - minHerd) + minHerd).toFixed(2));
 
   return {
     id: `Seat ${seatIndex}`,
@@ -67,21 +71,55 @@ export function generateRandomBettor(seatIndex: number): BettorProfile {
   };
 }
 
+const CONTRADICTORY_PAIRS: [string, string][] = [
+  ["Red", "Black"],
+  ["Even", "Odd"],
+  ["Low_1_18", "High_19_36"],
+];
+
+export function isContradictoryBet(newTarget: string, existingBets: BettorBet[]): boolean {
+  if (existingBets.length === 0) return false;
+
+  const existingTargets = existingBets.map(b => b.target);
+
+  // Check 1: Red/Black, Even/Odd, Low/High contradictions
+  for (const [t1, t2] of CONTRADICTORY_PAIRS) {
+    if (newTarget === t1 && existingTargets.includes(t2)) return true;
+    if (newTarget === t2 && existingTargets.includes(t1)) return true;
+  }
+
+  // Check 2: Dozens contradiction (cannot cover all 3 dozens)
+  const dozens = ["Dozen_1", "Dozen_2", "Dozen_3"];
+  if (dozens.includes(newTarget)) {
+    const activeDozens = dozens.filter(d => d === newTarget || existingTargets.includes(d));
+    if (activeDozens.length === 3) return true;
+  }
+
+  // Check 3: Columns contradiction (cannot cover all 3 columns)
+  const columns = ["Column_1", "Column_2", "Column_3"];
+  if (columns.includes(newTarget)) {
+    const activeColumns = columns.filter(c => c === newTarget || existingTargets.includes(c));
+    if (activeColumns.length === 3) return true;
+  }
+
+  return false;
+}
+
 /**
  * Executes a bettor's AI logic, subtracting chips and returning the placed bets.
  */
 export function executeBettorBetting(
   bettor: BettorProfile,
   previousWin: boolean | null,
-  previousBetAmount: number | null
+  previousBetAmount: number | null,
+  existingBets: BettorBet[] = []
 ): { bets: BettorBet[]; nextBetAmount: number } {
   const bets: BettorBet[] = [];
   let nextBetAmount = previousBetAmount ?? 0;
-
   const minBet = mastersonGameConfig.minimum_bet;
 
   if (bettor.chips < minBet) {
-    return { bets, nextBetAmount: 0 };
+    return { bets: [], nextBetAmount: 0 };
   }
 
   // Base units based on initial chip size (rounded to minBet increments)
@@ -90,7 +128,10 @@ export function executeBettorBetting(
   switch (bettor.strategy) {
     case "Martingale": {
       // Standard 1:1 bet. Double on loss, reset on win.
-      const target = Math.random() > 0.5 ? "Red" : "Black";
+      let target = Math.random() > 0.5 ? "Red" : "Black";
+      if (isContradictoryBet(target, existingBets)) {
+        target = target === "Red" ? "Black" : "Red";
+      }
       let amount = baseUnit;
       if (previousWin === false && previousBetAmount) {
         amount = previousBetAmount * 2;
@@ -110,7 +151,10 @@ export function executeBettorBetting(
 
     case "D_Alembert": {
       // 1:1 bet. Add unit on loss, subtract unit on win.
-      const target = Math.random() > 0.5 ? "Even" : "Odd";
+      let target = Math.random() > 0.5 ? "Even" : "Odd";
+      if (isContradictoryBet(target, existingBets)) {
+        target = target === "Even" ? "Odd" : "Even";
+      }
       let amount = baseUnit;
       if (previousBetAmount) {
         if (previousWin === false) {
@@ -131,7 +175,11 @@ export function executeBettorBetting(
     case "Random_1_1": {
       // Pick a random 1:1 outside target, size is random percentage of initial chips
       const targets = ["Red", "Black", "Even", "Odd", "Low_1_18", "High_19_36"];
-      const target = targets[Math.floor(Math.random() * targets.length)]!;
+      const allowed = targets.filter(t => !isContradictoryBet(t, existingBets));
+      if (allowed.length === 0) {
+        return { bets: [], nextBetAmount: 0 };
+      }
+      const target = allowed[Math.floor(Math.random() * allowed.length)]!;
       let amount = Math.round((baseUnit * (0.5 + Math.random() * 1.5)) / minBet) * minBet;
       amount = Math.min(amount, bettor.chips);
       if (amount >= minBet) {
@@ -155,7 +203,11 @@ export function executeBettorBetting(
         ...CORNERS,
         ...rouletteNumbers.map(n => n.value)
       ];
-      const target = targets[Math.floor(Math.random() * targets.length)]!;
+      const allowed = targets.filter(t => !isContradictoryBet(t, existingBets));
+      if (allowed.length === 0) {
+        return { bets: [], nextBetAmount: 0 };
+      }
+      const target = allowed[Math.floor(Math.random() * allowed.length)]!;
       const odds = getPayoutOddsForTarget(target);
       let amount = Math.round((baseUnit * (0.25 + Math.random() * 2)) / minBet) * minBet;
       amount = Math.min(amount, bettor.chips);
@@ -168,9 +220,18 @@ export function executeBettorBetting(
 
     case "Hedges": {
       // Splits bet between two high-payout segments (like Column 1 and 2, or Dozen 1 and 2)
-      const isDozens = Math.random() > 0.5;
-      const t1 = isDozens ? "Dozen_1" : "Column_1";
-      const t2 = isDozens ? "Dozen_2" : "Column_2";
+      let isDozens = Math.random() > 0.5;
+      let t1 = isDozens ? "Dozen_1" : "Column_1";
+      let t2 = isDozens ? "Dozen_2" : "Column_2";
+      
+      if (isContradictoryBet(t1, existingBets) || isContradictoryBet(t2, existingBets)) {
+        isDozens = !isDozens;
+        t1 = isDozens ? "Dozen_1" : "Column_1";
+        t2 = isDozens ? "Dozen_2" : "Column_2";
+        if (isContradictoryBet(t1, existingBets) || isContradictoryBet(t2, existingBets)) {
+          return { bets: [], nextBetAmount: 0 };
+        }
+      }
       
       const totalAmt = Math.min(baseUnit * 2, bettor.chips);
       const halfAmt = Math.round((totalAmt / 2) / minBet) * minBet;
@@ -184,7 +245,13 @@ export function executeBettorBetting(
 
     case "Low_Risk_Grind": {
       // Safe small bets on outside 1:1
-      const target = "Low_1_18";
+      let target = "Low_1_18";
+      if (isContradictoryBet(target, existingBets)) {
+        target = "High_19_36";
+        if (isContradictoryBet(target, existingBets)) {
+          return { bets: [], nextBetAmount: 0 };
+        }
+      }
       let amount = Math.round((baseUnit * 0.5) / minBet) * minBet;
       amount = Math.min(amount, bettor.chips);
       if (amount >= minBet) {

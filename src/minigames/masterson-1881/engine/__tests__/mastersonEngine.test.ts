@@ -1,11 +1,30 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { act, renderHook } from "@testing-library/react";
-import { useMastertonEngine } from "../useMastertonEngine";
 import { executeBettorBetting } from "../bettorAI";
+import { rouletteNumbers, validateOutcomeAgainstRig, mastersonGameConfig } from "@/config/minigames/mastersonRules";
+
+// vi.mock is hoisted by Vitest so it intercepts the engine's ESM named imports of
+// executeBettorBetting and generateRandomBettor. vi.spyOn only patches the namespace
+// object and does NOT intercept direct named import bindings inside useMastertonEngine.
+vi.mock("../bettorAI", async (importOriginal) => {
+  const original = await importOriginal<typeof import("../bettorAI")>();
+  return {
+    ...original,
+    executeBettorBetting: vi.fn(original.executeBettorBetting),
+    generateRandomBettor: vi.fn(original.generateRandomBettor),
+  };
+});
+
+// Import useMastertonEngine and the mocked bettorAI namespace after vi.mock declaration.
+import { useMastertonEngine } from "../useMastertonEngine";
 import * as bettorAI from "../bettorAI";
-import { rouletteNumbers, validateOutcomeAgainstRig } from "@/config/minigames/mastersonRules";
 
 describe("Bettor AI Strategies", () => {
+  beforeEach(() => {
+    vi.mocked(bettorAI.executeBettorBetting).mockRestore();
+    vi.mocked(bettorAI.generateRandomBettor).mockRestore();
+  });
+
   it("Martingale strategy should double bet on loss and reset on win", () => {
     const bettor = {
       id: "Seat 1",
@@ -73,7 +92,7 @@ describe("Roulette Geometry & Payout Validation", () => {
     const oddNum = rouletteNumbers.find((n) => n.value === "3")!;
     const evenNum = rouletteNumbers.find((n) => n.value === "10")!;
     const redNum = rouletteNumbers.find((n) => n.color === "Red")!;
-    
+
     expect(validateOutcomeAgainstRig(oddNum, { severity: "low", target: "Odd" })).toBe(true);
     expect(validateOutcomeAgainstRig(evenNum, { severity: "low", target: "Odd" })).toBe(false);
     expect(validateOutcomeAgainstRig(redNum, { severity: "low", target: "Red" })).toBe(true);
@@ -81,6 +100,12 @@ describe("Roulette Geometry & Payout Validation", () => {
 });
 
 describe("useMastertonEngine Hook", () => {
+  beforeEach(() => {
+    // Restore to real implementation before each test so other hook tests are unaffected
+    vi.mocked(bettorAI.executeBettorBetting).mockRestore();
+    vi.mocked(bettorAI.generateRandomBettor).mockRestore();
+  });
+
   it("should initialize with spinCount 1 and 4 seat profiles", () => {
     const { result } = renderHook(() => useMastertonEngine());
     expect(result.current.spinCount).toBe(1);
@@ -132,19 +157,54 @@ describe("useMastertonEngine Hook", () => {
   });
 
   it("should trigger last chance bettor join if table is completely empty on any spin", () => {
-    // Bettors bet all of their chips on Red to force eviction upon losing
-    const spyAI = vi.spyOn(bettorAI, "executeBettorBetting").mockImplementation((bettor) => ({
-      bets: [{ target: "Red", amount: bettor.chips }],
-      updatedBettor: { ...bettor, chips: 0 },
+    // Provide fully controlled bettor profiles so eviction is 100% deterministic:
+    //   loss_tolerance_pct = 1.0  →  eviction threshold = initial_chips * (1 - 1.0) = 0
+    //   chips = 0 after betting everything  →  0 <= 0  = true  →  always evicted
+    //   herd_mentality_pct = 0  →  no herd cascade random calls
+    const makeBettor = (seatIndex: number) => ({
+      id: `Seat ${seatIndex}`,
+      name: `Villain ${seatIndex}`,
+      strategy: "Martingale" as const,
+      chips: 10000,
+      initial_chips: 10000,
+      max_suspicion: 10,
+      current_suspicion: 0,
+      loss_tolerance_pct: 1.0,
+      max_consecutive_losses: 100,
+      current_consecutive_losses: 0,
+      double_bet_frequency: 0,
+      herd_mentality_pct: 0,
+    });
+
+    // Both are intercepted via vi.mock hoisting, so the engine's named imports are patched.
+    vi.mocked(bettorAI.generateRandomBettor).mockImplementation(makeBettor);
+    vi.mocked(bettorAI.executeBettorBetting).mockImplementation((bettor) => ({
+      bets: [{ target: "Red", amount: bettor.chips, payoutOdds: 1 }],
+      nextBetAmount: bettor.chips,
     }));
 
-    // Return 0.2 so standard seat refill (15% chance) is skipped,
-    // but empty table last chance check (25% chance) triggers successfully.
-    const spyMath = vi.spyOn(Math, "random").mockImplementation(() => 0.2);
+    // With controlled bettors, Math.random calls in the upkeep section are:
+    //   (1) determineResultAndLock outcome pick — any index in the Black-filtered set is fine
+    //   (2) seat-refill roll  → must be >= seat_fill_chance_per_spin (0.40) to SKIP
+    //   (3) empty-table roll  → must be < empty_table_last_chance_pct (0.25) to TRIGGER
+    // No other Math.random calls happen (bettors have herd_mentality_pct=0, no cascade branch).
+    const { seat_fill_chance_per_spin, empty_table_last_chance_pct } = mastersonGameConfig;
+    let callCount = 0;
+    const randomQueue = [
+      0.5,                                  // outcome pick (Black-filtered, any index works)
+      seat_fill_chance_per_spin + 0.1,      // seat-refill roll — SKIP (>= 0.40)
+      empty_table_last_chance_pct - 0.05,   // empty-table roll — TRIGGER (< 0.25)
+      ...Array(20).fill(0.5),               // generateRandomBettor for new wealthy gambler
+    ];
+    const spyMath = vi.spyOn(Math, "random").mockImplementation(() => {
+      const val = randomQueue[callCount] ?? 0.5;
+      callCount++;
+      return val;
+    });
 
     const { result } = renderHook(() => useMastertonEngine());
 
-    // Rig outcome to Black so all bets on Red lose
+    // Rig outcome to Black so all Red bets lose.
     act(() => {
       result.current.selectRig("low", "Black");
     });
@@ -164,7 +224,6 @@ describe("useMastertonEngine Hook", () => {
     expect(result.current.activeBettors.length).toBe(1);
     expect(result.current.notifications.some(n => n.message.includes("wealthy gambler"))).toBe(true);
 
-    spyAI.mockRestore();
     spyMath.mockRestore();
   });
 });

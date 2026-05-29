@@ -15,7 +15,13 @@
         "vol7.mp3",
         "vol8.mp3"
       ],
-      "interlude_files": []
+      "interlude_files": [],
+      "modifier": {
+        "game_id": "masterson_1881",
+        "payout_multiplier": 1.10,
+        "max_win_multiplier": 1.10,
+        "description": "+10% payout and max win in Masterson 1881"
+      }
     },
     {
       "id": "comebacker",
@@ -35,7 +41,13 @@
         "theHollowTide.mp3",
         "voidWaltz.mp3"
       ],
-      "interlude_files": []
+      "interlude_files": [],
+      "modifier": {
+        "game_id": "seven_year_itch",
+        "payout_multiplier": 1.15,
+        "max_win_multiplier": 1.15,
+        "description": "+15% payout and max win in 7 Year Itch"
+      }
     },
     {
       "id": "feints",
@@ -53,7 +65,13 @@
         "theMidnightStakeout.mp3",
         "unresolvedShadows.mp3"
       ],
-      "interlude_files": []
+      "interlude_files": [],
+      "modifier": {
+        "game_id": "oubliette_no9",
+        "payout_multiplier": 1.10,
+        "max_win_multiplier": 1.10,
+        "description": "+10% payout and max win in Oubliette Number 9"
+      }
     },
     {
       "id": "pillowcase",
@@ -66,7 +84,13 @@
         "shadowPlay.mp3",
         "staticHaze.mp3"
       ],
-      "interlude_files": []
+      "interlude_files": [],
+      "modifier": {
+        "game_id": "oubliette_no9",
+        "payout_multiplier": 1.05,
+        "max_win_multiplier": 1.05,
+        "description": "+5% payout and max win in Oubliette Number 9"
+      }
     },
     {
       "id": "timesNewRoman",
@@ -80,7 +104,13 @@
         "threeNotesBeforeMorning.mp3",
         "weightOfEmptyRooms.mp3"
       ],
-      "interlude_files": []
+      "interlude_files": [],
+      "modifier": {
+        "game_id": "seven_year_itch",
+        "payout_multiplier": 1.08,
+        "max_win_multiplier": 1.08,
+        "description": "+8% payout and max win in 7 Year Itch"
+      }
     },
     {
       "id": "velvet",
@@ -97,7 +127,13 @@
         "theRelentlessPulse.mp3",
         "theSilentTail.mp3"
       ],
-      "interlude_files": []
+      "interlude_files": [],
+      "modifier": {
+        "game_id": "fateseal_silver",
+        "payout_multiplier": 1.10,
+        "max_win_multiplier": 1.10,
+        "description": "+10% payout and max win in Fateseal Silver"
+      }
     }
   ]
 }

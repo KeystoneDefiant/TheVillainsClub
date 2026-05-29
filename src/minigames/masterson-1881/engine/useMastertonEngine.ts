@@ -107,8 +107,8 @@ export function useMastertonEngine() {
 
     const bettor = activeBettors[bettorIdx];
     const prev = previousBetsRef.current[bettor.id] || { lastBetAmount: 0, won: null };
-    
-    const { bets, nextBetAmount } = executeBettorBetting(bettor, prev.won, prev.lastBetAmount);
+    const existing = currentBets[seatId] || [];
+    const { bets, nextBetAmount } = executeBettorBetting(bettor, prev.won, prev.lastBetAmount, existing);
     if (bets.length === 0) return null;
 
     const totalBetAmount = bets.reduce((sum, b) => sum + b.amount, 0);
@@ -122,10 +122,10 @@ export function useMastertonEngine() {
     setActiveBettors(updatedBettors);
 
     setCurrentBets((prevBets) => {
-      const existing = prevBets[seatId] || [];
+      const existingBets = prevBets[seatId] || [];
       return {
         ...prevBets,
-        [seatId]: [...existing, ...bets],
+        [seatId]: [...existingBets, ...bets],
       };
     });
 
@@ -135,7 +135,7 @@ export function useMastertonEngine() {
     };
 
     return bets;
-  }, [phase, activeBettors]);
+  }, [phase, activeBettors, currentBets]);
 
   const determineResultAndLock = useCallback(() => {
     let possibilities = rouletteNumbers;
@@ -318,8 +318,12 @@ export function useMastertonEngine() {
     // Herd Mental Cascade Check
     let cascadeBettors: BettorProfile[] = [];
     if (triggeredSuspicionBreach) {
+      let currentDecayMultiplier = 1.0;
+      const decayRate = mastersonGameConfig.herd_mentality_decay_rate;
+
       remainingBettors.forEach((bettor) => {
-        if (Math.random() < bettor.herd_mentality_pct) {
+        const effectiveHerdMentality = bettor.herd_mentality_pct * currentDecayMultiplier;
+        if (Math.random() < effectiveHerdMentality) {
           evictedIds.add(bettor.id);
           evicts[bettor.id] = {
             name: bettor.name,
@@ -331,6 +335,8 @@ export function useMastertonEngine() {
             type: "eviction",
             message: `🐑 Herd Cascade: ${bettor.name} saw someone leave in suspicion and packed up!`,
           });
+          // Apply decay for the next possible migration check
+          currentDecayMultiplier *= (1 - decayRate);
         } else {
           cascadeBettors.push(bettor);
         }

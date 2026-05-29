@@ -10,7 +10,6 @@ import {
   Table,
 } from "@mantine/core";
 import { ClubButton } from "@/components/ui/ClubButton";
-import { GameScaleContainer } from "@/components/ui/GameScaleContainer";
 import { UnifiedGameHeader } from "@/components/ui/UnifiedGameHeader";
 import { GameSettingsModal } from "@/components/ui/GameSettingsModal";
 import { SommelierLiveGuide } from "@/components/ui/SommelierLiveGuide";
@@ -19,7 +18,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import { useMastertonEngine } from "./engine/useMastertonEngine";
 import { rouletteNumbers, mastersonGameConfig } from "@/config/minigames/mastersonRules";
-import type { ClubTableReturnDetail } from "@/game/sessionSettlement";
+import { computeMastersonReturn, type ClubTableReturnDetail, type OublietteSettlementProfile } from "@/game/sessionSettlement";
 
 import "./masterson.css";
 
@@ -65,6 +64,7 @@ const ODDS_LEDGER = [
 
 interface MastertonRootProps {
   sessionCredits: number;
+  settlement?: OublietteSettlementProfile;
   onReturnToClubMenu?: (detail: ClubTableReturnDetail) => void;
   onAbandonRun?: () => void;
   onPauseToClub?: () => void;
@@ -132,6 +132,7 @@ function isNumberAffectedByTarget(numStr: string, target: string | null): boolea
 
 export function MastertonRoot({
   sessionCredits,
+  settlement,
   onReturnToClubMenu,
   onAbandonRun,
   isTutorial = false,
@@ -163,6 +164,35 @@ export function MastertonRoot({
   const [ballAngle, setBallAngle] = useState(0);
   const [ballRadius, setBallRadius] = useState(42);
   const [timer, setTimer] = useState<number | null>(null);
+  const [isPulsing, setIsPulsing] = useState(false);
+  const prevTimerRef = useRef<number | null>(null);
+  const pulseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (timer !== null && prevTimerRef.current !== null && timer > prevTimerRef.current + 0.5) {
+      setIsPulsing(true);
+      if (pulseTimeoutRef.current) {
+        clearTimeout(pulseTimeoutRef.current);
+      }
+      pulseTimeoutRef.current = setTimeout(() => {
+        setIsPulsing(false);
+        pulseTimeoutRef.current = null;
+      }, 300);
+    }
+    prevTimerRef.current = timer;
+  }, [timer]);
+
+  // Clean up pulse timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (pulseTimeoutRef.current) {
+        clearTimeout(pulseTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const isResetting = timer !== null && prevTimerRef.current !== null && timer > prevTimerRef.current + 0.5;
+
   const [, setLastMinuteBetsQueue] = useState<LastMinuteBetJob[]>([]);
   const [neonFlashSeat, setNeonFlashSeat] = useState<string | null>(null);
   const [recapVisible, setRecapVisible] = useState(false);
@@ -207,41 +237,37 @@ export function MastertonRoot({
   // SVG wheel rotation & swirling ball loop
   useEffect(() => {
     if (process.env.NODE_ENV === "test") return;
+    if (engine.phase !== "SPINNING") {
+      landingRef.current = null;
+      return;
+    }
     let animId: number;
     const tick = () => {
-      if (engine.phase === "SPINNING") {
-        if (landingRef.current && landingRef.current.active) {
-          // Landing eased drop-in animation (2.5 seconds)
-          landingRef.current.elapsedMs += 16.7; // ~60fps
-          const t = Math.min(1, landingRef.current.elapsedMs / 2500);
-          const easeOut = 1 - Math.pow(1 - t, 3); // cubic ease-out
+      if (landingRef.current && landingRef.current.active) {
+        // Landing eased drop-in animation (2.5 seconds)
+        landingRef.current.elapsedMs += 16.7; // ~60fps
+        const t = Math.min(1, landingRef.current.elapsedMs / 2500);
+        const easeOut = 1 - Math.pow(1 - t, 3); // cubic ease-out
 
-          const currentWheelRot = landingRef.current.startWheelRot + (landingRef.current.finalWheelRot - landingRef.current.startWheelRot) * easeOut;
-          const currentBallAngle = landingRef.current.startBallAngle + (landingRef.current.finalBallAngle - landingRef.current.startBallAngle) * easeOut;
-          const currentBallRad = 42 - (42 - 34) * easeOut; // drop inward to pocket radius (34)
+        const currentWheelRot = landingRef.current.startWheelRot + (landingRef.current.finalWheelRot - landingRef.current.startWheelRot) * easeOut;
+        const currentBallAngle = landingRef.current.startBallAngle + (landingRef.current.finalBallAngle - landingRef.current.startBallAngle) * easeOut;
+        const currentBallRad = 42 - (42 - 34) * easeOut; // drop inward to pocket radius (34)
 
-          setWheelRotation(currentWheelRot % 360);
-          setBallAngle(currentBallAngle % 360);
-          setBallRadius(currentBallRad);
+        setWheelRotation(currentWheelRot % 360);
+        setBallAngle(currentBallAngle % 360);
+        setBallRadius(currentBallRad);
 
-          if (t >= 1) {
-            landingRef.current.active = false;
-            // Resolve outcome wagers automatically
-            engine.resolveSpin();
-            setRecapVisible(true);
-          }
-        } else {
-          // Normal constant spin rotation
-          setWheelRotation((prev) => (prev + 1.5) % 360);
-          setBallAngle((prev) => (prev - 4.5) % 360);
-          setBallRadius(42);
+        if (t >= 1) {
+          landingRef.current.active = false;
+          // Resolve outcome wagers automatically
+          engine.resolveSpin();
+          setRecapVisible(true);
         }
       } else {
-        // Slow standby rotational crawl in other phases
-        setWheelRotation((prev) => (prev + 0.12) % 360);
-        setBallAngle((prev) => (prev - 0.12) % 360);
-        setBallRadius(34);
-        landingRef.current = null;
+        // Normal constant spin rotation
+        setWheelRotation((prev) => (prev + 1.5) % 360);
+        setBallAngle((prev) => (prev - 4.5) % 360);
+        setBallRadius(42);
       }
       animId = requestAnimationFrame(tick);
     };
@@ -334,12 +360,19 @@ export function MastertonRoot({
   // Cash out and return commission to club
   const handleCashOut = () => {
     if (onReturnToClubMenu) {
+      const activeSettlement = settlement || {
+        buyIn: 1000,
+        maxReturnMultipleOfBuyIn: 3,
+        capModifierProduct: 1,
+        overachievement: {
+          capMultiple: 3,
+          buyInSlab: 0.5,
+          tierStepMultiple: 1,
+          bonusMultipleOfBuyInPerTier: 0.1,
+        },
+      };
       onReturnToClubMenu({
-        uncappedCredits: engine.accumulatedCommission,
-        basePayout: engine.accumulatedCommission,
-        overachievementBonus: 0,
-        tiers: 0,
-        totalReturn: engine.accumulatedCommission,
+        ...computeMastersonReturn(engine.accumulatedCommission, activeSettlement),
         tableRound: engine.spinCount,
       });
     }
@@ -536,16 +569,29 @@ export function MastertonRoot({
           }}
         >
           {/* Walnut Felt Layout Matrix */}
-          <Stack className="masterson-felt-board" p="sm" style={{ flex: isMobileLayout ? "unset" : 1, minHeight: 0, justifyContent: "center" }}>
+          <Stack
+            className="masterson-felt-board"
+            p="sm"
+            style={{
+              flex: isMobileLayout ? "unset" : 1,
+              minHeight: 0,
+              justifyContent: "center",
+              width: "100%",
+              overflowX: "auto",
+              WebkitOverflowScrolling: "touch",
+            }}
+          >
 
             {/* Board grid */}
-            <Box style={{ display: "flex", gap: "4px", justifyContent: "center", alignItems: "stretch" }}>
+            <Box style={{ display: "flex", gap: "4px", width: 767, flexShrink: 0, margin: "0 auto", alignItems: "stretch" }}>
               {/* Green Numbers 0 and 00 */}
-              <Box style={{ display: "flex", flexDirection: "column", gap: "4px", width: 50, height: 182 }}>
+              <Box style={{ display: "flex", flexDirection: "column", gap: "4px", width: 50, height: 182, flexShrink: 0 }}>
                 <Box
                   className={`masterson-grid-cell green ${isRigTarget("0") ? "active-rig" : ""} ${isNumberAffectedByTarget("0", hoveredTarget) ? "highlight-blue" : ""} ${engine.phase !== "BETTING" && engine.spinResult?.value === "0" ? "winning-highlight" : ""}`}
                   style={{
                     flex: 1,
+                    width: 50,
+                    boxSizing: "border-box",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -562,6 +608,8 @@ export function MastertonRoot({
                   className={`masterson-grid-cell green ${isRigTarget("00") ? "active-rig" : ""} ${isNumberAffectedByTarget("00", hoveredTarget) ? "highlight-blue" : ""} ${engine.phase !== "BETTING" && engine.spinResult?.value === "00" ? "winning-highlight" : ""}`}
                   style={{
                     flex: 1,
+                    width: 50,
+                    boxSizing: "border-box",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -577,7 +625,7 @@ export function MastertonRoot({
               </Box>
 
               {/* Grid 1-36 Numbers + Column Bets (12 Equal Columns + 1.3 Expanded Column Bet) */}
-              <Box style={{ display: "grid", gridTemplateColumns: "repeat(12, minmax(0, 1fr)) 1.3fr", gap: "4px", flex: 1 }}>
+              <Box style={{ display: "grid", gridTemplateColumns: "repeat(12, 50px) 65px", gap: "4px", flexShrink: 0, width: 713 }}>
                 {ROULETTE_ROWS.flatMap((row) => [
                   ...row.numbers.map((numStr) => {
                     const numObj = rouletteNumbers.find((n) => n.value === numStr)!;
@@ -588,7 +636,9 @@ export function MastertonRoot({
                         key={numStr}
                         className={`masterson-grid-cell number ${isRed ? "red" : "black"} ${isRigTarget(numStr) ? "active-rig" : ""} ${isNumberAffectedByTarget(numStr, hoveredTarget) ? "highlight-blue" : ""} ${engine.phase !== "BETTING" && engine.spinResult?.value === numStr ? "winning-highlight" : ""}`}
                         style={{
+                          width: 50,
                           height: 58,
+                          boxSizing: "border-box",
                           position: "relative",
                         }}
                         onClick={() => handleToggleRig("high", numStr)}
@@ -606,7 +656,9 @@ export function MastertonRoot({
                       key={row.columnTarget}
                       className={`masterson-grid-cell outside ${isRigTarget(row.columnTarget) ? "active-rig" : ""} ${isNumberAffectedByTarget(row.columnTarget, hoveredTarget) ? "highlight-blue" : ""}`}
                       style={{
+                        width: 65,
                         height: 58,
+                        boxSizing: "border-box",
                         background: "rgba(255, 255, 255, 0.05)",
                         position: "relative",
                       }}
@@ -625,9 +677,9 @@ export function MastertonRoot({
             </Box>
 
             {/* Outside Bet Dozens Layout */}
-            <Box style={{ display: "flex", gap: "4px", justifyContent: "center", marginTop: "4px" }}>
-              <Box style={{ width: 50 }} />
-              <Box style={{ display: "flex", flex: 12, gap: "4px" }}>
+            <Box style={{ display: "flex", gap: "4px", width: 767, flexShrink: 0, margin: "4px auto 0" }}>
+              <Box style={{ width: 50, flexShrink: 0 }} />
+              <Box style={{ display: "flex", width: 644, gap: "4px", flexShrink: 0 }}>
                 {["Dozen_1", "Dozen_2", "Dozen_3"].map((doz) => {
                   const friendlyLabels: Record<string, string> = {
                     Dozen_1: "1st Dozen",
@@ -640,8 +692,10 @@ export function MastertonRoot({
                       key={doz}
                       className={`masterson-grid-cell outside ${isRigTarget(doz) ? "active-rig" : ""} ${isNumberAffectedByTarget(doz, hoveredTarget) ? "highlight-blue" : ""}`}
                       style={{
-                        flex: 1,
+                        width: 212,
+                        flexShrink: 0,
                         height: 40,
+                        boxSizing: "border-box",
                         background: "rgba(255, 255, 255, 0.05)",
                         position: "relative",
                       }}
@@ -655,13 +709,13 @@ export function MastertonRoot({
                   );
                 })}
               </Box>
-              <Box style={{ flex: 1.3 }} />
+              <Box style={{ width: 65, flexShrink: 0 }} />
             </Box>
 
             {/* Outside Bet Categories Layout */}
-            <Box style={{ display: "flex", gap: "4px", justifyContent: "center", marginTop: "4px" }}>
-              <Box style={{ width: 50 }} />
-              <Box style={{ display: "flex", flex: 12, gap: "4px" }}>
+            <Box style={{ display: "flex", gap: "4px", width: 767, flexShrink: 0, margin: "4px auto 0" }}>
+              <Box style={{ width: 50, flexShrink: 0 }} />
+              <Box style={{ display: "flex", width: 644, gap: "4px", flexShrink: 0 }}>
                 {["Low_1_18", "Even", "Red", "Black", "Odd", "High_19_36"].map((out) => {
                   const friendlyLabels: Record<string, string> = {
                     Low_1_18: "Low 1-18",
@@ -674,8 +728,10 @@ export function MastertonRoot({
                       key={out}
                       className={`masterson-grid-cell outside ${isRigTarget(out) ? "active-rig" : ""} ${isNumberAffectedByTarget(out, hoveredTarget) ? "highlight-blue" : ""}`}
                       style={{
-                        flex: 1,
+                        width: 104,
+                        flexShrink: 0,
                         height: 40,
+                        boxSizing: "border-box",
                         background: bg,
                         position: "relative",
                       }}
@@ -689,7 +745,7 @@ export function MastertonRoot({
                   );
                 })}
               </Box>
-              <Box style={{ flex: 1.3 }} />
+              <Box style={{ width: 65, flexShrink: 0 }} />
             </Box>
           </Stack>
 
@@ -806,29 +862,47 @@ export function MastertonRoot({
                     pointerEvents: "none",
                   }}
                 >
-                  {/* Left Symmetrical Progress quarter-arc */}
+                  {/* Left Symmetrical Progress quarter-arc — path runs center→tip so arc drains from center outward to 9 o'clock */}
                   <path
-                    d="M 50,96 A 46,46 0 0,0 4,50"
+                    d="M 50,94 A 44,44 0 0,1 6,50"
                     fill="none"
-                    stroke={clubTokens.surface.brassStroke}
+                    stroke={isPulsing ? "#ffeb3b" : clubTokens.surface.brassStroke}
                     strokeWidth="2.5"
-                    strokeDasharray="72.3"
-                    strokeDashoffset={72.3 * (1 - timer / mastersonGameConfig.betting_duration_seconds)}
+                    strokeDasharray="69.1"
+                    strokeDashoffset={69.1 * (1 - timer / mastersonGameConfig.betting_duration_seconds)}
                     strokeLinecap="round"
                     opacity="0.95"
-                    style={{ filter: "drop-shadow(0px 0px 4px rgba(199,158,87,0.7))" }}
+                    style={{
+                      filter: isPulsing
+                        ? "drop-shadow(0px 0px 8px rgba(255, 235, 59, 0.95))"
+                        : "drop-shadow(0px 0px 4px rgba(199,158,87,0.7))",
+                      transition: isResetting
+                        ? "stroke-dashoffset 0.5s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.05s ease, filter 0.05s ease"
+                        : isPulsing
+                        ? "stroke-dashoffset 0.1s linear, stroke 0.3s ease-out, filter 0.3s ease-out"
+                        : "stroke-dashoffset 0.1s linear, stroke 0.2s ease, filter 0.2s ease",
+                    }}
                   />
-                  {/* Right Symmetrical Progress quarter-arc */}
+                  {/* Right Symmetrical Progress quarter-arc — path runs center→tip so arc drains from center outward to 3 o'clock */}
                   <path
-                    d="M 50,96 A 46,46 0 0,1 96,50"
+                    d="M 50,94 A 44,44 0 0,0 94,50"
                     fill="none"
-                    stroke={clubTokens.surface.brassStroke}
+                    stroke={isPulsing ? "#ffeb3b" : clubTokens.surface.brassStroke}
                     strokeWidth="2.5"
-                    strokeDasharray="72.3"
-                    strokeDashoffset={72.3 * (1 - timer / mastersonGameConfig.betting_duration_seconds)}
+                    strokeDasharray="69.1"
+                    strokeDashoffset={69.1 * (1 - timer / mastersonGameConfig.betting_duration_seconds)}
                     strokeLinecap="round"
                     opacity="0.95"
-                    style={{ filter: "drop-shadow(0px 0px 4px rgba(199,158,87,0.7))" }}
+                    style={{
+                      filter: isPulsing
+                        ? "drop-shadow(0px 0px 8px rgba(255, 235, 59, 0.95))"
+                        : "drop-shadow(0px 0px 4px rgba(199,158,87,0.7))",
+                      transition: isResetting
+                        ? "stroke-dashoffset 0.5s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.05s ease, filter 0.05s ease"
+                        : isPulsing
+                        ? "stroke-dashoffset 0.1s linear, stroke 0.3s ease-out, filter 0.3s ease-out"
+                        : "stroke-dashoffset 0.1s linear, stroke 0.2s ease, filter 0.2s ease",
+                    }}
                   />
                 </svg>
               )}
@@ -1257,24 +1331,10 @@ export function MastertonRoot({
     </Box>
   );
 
-  // Mobile: render without auto-scaling
-  if (isMobileLayout) {
-    return (
-      <Box style={{ width: "100%", overflowY: "auto", minHeight: "100vh", background: "#0c0a08" }}>
-        {gameContent}
-      </Box>
-    );
-  }
-
   return (
-    <GameScaleContainer
-      designWidth={1280}
-      designHeight={800}
-      transformOrigin="center top"
-      alignItems="flex-start"
-    >
+    <Box style={{ width: "100%", minHeight: "100%", background: "#0c0a08" }}>
       {gameContent}
-    </GameScaleContainer>
+    </Box>
   );
 }
 export const MastertonRootWrapped = MastertonRoot;

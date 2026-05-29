@@ -184,9 +184,9 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
 
   const activeSpecial = useMemo(() => resolveActiveClubSpecial(), []);
   const specialRow = useMemo(() => resolveSpecialDefinitionRow(activeSpecial), [activeSpecial]);
-  const band = useMemo(() => {
+  const activeBandObj = useMemo(() => {
     const idx = effectiveBandIndexForBarDate(barDateKey(new Date()));
-    return bandsCatalog.bands[idx]?.display_name ?? "House band";
+    return bandsCatalog.bands[idx] ?? null;
   }, []);
 
   const activeModifierLines = useMemo(() => {
@@ -716,14 +716,21 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
                 </ClubPanel>
 
                 <ClubPanel maw={360} w="min(360px, 100%)" px="md" py="md">
-                  <Group justify="space-between" gap="xs">
-                    <Text size="sm" c={clubTokens.text.secondary}>
-                      Tonight’s band
-                    </Text>
-                    <Text size="sm" fw={600}>
-                      {band}
-                    </Text>
-                  </Group>
+                  <Stack gap="xs">
+                    <Group justify="space-between" gap="xs">
+                      <Text size="sm" c={clubTokens.text.secondary}>
+                        Tonight’s band
+                      </Text>
+                      <Text size="sm" fw={600}>
+                        {activeBandObj?.display_name ?? "House band"}
+                      </Text>
+                    </Group>
+                    {activeBandObj?.modifier ? (
+                      <Text size="xs" c="dimmed" style={{ fontStyle: "italic", textAlign: "center" }}>
+                        {activeBandObj.modifier.description}
+                      </Text>
+                    ) : null}
+                  </Stack>
                 </ClubPanel>
 
 

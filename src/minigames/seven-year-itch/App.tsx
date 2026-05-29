@@ -863,7 +863,13 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
               hideInlineDice={diceRunActive}
             />
 
-            <Paper radius="md" p="xs" withBorder style={{ borderColor: "var(--7yi-amber-dim)", background: "var(--7yi-paper)" }}>
+            <Paper
+              radius="md"
+              p="xs"
+              withBorder
+              style={{ borderColor: "var(--7yi-amber-dim)", background: "var(--7yi-paper)" }}
+              className="seven-year-itch-actions"
+            >
               <Group justify="space-between" wrap="wrap" gap="xs">
                 {favorPicks.length > 0 ? (
                   <ClubButton variant="subtle" color="orange" size="xs" onClick={() => setMainView("favors")}>

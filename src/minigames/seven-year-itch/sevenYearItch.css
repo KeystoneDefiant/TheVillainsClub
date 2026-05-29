@@ -477,8 +477,15 @@
 }
 
 @media (max-width: 520px) {
+  .seven-year-itch-root {
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+  }
   .seven-year-itch-frame {
+    height: auto;
     padding: 0.35rem;
+    overflow: visible;
   }
   .seven-year-itch-storyCard .mantine-Group-root,
   .seven-year-itch-actions {
@@ -500,6 +507,36 @@
   }
   .yi-felt-hopGrid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .yi-felt-controls {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 8px 0;
+  }
+  .yi-felt-dice-container {
+    width: 100%;
+    justify-content: center;
+    margin-bottom: 4px;
+  }
+  .yi-felt-divest-container,
+  .yi-felt-roll-container {
+    flex: 1 1 40%;
+    justify-content: center;
+  }
+  .yi-felt-divest-container button,
+  .yi-felt-roll-container button,
+  .yi-felt-divest-container .club-btn,
+  .yi-felt-roll-container .club-btn {
+    width: 100%;
+  }
+  .yi-felt-controls:has(.yi-felt-divest-placeholder) .yi-felt-divest-container {
+    display: none;
+  }
+  .yi-felt-controls:has(.yi-felt-divest-placeholder) .yi-felt-roll-container {
+    flex: 1 1 100%;
   }
 }
 

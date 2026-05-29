@@ -1,11 +1,19 @@
 import bandsJson from "../../content/bands.json";
 
+export type BandModifier = {
+  game_id: string;
+  payout_multiplier: number;
+  max_win_multiplier: number;
+  description: string;
+};
+
 export type BandCatalogEntry = {
   id: string;
   display_name: string;
   asset_root: string;
   music_files: string[];
   interlude_files: string[];
+  modifier?: BandModifier;
 };
 
 export type BandsCatalog = {
@@ -39,12 +47,32 @@ function parseCatalog(raw: unknown): BandsCatalog {
     const interlude_files = Array.isArray(e.interlude_files)
       ? e.interlude_files.filter(isNonEmptyString)
       : [];
+
+    let modifier: BandModifier | undefined = undefined;
+    if (e.modifier && typeof e.modifier === "object") {
+      const mod = e.modifier as Record<string, unknown>;
+      if (
+        isNonEmptyString(mod.game_id) &&
+        typeof mod.payout_multiplier === "number" &&
+        typeof mod.max_win_multiplier === "number" &&
+        isNonEmptyString(mod.description)
+      ) {
+        modifier = {
+          game_id: mod.game_id,
+          payout_multiplier: mod.payout_multiplier,
+          max_win_multiplier: mod.max_win_multiplier,
+          description: mod.description,
+        };
+      }
+    }
+
     return {
       id: e.id,
       display_name: e.display_name,
       asset_root: e.asset_root,
       music_files: e.music_files,
       interlude_files,
+      modifier,
     };
   });
   return { interlude_chance_between_tracks: chance, bands };

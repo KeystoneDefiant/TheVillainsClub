@@ -10,6 +10,11 @@ export interface MastersonGameConfig {
   no_rig_suspicion_decrease: number;
   betting_duration_seconds: number;
   minimum_bet: number;
+  min_bettor_max_suspicion: number;
+  max_bettor_max_suspicion: number;
+  min_bettor_herd_mentality_pct: number;
+  max_bettor_herd_mentality_pct: number;
+  herd_mentality_decay_rate: number;
   rig_types: {
     low: { suspicion: number; targets: string[] };
     mid: { suspicion: number; targets: string[] };
@@ -71,6 +76,11 @@ export const mastersonGameConfig: MastersonGameConfig = {
   no_rig_suspicion_decrease: 2,
   betting_duration_seconds: 13,
   minimum_bet: 100,
+  min_bettor_max_suspicion: 4,
+  max_bettor_max_suspicion: 10,
+  min_bettor_herd_mentality_pct: 0.0,
+  max_bettor_herd_mentality_pct: 0.7,
+  herd_mentality_decay_rate: 0.35,
   rig_types: {
     low: {
       suspicion: 2,

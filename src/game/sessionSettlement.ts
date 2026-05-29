@@ -4,6 +4,9 @@ import {
   resolveActiveClubSpecial,
   resolveSpecialDefinitionRow,
 } from "./specialsResolver";
+import { bandsCatalog } from "@/config/bandsCatalog";
+import { effectiveBandIndexForBarDate } from "@/audio/barBandOverrideStore";
+import { barDateKey } from "@/audio/barBandSchedule";
 import type { GameState as OublietteGameState } from "@/minigames/oubliette-no9/types";
 
 /** Snapshot at table open; used when settling the session. */
@@ -133,21 +136,31 @@ export function buildFatesealSettlementProfile(buyIn: number, now: Date = new Da
 }
 
 /** Max credits paid back from the **capped** portion of the table (before overachievement tiers). */
-export function getOublietteBaseReturnCeiling(profile: OublietteSettlementProfile): number {
+export function getOublietteBaseReturnCeiling(profile: OublietteSettlementProfile, gameId: string = "oubliette_no9"): number {
   const b = Math.max(1, Math.floor(profile.buyIn));
-  return Math.floor(b * profile.maxReturnMultipleOfBuyIn * profile.capModifierProduct);
+  let maxWinMultiplier = 1;
+  try {
+    const idx = effectiveBandIndexForBarDate(barDateKey(new Date()));
+    const activeBand = bandsCatalog.bands[idx];
+    if (activeBand && activeBand.modifier && activeBand.modifier.game_id === gameId) {
+      maxWinMultiplier = activeBand.modifier.max_win_multiplier ?? 1;
+    }
+  } catch {
+    // Fail-safe fall back to 1
+  }
+  return Math.floor(b * profile.maxReturnMultipleOfBuyIn * profile.capModifierProduct * maxWinMultiplier);
 }
 
 export function getSevenYearItchBaseReturnCeiling(profile: OublietteSettlementProfile): number {
-  return getOublietteBaseReturnCeiling(profile);
+  return getOublietteBaseReturnCeiling(profile, "seven_year_itch");
 }
 
 export function getFatesealBaseReturnCeiling(profile: OublietteSettlementProfile): number {
-  return getOublietteBaseReturnCeiling(profile);
+  return getOublietteBaseReturnCeiling(profile, "fateseal_silver");
 }
 
 export function getMastersonBaseReturnCeiling(profile: OublietteSettlementProfile): number {
-  return getOublietteBaseReturnCeiling(profile);
+  return getOublietteBaseReturnCeiling(profile, "masterson_1881");
 }
 
 /** Same cap / tier math as Oubliette; profile comes from {@link buildSevenYearItchSettlementProfile}. */
@@ -155,34 +168,50 @@ export function computeSevenYearItchReturn(
   uncappedCredits: number,
   profile: OublietteSettlementProfile,
 ): ClubTableReturnDetail {
-  return computeOublietteReturn(uncappedCredits, profile);
+  return computeOublietteReturn(uncappedCredits, profile, "seven_year_itch");
 }
 
 /** Same cap / tier math as Oubliette; profile comes from {@link buildFatesealSettlementProfile}. */
 export function computeFatesealReturn(uncappedCredits: number, profile: OublietteSettlementProfile): ClubTableReturnDetail {
-  return computeOublietteReturn(uncappedCredits, profile);
+  return computeOublietteReturn(uncappedCredits, profile, "fateseal_silver");
 }
 
 export function computeMastersonReturn(
   uncappedCredits: number,
   profile: OublietteSettlementProfile,
 ): ClubTableReturnDetail {
-  return computeOublietteReturn(uncappedCredits, profile);
+  return computeOublietteReturn(uncappedCredits, profile, "masterson_1881");
 }
 
 /**
  * Turn uncapped in-game credits into what the club pays back.
- * Base line is capped at buyIn × maxReturnMultiple × cap modifiers; bonus tiers use uncapped total vs tier bars.
+ * Base line is capped at buyIn × maxReturnMultiple × cap modifiers × band max win modifier; bonus tiers use uncapped total vs tier bars.
  */
 export function computeOublietteReturn(
   uncappedCredits: number,
   profile: OublietteSettlementProfile,
+  gameId: string = "oubliette_no9",
 ): ClubTableReturnDetail {
-  const safe = Number.isFinite(uncappedCredits) ? Math.max(0, Math.floor(uncappedCredits)) : 0;
+  const safeRaw = Number.isFinite(uncappedCredits) ? Math.max(0, Math.floor(uncappedCredits)) : 0;
+  
+  let payoutMultiplier = 1;
+  let maxWinMultiplier = 1;
+  try {
+    const idx = effectiveBandIndexForBarDate(barDateKey(new Date()));
+    const activeBand = bandsCatalog.bands[idx];
+    if (activeBand && activeBand.modifier && activeBand.modifier.game_id === gameId) {
+      payoutMultiplier = activeBand.modifier.payout_multiplier ?? 1;
+      maxWinMultiplier = activeBand.modifier.max_win_multiplier ?? 1;
+    }
+  } catch {
+    // Fail-safe fall back to 1
+  }
+
+  const safe = Math.floor(safeRaw * payoutMultiplier);
   const b = Math.max(1, Math.floor(profile.buyIn));
   const baseCap = Math.max(
     0,
-    Math.floor(b * profile.maxReturnMultipleOfBuyIn * profile.capModifierProduct),
+    Math.floor(b * profile.maxReturnMultipleOfBuyIn * profile.capModifierProduct * maxWinMultiplier),
   );
   const basePayout = Math.min(safe, baseCap);
 

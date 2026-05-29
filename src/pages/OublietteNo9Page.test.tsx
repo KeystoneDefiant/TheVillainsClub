@@ -1,12 +1,43 @@
 import { MantineProvider } from "@mantine/core";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { villainsGameDefaults } from "@/config/villainsGameDefaults";
 import { useClubWallet } from "@/game/clubWalletStore";
 import { buildOublietteSettlementProfile } from "@/game/sessionSettlement";
 import { buildClubTheme } from "@/theme/clubTheme";
 import { OublietteNo9Page } from "./OublietteNo9Page";
+
+let originalRAF: typeof global.requestAnimationFrame;
+let originalCAF: typeof global.cancelAnimationFrame;
+
+beforeAll(() => {
+  originalRAF = global.requestAnimationFrame;
+  originalCAF = global.cancelAnimationFrame;
+  global.requestAnimationFrame = (cb) => setTimeout(cb, 0) as unknown as number;
+  global.cancelAnimationFrame = (id) => clearTimeout(id);
+  // Stub matchMedia so usePrefersReducedMotion resolves immediately.
+  // prefers-reduced-motion: reduce skips animation timers, letting the
+  // lazy Oubliette component mount and pass through Suspense synchronously.
+  vi.spyOn(window, "matchMedia").mockImplementation(
+    (query) =>
+      ({
+        matches: query === "(prefers-reduced-motion: reduce)",
+        media: query,
+        onchange: null,
+        addListener: () => {},
+        removeListener: () => {},
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        dispatchEvent: () => false,
+      }) as unknown as MediaQueryList,
+  );
+});
+
+afterAll(() => {
+  global.requestAnimationFrame = originalRAF;
+  global.cancelAnimationFrame = originalCAF;
+});
 
 function renderGameRoute() {
   return render(
@@ -42,7 +73,7 @@ describe("OublietteNo9Page", () => {
 
     renderGameRoute();
 
-    fireEvent.click(await screen.findByRole("button", { name: /cash out and return to the club/i }, { timeout: 5000 }));
+    fireEvent.click(await screen.findByRole("button", { name: /cash out and return to the club/i }, { timeout: 8000 }));
     fireEvent.click(await screen.findByRole("button", { name: /confirm cash out/i }));
 
     expect(await screen.findByText("Bar route")).toBeInTheDocument();

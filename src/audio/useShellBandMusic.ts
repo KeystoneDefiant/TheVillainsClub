@@ -36,11 +36,22 @@ export function useShellBandMusic(): void {
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const remainingMusicRef = useRef<string[]>([]);
+  const lastPlayedTrackRef = useRef<string | null>(null);
   const barKeyRef = useRef(barDateKey(new Date()));
   const bandIndexRef = useRef(effectiveBandIndexForBarDate(barKeyRef.current));
   const lastClipRef = useRef<"music" | "interlude" | null>(null);
   const boundaryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fadeTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const refillMusicQueue = () => {
+    const band = bandsCatalog.bands[bandIndexRef.current];
+    const urls = shuffledBandMusicUrls(band);
+    if (urls.length > 1 && urls[0] === lastPlayedTrackRef.current) {
+      const first = urls.shift()!;
+      urls.push(first);
+    }
+    remainingMusicRef.current = urls;
+  };
 
   useEffect(() => {
     const audio = new Audio();
@@ -85,13 +96,11 @@ export function useShellBandMusic(): void {
 
     applyVolume();
 
-    const refillMusicQueue = () => {
-      const band = bandsCatalog.bands[bandIndexRef.current];
-      remainingMusicRef.current = shuffledBandMusicUrls(band);
-    };
-
     const playUrl = (url: string, kind: "music" | "interlude") => {
       lastClipRef.current = kind;
+      if (kind === "music") {
+        lastPlayedTrackRef.current = url;
+      }
       applyVolume("instant");
       audio.src = url;
       void audio.play().catch(() => {});
@@ -277,12 +286,12 @@ export function useShellBandMusic(): void {
 
     if (!audio.src || audio.ended) {
       if (remainingMusicRef.current.length === 0) {
-        const band = bandsCatalog.bands[bandIndexRef.current];
-        remainingMusicRef.current = shuffledBandMusicUrls(band);
+        refillMusicQueue();
       }
       const next = remainingMusicRef.current.shift();
       if (next) {
         lastClipRef.current = "music";
+        lastPlayedTrackRef.current = next;
         const { musicEnabled: enabled, musicVolume } = useClubAudioStore.getState();
         audio.volume = enabled ? musicVolume * (useClubFlowStore.getState().hasEnteredClub ? 1 : 0.3) : 0;
         audio.src = next;

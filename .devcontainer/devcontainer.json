@@ -38,6 +38,7 @@
   "remoteUser": "node",
   "remoteEnv": {
     "NODE_ENV": "development",
-    "ELECTRON_DISABLE_GPU": "1"
+    "ELECTRON_DISABLE_GPU": "1",
+    "VITE_USE_POLLING": "true"
   }
 }

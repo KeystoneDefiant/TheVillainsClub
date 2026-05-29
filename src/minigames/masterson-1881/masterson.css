@@ -62,9 +62,6 @@
   border-color: var(--masterson-brass);
 }
 
-.masterson-grid-cell.number {
-  aspect-ratio: 1;
-}
 
 .masterson-grid-cell.outside {
   aspect-ratio: auto;
@@ -236,4 +233,104 @@
   border-radius: 16px;
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.8);
   overflow: hidden;
+}
+
+/* Interactive light-blue felt hover highlight */
+.masterson-grid-cell.highlight-blue {
+  box-shadow: inset 0 0 12px rgba(0, 191, 255, 0.7), 0 0 8px rgba(0, 191, 255, 0.5) !important;
+  border-color: #00bfff !important;
+  filter: brightness(1.2);
+}
+
+/* Glowing white winning cell highlight after ball settles */
+.masterson-grid-cell.winning-highlight {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border-color: #ffffff !important;
+  font-weight: 900 !important;
+  text-shadow: none !important;
+  box-shadow: 
+    inset 0 0 15px rgba(255, 255, 255, 1),
+    0 0 25px rgba(255, 255, 255, 0.9),
+    0 0 45px rgba(255, 255, 255, 0.7) !important;
+  animation: masterson-win-glow-pulse 1s infinite alternate;
+}
+
+@keyframes masterson-win-glow-pulse {
+  from {
+    box-shadow: 
+      inset 0 0 10px rgba(255, 255, 255, 0.8),
+      0 0 15px rgba(255, 255, 255, 0.8);
+  }
+  to {
+    box-shadow: 
+      inset 0 0 20px rgba(255, 255, 255, 1),
+      0 0 30px rgba(255, 255, 255, 1),
+      0 0 15px var(--masterson-brass);
+  }
+}
+
+/* Glassmorphic Win/Loss Staggered Overlay inside placard */
+.masterson-recap-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 12, 10, 0.88);
+  backdrop-filter: blur(2px);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 20;
+}
+
+.masterson-recap-text {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 1.1rem;
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
+}
+
+.masterson-recap-text.win {
+  color: #81c784; /* Premium mint green */
+  text-shadow: 0 0 8px rgba(129, 199, 132, 0.4);
+}
+
+.masterson-recap-text.loss {
+  color: #ef5350; /* Deep red */
+  text-shadow: 0 0 8px rgba(239, 83, 80, 0.4);
+}
+
+.masterson-recap-text.even {
+  color: #b0bec5; /* Muted gray */
+}
+
+/* Leaving Card Overlay styling */
+.masterson-leaving-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: rgba(26, 12, 8, 0.95);
+  border: 1px solid rgba(239, 83, 80, 0.4);
+  box-shadow: inset 0 0 12px rgba(239, 83, 80, 0.2);
+  border-radius: 6px;
+  width: 100%;
+  height: 100%;
+  padding: 6px;
+}
+
+.masterson-leaving-reason {
+  color: #ffb300;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-top: 2px;
 }

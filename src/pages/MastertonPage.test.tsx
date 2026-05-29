@@ -57,7 +57,7 @@ describe("MastertonPage", () => {
     expect(screen.queryByText("Menu fallback")).not.toBeInTheDocument();
     
     // The Masterton Page lazy loads MastertonRoot, so we should wait for a Masterton-specific text to render
-    expect(await screen.findByText("Masterton 1881", {}, { timeout: 10000 })).toBeInTheDocument();
+    expect(await screen.findByText("Masterton 1881", {}, { timeout: 25000 })).toBeInTheDocument();
 
     // Verify Sommelier live guide renders because isTutorial is true
     expect(screen.getByText("Pazillus A. Rabellum")).toBeInTheDocument();

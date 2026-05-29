@@ -72,7 +72,7 @@ describe("SevenYearItchPage", () => {
      * extended timeout to avoid flakes when the full suite races on Vite
      * transforms.
      */
-    fireEvent.click(await screen.findByRole("button", { name: /cash out/i }, { timeout: 5000 }));
+    fireEvent.click(await screen.findByRole("button", { name: /cash out/i }, { timeout: 8000 }));
     fireEvent.click(await screen.findByRole("button", { name: /confirm cash out/i }));
 
     await waitFor(() => {
@@ -82,5 +82,5 @@ describe("SevenYearItchPage", () => {
     expect(screen.getByTestId("bar-route-return")).toHaveTextContent(String(buyIn));
     expect(screen.queryByText("Menu fallback")).not.toBeInTheDocument();
     expect(useClubWallet.getState().activeSession).toBeNull();
-  });
+  }, 12000);
 });

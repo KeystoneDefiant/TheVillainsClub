@@ -574,13 +574,6 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
                             </button>
                           ))}
 
-                          <button type="button" className="club-menu-card__entry" onClick={openSettings}>
-                            <span>
-                              <strong>Settings</strong>
-                              <small>Music, sound, progress</small>
-                            </span>
-                          </button>
-
                           <Text size="xs" c={clubTokens.text.muted} ta="center">
                             {import.meta.env.DEV ? (
                               <>
@@ -733,6 +726,17 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
                   </Group>
                 </ClubPanel>
 
+
+                <Group justify="space-between" gap="xs">
+                  <button type="button" className="club-menu-card__entry" onClick={openSettings}>
+                    <span>
+                      <strong>Settings</strong>
+                      <small>Music, sound, progress</small>
+                    </span>
+                  </button>
+                </Group>
+
+
               </Stack>
             </div>
           </motion.section>
@@ -825,6 +829,6 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
           </Group>
         </Stack>
       </Modal>
-    </Box>
+    </Box >
   );
 }

@@ -15,6 +15,7 @@ services:
     environment:
       NODE_ENV: development
       ELECTRON_DISABLE_GPU: "1"
+      VITE_USE_POLLING: "true"
     tty: true
     stdin_open: true
     command: sleep infinity

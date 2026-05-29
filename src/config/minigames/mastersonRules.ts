@@ -8,6 +8,8 @@ export interface MastersonGameConfig {
   consecutive_rig_suspicion_multiplier: number;
   rig_win_suspicion_scalar: number;
   no_rig_suspicion_decrease: number;
+  betting_duration_seconds: number;
+  minimum_bet: number;
   rig_types: {
     low: { suspicion: number; targets: string[] };
     mid: { suspicion: number; targets: string[] };
@@ -67,6 +69,8 @@ export const mastersonGameConfig: MastersonGameConfig = {
   consecutive_rig_suspicion_multiplier: 1.20,
   rig_win_suspicion_scalar: 0.40,
   no_rig_suspicion_decrease: 1,
+  betting_duration_seconds: 13,
+  minimum_bet: 100,
   rig_types: {
     low: {
       suspicion: 2,
@@ -127,6 +131,25 @@ export const rouletteNumbers: RouletteNumberInfo[] = [
 
 export function validateOutcomeAgainstRig(outcome: RouletteNumberInfo, rig: RigChoice): boolean {
   if (rig.severity === 'none' || !rig.target) return true;
+
+  if (rig.target.startsWith('Street_')) {
+    const parts = rig.target.split('_');
+    const start = parseInt(parts[1] || '', 10);
+    const end = parseInt(parts[2] || '', 10);
+    const val = parseInt(outcome.value, 10);
+    return !isNaN(start) && !isNaN(end) && !isNaN(val) && val >= start && val <= end;
+  }
+  if (rig.target.startsWith('DoubleStreet_')) {
+    const parts = rig.target.split('_');
+    const start = parseInt(parts[1] || '', 10);
+    const end = parseInt(parts[2] || '', 10);
+    const val = parseInt(outcome.value, 10);
+    return !isNaN(start) && !isNaN(end) && !isNaN(val) && val >= start && val <= end;
+  }
+  if (rig.target.startsWith('Corner_')) {
+    const parts = rig.target.split('_').slice(1);
+    return parts.includes(outcome.value);
+  }
 
   switch (rig.target) {
     case 'Red': return outcome.color === 'Red';

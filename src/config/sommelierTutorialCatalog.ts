@@ -1,3 +1,5 @@
+import { mastersonGameConfig } from "./minigames/mastersonRules";
+
 export interface SommelierTutorialStep {
   /** The title of this step or concept */
   title: string;
@@ -228,17 +230,22 @@ export const sommelierTutorialCatalog: Record<string, SommelierTutorialStep[]> =
   masterton_1881: [
     {
       title: "Welcome to Masterton 1881",
-      dialogue: "Welcome to the table, friend. I am Pazillus A. Rabellum, the club's sommelier. Here at The Villains Club, we appreciate a vintage that has... a bit of manipulation behind it.\n\nIn Masterton 1881, you are the corrupt Croupier running a rigged Double Zero Roulette table. Your shift lasts exactly 30 spins. Your primary objective is to maximize the house's total earnings and pocket a massive personal commission cut, all while keeping the seats filled. Let me pour you a glass of Cabernet and show you how to pull the strings.",
+      dialogue: `Welcome to the table, friend. I am Pazillus A. Rabellum, the club's sommelier. Here at The Villains Club, we appreciate history. Masterson 1881 is named after William Barkley Masterson, an Old West lawman, gambler, and journalist. When he hung up his gunbelt in 1881, he still gambled quite a bit and encountered his fair share of crooked games.`,
       highlightSelector: ".masterson-felt-board"
     },
     {
-      title: "The Art of Rigging",
-      dialogue: "Before every spin, you can either select a Fair Spin or define a Rig Constraint Target across three severity levels.\n\n• Low Rig (Suspicion +2): Force colors (Red/Black), parity (Even/Odd), or range halves (Low/High).\n• Mid Rig (Suspicion +3): Target Column 1/2/3 or Dozens.\n• High Rig (Suspicion +5): Rig the ball to land on a Specific Number.\n\nRigging a spin filters the wheel's possible landing numbers to only those that satisfy your constraint. You can select your rig by clicking cells directly on the layout matrix or using the croupier rigging deck controls.",
+      title: "The Shift",
+      dialogue: `In Masterton 1881, you are the croupier (That's the roulette dealer...) running a rigged roulette table. Your shift lasts exactly ${mastersonGameConfig.shift_duration_spins} spins or until you scare off all of the bettors at the table. Your primary objective is to maximize the house's total earnings and pocket a massive personal commission cut, all while keeping the seats filled.\n\nLet me pour you a glass of Cabernet and show you how to pull the strings.`,
+      highlightSelector: ".masterson-felt-board"
+    },
+    {
+      title: "Zen and the Art of Scamming Rubes",
+      dialogue: `The key to success in Masterton 1881 is to ruin the day of your players. Don't feel bad, they'd do the same to you had roles been reversed. However, the players are wise to crooked croupiers, and will get suspicious if you rig the game a little too much. This is The Villains Club, after all.\n\nIf their suspicion maxes out, they will pack their bags and leave in a huff, taking their wallets with them. You want to give the players a little bit of hope that the game is fair, keeping them in their seats and betting more until you decide to pull the rug out from under them.\n\nAgain, this is The Villains Club, after all.`,
       highlightSelector: "#croupier-rigging-deck"
     },
     {
       title: "Bettor AI Strategies",
-      dialogue: "Up to four AI bettors will sit at your table, each following distinct betting patterns.\n\n• Martingale & D'Alembert: Systems that dynamically scale bet sizes based on wins/losses.\n• Random & Random 1:1: Erratic layout selections with varying risks.\n• Hedges: High-coverage bets covering multiple sections simultaneously.\n• Low Risk Grind: Conservative chips focused on safe outside bets.\n• High Risk: Chasing massive payouts on specific single-number fields.\n\nYou will see their names, strategies, chip stacks, and suspicion gauges displayed in the seat monitors.",
+      dialogue: "Up to four bettors will sit at your table, each following distinct betting patterns, risk tolerances, and... naivety for lack of a kinder word.\n\nYou will see their names, strategies, chip stacks, and suspicion gauges displayed in the seat monitors.",
       highlightSelector: "#seat-monitors",
       mockState: {
         activeBettors: [
@@ -252,8 +259,21 @@ export const sommelierTutorialCatalog: Record<string, SommelierTutorialStep[]> =
       }
     },
     {
-      title: "Managing Suspicion",
-      dialogue: "Rigging the wheel outcomes arouses suspicion. If a bettor's suspicion reaches their threshold, they exit immediately.\n\n• Base Rig Suspicion scales with severity (+2, +3, or +5).\n• Rigging multiple spins consecutively adds a streak multiplier: Ceil(RigCount * 1.20).\n• If a bettor wins on a rigged spin, they suspect less (+40% of the total suspicion rating).\n• Running a Fair Spin cools things down, reducing active suspicion by 1.\n\nKeep an eye on their unpolished whiskey glasses. As suspicion approaches the threshold, the glass clouds up with condensation and eventually cracks if they storm off.",
+      title: "Rigging the Wheel",
+      dialogue: `There are three types of rigs you can perform, the more specific the rigging, the more obvious your trickery will be. Click any bet to rig the wheel to that outcome and win, or run a fair spin. Click an active bet again to cancel the rigging and return to a fair spin.`,
+      highlightSelector: "#croupier-rigging-deck",
+      mockState: {
+        activeBettors: [
+          { id: "Seat 1", name: "Mildred Ratched", strategy: "Martingale", chips: 15000, initial_chips: 15000, max_suspicion: 6, current_suspicion: 5, loss_tolerance_pct: 0.7, max_consecutive_losses: 4, current_consecutive_losses: 0, double_bet_frequency: 0.5, herd_mentality_pct: 0.2 }
+        ],
+        currentBets: {
+          "Seat 1": [{ target: "Red", amount: 1000, payoutOdds: 1 }]
+        }
+      }
+    },
+    {
+      title: "Rigging and Suspicion, Part 2",
+      dialogue: `As I mentioned, the more specifically you are rigging the wheel, the more obvious you are going to be to the players.\n\n•Low Suspicion rigging: 1:1 bets found in the bottom row.\n• Mid Suspicion rigging: Columns or Dozens.\n• High Suspicion rigging: Specific Numbers.\n\nIf a bettor wins on a rigged spin, they still get wise, but won't care as much.\n\nRunning a Fair Spin cools things down, reducing active suspicion by a small amount.\n\nKeep an eye on their whiskey glasses. As suspicion approaches the threshold, the glass clouds up with condensation and eventually cracks if they storm off.`,
       highlightSelector: ".masterson-whiskey-glass",
       mockState: {
         activeBettors: [
@@ -266,10 +286,10 @@ export const sommelierTutorialCatalog: Record<string, SommelierTutorialStep[]> =
     },
     {
       title: "Evictions, Upkeeps, and Spawns",
-      dialogue: "Bettors leave the table due to Suspicion Breach, Financial Exhaustion, or Frustration (consecutive losses). Even worse, if a bettor leaves in a suspicion breach, others may trigger a 'Herd Cascade' and leave too!\n\nYour base commission is 10%. On spins 8, 15, and 23, it increases by +5%. Open seats have a 15% random chance to replenish, and if your table is completely empty on spin 30, a 25% last chance trigger may spawn a final bettor to keep the shift alive.\n\nWith that, I believe our tasting for this game has come to a conclusion. Settle your shift, rig the wheel wisely, and try to pocket a handsome sum of commission. Best of luck!",
+      dialogue: `Bettors leave the table due to Suspicion, Financial Exhaustion, or Frustration (consecutive losses). Even worse, if a bettor leaves due to suspicion, others may decide to leave the party as well!\n\nOpen seats have a ${Math.round(mastersonGameConfig.seat_fill_chance_per_spin * 100)}% random chance to replenish, and if your table is completely empty, a ${Math.round(mastersonGameConfig.empty_table_last_chance_pct * 100)}% last chance trigger may spawn a final bettor to keep the shift alive.`,
       highlightSelector: ["#ledger-log", "#table-house-ledger"],
       mockState: {
-        spinCount: 8,
+        spinCount: 12,
         commissionRate: 15,
         tableHouseLedger: 24500,
         accumulatedCommission: 3675,
@@ -277,6 +297,19 @@ export const sommelierTutorialCatalog: Record<string, SommelierTutorialStep[]> =
           { type: "upkeep", message: "📈 House commission rate increased! You now pocket 15% of positive take!" },
           { type: "eviction", message: "💥 Victor Lupin left the table: Frustration Limit." }
         ]
+      }
+    },
+    {
+      title: "Advanced Strategy - Bettor Behavior",
+      dialogue: `The players can bet in a number of different patterns. Knowing these patterns isn't essential, but it does help to know what they may be doing and how best to exploit them for maximum profit.\n\n• Martingale & D'Alembert: Systems that dynamically scale bet sizes based on wins/losses.\n• Random & Random 1:1: Erratic layout selections with varying risks.\n• Hedges: High-coverage bets covering multiple sections simultaneously.\n• Low Risk Grind: Conservative chips focused on safe outside bets.\n• High Risk: Chasing massive payouts on specific single-number fields.\n\nWith that, I believe our tasting for this game has come to a conclusion. Settle your shift, rig the wheel wisely, and try to pocket a handsome sum of commission. Best of luck!`,
+      highlightSelector: "#betting-styles-guide",
+      mockState: {
+        activeBettors: [
+          { id: "Seat 1", name: "Mildred Ratched", strategy: "Martingale", chips: 15000, initial_chips: 15000, max_suspicion: 6, current_suspicion: 5, loss_tolerance_pct: 0.7, max_consecutive_losses: 4, current_consecutive_losses: 0, double_bet_frequency: 0.5, herd_mentality_pct: 0.2 }
+        ],
+        currentBets: {
+          "Seat 1": [{ target: "Red", amount: 1000, payoutOdds: 1 }]
+        }
       }
     }
   ]

@@ -33,6 +33,7 @@ The **Agent cycle checklist** below is the same bar, itemized.
 - **Web shell (no Electron window):** `npm run dev:web` → open forwarded **http://localhost:5173** (Vite listens on all interfaces).
 - **Full Electron:** `npm run dev` — needs a display (WSLg, Linux desktop, macOS, or X11). Headless remote: use `dev:web` or `npm run build` / `npm test`.
 - **Docker only:** from repo root, `docker compose up -d dev` then `docker compose exec dev npm run dev:web` — details in [`.devcontainer/README.md`](.devcontainer/README.md).
+- **Hot Reloading / HMR on Windows Hosts:** Windows hosts running Docker containers typically do not propagate native file watch events across the mount boundary. In this repository, polling (`usePolling`) is used if `VITE_USE_POLLING=true` (or `CHOKIDAR_USEPOLLING=true`) is defined. It is enabled by default in `.devcontainer/devcontainer.json` and `compose.yaml`.
 
 ## Electron + React (commands)
 

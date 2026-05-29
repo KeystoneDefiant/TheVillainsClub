@@ -25,6 +25,7 @@ export function SommelierLiveGuide({
     height: number;
   }[]>([]);
 
+  const guideRef = useRef<HTMLDivElement>(null);
   const retryTimerRef = useRef<number | null>(null);
   const stepsRef = useRef(steps);
   stepsRef.current = steps;
@@ -46,15 +47,37 @@ export function SommelierLiveGuide({
       return;
     }
 
+    const guideEl = guideRef.current;
+    if (!guideEl) {
+      if (retryCount < 25) {
+        retryTimerRef.current = window.setTimeout(() => {
+          updateSpotlight(retryCount + 1);
+        }, 100);
+      }
+      return;
+    }
+
     const selectors = Array.isArray(raw) ? raw : [raw];
     const rects: { left: number; top: number; width: number; height: number }[] = [];
+
+    const rectContainer = guideEl.getBoundingClientRect();
+    const scale = rectContainer.width > 0 ? rectContainer.width / guideEl.offsetWidth : 1;
 
     for (const sel of selectors) {
       for (const el of document.querySelectorAll(sel)) {
         const r = el.getBoundingClientRect();
         // Check both existence and visibility to prevent highlighting hidden dummy/transitioning elements
         if (r.width > 0 || r.height > 0) {
-          rects.push({ left: r.left, top: r.top, width: r.width, height: r.height });
+          if (scale > 0) {
+            rects.push({
+              left: (r.left - rectContainer.left) / scale,
+              top: (r.top - rectContainer.top) / scale,
+              width: r.width / scale,
+              height: r.height / scale,
+            });
+          } else {
+            rects.push({ left: r.left - rectContainer.left, top: r.top - rectContainer.top, width: r.width, height: r.height });
+          }
         }
       }
     }
@@ -126,6 +149,7 @@ export function SommelierLiveGuide({
 
   return (
     <Box
+      ref={guideRef}
       style={{
         position: "absolute",
         inset: 0,

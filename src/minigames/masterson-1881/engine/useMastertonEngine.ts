@@ -30,6 +30,12 @@ export function useMastertonEngine() {
   const [spinResult, setSpinResult] = useState<RouletteNumberInfo | null>(null);
   const [roundRecaps, setRoundRecaps] = useState<Record<string, number>>({});
   const [sessionTotals, setSessionTotals] = useState<Record<string, number>>({});
+  const [evictedBettors, setEvictedBettors] = useState<Record<string, {
+    name: string;
+    reason: string;
+    chips: number;
+    strategy: string;
+  }>>({});
 
   // Table House Ledger: net profit / loss of the table
   const [tableHouseLedger, setTableHouseLedger] = useState<number>(0);
@@ -53,6 +59,7 @@ export function useMastertonEngine() {
     setCurrentBets({});
     setRoundRecaps({});
     setSessionTotals({});
+    setEvictedBettors({});
     setSelectedRig({ severity: "none", target: null });
     setConsecutiveRigCount(0);
     setSpinResult(null);
@@ -273,6 +280,7 @@ export function useMastertonEngine() {
     const remainingBettors: BettorProfile[] = [];
     const evictedIds = new Set<string>();
     let triggeredSuspicionBreach = false;
+    const evicts: Record<string, { name: string; reason: string; chips: number; strategy: string }> = {};
 
     evaluatedBettors.forEach((bettor) => {
       let evicted = false;
@@ -292,6 +300,12 @@ export function useMastertonEngine() {
 
       if (evicted) {
         evictedIds.add(bettor.id);
+        evicts[bettor.id] = {
+          name: bettor.name,
+          reason,
+          chips: bettor.chips,
+          strategy: bettor.strategy,
+        };
         newNotifications.push({
           type: "eviction",
           message: `💥 ${bettor.name} left the table: ${reason}.`,
@@ -307,6 +321,12 @@ export function useMastertonEngine() {
       remainingBettors.forEach((bettor) => {
         if (Math.random() < bettor.herd_mentality_pct) {
           evictedIds.add(bettor.id);
+          evicts[bettor.id] = {
+            name: bettor.name,
+            reason: "Herd Cascade",
+            chips: bettor.chips,
+            strategy: bettor.strategy,
+          };
           newNotifications.push({
             type: "eviction",
             message: `🐑 Herd Cascade: ${bettor.name} saw someone leave in suspicion and packed up!`,
@@ -318,6 +338,8 @@ export function useMastertonEngine() {
     } else {
       cascadeBettors = remainingBettors;
     }
+
+    setEvictedBettors(evicts);
 
     // Step 7: Upkeep & Payout Scaling / Spawning
     const nextSpin = spinCount + 1;
@@ -390,6 +412,7 @@ export function useMastertonEngine() {
     setCurrentBets({});
     setSpinResult(null);
     setRoundRecaps({});
+    setEvictedBettors({});
     setNotifications([]);
     setPhase("BETTING");
   }, [phase]);
@@ -416,5 +439,6 @@ export function useMastertonEngine() {
     resetGame,
     roundRecaps,
     sessionTotals,
+    evictedBettors,
   };
 }

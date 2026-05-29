@@ -1,4 +1,4 @@
-import { BettorProfile, rouletteNumbers } from "@/config/minigames/mastersonRules";
+import { BettorProfile, rouletteNumbers, mastersonGameConfig } from "@/config/minigames/mastersonRules";
 
 export interface BettorBet {
   target: string; // E.g., "Red", "Black", "Even", "Odd", "Low_1_18", "High_19_36", "Column_1", "Dozen_2", "17", etc.
@@ -13,6 +13,15 @@ export function getPayoutOddsForTarget(target: string): number {
   }
   if (["Column_1", "Column_2", "Column_3", "Dozen_1", "Dozen_2", "Dozen_3"].includes(target)) {
     return 2;
+  }
+  if (target.startsWith("Street_")) {
+    return 11;
+  }
+  if (target.startsWith("Corner_")) {
+    return 8;
+  }
+  if (target.startsWith("DoubleStreet_")) {
+    return 5;
   }
   return 35; // Specific number
 }
@@ -34,8 +43,8 @@ export function generateRandomBettor(seatIndex: number): BettorProfile {
   ];
   const strategy = strategies[Math.floor(Math.random() * strategies.length)]!;
   
-  // Starting chips between 5,000 and 200,000
-  const initial_chips = Math.floor(Math.random() * (200000 - 5000) + 5000);
+  // Starting chips between 5,000 and 200,000 in whole $500 increments
+  const initial_chips = Math.round((Math.random() * (200000 - 5000) + 5000) / 500) * 500;
   const max_suspicion = Math.floor(Math.random() * (10 - 4) + 4); // 4 to 10
   const loss_tolerance_pct = parseFloat((Math.random() * (1.00 - 0.50) + 0.50).toFixed(2)); // 0.50 to 1.00
   const max_consecutive_losses = Math.floor(Math.random() * (10 - 2) + 2); // 2 to 10
@@ -69,12 +78,14 @@ export function executeBettorBetting(
   const bets: BettorBet[] = [];
   let nextBetAmount = previousBetAmount ?? 0;
 
-  if (bettor.chips <= 0) {
+  const minBet = mastersonGameConfig.minimum_bet;
+
+  if (bettor.chips < minBet) {
     return { bets, nextBetAmount: 0 };
   }
 
-  // Base units based on initial chip size
-  const baseUnit = Math.max(100, Math.floor(bettor.initial_chips * 0.02)); // 2% of initial bankroll
+  // Base units based on initial chip size (rounded to minBet increments)
+  const baseUnit = Math.max(minBet, Math.round((bettor.initial_chips * 0.02) / minBet) * minBet);
   
   switch (bettor.strategy) {
     case "Martingale": {
@@ -88,8 +99,9 @@ export function executeBettorBetting(
       if (Math.random() < bettor.double_bet_frequency) {
         amount *= 2;
       }
+      amount = Math.round(amount / minBet) * minBet;
       amount = Math.min(amount, bettor.chips);
-      if (amount > 0) {
+      if (amount >= minBet) {
         bets.push({ target, amount, payoutOdds: 1 });
         nextBetAmount = amount;
       }
@@ -107,8 +119,9 @@ export function executeBettorBetting(
           amount = Math.max(baseUnit, previousBetAmount - baseUnit);
         }
       }
+      amount = Math.round(amount / minBet) * minBet;
       amount = Math.min(amount, bettor.chips);
-      if (amount > 0) {
+      if (amount >= minBet) {
         bets.push({ target, amount, payoutOdds: 1 });
         nextBetAmount = amount;
       }
@@ -119,9 +132,9 @@ export function executeBettorBetting(
       // Pick a random 1:1 outside target, size is random percentage of initial chips
       const targets = ["Red", "Black", "Even", "Odd", "Low_1_18", "High_19_36"];
       const target = targets[Math.floor(Math.random() * targets.length)]!;
-      let amount = Math.floor(baseUnit * (0.5 + Math.random() * 1.5));
+      let amount = Math.round((baseUnit * (0.5 + Math.random() * 1.5)) / minBet) * minBet;
       amount = Math.min(amount, bettor.chips);
-      if (amount > 0) {
+      if (amount >= minBet) {
         bets.push({ target, amount, payoutOdds: 1 });
         nextBetAmount = amount;
       }
@@ -129,17 +142,24 @@ export function executeBettorBetting(
     }
 
     case "Random": {
+      const STREETS = ["Street_1_3", "Street_4_6", "Street_7_9", "Street_10_12", "Street_13_15", "Street_16_18", "Street_19_21", "Street_22_24", "Street_25_27", "Street_28_30", "Street_31_33", "Street_34_36"];
+      const DOUBLE_STREETS = ["DoubleStreet_1_6", "DoubleStreet_7_12", "DoubleStreet_13_18", "DoubleStreet_19_24", "DoubleStreet_25_30", "DoubleStreet_31_36"];
+      const CORNERS = ["Corner_1_2_4_5", "Corner_2_3_5_6", "Corner_4_5_7_8", "Corner_5_6_8_9", "Corner_7_8_10_11", "Corner_8_9_11_12", "Corner_10_11_13_14", "Corner_11_12_14_15", "Corner_13_14_16_17", "Corner_14_15_17_18", "Corner_16_17_19_20", "Corner_17_18_20_21", "Corner_19_20_22_23", "Corner_20_21_23_24", "Corner_22_23_25_26", "Corner_23_24_26_27", "Corner_25_26_28_29", "Corner_26_27_29_30", "Corner_28_29_31_32", "Corner_29_30_32_33", "Corner_31_32_34_35", "Corner_32_33_35_36"];
+
       // Pick a random spot anywhere on layout, bet is random
       const targets = [
         "Red", "Black", "Even", "Odd", "Low_1_18", "High_19_36",
         "Column_1", "Column_2", "Column_3", "Dozen_1", "Dozen_2", "Dozen_3",
+        ...STREETS,
+        ...DOUBLE_STREETS,
+        ...CORNERS,
         ...rouletteNumbers.map(n => n.value)
       ];
       const target = targets[Math.floor(Math.random() * targets.length)]!;
       const odds = getPayoutOddsForTarget(target);
-      let amount = Math.floor(baseUnit * (0.25 + Math.random() * 2));
+      let amount = Math.round((baseUnit * (0.25 + Math.random() * 2)) / minBet) * minBet;
       amount = Math.min(amount, bettor.chips);
-      if (amount > 0) {
+      if (amount >= minBet) {
         bets.push({ target, amount, payoutOdds: odds });
         nextBetAmount = amount;
       }
@@ -153,11 +173,11 @@ export function executeBettorBetting(
       const t2 = isDozens ? "Dozen_2" : "Column_2";
       
       const totalAmt = Math.min(baseUnit * 2, bettor.chips);
-      const halfAmt = Math.floor(totalAmt / 2);
-      if (halfAmt > 0) {
+      const halfAmt = Math.round((totalAmt / 2) / minBet) * minBet;
+      if (halfAmt >= minBet) {
         bets.push({ target: t1, amount: halfAmt, payoutOdds: 2 });
         bets.push({ target: t2, amount: halfAmt, payoutOdds: 2 });
-        nextBetAmount = totalAmt;
+        nextBetAmount = halfAmt * 2;
       }
       break;
     }
@@ -165,8 +185,9 @@ export function executeBettorBetting(
     case "Low_Risk_Grind": {
       // Safe small bets on outside 1:1
       const target = "Low_1_18";
-      const amount = Math.min(Math.floor(baseUnit * 0.5), bettor.chips);
-      if (amount > 0) {
+      let amount = Math.round((baseUnit * 0.5) / minBet) * minBet;
+      amount = Math.min(amount, bettor.chips);
+      if (amount >= minBet) {
         bets.push({ target, amount, payoutOdds: 1 });
         nextBetAmount = amount;
       }
@@ -177,8 +198,10 @@ export function executeBettorBetting(
       // Select single number coordinates with high sizing
       const randomOutcome = rouletteNumbers[Math.floor(Math.random() * rouletteNumbers.length)]!;
       const target = randomOutcome.value;
-      const amount = Math.min(baseUnit * 3, bettor.chips);
-      if (amount > 0) {
+      let amount = baseUnit * 3;
+      amount = Math.round(amount / minBet) * minBet;
+      amount = Math.min(amount, bettor.chips);
+      if (amount >= minBet) {
         bets.push({ target, amount, payoutOdds: 35 });
         nextBetAmount = amount;
       }

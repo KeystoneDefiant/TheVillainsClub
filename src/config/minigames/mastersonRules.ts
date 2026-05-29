@@ -64,11 +64,11 @@ export const mastersonGameConfig: MastersonGameConfig = {
   max_bettors: 4,
   base_commission_pct: 10.0,
   quarter_commission_bonus_pct: 5.0,
-  seat_fill_chance_per_spin: 0.15,
+  seat_fill_chance_per_spin: 0.40,
   empty_table_last_chance_pct: 0.25,
   consecutive_rig_suspicion_multiplier: 1.20,
   rig_win_suspicion_scalar: 0.40,
-  no_rig_suspicion_decrease: 1,
+  no_rig_suspicion_decrease: 2,
   betting_duration_seconds: 13,
   minimum_bet: 100,
   rig_types: {

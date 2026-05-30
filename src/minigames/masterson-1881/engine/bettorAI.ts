@@ -14,7 +14,7 @@ export function getPayoutOddsForTarget(target: string): number {
   if (["Column_1", "Column_2", "Column_3", "Dozen_1", "Dozen_2", "Dozen_3"].includes(target)) {
     return 2;
   }
-  if (target.startsWith("Street_")) {
+  if (target.startsWith("Street_") || target.startsWith("Trio_")) {
     return 11;
   }
   if (target.startsWith("Corner_")) {
@@ -26,12 +26,10 @@ export function getPayoutOddsForTarget(target: string): number {
   return 35; // Specific number
 }
 
-// Generate names for seat profiles
-const SURNAMES = ["Vance", "Lupin", "Moriarty", "Riddle", "Ratched", "Kruger", "Lecter", "Bates", "Duval", "Skeeter", "Gekko", "Corleone"];
-const FIRST_NAMES = ["Victor", "Arsene", "James", "Tom", "Mildred", "Freddy", "Hannibal", "Norman", "Claude", "Rita", "Gordon", "Vito"];
-
 export function generateRandomBettor(seatIndex: number): BettorProfile {
-  const name = `${FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)]} ${SURNAMES[Math.floor(Math.random() * SURNAMES.length)]}`;
+  const firstNames = mastersonGameConfig.first_names;
+  const lastNames = mastersonGameConfig.last_names;
+  const name = `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`;
   const strategies: BettorProfile["strategy"][] = [
     "D_Alembert",
     "Martingale",
@@ -40,6 +38,12 @@ export function generateRandomBettor(seatIndex: number): BettorProfile {
     "Hedges",
     "Low_Risk_Grind",
     "High_Risk",
+    "Keystone_Lock",
+    "James_Bond",
+    "Fibonacci",
+    "Tier_et_Tout",
+    "The_Pivot",
+    "Angels_Split",
   ];
   const strategy = strategies[Math.floor(Math.random() * strategies.length)]!;
   
@@ -68,6 +72,8 @@ export function generateRandomBettor(seatIndex: number): BettorProfile {
     current_consecutive_losses: 0,
     double_bet_frequency,
     herd_mentality_pct,
+    total_spins_bet: 0,
+    total_amount_bet: 0,
   };
 }
 
@@ -272,6 +278,197 @@ export function executeBettorBetting(
         bets.push({ target, amount, payoutOdds: 35 });
         nextBetAmount = amount;
       }
+      break;
+    }
+
+    case "Keystone_Lock": {
+      // 4 units on 2nd and 3rd dozen, 2 units on 7-10 double street (DoubleStreet_7_12),
+      // and 1 unit on a trio of 00, 1, 2 (Trio_00_1_2) or 0, 2, 3 (Trio_0_2_3), or 1 street (Street_1_3), or 4 street (Street_4_6)
+      const unitsDozen = baseUnit * 4;
+      const unitsDoubleStreet = baseUnit * 2;
+      const unitsTrio = baseUnit * 1;
+
+      const dozen2Target = "Dozen_2";
+      const dozen3Target = "Dozen_3";
+      const dsTarget = "DoubleStreet_7_12";
+
+      const trioOptions = ["Trio_00_1_2", "Trio_0_2_3", "Street_1_3", "Street_4_6"];
+      const allowedTrios = trioOptions.filter(t => !isContradictoryBet(t, existingBets));
+      const trioTarget = allowedTrios.length > 0
+        ? allowedTrios[Math.floor(Math.random() * allowedTrios.length)]!
+        : trioOptions[Math.floor(Math.random() * trioOptions.length)]!;
+
+      const tempBets = [
+        { target: dozen2Target, amount: unitsDozen, payoutOdds: 2 },
+        { target: dozen3Target, amount: unitsDozen, payoutOdds: 2 },
+        { target: dsTarget, amount: unitsDoubleStreet, payoutOdds: 5 },
+        { target: trioTarget, amount: unitsTrio, payoutOdds: getPayoutOddsForTarget(trioTarget) }
+      ];
+
+      let availableChips = bettor.chips;
+      tempBets.forEach(bet => {
+        let amt = Math.round(bet.amount / minBet) * minBet;
+        amt = Math.min(amt, availableChips);
+        if (amt >= minBet) {
+          bets.push({ target: bet.target, amount: amt, payoutOdds: bet.payoutOdds });
+          availableChips -= amt;
+        }
+      });
+      nextBetAmount = bets.reduce((sum, b) => sum + b.amount, 0);
+      break;
+    }
+
+    case "James_Bond": {
+      const uHigh = baseUnit * 14;
+      const uDS = baseUnit * 5;
+      const uZero = baseUnit * 1;
+      
+      const tempBets = [
+        { target: "High_19_36", amount: uHigh, payoutOdds: 1 },
+        { target: "DoubleStreet_13_18", amount: uDS, payoutOdds: 5 },
+        { target: "0", amount: uZero, payoutOdds: 35 }
+      ];
+      
+      let availableChips = bettor.chips;
+      tempBets.forEach(bet => {
+        let amt = Math.round(bet.amount / minBet) * minBet;
+        amt = Math.min(amt, availableChips);
+        if (amt >= minBet) {
+          bets.push({ target: bet.target, amount: amt, payoutOdds: bet.payoutOdds });
+          availableChips -= amt;
+        }
+      });
+      nextBetAmount = bets.reduce((sum, b) => sum + b.amount, 0);
+      break;
+    }
+
+    case "Fibonacci": {
+      const FIB = [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377];
+      let idx = bettor.progression_index ?? 0;
+      
+      if (previousWin === false) {
+        idx = Math.min(FIB.length - 1, idx + 1);
+      } else if (previousWin === true) {
+        idx = Math.max(0, idx - 2);
+      }
+      bettor.progression_index = idx;
+      
+      let target = Math.random() > 0.5 ? "Red" : "Black";
+      if (isContradictoryBet(target, existingBets)) {
+        target = target === "Red" ? "Black" : "Red";
+      }
+      
+      const units = FIB[idx]!;
+      let amount = baseUnit * units;
+      amount = Math.round(amount / minBet) * minBet;
+      amount = Math.min(amount, bettor.chips);
+      if (amount >= minBet) {
+        bets.push({ target, amount, payoutOdds: 1 });
+        nextBetAmount = amount;
+      }
+      break;
+    }
+
+    case "Tier_et_Tout": {
+      let stage = bettor.progression_index ?? 0; // 0: Tier (1/3), 1: Tout (2/3)
+      
+      if (previousWin === true) {
+        stage = 0;
+      } else if (previousWin === false && stage === 0) {
+        stage = 1;
+      } else if (previousWin === false && stage === 1) {
+        stage = 0;
+      }
+      bettor.progression_index = stage;
+      
+      let target = Math.random() > 0.5 ? "Even" : "Odd";
+      if (isContradictoryBet(target, existingBets)) {
+        target = target === "Even" ? "Odd" : "Even";
+      }
+      
+      let amount = 0;
+      if (stage === 0) {
+        amount = Math.max(minBet, Math.round((bettor.chips / 3) / minBet) * minBet);
+      } else {
+        amount = bettor.chips;
+      }
+      
+      amount = Math.min(amount, bettor.chips);
+      if (amount >= minBet) {
+        bets.push({ target, amount, payoutOdds: 1 });
+        nextBetAmount = amount;
+      }
+      break;
+    }
+
+    case "The_Pivot": {
+      const history = bettor.recent_spins ?? [];
+      let target = bettor.pivot_target ?? null;
+      let count = bettor.progression_index ?? 0;
+      
+      if (target) {
+        count += 1;
+        if (previousWin === true || count >= 35) {
+          target = null;
+          count = 0;
+        }
+      }
+      
+      if (!target && history.length >= 2) {
+        const seen = new Set<string>();
+        for (const num of history) {
+          if (seen.has(num)) {
+            target = num;
+            count = 0;
+            break;
+          }
+          seen.add(num);
+        }
+      }
+      
+      bettor.pivot_target = target;
+      bettor.progression_index = count;
+      
+      if (target) {
+        let amount = baseUnit;
+        amount = Math.min(amount, bettor.chips);
+        if (amount >= minBet) {
+          bets.push({ target, amount, payoutOdds: 35 });
+          nextBetAmount = amount;
+        }
+      } else {
+        let shadowTarget = Math.random() > 0.5 ? "Red" : "Black";
+        let amount = minBet;
+        amount = Math.min(amount, bettor.chips);
+        if (amount >= minBet) {
+          bets.push({ target: shadowTarget, amount, payoutOdds: 1 });
+          nextBetAmount = amount;
+        }
+      }
+      break;
+    }
+
+    case "Angels_Split": {
+      const uCol = baseUnit * 2;
+      const uZero = baseUnit;
+      
+      const tempBets = [
+        { target: "Column_1", amount: uCol, payoutOdds: 2 },
+        { target: "Column_2", amount: uCol, payoutOdds: 2 },
+        { target: "0", amount: uZero, payoutOdds: 35 },
+        { target: "00", amount: uZero, payoutOdds: 35 }
+      ];
+      
+      let availableChips = bettor.chips;
+      tempBets.forEach(bet => {
+        let amt = Math.round(bet.amount / minBet) * minBet;
+        amt = Math.min(amt, availableChips);
+        if (amt >= minBet) {
+          bets.push({ target: bet.target, amount: amt, payoutOdds: bet.payoutOdds });
+          availableChips -= amt;
+        }
+      });
+      nextBetAmount = bets.reduce((sum, b) => sum + b.amount, 0);
       break;
     }
   }

@@ -19,3 +19,59 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* Player's Card Gold Sheen Hover Effect */
+.players-card-hover-gold-sheen {
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.4s ease, box-shadow 0.4s ease, transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+}
+
+.players-card-hover-gold-sheen::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    135deg,
+    transparent 0%,
+    transparent 35%,
+    rgba(230, 184, 52, 0.0) 40%,
+    rgba(230, 184, 52, 0.15) 50%,
+    rgba(230, 184, 52, 0.0) 60%,
+    transparent 65%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+  transform: translate(-30%, -30%);
+  transition: opacity 0.4s ease;
+}
+
+.players-card-hover-gold-sheen:hover {
+  border-color: rgba(230, 184, 52, 0.7) !important;
+  box-shadow: 0 0 24px rgba(230, 184, 52, 0.35), inset 0 0 16px rgba(230, 184, 52, 0.1) !important;
+  transform: translateY(-2px) !important;
+}
+
+.players-card-hover-gold-sheen:hover::before {
+  opacity: 1;
+  animation: playcard-gold-sheen 3s ease-in-out infinite;
+}
+
+.players-card-hover-gold-sheen > * {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes playcard-gold-sheen {
+  0% {
+    transform: translate(-30%, -30%);
+  }
+  100% {
+    transform: translate(30%, 30%);
+  }
+}

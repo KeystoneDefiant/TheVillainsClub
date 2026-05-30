@@ -23,7 +23,7 @@ export const sommelierTutorialCatalog: Record<string, SommelierTutorialStep[]> =
   oubliette_no9: [
     {
       title: "Welcome to Oubliette No. 9",
-      dialogue: "Welcome to the table, friend. I am Pazillus A. Rabellum, the club's sommelier. \n\nOubliette No. 9 is a rustic, full-bodied video-poker blend. This is The Villains Club's first game, and its staple for most of our patronage. Quite a popular choice, I must admit.",
+      dialogue: "Welcome to the table, {playerName}. I am Pazillus A. Rabellum, the club's sommelier. \n\nOubliette No. 9 is a rustic, full-bodied video-poker blend. This is The Villains Club's first game, and its staple for most of our patronage. Quite a popular choice, I must admit.",
       highlightSelector: "#preDraw-screen"
     },
     {
@@ -139,7 +139,7 @@ export const sommelierTutorialCatalog: Record<string, SommelierTutorialStep[]> =
   seven_year_itch: [
     {
       title: "The Green Felt Racket - Seven Year Itch",
-      dialogue: "Welcome to the table, friend. I am Pazillus A. Rabellum, the club's sommelier. \n\nAh, the green wool felt of craps... an unpredictable, exciting game of dice and daring. This is 7 Year Itch, a version of craps that removes some of the more... let's call them 'unnecessary' notes of the game, and refines the rules in to a more palatable experience. I will guide you through this volatile noir flight, but do keep up and feel free to make tasting notes. \n\n For the craps players here, this is a twist on crapless craps rules.",
+      dialogue: "Welcome to the table, {playerName}. I am Pazillus A. Rabellum, the club's sommelier. \n\nAh, the green wool felt of craps... an unpredictable, exciting game of dice and daring. This is 7 Year Itch, a version of craps that removes some of the more... let's call them 'unnecessary' notes of the game, and refines the rules in to a more palatable experience. I will guide you through this volatile noir flight, but do keep up and feel free to make tasting notes. \n\n For the craps players here, this is a twist on crapless craps rules.",
       highlightSelector: ".seven-year-itch-root"
     },
     {
@@ -175,7 +175,7 @@ export const sommelierTutorialCatalog: Record<string, SommelierTutorialStep[]> =
   fateseal_silver: [
     {
       title: "Welcome to Fateseal Silver, The Occult Altar",
-      dialogue: "Welcome to the altar, friend. I am Pazillus A. Rabellum, the club's sommelier. The only demons here are the tannins in this bottle of Rioja; fear not. \n\nIn Fateseal Silver, you will use your foresight to choose the correct sigils to align with, and then converse with the spirits through it to bring you fortune. Or ruin. Both are entirely possible, but that's why we're here, no? \n\nThis game effectively plays like a slot machine, but instead of hoping any symbol lines up on the reels, we pick a specific symbol and hope to see it as many times as possible.",
+      dialogue: "Welcome to the altar, {playerName}. I am Pazillus A. Rabellum, the club's sommelier. The only demons here are the tannins in this bottle of Rioja; fear not. \n\nIn Fateseal Silver, you will use your foresight to choose the correct sigils to align with, and then converse with the spirits through it to bring you fortune. Or ruin. Both are entirely possible, but that's why we're here, no? \n\nThis game effectively plays like a slot machine, but instead of hoping any symbol lines up on the reels, we pick a specific symbol and hope to see it as many times as possible.",
       mockState: { phase: "altar", picks: [] }
     },
     {
@@ -230,7 +230,7 @@ export const sommelierTutorialCatalog: Record<string, SommelierTutorialStep[]> =
   masterton_1881: [
     {
       title: "Welcome to Masterton 1881",
-      dialogue: `Welcome to the table, friend. I am Pazillus A. Rabellum, the club's sommelier. Here at The Villains Club, we appreciate history. Masterson 1881 is named after William Barkley Masterson, an Old West lawman, gambler, and journalist. When he hung up his gunbelt in 1881, he still gambled quite a bit and encountered his fair share of crooked games.`,
+      dialogue: `Welcome to the table, {playerName}. I am Pazillus A. Rabellum, the club's sommelier. Here at The Villains Club, we appreciate history. Masterson 1881 is named after William Barkley Masterson, an Old West lawman, gambler, and journalist. When he hung up his gunbelt in 1881, he still gambled quite a bit and encountered his fair share of crooked games.`,
       highlightSelector: ".masterson-felt-board"
     },
     {

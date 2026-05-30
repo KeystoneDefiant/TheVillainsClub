@@ -9,6 +9,20 @@ export const villainsGameDefaults = {
    */
   defaultClubBalance: 10000,
 
+  playerTitles: [
+    { id: "new_villain", title: "New Villain", minCredits: 0 },
+    { id: "villain", title: "Villain", minCredits: 0 },
+    { id: "known_villain", title: "Known Villain", minCredits: 30000 },
+    { id: "notorious_villain", title: "Notorious Villain", minCredits: 1000000 },
+  ],
+
+  bankruptcy: {
+    minCreditsTrigger: 2000,
+    bumTitle: "Smelly Bum",
+    restoreMinCreditsRequired: 30000,
+    restoreFee: 10000,
+  },
+
   oublietteNo9: {
     /** Default stake when starting a table (static for now; specials may vary later). */
     defaultBuyIn: 2000,

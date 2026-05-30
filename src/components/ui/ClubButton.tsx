@@ -37,7 +37,7 @@ export function ClubButton<C extends React.ElementType = "button">(props: ClubBu
     <Button
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       component={component as any}
-      variant={variant === "filled" ? "filled" : variant === "light" ? "light" : variant === "outline" ? "outline" : "subtle"}
+      variant={variant === "filled" || variant === "sheen" ? "filled" : variant === "light" ? "light" : variant === "outline" ? "outline" : "subtle"}
       color="brass"
       radius={isFancy ? undefined : "xs"}
       size={isFancy ? undefined : size}

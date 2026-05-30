@@ -20,6 +20,11 @@ type ClubWalletState = {
   playerName: string | null;
   activeSession: TableSession | null;
   hasSave: boolean;
+  hasPlayedFirstGame: boolean;
+  isBum: boolean;
+  customPlayerTitle: string | null;
+  showBankruptcyDialogue: boolean;
+  playedGames: Record<string, boolean>;
   startSession: (input: {
     gameId: string;
     drinkId: string;
@@ -29,7 +34,7 @@ type ClubWalletState = {
   }) => StartClubSessionResult;
   startTutorialSession: (gameId: string) => void;
   updateActiveSessionProgress: (
-    patch: Partial<Pick<TableSession, "progressRound" | "oublietteState">>,
+    patch: Partial<Pick<TableSession, "progressRound" | "oublietteState" | "recent_spins">>,
   ) => void;
   endSession: (returned: number | ClubTableReturnDetail) => void;
   creditClub: (amount: number) => void;
@@ -42,9 +47,30 @@ type ClubWalletState = {
    * Buy-in already left the club at `startSession`; forfeiture means no payout and no refund.
    */
   forfeitActiveSession: () => void;
+  selectPlayerTitle: (titleId: string | null) => void;
+  dismissBankruptcyDialogue: () => void;
+  payBumFee: () => boolean;
+  setDevTitleStates: (patch: {
+    clubBalance?: number;
+    hasPlayedFirstGame?: boolean;
+    isBum?: boolean;
+    customPlayerTitle?: string | null;
+    playedGames?: Record<string, boolean>;
+  }) => void;
 };
 
 const STORAGE_KEY = "villains-club-wallet";
+
+const checkBankruptcyState = (balance: number, currentIsBum: boolean) => {
+  if (balance < villainsGameDefaults.bankruptcy.minCreditsTrigger && !currentIsBum) {
+    return {
+      clubBalance: villainsGameDefaults.defaultClubBalance,
+      isBum: true,
+      showBankruptcyDialogue: true,
+    };
+  }
+  return { clubBalance: balance };
+};
 
 export const useClubWallet = create<ClubWalletState>()(
   persist(
@@ -53,8 +79,18 @@ export const useClubWallet = create<ClubWalletState>()(
       playerName: null,
       activeSession: null,
       hasSave: false,
+      hasPlayedFirstGame: false,
+      isBum: false,
+      customPlayerTitle: null,
+      showBankruptcyDialogue: false,
+      playedGames: {
+        oubliette_no9: false,
+        seven_year_itch: false,
+        fateseal_silver: false,
+        masterson_1881: false,
+      },
       startSession: (input) => {
-        const { clubBalance, activeSession } = get();
+        const { clubBalance, activeSession, isBum } = get();
         if (activeSession) return { ok: false, reason: "session_active" };
         const result = startTableSession(clubBalance, {
           gameId: input.gameId,
@@ -64,9 +100,16 @@ export const useClubWallet = create<ClubWalletState>()(
           gameModeId: input.gameModeId,
         });
         if (!result.ok) return { ok: false, reason: result.reason };
+        const nextBalance = clubBalance - input.buyIn;
+        const newState = checkBankruptcyState(nextBalance, isBum);
         set({
-          clubBalance: clubBalance - input.buyIn,
+          ...newState,
           activeSession: result.session,
+          playedGames: {
+            ...get().playedGames,
+            [input.gameId]: true,
+          },
+          hasPlayedFirstGame: true,
         });
         return { ok: true };
       },
@@ -91,6 +134,11 @@ export const useClubWallet = create<ClubWalletState>()(
             isTutorial: true,
             settlement,
           },
+          playedGames: {
+            ...get().playedGames,
+            [gameId]: true,
+          },
+          hasPlayedFirstGame: true,
         });
       },
       updateActiveSessionProgress: (patch) => {
@@ -99,7 +147,7 @@ export const useClubWallet = create<ClubWalletState>()(
         set({ activeSession: { ...activeSession, ...patch } });
       },
       endSession: (returned) => {
-        const { clubBalance, activeSession } = get();
+        const { clubBalance, activeSession, isBum } = get();
         if (!activeSession) return;
         if (activeSession.isTutorial) {
           set({ activeSession: null });
@@ -110,18 +158,25 @@ export const useClubWallet = create<ClubWalletState>()(
         const baseCap = getOublietteBaseReturnCeiling(activeSession.settlement, activeSession.gameId);
         const total = Math.min(rawTotal, baseCap);
         const { clubBalance: next } = settleTableSession(clubBalance, activeSession, total);
-        set({ clubBalance: next, activeSession: null });
+        const newState = checkBankruptcyState(next, isBum);
+        set({
+          ...newState,
+          activeSession: null,
+          hasPlayedFirstGame: true,
+        });
       },
       creditClub: (amount) => {
         if (!Number.isFinite(amount)) return;
-        set({ clubBalance: get().clubBalance + amount });
+        const nextBalance = get().clubBalance + amount;
+        const newState = checkBankruptcyState(nextBalance, get().isBum);
+        set(newState);
       },
       setHasSave: (value) => set({ hasSave: value }),
       setPlayerName: (name) => set({ playerName: name }),
       forfeitActiveSession: () => {
         const { activeSession } = get();
         if (!activeSession) return;
-        set({ activeSession: null });
+        set({ activeSession: null, hasPlayedFirstGame: true });
       },
       resetWalletAndSession: () =>
         set({
@@ -129,7 +184,37 @@ export const useClubWallet = create<ClubWalletState>()(
           activeSession: null,
           playerName: null,
           hasSave: false,
+          hasPlayedFirstGame: false,
+          isBum: false,
+          customPlayerTitle: null,
+          showBankruptcyDialogue: false,
+          playedGames: {
+            oubliette_no9: false,
+            seven_year_itch: false,
+            fateseal_silver: false,
+            masterson_1881: false,
+          },
         }),
+      selectPlayerTitle: (titleId) => {
+        set({ customPlayerTitle: titleId });
+      },
+      dismissBankruptcyDialogue: () => {
+        set({ showBankruptcyDialogue: false });
+      },
+      payBumFee: () => {
+        const { clubBalance, isBum } = get();
+        if (!isBum) return false;
+        if (clubBalance < villainsGameDefaults.bankruptcy.restoreMinCreditsRequired) return false;
+        set({
+          clubBalance: clubBalance - villainsGameDefaults.bankruptcy.restoreFee,
+          isBum: false,
+          customPlayerTitle: null,
+        });
+        return true;
+      },
+      setDevTitleStates: (patch) => {
+        set(patch);
+      },
     }),
     {
       name: STORAGE_KEY,
@@ -139,7 +224,47 @@ export const useClubWallet = create<ClubWalletState>()(
         playerName: s.playerName,
         activeSession: s.activeSession,
         hasSave: s.hasSave,
+        hasPlayedFirstGame: s.hasPlayedFirstGame,
+        isBum: s.isBum,
+        customPlayerTitle: s.customPlayerTitle,
+        playedGames: s.playedGames,
       }),
     },
   ),
 );
+
+export function getPlayerTitle(state: {
+  clubBalance: number;
+  hasPlayedFirstGame: boolean;
+  isBum: boolean;
+  customPlayerTitle: string | null;
+}): string {
+  if (state.isBum) {
+    return villainsGameDefaults.bankruptcy.bumTitle;
+  }
+
+  const qualifies = (titleId: string): boolean => {
+    if (titleId === "new_villain") return true;
+    if (titleId === "villain") return state.hasPlayedFirstGame;
+    if (titleId === "known_villain") return state.clubBalance >= 30000;
+    if (titleId === "notorious_villain") return state.clubBalance >= 1000000;
+    return false;
+  };
+
+  if (state.customPlayerTitle && qualifies(state.customPlayerTitle)) {
+    const found = villainsGameDefaults.playerTitles.find((t) => t.id === state.customPlayerTitle);
+    if (found) return found.title;
+  }
+
+  // Fallback to highest unlocked
+  if (!state.hasPlayedFirstGame) {
+    return "New Villain";
+  }
+  if (state.clubBalance >= 1000000) {
+    return "Notorious Villain";
+  }
+  if (state.clubBalance >= 30000) {
+    return "Known Villain";
+  }
+  return "Villain";
+}

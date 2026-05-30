@@ -17,7 +17,7 @@ import { clubTokens } from "@/theme/clubTokens";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { useMastertonEngine } from "./engine/useMastertonEngine";
-import { rouletteNumbers, mastersonGameConfig } from "@/config/minigames/mastersonRules";
+import { rouletteNumbers, mastersonGameConfig, validateOutcomeAgainstRig, bettorStrategyDescriptions } from "@/config/minigames/mastersonRules";
 import { computeMastersonReturn, type ClubTableReturnDetail, type OublietteSettlementProfile } from "@/game/sessionSettlement";
 
 import "./masterson.css";
@@ -71,63 +71,12 @@ interface MastertonRootProps {
   isTutorial?: boolean;
 }
 
-interface LastMinuteBetJob {
-  bettorId: string;
-  delaySeconds: number;
-  triggered: boolean;
-}
 
 function isNumberAffectedByTarget(numStr: string, target: string | null): boolean {
   if (!target) return false;
-  if (target === numStr) return true;
-
-  if (target === "Dozen_1") {
-    const val = parseInt(numStr, 10);
-    return !isNaN(val) && val >= 1 && val <= 12;
-  }
-  if (target === "Dozen_2") {
-    const val = parseInt(numStr, 10);
-    return !isNaN(val) && val >= 13 && val <= 24;
-  }
-  if (target === "Dozen_3") {
-    const val = parseInt(numStr, 10);
-    return !isNaN(val) && val >= 25 && val <= 36;
-  }
-  if (target === "Low_1_18") {
-    const val = parseInt(numStr, 10);
-    return !isNaN(val) && val >= 1 && val <= 18;
-  }
-  if (target === "High_19_36") {
-    const val = parseInt(numStr, 10);
-    return !isNaN(val) && val >= 19 && val <= 36;
-  }
-  if (target === "Even") {
-    const val = parseInt(numStr, 10);
-    return !isNaN(val) && val >= 2 && val <= 36 && val % 2 === 0;
-  }
-  if (target === "Odd") {
-    const val = parseInt(numStr, 10);
-    return !isNaN(val) && val >= 1 && val <= 35 && val % 2 !== 0;
-  }
-  if (target === "Red") {
-    const numObj = rouletteNumbers.find((n) => n.value === numStr);
-    return numObj?.color === "Red";
-  }
-  if (target === "Black") {
-    const numObj = rouletteNumbers.find((n) => n.value === numStr);
-    return numObj?.color === "Black";
-  }
-  if (target === "Column_3") {
-    return ["3", "6", "9", "12", "15", "18", "21", "24", "27", "30", "33", "36"].includes(numStr);
-  }
-  if (target === "Column_2") {
-    return ["2", "5", "8", "11", "14", "17", "20", "23", "26", "29", "32", "35"].includes(numStr);
-  }
-  if (target === "Column_1") {
-    return ["1", "4", "7", "10", "13", "16", "19", "22", "25", "28", "31", "34"].includes(numStr);
-  }
-
-  return false;
+  const numObj = rouletteNumbers.find((n) => n.value === numStr);
+  if (!numObj) return false;
+  return validateOutcomeAgainstRig(numObj, { severity: "high", target });
 }
 
 export function MastertonRoot({
@@ -158,6 +107,19 @@ export function MastertonRoot({
   const [showSettings, setShowSettings] = useState(false);
   const [showTutorial, setShowTutorial] = useState(isTutorial);
   const [showOddsModal, setShowOddsModal] = useState(false);
+  const [selectedBettorCard, setSelectedBettorCard] = useState<string | null>(null);
+
+  // Close card details modal instantly when spin begins
+  useEffect(() => {
+    if (engine.phase === "SPINNING") {
+      setSelectedBettorCard(null);
+    }
+  }, [engine.phase]);
+
+  const selectedBettor = useMemo(() => {
+    if (!selectedBettorCard) return null;
+    return engine.activeBettors.find(b => b.id === selectedBettorCard) || engine.evictedBettors[selectedBettorCard];
+  }, [selectedBettorCard, engine.activeBettors, engine.evictedBettors]);
 
   // Wheel swirling and countdown timing states
   const [wheelRotation, setWheelRotation] = useState(0);
@@ -193,7 +155,13 @@ export function MastertonRoot({
 
   const isResetting = timer !== null && prevTimerRef.current !== null && timer > prevTimerRef.current + 0.5;
 
-  const [, setLastMinuteBetsQueue] = useState<LastMinuteBetJob[]>([]);
+  interface ScheduledBetJob {
+    seatId: string;
+    triggerTime: number;
+    placed: boolean;
+  }
+  const [scheduledBets, setScheduledBets] = useState<ScheduledBetJob[]>([]);
+  const [isHolding, setIsHolding] = useState(false);
   const [neonFlashSeat, setNeonFlashSeat] = useState<string | null>(null);
   const [recapVisible, setRecapVisible] = useState(false);
 
@@ -237,8 +205,7 @@ export function MastertonRoot({
   // SVG wheel rotation & swirling ball loop
   useEffect(() => {
     if (process.env.NODE_ENV === "test") return;
-    if (engine.phase !== "SPINNING") {
-      landingRef.current = null;
+    if (engine.phase !== "SPINNING" || isHolding) {
       return;
     }
     let animId: number;
@@ -259,9 +226,12 @@ export function MastertonRoot({
 
         if (t >= 1) {
           landingRef.current.active = false;
-          // Resolve outcome wagers automatically
-          engine.resolveSpin();
-          setRecapVisible(true);
+          setIsHolding(true);
+          setTimeout(() => {
+            engine.resolveSpin();
+            setRecapVisible(true);
+            setIsHolding(false);
+          }, 1000);
         }
       } else {
         // Normal constant spin rotation
@@ -273,7 +243,7 @@ export function MastertonRoot({
     };
     animId = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(animId);
-  }, [engine.phase, engine.resolveSpin, engine]);
+  }, [engine.phase, engine.resolveSpin, engine, isHolding]);
 
   const isTimerNull = timer === null;
 
@@ -324,30 +294,21 @@ export function MastertonRoot({
         }
 
         const nextTimer = prev - 0.1;
-        const elapsedTime = mastersonGameConfig.betting_duration_seconds - nextTimer;
 
-        // Check for queued last-minute bets
-        setLastMinuteBetsQueue((prevQueue) => {
-          let timerResetNeeded = false;
-          const updated = prevQueue.map((job) => {
-            if (!job.triggered && elapsedTime >= job.delaySeconds) {
-              engineRef.current.placeLastMinuteBet(job.bettorId);
-              timerResetNeeded = true;
-              return { ...job, triggered: true };
+        // Trigger any scheduled bets as timer counts down
+        setScheduledBets((prevScheduled) => {
+          let updated = false;
+          const nextScheduled = prevScheduled.map((job) => {
+            if (!job.placed && nextTimer <= job.triggerTime) {
+              engineRef.current.placeSingleBettorBet(job.seatId);
+              setNeonFlashSeat(job.seatId);
+              setTimeout(() => setNeonFlashSeat(null), 850);
+              updated = true;
+              return { ...job, placed: true };
             }
             return job;
           });
-
-          if (timerResetNeeded) {
-            const triggeredJob = updated.find(j => j.triggered && elapsedTime >= j.delaySeconds);
-            if (triggeredJob) {
-              setNeonFlashSeat(triggeredJob.bettorId);
-              setTimeout(() => setNeonFlashSeat(null), 850);
-            }
-            // Reset countdown back to betting_duration_seconds
-            setTimeout(() => setTimer(mastersonGameConfig.betting_duration_seconds), 0);
-          }
-          return updated;
+          return updated ? nextScheduled : prevScheduled;
         });
 
         return nextTimer;
@@ -395,20 +356,24 @@ export function MastertonRoot({
 
   // Trigger betting round
   const handlePlaceInitialBets = () => {
-    engine.placeInitialBets();
+    engine.placeInitialBets(true);
     setTimer(mastersonGameConfig.betting_duration_seconds);
     setRecapVisible(false);
 
-    // Queue 1 or 2 last-minute bets dynamically
-    const activeSeatIds = engine.activeBettors.map((b) => b.id);
-    const shuffled = [...activeSeatIds].sort(() => Math.random() - 0.5);
-    const numLastMinute = shuffled.length > 0 ? (Math.random() > 0.5 ? Math.min(2, shuffled.length) : 1) : 0;
-    const queue = shuffled.slice(0, numLastMinute).map((id, idx) => ({
-      bettorId: id,
-      delaySeconds: idx === 0 ? 3.0 : 6.0,
-      triggered: false,
-    }));
-    setLastMinuteBetsQueue(queue);
+    const duration = mastersonGameConfig.betting_duration_seconds;
+    const cutoff = mastersonGameConfig.no_more_bets_seconds;
+    const activeBettors = engine.activeBettors;
+
+    const scheduled = activeBettors.map((bettor) => {
+      // Pick a random trigger time between (cutoff + 0.5) and (duration - 0.5)
+      const triggerTime = Math.random() * (duration - cutoff - 1.0) + cutoff + 0.5;
+      return {
+        seatId: bettor.id,
+        triggerTime,
+        placed: false,
+      };
+    });
+    setScheduledBets(scheduled);
   };
 
   // Stacked, offset, color-coded wagers rendering with visual splits support
@@ -418,6 +383,13 @@ export function MastertonRoot({
     // Helper to compute bet share for covered numbers
     const getWagerWeight = (wTarget: string, cellTarget: string): number => {
       if (wTarget === cellTarget) return 1.0;
+
+      if (wTarget.startsWith("Trio_")) {
+        const parts = wTarget.split("_").slice(1);
+        if (parts.includes(cellTarget)) {
+          return 1.0 / 3;
+        }
+      }
 
       const cellVal = parseInt(cellTarget, 10);
       if (isNaN(cellVal)) return 0;
@@ -587,7 +559,7 @@ export function MastertonRoot({
               {/* Green Numbers 0 and 00 */}
               <Box style={{ display: "flex", flexDirection: "column", gap: "4px", width: 50, height: 182, flexShrink: 0 }}>
                 <Box
-                  className={`masterson-grid-cell green ${isRigTarget("0") ? "active-rig" : ""} ${isNumberAffectedByTarget("0", hoveredTarget) ? "highlight-blue" : ""} ${engine.phase !== "BETTING" && engine.spinResult?.value === "0" ? "winning-highlight" : ""}`}
+                  className={`masterson-grid-cell green ${isRigTarget("0") ? "active-rig" : ""} ${engine.selectedRig.target && isNumberAffectedByTarget("0", engine.selectedRig.target) ? "highlight-yellow" : ""} ${isNumberAffectedByTarget("0", hoveredTarget) ? "highlight-blue" : ""} ${(engine.phase === "EVALUATION" || engine.phase === "SUMMARY") && engine.spinResult?.value === "0" ? "winning-highlight" : ""}`}
                   style={{
                     flex: 1,
                     width: 50,
@@ -605,7 +577,7 @@ export function MastertonRoot({
                   {renderWagerChips("0")}
                 </Box>
                 <Box
-                  className={`masterson-grid-cell green ${isRigTarget("00") ? "active-rig" : ""} ${isNumberAffectedByTarget("00", hoveredTarget) ? "highlight-blue" : ""} ${engine.phase !== "BETTING" && engine.spinResult?.value === "00" ? "winning-highlight" : ""}`}
+                  className={`masterson-grid-cell green ${isRigTarget("00") ? "active-rig" : ""} ${engine.selectedRig.target && isNumberAffectedByTarget("00", engine.selectedRig.target) ? "highlight-yellow" : ""} ${isNumberAffectedByTarget("00", hoveredTarget) ? "highlight-blue" : ""} ${(engine.phase === "EVALUATION" || engine.phase === "SUMMARY") && engine.spinResult?.value === "00" ? "winning-highlight" : ""}`}
                   style={{
                     flex: 1,
                     width: 50,
@@ -634,7 +606,7 @@ export function MastertonRoot({
                     return (
                       <Box
                         key={numStr}
-                        className={`masterson-grid-cell number ${isRed ? "red" : "black"} ${isRigTarget(numStr) ? "active-rig" : ""} ${isNumberAffectedByTarget(numStr, hoveredTarget) ? "highlight-blue" : ""} ${engine.phase !== "BETTING" && engine.spinResult?.value === numStr ? "winning-highlight" : ""}`}
+                        className={`masterson-grid-cell number ${isRed ? "red" : "black"} ${isRigTarget(numStr) ? "active-rig" : ""} ${engine.selectedRig.target && isNumberAffectedByTarget(numStr, engine.selectedRig.target) ? "highlight-yellow" : ""} ${isNumberAffectedByTarget(numStr, hoveredTarget) ? "highlight-blue" : ""} ${(engine.phase === "EVALUATION" || engine.phase === "SUMMARY") && engine.spinResult?.value === numStr ? "winning-highlight" : ""}`}
                         style={{
                           width: 50,
                           height: 58,
@@ -945,17 +917,19 @@ export function MastertonRoot({
                     left: "50%",
                     transform: "translateX(-50%)",
                     background: "rgba(15, 12, 10, 0.9)",
-                    border: `1.5px solid ${clubTokens.surface.brassStroke}`,
-                    boxShadow: "0 0 8px rgba(199,158,87,0.4)",
+                    border: `1.5px solid ${timer <= mastersonGameConfig.no_more_bets_seconds ? "#ef5350" : clubTokens.surface.brassStroke}`,
+                    boxShadow: timer <= mastersonGameConfig.no_more_bets_seconds
+                      ? "0 0 12px rgba(239, 83, 80, 0.6)"
+                      : "0 0 8px rgba(199,158,87,0.4)",
                     borderRadius: "6px",
                     padding: "4px 12px",
                     textAlign: "center",
                     zIndex: 8,
-                    minWidth: 80,
+                    minWidth: 95,
                   }}
                 >
-                  <Text size="10px" c="dimmed" tt="uppercase" fw={600} style={{ letterSpacing: "0.06em" }}>
-                    Lock Rig In
+                  <Text size="10px" c={timer <= mastersonGameConfig.no_more_bets_seconds ? "#ef5350" : "dimmed"} tt="uppercase" fw={700} style={{ letterSpacing: "0.06em" }}>
+                    {timer <= mastersonGameConfig.no_more_bets_seconds ? "No More Bets" : "Lock Rig In"}
                   </Text>
                   <Text size="sm" fw={800} c={timer <= 3 ? "red" : clubTokens.text.brass}>
                     {timer.toFixed(1)}s
@@ -1117,7 +1091,17 @@ export function MastertonRoot({
                             transition={{ duration: 0.5, ease: "easeOut" }}
                             style={{ width: "100%", height: "100%" }}
                           >
-                            <Box className="masterson-leaving-overlay">
+                            <Box
+                              className="masterson-leaving-overlay"
+                              style={{
+                                cursor: engine.phase === "SPINNING" ? "not-allowed" : "pointer",
+                              }}
+                              onClick={() => {
+                                if (engine.phase !== "SPINNING") {
+                                  setSelectedBettorCard(seatId);
+                                }
+                              }}
+                            >
                               <Text size="xs" fw={700} c="white" truncate>{displayBettor.name}</Text>
                               <Text className="masterson-leaving-reason">
                                 {evictedBettor.reason}
@@ -1144,6 +1128,12 @@ export function MastertonRoot({
                                 borderRadius: 6,
                                 position: "relative",
                                 transition: "all 0.3s ease",
+                                cursor: engine.phase === "SPINNING" ? "not-allowed" : "pointer",
+                              }}
+                              onClick={() => {
+                                if (engine.phase !== "SPINNING") {
+                                  setSelectedBettorCard(seatId);
+                                }
                               }}
                             >
                               {/* Seat colored dot */}
@@ -1161,7 +1151,16 @@ export function MastertonRoot({
 
                               <Stack gap={2} style={{ flex: 1, minWidth: 0, paddingLeft: 8 }}>
                                 <Text size="xs" fw={700} c="white" truncate>{displayBettor.name}</Text>
-                                <Text size="10px" c="dimmed">{displayBettor.strategy.replace(/_/g, " ")}</Text>
+                                {(() => {
+                                  const avgBet = displayBettor.total_spins_bet && displayBettor.total_spins_bet > 0
+                                    ? Math.round(displayBettor.total_amount_bet! / displayBettor.total_spins_bet)
+                                    : 0;
+                                  return (
+                                    <Text size="10px" c="dimmed">
+                                      {displayBettor.strategy.replace(/_/g, " ")} • Avg: ${avgBet.toLocaleString()}
+                                    </Text>
+                                  );
+                                })()}
                                 {/* Session Win/Loss — sits between name/strategy and suspicion gauge */}
                                 <Group gap={4} align="center">
                                   <Text size="xs" c={clubTokens.text.brass} fw={700}>${displayBettor.chips.toLocaleString()}</Text>
@@ -1225,7 +1224,25 @@ export function MastertonRoot({
           </Stack>
 
           {/* Table House Ledger (Balanced Sidebar placement) */}
-          <Stack id="table-house-ledger" className="masterson-ledger-panel" p="sm" justify="center" align="center" style={{ height: 110, flexShrink: 0 }}>
+          <Stack id="table-house-ledger" className="masterson-ledger-panel" p="sm" justify="center" align="center" style={{ height: 110, flexShrink: 0, position: "relative" }}>
+            <AnimatePresence>
+              {(engine.phase === "EVALUATION" || engine.phase === "SUMMARY") && engine.lastSpinHouseProfit !== null && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ duration: 0.35, ease: "easeOut" }}
+                  className="masterson-recap-overlay"
+                  style={{ borderRadius: 8 }}
+                >
+                  <span className={`masterson-recap-text ${engine.lastSpinHouseProfit >= 0 ? "win" : "loss"}`}>
+                    {engine.lastSpinHouseProfit >= 0 
+                      ? `House Won +$${engine.lastSpinHouseProfit.toLocaleString()}` 
+                      : `House Lost -$${Math.abs(engine.lastSpinHouseProfit).toLocaleString()}`}
+                  </span>
+                </motion.div>
+              )}
+            </AnimatePresence>
             <Text size="xs" c="dimmed">TABLE HOUSE LEDGER</Text>
             <Title order={4} className="masterson-text-brass" style={{ fontFamily: "Georgia, serif" }}>
               ${engine.tableHouseLedger.toLocaleString()}
@@ -1317,6 +1334,228 @@ export function MastertonRoot({
         </Stack>
       </Modal>
 
+      {/* Player Profile Details Modal */}
+      <Modal
+        opened={!!selectedBettorCard && !!selectedBettor}
+        onClose={() => setSelectedBettorCard(null)}
+        title={
+          selectedBettor ? (
+            <Group gap="xs" align="center">
+              <Box
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: "50%",
+                  background: SEAT_COLORS[selectedBettor.id] || "#ffe066",
+                }}
+              />
+              <Text fw={700} c={clubTokens.text.brass} style={{ fontFamily: "Georgia, serif", fontSize: "1.2rem" }}>
+                {selectedBettor.name} ({selectedBettor.id})
+              </Text>
+              {engine.evictedBettors[selectedBettor.id] && (
+                <Text size="10px" fw={800} bg="rgba(239, 83, 80, 0.2)" c="#ef5350" px={6} py={2} style={{ borderRadius: 4, textTransform: "uppercase" }}>
+                  EVICTED
+                </Text>
+              )}
+            </Group>
+          ) : null
+        }
+        centered
+        size="md"
+        styles={{
+          content: {
+            background: "radial-gradient(circle at top, #2e1d13 0%, #140d08 100%)",
+            border: `2.5px solid ${clubTokens.surface.brassStroke}`,
+            borderRadius: "14px",
+            boxShadow: "0 16px 48px rgba(0, 0, 0, 0.9), inset 0 0 24px rgba(0,0,0,0.5)",
+            color: "#ffffff",
+          },
+          header: {
+            background: "transparent",
+            borderBottom: "1px solid rgba(230, 184, 52, 0.25)",
+            paddingBottom: "12px",
+          },
+          close: {
+            color: clubTokens.text.brass,
+            "&:hover": {
+              background: "rgba(255, 255, 255, 0.05)",
+            },
+          },
+        }}
+      >
+        {selectedBettor && (
+          <Stack gap="md" p="xs" style={{ position: "relative" }}>
+            {/* Ornate subtle dashed inner border */}
+            <Box
+              style={{
+                position: "absolute",
+                top: -8,
+                left: -8,
+                right: -8,
+                bottom: -8,
+                border: "1px dashed rgba(230, 184, 52, 0.1)",
+                borderRadius: "10px",
+                pointerEvents: "none",
+              }}
+            />
+
+            {/* Strategy Spotlight Section */}
+            {(() => {
+              const strategyDetails = bettorStrategyDescriptions[selectedBettor.strategy];
+              return (
+                <Stack
+                  gap="xs"
+                  p="sm"
+                  style={{
+                    background: "rgba(255, 255, 255, 0.02)",
+                    border: "1px solid rgba(230, 184, 52, 0.15)",
+                    borderRadius: "8px",
+                  }}
+                >
+                  <Text size="xs" c="dimmed" tt="uppercase" fw={800} style={{ letterSpacing: "0.05em" }}>
+                    Betting Strategy
+                  </Text>
+                  <Text fw={700} c={clubTokens.text.brass} size="sm">
+                    {strategyDetails?.title || selectedBettor.strategy.replace(/_/g, " ")}
+                  </Text>
+                  <Text size="xs" c="rgba(255, 255, 255, 0.75)" style={{ lineHeight: "1.4" }}>
+                    {strategyDetails?.description || "A secretive betting pattern used to outsmart the croupier."}
+                  </Text>
+                </Stack>
+              );
+            })()}
+
+            {/* Metrics Panel */}
+            <Stack
+              gap="xs"
+              p="sm"
+              style={{
+                background: "rgba(0, 0, 0, 0.3)",
+                border: "1px solid rgba(255, 255, 255, 0.05)",
+                borderRadius: "8px",
+              }}
+            >
+              <Text size="xs" c="dimmed" tt="uppercase" fw={800} style={{ letterSpacing: "0.05em" }} mb={4}>
+                Real-Time Statistics
+              </Text>
+
+              {/* Bankroll Chips */}
+              <Group justify="space-between" style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.05)", paddingBottom: "6px" }}>
+                <Text size="xs" c="dimmed">Current Bankroll</Text>
+                <Text size="sm" fw={800} c={clubTokens.text.brass}>
+                  ${selectedBettor.chips.toLocaleString()}
+                </Text>
+              </Group>
+
+              {/* Net Session Change */}
+              {(() => {
+                const netChange = selectedBettor.chips - selectedBettor.initial_chips;
+                const isPositive = netChange > 0;
+                const isNegative = netChange < 0;
+                return (
+                  <Group justify="space-between" style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.05)", paddingBottom: "6px" }}>
+                    <Text size="xs" c="dimmed">Net Session Return</Text>
+                    <Text size="sm" fw={800} c={isPositive ? "#81c784" : isNegative ? "#ef5350" : "dimmed"}>
+                      {isPositive ? `+$${netChange.toLocaleString()}` : isNegative ? `-$${Math.abs(netChange).toLocaleString()}` : "$0"}
+                    </Text>
+                  </Group>
+                );
+              })()}
+
+              {/* Total Wagers */}
+              <Group justify="space-between" style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.05)", paddingBottom: "6px" }}>
+                <Text size="xs" c="dimmed">Total Rounds Wagered</Text>
+                <Text size="xs" fw={700} c="white">
+                  {selectedBettor.total_spins_bet ?? 0} spins
+                </Text>
+              </Group>
+
+              {/* Average Bet Size */}
+              {(() => {
+                const avgBet = selectedBettor.total_spins_bet && selectedBettor.total_spins_bet > 0
+                  ? Math.round(selectedBettor.total_amount_bet! / selectedBettor.total_spins_bet)
+                  : 0;
+                return (
+                  <Group justify="space-between" style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.05)", paddingBottom: "6px" }}>
+                    <Text size="xs" c="dimmed">Average Bet Size</Text>
+                    <Text size="xs" fw={700} c="white">
+                      ${avgBet.toLocaleString()}
+                    </Text>
+                  </Group>
+                );
+              })()}
+
+              {/* Suspicion Meter */}
+              <Group justify="space-between" style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.05)", paddingBottom: "6px" }} align="center">
+                <Stack gap={0}>
+                  <Text size="xs" c="dimmed">Suspicion Meter</Text>
+                  <Text size="9px" c="dimmed">(Max tolerance: {selectedBettor.max_suspicion})</Text>
+                </Stack>
+                <Group gap="xs" align="center">
+                  <Text size="xs" fw={700} c={selectedBettor.current_suspicion >= selectedBettor.max_suspicion - 1 ? "#ef5350" : "white"}>
+                    {selectedBettor.current_suspicion} / {selectedBettor.max_suspicion}
+                  </Text>
+                  <Box
+                    style={{
+                      width: 60,
+                      height: 8,
+                      background: "rgba(255, 255, 255, 0.1)",
+                      borderRadius: 4,
+                      overflow: "hidden",
+                    }}
+                  >
+                    <Box
+                      style={{
+                        width: `${Math.min(100, (selectedBettor.current_suspicion / selectedBettor.max_suspicion) * 100)}%`,
+                        height: "100%",
+                        background: selectedBettor.current_suspicion >= selectedBettor.max_suspicion - 1
+                          ? "linear-gradient(90deg, #e53935, #ef5350)"
+                          : "linear-gradient(90deg, #c79e57, #ffd700)",
+                        boxShadow: selectedBettor.current_suspicion >= selectedBettor.max_suspicion - 1
+                          ? "0 0 6px rgba(239, 83, 80, 0.8)"
+                          : "0 0 4px rgba(255, 215, 0, 0.5)",
+                      }}
+                    />
+                  </Box>
+                </Group>
+              </Group>
+
+              {/* Consecutive Losses */}
+              <Group justify="space-between" style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.05)", paddingBottom: "6px" }}>
+                <Stack gap={0}>
+                  <Text size="xs" c="dimmed">Consecutive Losses</Text>
+                  <Text size="9px" c="dimmed">(Patience limit: {selectedBettor.max_consecutive_losses} spins)</Text>
+                </Stack>
+                <Text size="xs" fw={700} c={selectedBettor.current_consecutive_losses >= selectedBettor.max_consecutive_losses - 1 ? "#ef5350" : "white"}>
+                  {selectedBettor.current_consecutive_losses} / {selectedBettor.max_consecutive_losses}
+                </Text>
+              </Group>
+
+              {/* Herd Mentality */}
+              <Group justify="space-between">
+                <Stack gap={0}>
+                  <Text size="xs" c="dimmed">Herd Mentality Index</Text>
+                  <Text size="9px" c="dimmed">(Tendency to follow other high wagers)</Text>
+                </Stack>
+                <Text size="xs" fw={700} c="white">
+                  {Math.round((selectedBettor.herd_mentality_pct ?? 0) * 100)}%
+                </Text>
+              </Group>
+            </Stack>
+
+            <ClubButton
+              onClick={() => setSelectedBettorCard(null)}
+              variant="fancy"
+              size="sm"
+              fullWidth
+              mt="xs"
+            >
+              CLOSE DOSSIER
+            </ClubButton>
+          </Stack>
+        )}
+      </Modal>
+
       {/* Interactive Sommelier Live Guide */}
       {showTutorial && (
         <SommelierLiveGuide
@@ -1332,8 +1571,113 @@ export function MastertonRoot({
   );
 
   return (
-    <Box style={{ width: "100%", minHeight: "100%", background: "#0c0a08" }}>
+    <Box style={{ width: "100%", minHeight: "100%", background: "#0c0a08", position: "relative" }}>
       {gameContent}
+
+      <AnimatePresence>
+        {engine.gameOverReason && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: "rgba(10, 8, 7, 0.95)",
+              backdropFilter: "blur(6px)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 9999,
+              padding: "1.5rem",
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 180 }}
+              style={{
+                width: "100%",
+                maxWidth: 500,
+                background: "radial-gradient(circle at top, #2e1d13 0%, #140d08 100%)",
+                border: `3px solid ${clubTokens.surface.brassStroke}`,
+                borderRadius: "16px",
+                boxShadow: "0 20px 50px rgba(0, 0, 0, 0.9), inset 0 0 30px rgba(0,0,0,0.5)",
+                padding: "2rem",
+                textAlign: "center",
+                position: "relative",
+                boxSizing: "border-box",
+              }}
+            >
+              {/* Ornate brass trim elements */}
+              <Box
+                style={{
+                  position: "absolute",
+                  top: 10,
+                  left: 10,
+                  right: 10,
+                  bottom: 10,
+                  border: "1px dashed rgba(230, 184, 52, 0.2)",
+                  borderRadius: "12px",
+                  pointerEvents: "none",
+                }}
+              />
+
+              <Title order={2} style={{ fontFamily: "Georgia, serif", color: clubTokens.text.brass, fontSize: "1.8rem" }} mb="md">
+                {engine.gameOverReason === "MAX_SPINS" ? "SHIFT COMPLETED" : "TABLE ISOLATED"}
+              </Title>
+
+              <Text size="sm" c="dimmed" mb="xl" style={{ lineHeight: "1.5" }}>
+                {engine.gameOverReason === "MAX_SPINS"
+                  ? "All 30 spins of your croupier shift have been conducted. The club house managers have closed the table for final audit."
+                  : "All active bettors have left the table due to suspicion, frustration, or financial exhaustion. No new players are willing to take a seat."}
+              </Text>
+
+              {/* Statistics Panel */}
+              <Stack
+                gap="sm"
+                p="md"
+                mb="xl"
+                style={{
+                  background: "rgba(0, 0, 0, 0.4)",
+                  border: "1px solid rgba(230, 184, 52, 0.15)",
+                  borderRadius: "8px",
+                }}
+              >
+                <Group justify="space-between">
+                  <Text size="xs" c="dimmed">SPINS CONDUCTED</Text>
+                  <Text size="xs" fw={700} c="white">{engine.spinCount} / 30</Text>
+                </Group>
+                <Group justify="space-between">
+                  <Text size="xs" c="dimmed">TABLE HOUSE LEDGER</Text>
+                  <Text size="xs" fw={700} c={engine.tableHouseLedger >= 0 ? "#81c784" : "#ef5350"}>
+                    {engine.tableHouseLedger >= 0 ? `+$${engine.tableHouseLedger.toLocaleString()}` : `-$${Math.abs(engine.tableHouseLedger).toLocaleString()}`}
+                  </Text>
+                </Group>
+                <Group justify="space-between" style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "8px" }}>
+                  <Text size="xs" c="dimmed">YOUR COMMISSION ({engine.commissionRate}%)</Text>
+                  <Text size="sm" fw={800} c="yellow">
+                    ${engine.accumulatedCommission.toLocaleString()}
+                  </Text>
+                </Group>
+              </Stack>
+
+              <ClubButton
+                onClick={handleCashOut}
+                variant="fancy"
+                size="md"
+                fullWidth
+              >
+                CASH OUT & SETTLE SHIFT
+              </ClubButton>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Box>
   );
 }

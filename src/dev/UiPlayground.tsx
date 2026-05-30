@@ -42,6 +42,8 @@ import { useMotionPresetStore } from "@/motion/motionPresetStore";
 import { buildClubTheme } from "@/theme/clubTheme";
 import { clubTokens } from "@/theme/clubTokens";
 import { useThemeLab } from "@/dev/themeLabStore";
+import { useClubWallet, getPlayerTitle } from "@/game/clubWalletStore";
+import { villainsGameDefaults } from "@/config/villainsGameDefaults";
 import "@/minigames/oubliette-no9/styles/global.css";
 
 
@@ -50,6 +52,23 @@ const radiusOptions = ["xs", "sm", "md", "lg", "xl"] as const;
 const soundBase = () => `${import.meta.env.BASE_URL}sounds/Classic/`;
 
 export function UiPlayground() {
+  const {
+    clubBalance,
+    hasPlayedFirstGame,
+    isBum,
+    customPlayerTitle,
+    setDevTitleStates,
+    creditClub,
+    playedGames,
+  } = useClubWallet();
+
+  const resolvedTitle = getPlayerTitle({
+    clubBalance,
+    hasPlayedFirstGame,
+    isBum,
+    customPlayerTitle,
+  });
+
   const preset = useMotionPresetStore((s) => s.preset);
   const setPartial = useMotionPresetStore((s) => s.setPartial);
   const resetMotion = useMotionPresetStore((s) => s.reset);
@@ -301,6 +320,7 @@ export function UiPlayground() {
             <Tabs.Tab value="overlays">Overlays &amp; chrome</Tabs.Tab>
             <Tabs.Tab value="audio">Audio lab</Tabs.Tab>
             <Tabs.Tab value="bands">House bands</Tabs.Tab>
+            <Tabs.Tab value="titles">Titles &amp; Wallet</Tabs.Tab>
             <Tabs.Tab value="animation">Animation</Tabs.Tab>
             <Tabs.Tab value="motion">Motion tuning</Tabs.Tab>
           </Tabs.List>
@@ -384,6 +404,16 @@ export function UiPlayground() {
                   <ClubButton fullWidth variant="outline" disabled>Outline (Disabled)</ClubButton>
                   <ClubButton fullWidth variant="subtle" color="gray">Subtle (Active)</ClubButton>
                   <ClubButton fullWidth variant="subtle" color="gray" disabled>Subtle (Disabled)</ClubButton>
+
+                  {/* Row 3 Headers */}
+                  <Text size="xs" fw={700} tt="uppercase" c="dimmed" style={{ gridColumn: "span 2" }}>Sheen Variant (Gold Sheen)</Text>
+                  <Text size="xs" fw={700} tt="uppercase" c="dimmed" style={{ gridColumn: "span 2" }}></Text>
+                  
+                  {/* Row 3 Buttons */}
+                  <ClubButton fullWidth variant="sheen">Sheen (Active)</ClubButton>
+                  <ClubButton fullWidth variant="sheen" disabled>Sheen (Disabled)</ClubButton>
+                  <div />
+                  <div />
                 </SimpleGrid>
 
                 <Divider my="md" label="Other States & Sizes" labelPosition="center" color={clubTokens.surface.brassStroke} opacity={0.25} />
@@ -1044,6 +1074,216 @@ export function UiPlayground() {
                   />
                 </Box>
                 <ClubButton onClick={resetMotion}>Reset motion preset</ClubButton>
+              </Stack>
+            </ClubPanel>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="titles" pt="md">
+            <ClubPanel>
+              <Stack gap="md">
+                <Title order={4} c={clubTokens.text.brass} style={{ fontFamily: "Georgia, serif" }}>
+                  Dossier &amp; Title Testing Controls
+                </Title>
+                <Text size="sm" c={clubTokens.text.secondary}>
+                  Control and simulate wallet balances, play history, and bankruptcy states. Check how they alter the active title and dossier list.
+                </Text>
+
+                <Divider color={clubTokens.surface.brassStroke} opacity={0.2} />
+
+                <Grid gutter="md">
+                  <Grid.Col span={{ base: 12, md: 6 }}>
+                    <Stack gap="sm">
+                      <NumberInput
+                        label="Club Wallet Balance (Credits)"
+                        value={clubBalance}
+                        onChange={(v) => {
+                          const num = typeof v === "number" ? v : Number(v);
+                          if (Number.isFinite(num)) {
+                            setDevTitleStates({ clubBalance: num });
+                          }
+                        }}
+                        min={0}
+                      />
+
+                      <Select
+                        label="Active Title Override"
+                        description="Manually select one of your unlocked titles (setting this simulates manual choice in the dossier)."
+                        data={[
+                          { value: "clear", label: "No Override (Auto highest-unlocked)" },
+                          ...villainsGameDefaults.playerTitles.map((t) => ({
+                            value: t.id,
+                            label: t.title,
+                          })),
+                        ]}
+                        value={customPlayerTitle ?? "clear"}
+                        onChange={(v) => {
+                          setDevTitleStates({
+                            customPlayerTitle: v === "clear" ? null : v,
+                          });
+                        }}
+                      />
+
+                      <Group gap="md" mt="xs">
+                        <Switch
+                          label="Has Played First Game"
+                          checked={hasPlayedFirstGame}
+                          onChange={(e) => setDevTitleStates({ hasPlayedFirstGame: e.currentTarget.checked })}
+                        />
+                        <Switch
+                          label="Is Bum (Smelly Bum)"
+                          checked={isBum}
+                          onChange={(e) => setDevTitleStates({ isBum: e.currentTarget.checked })}
+                        />
+                      </Group>
+                    </Stack>
+                  </Grid.Col>
+
+                  <Grid.Col span={{ base: 12, md: 6 }}>
+                    <Stack gap="sm">
+                      <Text size="sm" fw={700} c={clubTokens.text.brass}>
+                        Quick Action Presets
+                      </Text>
+                      <SimpleGrid cols={2} spacing="xs">
+                        <ClubButton
+                          variant="light"
+                          size="sm"
+                          onClick={() => {
+                            setDevTitleStates({
+                              clubBalance: 1500,
+                              isBum: false,
+                            });
+                            // Force bankruptcy check immediately
+                            creditClub(0);
+                          }}
+                        >
+                          Force Bankruptcy
+                        </ClubButton>
+                        <ClubButton
+                          variant="light"
+                          size="sm"
+                          onClick={() => {
+                            setDevTitleStates({
+                              clubBalance: villainsGameDefaults.defaultClubBalance,
+                              hasPlayedFirstGame: false,
+                              isBum: false,
+                              customPlayerTitle: null,
+                              playedGames: {
+                                oubliette_no9: false,
+                                seven_year_itch: false,
+                                fateseal_silver: false,
+                                masterson_1881: false,
+                              },
+                            });
+                          }}
+                        >
+                          Reset to New Villain
+                        </ClubButton>
+                        <ClubButton
+                          variant="light"
+                          size="sm"
+                          onClick={() => {
+                            setDevTitleStates({
+                              clubBalance: 500000,
+                              hasPlayedFirstGame: true,
+                              isBum: false,
+                            });
+                          }}
+                        >
+                          Make Rich Villain (500k)
+                        </ClubButton>
+                        <ClubButton
+                          variant="light"
+                          size="sm"
+                          onClick={() => {
+                            setDevTitleStates({
+                              clubBalance: 1500000,
+                              hasPlayedFirstGame: true,
+                              isBum: false,
+                            });
+                          }}
+                        >
+                          Make Notorious (1.5M)
+                        </ClubButton>
+                      </SimpleGrid>
+                    </Stack>
+                  </Grid.Col>
+                </Grid>
+
+                <Divider color={clubTokens.surface.brassStroke} opacity={0.2} />
+
+                <Grid gutter="md">
+                  <Grid.Col span={12}>
+                    <Stack gap="sm">
+                      <Text size="sm" fw={700} c={clubTokens.text.brass}>
+                        Played Games Toggles
+                      </Text>
+                      <Text size="xs" c={clubTokens.text.secondary}>
+                        Toggle whether the player has played each game. If a game is unchecked (not played), launching it from the main menu will automatically trigger its tutorial!
+                      </Text>
+                      <Group gap="md" wrap="wrap">
+                        <Switch
+                          label="Oubliette Number 9"
+                          checked={playedGames.oubliette_no9}
+                          onChange={(e) =>
+                            setDevTitleStates({
+                              playedGames: {
+                                ...playedGames,
+                                oubliette_no9: e.currentTarget.checked,
+                              },
+                            })
+                          }
+                        />
+                        <Switch
+                          label="7 Year Itch"
+                          checked={playedGames.seven_year_itch}
+                          onChange={(e) =>
+                            setDevTitleStates({
+                              playedGames: {
+                                ...playedGames,
+                                seven_year_itch: e.currentTarget.checked,
+                              },
+                            })
+                          }
+                        />
+                        <Switch
+                          label="Fateseal Silver"
+                          checked={playedGames.fateseal_silver}
+                          onChange={(e) =>
+                            setDevTitleStates({
+                              playedGames: {
+                                ...playedGames,
+                                fateseal_silver: e.currentTarget.checked,
+                              },
+                            })
+                          }
+                        />
+                        <Switch
+                          label="Masterton 1881"
+                          checked={playedGames.masterson_1881}
+                          onChange={(e) =>
+                            setDevTitleStates({
+                              playedGames: {
+                                ...playedGames,
+                                masterson_1881: e.currentTarget.checked,
+                              },
+                            })
+                          }
+                        />
+                      </Group>
+                    </Stack>
+                  </Grid.Col>
+                </Grid>
+
+                <Divider color={clubTokens.surface.brassStroke} opacity={0.2} />
+
+                <Stack gap={2}>
+                  <Text size="xs" tt="uppercase" fw={800} c={clubTokens.text.muted}>
+                    Active Resolved Title (Output)
+                  </Text>
+                  <Text size="lg" fw={900} c={isBum ? "#ef5350" : clubTokens.text.brass}>
+                    {resolvedTitle}
+                  </Text>
+                </Stack>
               </Stack>
             </ClubPanel>
           </Tabs.Panel>

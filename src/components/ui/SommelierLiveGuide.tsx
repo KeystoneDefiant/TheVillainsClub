@@ -3,6 +3,7 @@ import { Box, Group, Paper, Text, Title, Stack } from "@mantine/core";
 import { clubTokens } from "@/theme/clubTokens";
 import { ClubButton } from "./ClubButton";
 import { sommelierTutorialCatalog } from "@/config/sommelierTutorialCatalog";
+import { useClubWallet, getPlayerTitle } from "@/game/clubWalletStore";
 
 export interface SommelierLiveGuideProps {
   gameId: string;
@@ -145,6 +146,32 @@ export function SommelierLiveGuide({
   };
 
   const currentStep = steps[activeStep];
+  const {
+    playerName,
+    clubBalance,
+    hasPlayedFirstGame,
+    isBum,
+    customPlayerTitle,
+  } = useClubWallet();
+
+  const playerTitle = useMemo(() => {
+    return getPlayerTitle({
+      clubBalance,
+      hasPlayedFirstGame,
+      isBum,
+      customPlayerTitle,
+    });
+  }, [clubBalance, hasPlayedFirstGame, isBum, customPlayerTitle]);
+
+  const dialogueText = useMemo(() => {
+    if (!currentStep) return "";
+    const raw = currentStep.dialogue;
+    const name = playerName || "friend";
+    return raw
+      .replace(/{playerName}/g, name)
+      .replace(/{playerTitle}/g, playerTitle);
+  }, [currentStep, playerName, playerTitle]);
+
   if (!currentStep) return null;
 
   return (
@@ -296,7 +323,7 @@ export function SommelierLiveGuide({
                 whiteSpace: "pre-line",
               }}
             >
-              "{currentStep.dialogue}"
+              "{dialogueText}"
             </Text>
           </Stack>
 

@@ -122,3 +122,57 @@ describe("clubWalletStore endSession", () => {
     expect(useClubWallet.getState().clubBalance).toBe(108000);
   });
 });
+
+describe("clubWalletStore playedGames tracking", () => {
+  beforeEach(() => {
+    useClubWallet.getState().resetWalletAndSession();
+  });
+
+  it("initializes with all games set to not played", () => {
+    const state = useClubWallet.getState();
+    expect(state.playedGames).toEqual({
+      oubliette_no9: false,
+      seven_year_itch: false,
+      fateseal_silver: false,
+      masterson_1881: false,
+    });
+  });
+
+  it("marks a game as played when a standard session starts successfully", () => {
+    const buyIn = 2000;
+    const baseProfile = buildOublietteSettlementProfile(buyIn, new Date("2026-01-01"));
+    
+    const result = useClubWallet.getState().startSession({
+      gameId: "oubliette_no9",
+      drinkId: "club_table",
+      buyIn,
+      settlement: baseProfile,
+    });
+    
+    expect(result.ok).toBe(true);
+    expect(useClubWallet.getState().playedGames.oubliette_no9).toBe(true);
+    expect(useClubWallet.getState().playedGames.seven_year_itch).toBe(false);
+  });
+
+  it("marks a game as played when a tutorial session starts", () => {
+    useClubWallet.getState().startTutorialSession("seven_year_itch");
+    
+    expect(useClubWallet.getState().activeSession).not.toBeNull();
+    expect(useClubWallet.getState().activeSession?.isTutorial).toBe(true);
+    expect(useClubWallet.getState().playedGames.seven_year_itch).toBe(true);
+    expect(useClubWallet.getState().playedGames.oubliette_no9).toBe(false);
+  });
+
+  it("resets all playedGames to false on resetWalletAndSession", () => {
+    useClubWallet.getState().startTutorialSession("fateseal_silver");
+    expect(useClubWallet.getState().playedGames.fateseal_silver).toBe(true);
+    
+    useClubWallet.getState().resetWalletAndSession();
+    expect(useClubWallet.getState().playedGames).toEqual({
+      oubliette_no9: false,
+      seven_year_itch: false,
+      fateseal_silver: false,
+      masterson_1881: false,
+    });
+  });
+});

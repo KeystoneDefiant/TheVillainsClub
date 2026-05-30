@@ -9,12 +9,15 @@ export interface MastersonGameConfig {
   rig_win_suspicion_scalar: number;
   no_rig_suspicion_decrease: number;
   betting_duration_seconds: number;
+  no_more_bets_seconds: number;
   minimum_bet: number;
   min_bettor_max_suspicion: number;
   max_bettor_max_suspicion: number;
   min_bettor_herd_mentality_pct: number;
   max_bettor_herd_mentality_pct: number;
   herd_mentality_decay_rate: number;
+  first_names: string[];
+  last_names: string[];
   rig_types: {
     low: { suspicion: number; targets: string[] };
     mid: { suspicion: number; targets: string[] };
@@ -29,7 +32,13 @@ export type BettorStrategy =
   | 'Random_1_1'
   | 'Hedges'
   | 'Low_Risk_Grind'
-  | 'High_Risk';
+  | 'High_Risk'
+  | 'Keystone_Lock'
+  | 'James_Bond'
+  | 'Fibonacci'
+  | 'Tier_et_Tout'
+  | 'The_Pivot'
+  | 'Angels_Split';
 
 export interface BettorProfile {
   id: string; // "Seat 1", "Seat 2", etc.
@@ -44,6 +53,11 @@ export interface BettorProfile {
   current_consecutive_losses: number;
   double_bet_frequency: number;
   herd_mentality_pct: number;
+  total_spins_bet?: number;
+  total_amount_bet?: number;
+  progression_index?: number;
+  pivot_target?: string | null;
+  recent_spins?: string[];
 }
 
 export type RigSeverity = 'none' | 'low' | 'mid' | 'high';
@@ -75,12 +89,15 @@ export const mastersonGameConfig: MastersonGameConfig = {
   rig_win_suspicion_scalar: 0.40,
   no_rig_suspicion_decrease: 2,
   betting_duration_seconds: 13,
+  no_more_bets_seconds: 6,
   minimum_bet: 100,
   min_bettor_max_suspicion: 4,
   max_bettor_max_suspicion: 10,
   min_bettor_herd_mentality_pct: 0.0,
   max_bettor_herd_mentality_pct: 0.7,
   herd_mentality_decay_rate: 0.35,
+  first_names: ["Victor", "Arsene", "James", "Tom", "Mildred", "Freddy", "Hannibal", "Norman", "Claude", "Rita", "Gordon", "Vito"],
+  last_names: ["Vance", "Lupin", "Moriarty", "Riddle", "Ratched", "Kruger", "Lecter", "Bates", "Duval", "Skeeter", "Gekko", "Corleone"],
   rig_types: {
     low: {
       suspicion: 2,
@@ -143,6 +160,10 @@ export const rouletteNumbers: RouletteNumberInfo[] = [
 export function validateOutcomeAgainstRig(outcome: RouletteNumberInfo, rig: RigChoice): boolean {
   if (rig.severity === 'none' || !rig.target) return true;
 
+  if (rig.target.startsWith('Trio_')) {
+    const parts = rig.target.split('_').slice(1);
+    return parts.includes(outcome.value);
+  }
   if (rig.target.startsWith('Street_')) {
     const parts = rig.target.split('_');
     const start = parseInt(parts[1] || '', 10);
@@ -180,3 +201,58 @@ export function validateOutcomeAgainstRig(outcome: RouletteNumberInfo, rig: RigC
       return outcome.value === rig.target;
   }
 }
+
+export const bettorStrategyDescriptions: Record<BettorStrategy, { title: string; description: string }> = {
+  Martingale: {
+    title: "Martingale",
+    description: "Doubles the bet size on every loss, resetting to the base unit upon a win. Aimed at recovering all losses with a single win.",
+  },
+  D_Alembert: {
+    title: "D'Alembert",
+    description: "Increases the bet by one base unit after a loss, and decreases it by one base unit after a win. A balanced, low-volatility progression.",
+  },
+  Random_1_1: {
+    title: "Random 1:1",
+    description: "Picks a random 1:1 outside bet (Red/Black, Even/Odd, Low/High) and wagers a random amount between 0.5x and 2x base units.",
+  },
+  Random: {
+    title: "Wild Random",
+    description: "Places wagers at random spots across the entire board (Numbers, Streets, Corners, Columns, Dozens) with highly volatile sizing.",
+  },
+  Hedges: {
+    title: "Column/Dozen Hedges",
+    description: "Splits bets equally between two columns or two dozens (covering 24 numbers), yielding a high win frequency but low net return.",
+  },
+  Low_Risk_Grind: {
+    title: "Low Risk Grind",
+    description: "Steadily wagers small, conservative amounts on safe 1:1 outside bets to drag out play without risking their bankroll.",
+  },
+  High_Risk: {
+    title: "High Risk Plunger",
+    description: "Targets specific numbers with heavy stakes, seeking rare 35:1 high-value payouts at the cost of rapid financial exhaustion.",
+  },
+  Keystone_Lock: {
+    title: "Keystone Lock",
+    description: "Highly defensive system placing 4 units on 2nd Dozen, 4 units on 3rd Dozen, 2 units on 7-12 Double Street, and 1 unit on a green Trio or Street. Developed by some maniac.",
+  },
+  James_Bond: {
+    title: "James Bond 007",
+    description: "Covers 2/3 of the board by placing 14 units on High numbers, 5 units on 13-18 Double Street, and 1 unit on 0 as insurance.",
+  },
+  Fibonacci: {
+    title: "Fibonacci Progression",
+    description: "Progresses bets on 1:1 outcomes along the Fibonacci sequence on losses, stepping back two positions on wins. Safer than Martingale.",
+  },
+  Tier_et_Tout: {
+    title: "Tier-et-Tout",
+    description: "Splits bankroll into 1/3 ('Tier') for the first bet, and 2/3 ('Tout') for the second bet on loss. Highly volatile and explosive.",
+  },
+  The_Pivot: {
+    title: "The Pivot Tracker",
+    description: "Tracks recently landed numbers and wagers flat units exclusively on the first single number that repeats, hoping it is 'hot'.",
+  },
+  Angels_Split: {
+    title: "Angel's Column Split",
+    description: "Covers 24 numbers on columns by wagering equally on Column 1 and Column 2, plus 1 unit on green zero/double-zero splits for safety.",
+  },
+};

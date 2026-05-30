@@ -39,6 +39,9 @@ export function useMastertonEngine() {
 
   // Table House Ledger: net profit / loss of the table
   const [tableHouseLedger, setTableHouseLedger] = useState<number>(0);
+  const [lastSpinHouseProfit, setLastSpinHouseProfit] = useState<number | null>(null);
+  const [gameOverReason, setGameOverReason] = useState<"MAX_SPINS" | "NO_PLAYERS" | null>(null);
+
   // Croupier's personal commission pocket
   const [accumulatedCommission, setAccumulatedCommission] = useState<number>(0);
   const [commissionRate, setCommissionRate] = useState<number>(mastersonGameConfig.base_commission_pct);
@@ -64,21 +67,30 @@ export function useMastertonEngine() {
     setConsecutiveRigCount(0);
     setSpinResult(null);
     setTableHouseLedger(0);
+    setLastSpinHouseProfit(null);
+    setGameOverReason(null);
     setAccumulatedCommission(0);
     setCommissionRate(mastersonGameConfig.base_commission_pct);
     setNotifications([]);
     previousBetsRef.current = {};
   }, []);
 
-  const placeInitialBets = useCallback(() => {
+  const placeInitialBets = useCallback((isDeferred = false) => {
     if (phase !== "BETTING") return;
 
-    // Step 1: Initial Bet Phase
+    if (isDeferred) {
+      setCurrentBets({});
+      setRoundRecaps({});
+      setPhase("SPINNING");
+      return;
+    }
+
+    // Instant placement (used in unit tests)
     const newBets: Record<string, BettorBet[]> = {};
     const updatedBettors = activeBettors.map((bettor) => {
       const prev = previousBetsRef.current[bettor.id] || { lastBetAmount: 0, won: null };
       const { bets, nextBetAmount } = executeBettorBetting(bettor, prev.won, prev.lastBetAmount);
-      
+
       const totalBetAmount = bets.reduce((sum, b) => sum + b.amount, 0);
       newBets[bettor.id] = bets;
 
@@ -90,6 +102,8 @@ export function useMastertonEngine() {
       return {
         ...bettor,
         chips: Math.max(0, bettor.chips - totalBetAmount),
+        total_spins_bet: (bettor.total_spins_bet ?? 0) + 1,
+        total_amount_bet: (bettor.total_amount_bet ?? 0) + totalBetAmount,
       };
     });
 
@@ -99,16 +113,14 @@ export function useMastertonEngine() {
     setPhase("SPINNING");
   }, [phase, activeBettors]);
 
-  const placeLastMinuteBet = useCallback((seatId: string) => {
-    if (phase !== "SPINNING") return null;
-
+  const placeSingleBettorBet = useCallback((seatId: string) => {
     const bettorIdx = activeBettors.findIndex((b) => b.id === seatId);
     if (bettorIdx === -1) return null;
 
-    const bettor = activeBettors[bettorIdx];
+    const bettor = activeBettors[bettorIdx]!;
     const prev = previousBetsRef.current[bettor.id] || { lastBetAmount: 0, won: null };
-    const existing = currentBets[seatId] || [];
-    const { bets, nextBetAmount } = executeBettorBetting(bettor, prev.won, prev.lastBetAmount, existing);
+    const { bets, nextBetAmount } = executeBettorBetting(bettor, prev.won, prev.lastBetAmount);
+
     if (bets.length === 0) return null;
 
     const totalBetAmount = bets.reduce((sum, b) => sum + b.amount, 0);
@@ -118,6 +130,8 @@ export function useMastertonEngine() {
     updatedBettors[bettorIdx] = {
       ...bettor,
       chips: bettor.chips - totalBetAmount,
+      total_spins_bet: (bettor.total_spins_bet ?? 0) + 1,
+      total_amount_bet: (bettor.total_amount_bet ?? 0) + totalBetAmount,
     };
     setActiveBettors(updatedBettors);
 
@@ -135,7 +149,11 @@ export function useMastertonEngine() {
     };
 
     return bets;
-  }, [phase, activeBettors, currentBets]);
+  }, [activeBettors]);
+
+  const placeLastMinuteBet = useCallback((seatId: string) => {
+    return placeSingleBettorBet(seatId);
+  }, [placeSingleBettorBet]);
 
   const determineResultAndLock = useCallback(() => {
     let possibilities = rouletteNumbers;
@@ -176,7 +194,6 @@ export function useMastertonEngine() {
 
     let spinTableProfit = 0;
     let spinPayouts = 0;
-    let spinLosingBets = 0;
 
     const recaps: Record<string, number> = {};
 
@@ -199,10 +216,9 @@ export function useMastertonEngine() {
       recaps[bettor.id] = totalWon - totalBetAmount;
 
       spinPayouts += totalWon;
-      spinLosingBets += totalLost;
 
       const isOverallWin = totalWon > totalLost;
-      
+
       // Update bettor chips
       const finalChips = bettor.chips + totalWon;
 
@@ -253,16 +269,20 @@ export function useMastertonEngine() {
         });
       }
 
+      const nextRecentSpins = [...(bettor.recent_spins ?? []), spinResult.value].slice(-10);
+
       return {
         ...bettor,
         chips: finalChips,
         current_suspicion: nextSuspicion,
         current_consecutive_losses: nextConsecutiveLosses,
+        recent_spins: nextRecentSpins,
       };
     });
 
     // Net house earnings from this spin
-    spinTableProfit = spinLosingBets - spinPayouts;
+    spinTableProfit = -Object.values(recaps).reduce((sum, val) => sum + val, 0);
+    setLastSpinHouseProfit(spinTableProfit);
     const nextTableLedger = tableHouseLedger + spinTableProfit;
     setTableHouseLedger(nextTableLedger);
 
@@ -349,7 +369,7 @@ export function useMastertonEngine() {
 
     // Step 7: Upkeep & Payout Scaling / Spawning
     const nextSpin = spinCount + 1;
-    
+
     // Dynamic commission update
     let nextCommRate = commissionRate;
     if (nextSpin === 8 || nextSpin === 15 || nextSpin === 23) {
@@ -373,6 +393,14 @@ export function useMastertonEngine() {
         ) || 1;
         const newBettor = generateRandomBettor(newSeatNum);
         nextActiveBettors.push(newBettor);
+
+        // Reset win/loss total and previous bet ref for the new bettor in this seat
+        setSessionTotals((prev) => ({
+          ...prev,
+          [`Seat ${newSeatNum}`]: 0,
+        }));
+        previousBetsRef.current[`Seat ${newSeatNum}`] = { lastBetAmount: 0, won: null };
+
         newNotifications.push({
           type: "info",
           message: `👤 ${newBettor.name} joined the table at Seat ${newSeatNum}.`,
@@ -381,16 +409,30 @@ export function useMastertonEngine() {
     }
 
     // Table isolation last chance check
+    let noPlayers = false;
     if (nextActiveBettors.length === 0) {
       if (Math.random() < mastersonGameConfig.empty_table_last_chance_pct) {
         const fallbackBettor = generateRandomBettor(1);
         nextActiveBettors.push(fallbackBettor);
+
+        setSessionTotals((prev) => ({
+          ...prev,
+          [`Seat 1`]: 0,
+        }));
+        previousBetsRef.current[`Seat 1`] = { lastBetAmount: 0, won: null };
+
         const isFinalSpin = spinCount === 30;
         newNotifications.push({
           type: "info",
           message: `🚨 Table Isolation: A wealthy gambler stepped up ${isFinalSpin ? "for the final spin" : "to keep the shift alive"}!`,
         });
+      } else {
+        noPlayers = true;
       }
+    }
+
+    if (noPlayers) {
+      setGameOverReason("NO_PLAYERS");
     }
 
     setActiveBettors(nextActiveBettors);
@@ -413,15 +455,20 @@ export function useMastertonEngine() {
 
   const nextSpinTurn = useCallback(() => {
     if (phase !== "SUMMARY" && phase !== "EVALUATION") return;
+    if (spinCount >= mastersonGameConfig.shift_duration_spins) {
+      setGameOverReason("MAX_SPINS");
+      return;
+    }
     setSpinCount((prev) => prev + 1);
     setSelectedRig({ severity: "none", target: null });
     setCurrentBets({});
     setSpinResult(null);
     setRoundRecaps({});
+    setLastSpinHouseProfit(null);
     setEvictedBettors({});
     setNotifications([]);
     setPhase("BETTING");
-  }, [phase]);
+  }, [phase, spinCount]);
 
   return {
     spinCount,
@@ -432,12 +479,15 @@ export function useMastertonEngine() {
     consecutiveRigCount,
     spinResult,
     tableHouseLedger,
+    lastSpinHouseProfit,
+    gameOverReason,
     accumulatedCommission,
     commissionRate,
     notifications,
     selectRig,
     placeInitialBets,
     placeLastMinuteBet,
+    placeSingleBettorBet,
     determineResultAndLock,
     resolveSpin,
     advanceToSummary,

@@ -12,6 +12,7 @@ import {
   Switch,
   Text,
   Title,
+  Paper,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { AnimatePresence, motion } from "framer-motion";
@@ -32,7 +33,7 @@ import { ClubHeading } from "@/components/ui/ClubHeading";
 import { ClubPanel } from "@/components/ui/ClubPanel";
 import { isBarRouteState } from "@/game/barRouteState";
 import { useClubFlowStore } from "@/game/clubFlowStore";
-import { useClubWallet } from "@/game/clubWalletStore";
+import { useClubWallet, getPlayerTitle } from "@/game/clubWalletStore";
 import { resetShellGameProgress } from "@/game/resetShellGameProgress";
 import { resolveActiveClubSpecial, resolveSpecialDefinitionRow } from "@/game/specialsResolver";
 import {
@@ -138,11 +139,21 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
     startSession,
     forfeitActiveSession,
     startTutorialSession,
+    hasPlayedFirstGame,
+    isBum,
+    customPlayerTitle,
+    showBankruptcyDialogue,
+    dismissBankruptcyDialogue,
+    selectPlayerTitle,
+    payBumFee,
+    playedGames,
+    playerName,
   } = useClubWallet();
   const hasEnteredClub = useClubFlowStore((s) => s.hasEnteredClub);
   const setHasEnteredClub = useClubFlowStore((s) => s.setHasEnteredClub);
   const [settingsOpened, { open: openSettings, close: closeSettings }] = useDisclosure(false);
   const [abandonOpened, { open: openAbandon, close: closeAbandon }] = useDisclosure(false);
+  const [titlesOpened, { open: openTitles, close: closeTitles }] = useDisclosure(false);
   const [resetProgressArmed, setResetProgressArmed] = useState(false);
   const [selectedGame, setSelectedGame] = useState<GameMenuEntry | null>(null);
   const [ruleset, setRuleset] = useState("house");
@@ -226,6 +237,14 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
         setSessionError(startSessionErrorMessage("session_active"));
         return;
       }
+
+      // Automatically trigger the tutorial on the first time playing
+      if (!playedGames[game.id]) {
+        startTutorialSession(game.id);
+        navigate(game.route);
+        return;
+      }
+
       if (clubBalance < game.buyIn) {
         setSessionError(startSessionErrorMessage("insufficient_funds"));
         return;
@@ -260,13 +279,17 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
       }
       navigate(game.route);
     },
-    [activeSession, clubBalance, navigate, startSession],
+    [activeSession, clubBalance, navigate, startSession, playedGames, startTutorialSession],
   );
 
   const tone = useMemo(() => {
     if (!settlementFlash?.lastTable) return "break_even";
     return barSettlementTone(settlementFlash.lastTable);
   }, [settlementFlash]);
+
+  const currentTitle = useMemo(() => {
+    return getPlayerTitle({ clubBalance, hasPlayedFirstGame, isBum, customPlayerTitle });
+  }, [clubBalance, hasPlayedFirstGame, isBum, customPlayerTitle]);
 
   const delta = useMemo(() => {
     if (!settlementFlash?.lastTable) return 0;
@@ -704,15 +727,41 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
               </Box>
 
               <Stack gap="md" className="club-settlement-dock">
-                <ClubPanel maw={360} w="min(360px, 100%)" px="md" py="md">
-                  <Group justify="space-between" gap="md">
-                    <Text size="sm" c={clubTokens.text.secondary}>
-                      Club balance
+                <ClubPanel
+                  maw={360}
+                  w="min(360px, 100%)"
+                  px="md"
+                  py="md"
+                  className="players-card-hover-gold-sheen"
+                  styles={{
+                    root: {
+                      outline: "none",
+                      "&:hover, &:focus, &:focus-visible, &:active": {
+                        outline: "none !important",
+                      },
+                    },
+                  }}
+                  onClick={openTitles}
+                >
+                  <Stack gap="xs">
+                    <Text size="xs" tt="uppercase" fw={800} c={clubTokens.text.muted} style={{ letterSpacing: "0.05em" }}>
+                      Player's Card
                     </Text>
-                    <Text fw={700} c={clubTokens.text.brass}>
-                      {clubBalance.toLocaleString()} credits
-                    </Text>
-                  </Group>
+                    <Divider color={clubTokens.surface.brassStroke} opacity={0.2} />
+                    <Group justify="space-between" align="center" wrap="nowrap">
+                      <Stack gap={2}>
+                        <Text size="sm" fw={700} c={clubTokens.text.primary}>
+                          {playerName || "Anonymous"}
+                        </Text>
+                        <Text size="10px" fw={700} c={isBum ? "#ef5350" : clubTokens.text.brass} style={{ letterSpacing: "0.04em" }}>
+                          {currentTitle}
+                        </Text>
+                      </Stack>
+                      <Text fw={700} c={clubTokens.text.brass}>
+                        {clubBalance.toLocaleString()} credits
+                      </Text>
+                    </Group>
+                  </Stack>
                 </ClubPanel>
 
                 <ClubPanel maw={360} w="min(360px, 100%)" px="md" py="md">
@@ -836,6 +885,339 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
           </Group>
         </Stack>
       </Modal>
+
+      {/* Club Credits & Titles Dossier Modal */}
+      <Modal
+        opened={titlesOpened}
+        onClose={closeTitles}
+        title={
+          <Text fw={700} c={clubTokens.text.brass} style={{ fontFamily: "Georgia, serif", fontSize: "1.1rem" }}>
+            Villainous Dossier &amp; Titles
+          </Text>
+        }
+        centered
+        size="md"
+        styles={{
+          content: {
+            background: "radial-gradient(circle at top, #2e1d13 0%, #140d08 100%)",
+            border: `2px solid ${clubTokens.surface.brassStroke}`,
+            borderRadius: "12px",
+            boxShadow: "0 12px 36px rgba(0, 0, 0, 0.9)",
+            color: "#ffffff",
+          },
+          header: {
+            background: "transparent",
+            borderBottom: "1px solid rgba(230, 184, 52, 0.25)",
+            paddingBottom: "10px",
+          },
+          close: {
+            color: clubTokens.text.brass,
+            "&:hover": {
+              background: "rgba(255, 255, 255, 0.05)",
+            },
+          },
+        }}
+      >
+        <Stack gap="md" p="xs" style={{ position: "relative" }}>
+          {/* Ornate inner dashed border */}
+          <Box
+            style={{
+              position: "absolute",
+              top: -8,
+              left: -8,
+              right: -8,
+              bottom: -8,
+              border: "1px dashed rgba(230, 184, 52, 0.1)",
+              borderRadius: "10px",
+              pointerEvents: "none",
+            }}
+          />
+
+          <Stack gap={2} ta="center" py="xs">
+            <Text size="xs" tt="uppercase" fw={800} c={clubTokens.text.muted} style={{ letterSpacing: "0.05em" }}>
+              Active Title
+            </Text>
+            <Text size="xl" fw={900} c={isBum ? "#ef5350" : clubTokens.text.brass} style={{ textShadow: "0 0 8px rgba(230,184,52,0.25)" }}>
+              {currentTitle}
+            </Text>
+            <Text size="xs" c="dimmed">
+              Current wallet balance: <strong>{clubBalance.toLocaleString()} credits</strong>
+            </Text>
+          </Stack>
+
+          {!isBum && (
+            <>
+              <Divider color={clubTokens.surface.brassStroke} opacity={0.2} label="SELECTABLE TITLES" labelPosition="center" />
+
+              <Stack gap="sm">
+                {villainsGameDefaults.playerTitles.map((t) => {
+                  const qualifies = (id: string): boolean => {
+                    if (id === "new_villain") return true;
+                    if (id === "villain") return hasPlayedFirstGame;
+                    if (id === "known_villain") return clubBalance >= 30000;
+                    if (id === "notorious_villain") return clubBalance >= 1000000;
+                    return false;
+                  };
+
+                  const isQualified = qualifies(t.id);
+                  const isActive = !isBum && currentTitle === t.title;
+
+                  return (
+                    <Group
+                      key={t.id}
+                      justify="space-between"
+                      p="sm"
+                      style={{
+                        background: isActive ? "rgba(230, 184, 52, 0.08)" : "rgba(0,0,0,0.25)",
+                        border: isActive ? `1.5px solid ${clubTokens.surface.brassStroke}` : "1px solid rgba(255,255,255,0.05)",
+                        borderRadius: "8px",
+                        cursor: isQualified ? "pointer" : "not-allowed",
+                        opacity: isQualified ? 1 : 0.45,
+                        transition: "all 0.2s ease",
+                      }}
+                      onClick={() => {
+                        if (isQualified) {
+                          selectPlayerTitle(t.id);
+                        }
+                      }}
+                      onMouseEnter={(e) => {
+                        if (isQualified && !isActive) {
+                          e.currentTarget.style.borderColor = "rgba(230, 184, 52, 0.4)";
+                          e.currentTarget.style.background = "rgba(255,255,255,0.02)";
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.borderColor = "rgba(255,255,255,0.05)";
+                          e.currentTarget.style.background = "rgba(0,0,0,0.25)";
+                        }
+                      }}
+                    >
+                      <Stack gap={2}>
+                        <Text size="sm" fw={700} c={isActive ? clubTokens.text.brass : "white"}>
+                          {t.title}
+                        </Text>
+                        <Text size="10px" c="dimmed">
+                          {t.id === "new_villain"
+                            ? "Default starting title"
+                            : t.id === "villain"
+                            ? "Unlocked after playing your first game"
+                            : t.id === "known_villain"
+                            ? "Requires 30,000+ club credits"
+                            : "Requires 1,000,000+ club credits"}
+                        </Text>
+                      </Stack>
+                      <Group gap="xs">
+                        {isActive && (
+                          <Text size="xs" fw={800} c={clubTokens.text.brass} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                            <span>✓</span> ACTIVE
+                          </Text>
+                        )}
+                        {!isActive && isQualified && (
+                          <Text size="10px" c={clubTokens.text.brass} tt="uppercase" fw={700}>
+                            Select
+                          </Text>
+                        )}
+                        {!isQualified && (
+                          <Text size="10px" c="#ef5350" tt="uppercase" fw={700}>
+                            Locked
+                          </Text>
+                        )}
+                      </Group>
+                    </Group>
+                  );
+                })}
+              </Stack>
+            </>
+          )}
+
+          {isBum && (
+            <Stack
+              gap="xs"
+              p="md"
+              style={{
+                background: "rgba(239, 83, 80, 0.05)",
+                border: "1px solid rgba(239, 83, 80, 0.2)",
+                borderRadius: "8px",
+                marginTop: "12px",
+              }}
+            >
+              <Title order={5} c="#ef5350" style={{ fontFamily: "Georgia, serif" }}>
+                Get Square with the Club
+              </Title>
+              <Text size="xs" c="rgba(255, 255, 255, 0.8)" lh={1.4}>
+                The house has covered your bankruptcy, but your reputation is currently set to <strong>Smelly Bum</strong>. 
+                To settle your debt and restore your villainous title, you must pay the house a fee of <strong>10,000 credits</strong>. 
+                This requires having at least <strong>30,000 credits</strong> in hand.
+              </Text>
+              <Group justify="space-between" mt="xs" align="center">
+                <Text size="xs" c="dimmed">
+                  Required: $30,000 • Fee: $10,000
+                </Text>
+                <ClubButton
+                  size="sm"
+                  variant="filled"
+                  color="red"
+                  disabled={clubBalance < 30000}
+                  onClick={() => {
+                    const success = payBumFee();
+                    if (success) {
+                      closeTitles();
+                    }
+                  }}
+                >
+                  PAY DEBT ($10,000)
+                </ClubButton>
+              </Group>
+            </Stack>
+          )}
+
+          <ClubButton
+            onClick={closeTitles}
+            variant="fancy"
+            size="sm"
+            fullWidth
+            mt="xs"
+          >
+            DISMISS DOSSIER
+          </ClubButton>
+        </Stack>
+      </Modal>
+
+      {/* Squeezed Out / Bankruptcy Dialogue Overlay */}
+      <AnimatePresence>
+        {showBankruptcyDialogue && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 10000,
+              background: "rgba(5, 5, 8, 0.88)",
+              backdropFilter: "blur(6px)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "1.5rem",
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 180 }}
+              style={{
+                width: "100%",
+                maxWidth: 550,
+                position: "relative",
+              }}
+            >
+              <Paper
+                p="xl"
+                radius="md"
+                style={{
+                  background: `linear-gradient(135deg, ${clubTokens.surface.walnutHi} 0%, ${clubTokens.surface.panel} 100%)`,
+                  border: `2px solid ${clubTokens.surface.brassStroke}`,
+                  boxShadow: "0 12px 48px rgba(0, 0, 0, 0.9), inset 0 0 24px rgba(0,0,0,0.5)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 16,
+                  color: "#ffffff",
+                }}
+              >
+                {/* Ornate dashed border */}
+                <Box
+                  style={{
+                    position: "absolute",
+                    top: 10,
+                    left: 10,
+                    right: 10,
+                    bottom: 10,
+                    border: "1px dashed rgba(230, 184, 52, 0.15)",
+                    borderRadius: "8px",
+                    pointerEvents: "none",
+                  }}
+                />
+
+                {/* Header */}
+                <Group justify="space-between" align="center" wrap="nowrap" style={{ zIndex: 1 }}>
+                  <Group gap="sm" wrap="nowrap">
+                    <span
+                      style={{
+                        fontSize: "1.5rem",
+                        lineHeight: 1,
+                        filter: "drop-shadow(0 0 6px rgba(199,158,87,0.6))",
+                      }}
+                      aria-hidden
+                    >
+                      🤵
+                    </span>
+                    <Stack gap={1}>
+                      <Title
+                        order={4}
+                        fz="sm"
+                        c={clubTokens.text.brass}
+                        style={{ fontFamily: "Georgia, serif", fontWeight: 700 }}
+                      >
+                        The Bartender
+                      </Title>
+                      <Text size="10px" c={clubTokens.text.muted} tt="uppercase" fw={600} style={{ letterSpacing: "0.08em" }}>
+                        Sobering Intervention
+                      </Text>
+                    </Stack>
+                  </Group>
+                </Group>
+
+                <hr style={{ margin: 0, border: 0, borderTop: `1px solid ${clubTokens.surface.brassStroke}`, opacity: 0.3, zIndex: 1 }} />
+
+                {/* Dialogue */}
+                <Stack gap={4} style={{ zIndex: 1 }}>
+                  <Text
+                    size="xs"
+                    fw={700}
+                    c="#ef5350"
+                    tt="uppercase"
+                    style={{ letterSpacing: "0.06em" }}
+                  >
+                    Bankruptcy Alert
+                  </Text>
+                  <Text
+                    size="sm"
+                    c={clubTokens.text.primary}
+                    style={{
+                      fontStyle: "italic",
+                      lineHeight: 1.5,
+                      minHeight: 64,
+                      whiteSpace: "pre-line",
+                    }}
+                  >
+                    "Squeezed out to the last drop, are we? The house doesn't like broke guests cluttering the velvet, but we aren't completely heartless.
+
+                    We've reset your credits to 10,000, but it comes at a steep price: until you pay back the house fee of 10,000 credits (which requires having at least 30,000 credits in hand), you will carry the mark of a 'Smelly Bum'. Step lively and get square."
+                  </Text>
+                </Stack>
+
+                <hr style={{ margin: 0, border: 0, borderTop: `1px solid ${clubTokens.surface.brassStroke}`, opacity: 0.3, zIndex: 1 }} />
+
+                {/* Action button */}
+                <Group justify="flex-end" style={{ zIndex: 1 }}>
+                  <ClubButton
+                    size="md"
+                    variant="filled"
+                    color="red"
+                    onClick={dismissBankruptcyDialogue}
+                  >
+                    Accept the Humiliation
+                  </ClubButton>
+                </Group>
+              </Paper>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Box >
   );
 }

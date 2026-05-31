@@ -9,6 +9,9 @@ import {
   resolveSevenYearItchGameMode,
   sevenYearItchHeatBonuses,
   sevenYearItchRackets,
+  isPointNumber,
+  placeBetScaledReturn,
+  placeBetTotalReturn,
   type SevenYearItchHeatBonus,
   type HardwayNumber,
   type HopKey,
@@ -126,7 +129,6 @@ interface SevenYearItchMockState {
 export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
   const buyIn = props.settlement.buyIn;
   const tableRules = useMemo(() => resolveSevenYearItchGameMode(props.gameModeId), [props.gameModeId]);
-  const chip = tableRules.chipIncrement;
   const heatRollsPerFavorOffer = tableRules.heatRollsPerFavorOffer;
   const showFieldHorn = tableRules.showFieldAndHornSection;
   const reduceMotion = usePrefersReducedMotion();
@@ -146,6 +148,12 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
     if (!mockState?.bets) return realBets;
     return { ...realBets, ...mockState.bets };
   }, [realBets, mockState]);
+  const chip = useMemo(() => {
+    if (table.phase === "point" && bets.passLine > 0) {
+      return bets.passLine;
+    }
+    return tableRules.chipIncrement;
+  }, [table.phase, bets.passLine, tableRules.chipIncrement]);
   const [feed, setFeed] = useState<RollLine[]>([]);
   const [rollCount, setRollCount] = useState(0);
   const [heatRolls, setHeatRolls] = useState(0);
@@ -173,6 +181,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
   const [oddsOpened, setOddsOpened] = useState(false);
   /** When set, roll story modal includes hand recap + continue / cash-out actions. */
   const [loreHandRecap, setLoreHandRecap] = useState<HandEndSummary | null>(null);
+  const [recentPlacePayout, setRecentPlacePayout] = useState<{ pk: PointNumber; amount: number; triggerKey: number } | null>(null);
 
   const tableRef = useRef(table);
   const betsRef = useRef(bets);
@@ -197,6 +206,14 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
     };
   }, []);
 
+  useEffect(() => {
+    const preventDefault = (e: MouseEvent) => e.preventDefault();
+    document.addEventListener("contextmenu", preventDefault);
+    return () => {
+      document.removeEventListener("contextmenu", preventDefault);
+    };
+  }, []);
+
   const wealth = balance + totalOnLayout(bets);
   const capPassHouse = Math.floor(buyIn * tableRules.maxPassBetFractionOfBuyIn);
   const passLocked = table.phase === "point" && bets.passLine > 0;
@@ -213,6 +230,27 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
 
   const heat = Math.min(100, (heatRolls / heatRollsPerFavorOffer) * 100);
   const canCashOut = table.phase === "comeOut" && table.point == null && !diceRunActive;
+
+  const cannotAffordComeOut = useMemo(() => {
+    return table.phase === "comeOut" && table.point == null && (balance + bets.passLine) < tableRules.minPassBet;
+  }, [table.phase, table.point, balance, bets.passLine, tableRules.minPassBet]);
+
+  useEffect(() => {
+    if (cannotAffordComeOut && !diceRunActive) {
+      props.onReturnToClubMenu?.({
+        ...computeSevenYearItchReturn(wealth, props.settlement),
+        tableRound: rollCount,
+        endReason: "Busted — insufficient funds for minimum Come Out bet",
+        stats: [
+          { label: "Total Rolls", value: rollCount },
+          { label: "Starting Buy-in", value: `${buyIn.toLocaleString()} cr` },
+          { label: "Ending Wealth", value: `${wealth.toLocaleString()} cr` },
+          { label: "Status", value: "Busted" },
+          { label: "Heat Level", value: `${Math.floor(heat)}%` }
+        ],
+      });
+    }
+  }, [cannotAffordComeOut, diceRunActive, wealth, rollCount, buyIn, heat, props]);
 
   const pickHeatChoices = useCallback(() => {
     const excludeId = activeBonus?.id;
@@ -244,24 +282,8 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
   }, [balance, bets.passLine, capPassHouse, chip, passLocked]);
 
   const removePassChip = useCallback(() => {
-    if (passLocked) return;
-    if (bets.passLine <= 0) return;
-
-    let next = Math.max(0, bets.passLine - chip);
-
-    const maxPlaceStake = Object.values(bets.place).reduce((max, val) => Math.max(max, val ?? 0), 0);
-    const minRequiredPass = Math.ceil(maxPlaceStake / 3);
-
-    if (next < minRequiredPass) {
-      next = minRequiredPass;
-    }
-
-    if (next === bets.passLine) return;
-
-    const d = bets.passLine - next;
-    setBalance((b) => b + d);
-    setBets((prev) => ({ ...prev, passLine: next }));
-  }, [bets.passLine, bets.place, chip, passLocked]);
+    // Locked: once a bet is made, it is locked until divestment/resolution
+  }, []);
 
   const addOddsChip = useCallback(() => {
     if (table.phase !== "point") return;
@@ -274,13 +296,8 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
   }, [bets.freeOdds, chip, maxOddsCap, maxOddsWallet, table.phase]);
 
   const removeOddsChip = useCallback(() => {
-    if (table.phase !== "point") return;
-    if (bets.freeOdds <= 0) return;
-    const next = Math.max(0, bets.freeOdds - chip);
-    const d = bets.freeOdds - next;
-    setBalance((b) => b + d);
-    setBets((prev) => ({ ...prev, freeOdds: next }));
-  }, [bets.freeOdds, chip, table.phase]);
+    // Locked: once a bet is made, it is locked until divestment/resolution
+  }, []);
 
   const addPlaceChip = useCallback(
     (pk: PointNumber) => {
@@ -305,24 +322,10 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
   );
 
   const removePlaceChip = useCallback(
-    (pk: PointNumber) => {
-      if (table.phase !== "point") return;
-      const old = bets.place[pk] ?? 0;
-      if (old <= 0) return;
-      let next = Math.max(0, old - chip);
-      if (next > 0 && next < tableRules.minPlaceBet) {
-        next = 0;
-      }
-      const d = old - next;
-      setBalance((b) => b + d);
-      setBets((prev) => {
-        const place = { ...prev.place };
-        if (next <= 0) delete place[pk];
-        else place[pk] = next;
-        return { ...prev, place };
-      });
+    () => {
+      // Locked: once a bet is made, it is locked until divestment/resolution
     },
-    [bets.place, chip, table.phase, tableRules.minPlaceBet],
+    [],
   );
 
   const addFieldChip = useCallback(() => {
@@ -333,12 +336,8 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
   }, [balance, bets.field, chip]);
 
   const removeFieldChip = useCallback(() => {
-    if (bets.field <= 0) return;
-    const next = Math.max(0, bets.field - chip);
-    const d = bets.field - next;
-    setBalance((b) => b + d);
-    setBets((prev) => ({ ...prev, field: next }));
-  }, [bets.field, chip]);
+    // Locked: once a bet is made, it is locked until divestment/resolution
+  }, []);
 
   const addHornChip = useCallback(() => {
     const cost = chip * 4;
@@ -348,12 +347,8 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
   }, [balance, chip]);
 
   const removeHornChip = useCallback(() => {
-    if (bets.hornUnit <= 0) return;
-    const next = Math.max(0, bets.hornUnit - chip);
-    const d = bets.hornUnit - next;
-    setBalance((b) => b + d * 4);
-    setBets((prev) => ({ ...prev, hornUnit: next }));
-  }, [bets.hornUnit, chip]);
+    // Locked: once a bet is made, it is locked until divestment/resolution
+  }, []);
 
   const addHopChip = useCallback(
     (key: HopKey) => {
@@ -368,19 +363,9 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
     [balance, bets.hops, chip],
   );
 
-  const removeHopChip = useCallback((key: HopKey) => {
-    const old = bets.hops[key] ?? 0;
-    if (old <= 0) return;
-    const next = Math.max(0, old - chip);
-    const d = old - next;
-    setBalance((b) => b + d);
-    setBets((prev) => {
-      const hops = { ...prev.hops };
-      if (next <= 0) delete hops[key];
-      else hops[key] = next;
-      return { ...prev, hops };
-    });
-  }, [bets.hops, chip]);
+  const removeHopChip = useCallback(() => {
+    // Locked: once a bet is made, it is locked until divestment/resolution
+  }, []);
 
   const addHardwayChip = useCallback(
     (hw: HardwayNumber) => {
@@ -395,19 +380,9 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
     [balance, bets.hardways, chip],
   );
 
-  const removeHardwayChip = useCallback((hw: HardwayNumber) => {
-    const old = bets.hardways[hw] ?? 0;
-    if (old <= 0) return;
-    const next = Math.max(0, old - chip);
-    const d = old - next;
-    setBalance((b) => b + d);
-    setBets((prev) => {
-      const hardways = { ...prev.hardways };
-      if (next <= 0) delete hardways[hw];
-      else hardways[hw] = next;
-      return { ...prev, hardways };
-    });
-  }, [bets.hardways, chip]);
+  const removeHardwayChip = useCallback(() => {
+    // Locked: once a bet is made, it is locked until divestment/resolution
+  }, []);
 
   const handleDivest = useCallback(() => {
     if (table.phase !== "point" || table.hasUsedDivest || diceRunActive) return;
@@ -488,6 +463,37 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
       setFeed((f) => [...bonusLines, ...(shieldAbsorbsSeven ? [] : res.lines), ...f].slice(0, 28));
       setRollCount((n) => n + 1);
 
+      // Detect if a place bet on this roll total paid out
+      if (r.total !== 7 && isPointNumber(r.total)) {
+        const pk = r.total as PointNumber;
+        const st = currentBets.place[pk] ?? 0;
+        if (st > 0) {
+          let paidAmount = 0;
+          if (currentTable.phase === "point" && pk === currentTable.point) {
+            paidAmount = placeBetScaledReturn(pk, st, currentTable.placePayoutScale);
+          } else {
+            const ret = placeBetTotalReturn(pk, st);
+            const profit = ret - st;
+            paidAmount = currentTable.placePayoutScale >= 1 ? profit : Math.floor(profit * currentTable.placePayoutScale);
+          }
+
+          // Apply potential active bonus multiplier
+          if (bonus && bonus.effect.type === "place_hit_multiplier" && res.lines.some((line) => line.text.includes("Place on"))) {
+            paidAmount = Math.floor(paidAmount * bonus.effect.value);
+          } else if (bonus && (bonus.effect.type === "next_non_seven_multiplier" || bonus.effect.type === "risk_reward_multiplier")) {
+            paidAmount = Math.floor(paidAmount * bonus.effect.value);
+          }
+
+          if (paidAmount > 0) {
+            setRecentPlacePayout({
+              pk,
+              amount: paidAmount,
+              triggerKey: Date.now() + Math.random(),
+            });
+          }
+        }
+      }
+
       const storyLine = pickSevenYearItchRollStory(r.total);
       const racket = r.total === 7 ? null : sevenYearItchRackets[r.total as PointNumber];
       if (shieldAbsorbsSeven) {
@@ -522,8 +528,15 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
           netWealthVsHandStart: wealthAfter - handStartWealthRef.current,
           roll: r,
         });
+        handStartWealthRef.current = wealthAfter;
       } else {
         setLoreHandRecap(null);
+      }
+
+      // Show the post-roll modal when the point or a seven is rolled
+      const isPointOrSeven = r.total === 7 || (currentTable.phase === "point" && r.total === currentTable.point);
+      if (isPointOrSeven) {
+        setLoreOpen(true);
       }
 
       setHeatRolls((prev) => {
@@ -571,7 +584,6 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
     const r = rollDice();
     if (reduceMotion) {
       applyRollResult(r);
-      setLoreOpen(true);
       return;
     }
     const startX1 = 5 + Math.random() * 20;
@@ -636,7 +648,6 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
     const t2 = window.setTimeout(() => {
       applyRollResult(r);
       setDiceRunActive(false);
-      setLoreOpen(true);
     }, 1080);
     animTimersRef.current.push(t2);
   }, [applyRollResult, canRoll, diceRunActive, reduceMotion]);
@@ -861,6 +872,8 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
               onRoll={handleRoll}
               maxOddsDisplay={maxOddsDisplay}
               hideInlineDice={diceRunActive}
+              maxBet={bets.passLine * 3}
+              recentPlacePayout={recentPlacePayout}
             />
 
             <Paper
@@ -1051,6 +1064,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
           </SimpleGrid>
         </Stack>
       </Modal>
+
 
       <GameSettingsModal opened={settingsOpened} onClose={() => setSettingsOpened(false)} />
       <SevenYearItchOddsModal

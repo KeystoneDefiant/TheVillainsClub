@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from "react";
 import { Text } from "@mantine/core";
 import { ClubButton } from "@/components/ui/ClubButton";
 import type { CraplessTableState, TableBets } from "../engine/craplessEngine";
@@ -48,6 +49,8 @@ export type CraplessTableFeltProps = {
   maxOddsDisplay: number;
   /** Hide in-table dice during overlay roll animation. */
   hideInlineDice: boolean;
+  maxBet: number;
+  recentPlacePayout: { pk: PointNumber; amount: number; triggerKey: number } | null;
 };
 
 function preventCtx(e: React.MouseEvent) {
@@ -87,6 +90,8 @@ export function CraplessTableFelt({
   onRoll,
   maxOddsDisplay,
   hideInlineDice,
+  maxBet,
+  recentPlacePayout,
 }: CraplessTableFeltProps) {
   const topPlaces = POINT_NUMBERS.filter((n) => n <= 6);
   const bottomPlaces = POINT_NUMBERS.filter((n) => n >= 8);
@@ -122,6 +127,8 @@ export function CraplessTableFelt({
                 placePayoutScale={placePayoutScale}
                 onPrimary={() => onPlacePrimary(pk)}
                 onSecondary={() => onPlaceSecondary(pk)}
+                maxBet={maxBet}
+                recentPlacePayout={recentPlacePayout}
               />
             ))}
           </div>
@@ -140,6 +147,8 @@ export function CraplessTableFelt({
                 placePayoutScale={placePayoutScale}
                 onPrimary={() => onPlacePrimary(pk)}
                 onSecondary={() => onPlaceSecondary(pk)}
+                maxBet={maxBet}
+                recentPlacePayout={recentPlacePayout}
               />
             ))}
           </div>
@@ -326,6 +335,8 @@ function PlaceCell({
   placePayoutScale,
   onPrimary,
   onSecondary,
+  maxBet,
+  recentPlacePayout,
 }: {
   pk: PointNumber;
   amount: number;
@@ -335,13 +346,31 @@ function PlaceCell({
   placePayoutScale: number;
   onPrimary: () => void;
   onSecondary: () => void;
+  maxBet: number;
+  recentPlacePayout: { pk: PointNumber; amount: number; triggerKey: number } | null;
 }) {
+  const [showPayoutAnim, setShowPayoutAnim] = useState(false);
+  const [payoutAmount, setPayoutAmount] = useState(0);
+
+  useEffect(() => {
+    if (recentPlacePayout && recentPlacePayout.pk === pk) {
+      setPayoutAmount(recentPlacePayout.amount);
+      setShowPayoutAnim(true);
+      const t = setTimeout(() => {
+        setShowPayoutAnim(false);
+      }, 1500);
+      return () => clearTimeout(t);
+    }
+  }, [recentPlacePayout, pk]);
+
   const previewStake = amount > 0 ? amount : chip;
   const retPreview = placeBetScaledReturn(pk, previewStake, placePayoutScale);
+  const progressPercent = maxBet > 0 ? Math.min(100, (amount / maxBet) * 100) : 0;
+
   return (
     <button
       type="button"
-      className={`yi-felt-place ${isPoint ? "yi-felt-place--point" : ""} ${disabled ? "yi-felt-place--off" : ""}`}
+      className={`yi-felt-place ${isPoint ? "yi-felt-place--point" : ""} ${disabled ? "yi-felt-place--off" : ""} ${showPayoutAnim ? "yi-felt-place--payout-pulse" : ""}`}
       data-testid={`felt-place-${pk}`}
       disabled={disabled}
       onClick={onPrimary}
@@ -349,13 +378,77 @@ function PlaceCell({
         e.preventDefault();
         onSecondary();
       }}
+      style={{
+        position: "relative",
+        paddingTop: 18,
+        paddingBottom: 6,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
     >
-      <span className="yi-felt-place-num">{pk}</span>
-      <span className="yi-felt-place-name">{sevenYearItchRackets[pk].name}</span>
-      <span className="yi-felt-place-amt">
+      {/* Background Progress Bar */}
+      {amount > 0 && maxBet > 0 && (
+        <div style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          bottom: 0,
+          width: `${progressPercent}%`,
+          background: "linear-gradient(90deg, rgba(196, 120, 45, 0.22) 0%, rgba(196, 120, 45, 0.42) 90%, rgba(255, 215, 128, 0.08) 100%)",
+          transition: "width 0.2s ease",
+          pointerEvents: "none",
+          zIndex: 0,
+          borderRadius: 6,
+        }} />
+      )}
+
+      {/* Number Circle - Overlapping top-center */}
+      <div style={{
+        position: "absolute",
+        top: -12,
+        left: "50%",
+        transform: "translateX(-50%)",
+        width: 24,
+        height: 24,
+        borderRadius: "50%",
+        border: `1.5px solid ${isPoint ? "#ffd780" : "var(--7yi-amber)"}`,
+        background: "#0c0a09",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        boxShadow: "0 2px 4px rgba(0,0,0,0.6)",
+        zIndex: 2,
+      }}>
+        <span style={{
+          fontSize: "0.85rem",
+          fontWeight: 900,
+          color: isPoint ? "#ffd780" : "var(--7yi-amber)",
+          lineHeight: 1,
+          textAlign: "center",
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}>
+          {pk}
+        </span>
+      </div>
+
+      <span className="yi-felt-place-name" style={{ fontSize: "0.72rem", fontWeight: 700, zIndex: 1 }}>
+        {sevenYearItchRackets[pk].name}
+      </span>
+      <span className="yi-felt-place-amt" style={{ fontSize: "0.62rem", zIndex: 1 }}>
         {amount > 0 ? `${retPreview.toLocaleString()} return` : `${retPreview.toLocaleString()} on ${chip}`}
       </span>
-      {!disabled ? <span className="yi-felt-chipHintSm">+{chip}</span> : null}
+
+      {!disabled ? <span className="yi-felt-chipHintSm" style={{ marginTop: 2, zIndex: 1 }}>+{chip}</span> : null}
+
+      {showPayoutAnim && (
+        <span className="yi-felt-payout-float">
+          +${payoutAmount.toLocaleString()}
+        </span>
+      )}
     </button>
   );
 }

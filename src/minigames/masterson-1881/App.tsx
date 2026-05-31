@@ -17,7 +17,7 @@ import { clubTokens } from "@/theme/clubTokens";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { useMastertonEngine } from "./engine/useMastertonEngine";
-import { rouletteNumbers, mastersonGameConfig, validateOutcomeAgainstRig, bettorStrategyDescriptions } from "@/config/minigames/mastersonRules";
+import { rouletteNumbers, mastersonGameConfig, validateOutcomeAgainstRig, bettorStrategyDescriptions, type BettorProfile, type BettorStrategy } from "@/config/minigames/mastersonRules";
 import { computeMastersonReturn, type ClubTableReturnDetail, type OublietteSettlementProfile } from "@/game/sessionSettlement";
 
 import "./masterson.css";
@@ -116,9 +116,31 @@ export function MastertonRoot({
     }
   }, [engine.phase]);
 
-  const selectedBettor = useMemo(() => {
+  const selectedBettor = useMemo<BettorProfile | null>(() => {
     if (!selectedBettorCard) return null;
-    return engine.activeBettors.find(b => b.id === selectedBettorCard) || engine.evictedBettors[selectedBettorCard];
+    const active = engine.activeBettors.find(b => b.id === selectedBettorCard);
+    if (active) return active;
+    const evicted = engine.evictedBettors[selectedBettorCard];
+    if (evicted) {
+      return {
+        id: selectedBettorCard,
+        name: evicted.name,
+        chips: evicted.chips,
+        strategy: evicted.strategy as BettorStrategy,
+        initial_chips: evicted.chips,
+        loss_tolerance_pct: 0.5,
+        current_suspicion: 10,
+        max_suspicion: 10,
+        current_consecutive_losses: 0,
+        max_consecutive_losses: 5,
+        double_bet_frequency: 0,
+        herd_mentality_pct: 0.3,
+        total_spins_bet: 0,
+        total_amount_bet: 0,
+        recent_spins: [],
+      };
+    }
+    return null;
   }, [selectedBettorCard, engine.activeBettors, engine.evictedBettors]);
 
   // Wheel swirling and countdown timing states
@@ -160,7 +182,7 @@ export function MastertonRoot({
     triggerTime: number;
     placed: boolean;
   }
-  const [scheduledBets, setScheduledBets] = useState<ScheduledBetJob[]>([]);
+  const scheduledBetsRef = useRef<ScheduledBetJob[]>([]);
   const [isHolding, setIsHolding] = useState(false);
   const [neonFlashSeat, setNeonFlashSeat] = useState<string | null>(null);
   const [recapVisible, setRecapVisible] = useState(false);
@@ -296,20 +318,16 @@ export function MastertonRoot({
         const nextTimer = prev - 0.1;
 
         // Trigger any scheduled bets as timer counts down
-        setScheduledBets((prevScheduled) => {
-          let updated = false;
-          const nextScheduled = prevScheduled.map((job) => {
-            if (!job.placed && nextTimer <= job.triggerTime) {
-              engineRef.current.placeSingleBettorBet(job.seatId);
-              setNeonFlashSeat(job.seatId);
-              setTimeout(() => setNeonFlashSeat(null), 850);
-              updated = true;
-              return { ...job, placed: true };
-            }
-            return job;
-          });
-          return updated ? nextScheduled : prevScheduled;
+        const nextScheduled = scheduledBetsRef.current.map((job) => {
+          if (!job.placed && nextTimer <= job.triggerTime) {
+            engineRef.current.placeSingleBettorBet(job.seatId);
+            setNeonFlashSeat(job.seatId);
+            setTimeout(() => setNeonFlashSeat(null), 850);
+            return { ...job, placed: true };
+          }
+          return job;
         });
+        scheduledBetsRef.current = nextScheduled;
 
         return nextTimer;
       });
@@ -373,7 +391,7 @@ export function MastertonRoot({
         placed: false,
       };
     });
-    setScheduledBets(scheduled);
+    scheduledBetsRef.current = scheduled;
   };
 
   // Stacked, offset, color-coded wagers rendering with visual splits support
@@ -1057,7 +1075,25 @@ export function MastertonRoot({
                   const bettor = engine.activeBettors.find((b) => b.id === seatId);
                   const evictedBettor = engine.evictedBettors[seatId];
                   const isEvicted = !!evictedBettor;
-                  const displayBettor = evictedBettor || bettor;
+                  const displayBettor: BettorProfile | undefined = evictedBettor
+                    ? {
+                        id: seatId,
+                        name: evictedBettor.name,
+                        chips: evictedBettor.chips,
+                        strategy: evictedBettor.strategy as BettorStrategy,
+                        initial_chips: evictedBettor.chips,
+                        loss_tolerance_pct: 0.5,
+                        current_suspicion: 10,
+                        max_suspicion: 10,
+                        current_consecutive_losses: 0,
+                        max_consecutive_losses: 5,
+                        double_bet_frequency: 0,
+                        herd_mentality_pct: 0.3,
+                        total_spins_bet: 0,
+                        total_amount_bet: 0,
+                        recent_spins: [],
+                      }
+                    : bettor;
 
                   if (!displayBettor) {
                     return (

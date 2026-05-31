@@ -193,7 +193,6 @@ export function useMastertonEngine() {
     const totalTargetSuspicion = baseSuspicion + streakMultiplier;
 
     let spinTableProfit = 0;
-    let spinPayouts = 0;
 
     const recaps: Record<string, number> = {};
 
@@ -214,8 +213,6 @@ export function useMastertonEngine() {
 
       const totalBetAmount = bets.reduce((sum, b) => sum + b.amount, 0);
       recaps[bettor.id] = totalWon - totalBetAmount;
-
-      spinPayouts += totalWon;
 
       const isOverallWin = totalWon > totalLost;
 

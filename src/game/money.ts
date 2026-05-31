@@ -27,6 +27,8 @@ export type TableSession = {
   oublietteState?: OublietteGameState;
   /** Game-specific settlement snapshot (same cap shape for Oubliette and 7 Year Itch; see `sessionSettlement.ts`). */
   settlement: OublietteSettlementProfile;
+  /** Saved recent spin results for games like Masterson or Fateseal to restore history on resume. */
+  recent_spins?: string[];
 };
 
 export type MinigameRuntimeProps = {

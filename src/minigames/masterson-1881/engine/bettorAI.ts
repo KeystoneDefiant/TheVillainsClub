@@ -46,7 +46,7 @@ export function generateRandomBettor(seatIndex: number): BettorProfile {
     "Angels_Split",
   ];
   const strategy = strategies[Math.floor(Math.random() * strategies.length)]!;
-  
+
   // Starting chips between 5,000 and 200,000 in whole $500 increments
   const initial_chips = Math.round((Math.random() * (200000 - 5000) + 5000) / 500) * 500;
   const minSusp = mastersonGameConfig.min_bettor_max_suspicion;
@@ -130,7 +130,7 @@ export function executeBettorBetting(
 
   // Base units based on initial chip size (rounded to minBet increments)
   const baseUnit = Math.max(minBet, Math.round((bettor.initial_chips * 0.02) / minBet) * minBet);
-  
+
   switch (bettor.strategy) {
     case "Martingale": {
       // Standard 1:1 bet. Double on loss, reset on win.
@@ -229,7 +229,7 @@ export function executeBettorBetting(
       let isDozens = Math.random() > 0.5;
       let t1 = isDozens ? "Dozen_1" : "Column_1";
       let t2 = isDozens ? "Dozen_2" : "Column_2";
-      
+
       if (isContradictoryBet(t1, existingBets) || isContradictoryBet(t2, existingBets)) {
         isDozens = !isDozens;
         t1 = isDozens ? "Dozen_1" : "Column_1";
@@ -238,7 +238,7 @@ export function executeBettorBetting(
           return { bets: [], nextBetAmount: 0 };
         }
       }
-      
+
       const totalAmt = Math.min(baseUnit * 2, bettor.chips);
       const halfAmt = Math.round((totalAmt / 2) / minBet) * minBet;
       if (halfAmt >= minBet) {
@@ -322,13 +322,13 @@ export function executeBettorBetting(
       const uHigh = baseUnit * 14;
       const uDS = baseUnit * 5;
       const uZero = baseUnit * 1;
-      
+
       const tempBets = [
         { target: "High_19_36", amount: uHigh, payoutOdds: 1 },
         { target: "DoubleStreet_13_18", amount: uDS, payoutOdds: 5 },
         { target: "0", amount: uZero, payoutOdds: 35 }
       ];
-      
+
       let availableChips = bettor.chips;
       tempBets.forEach(bet => {
         let amt = Math.round(bet.amount / minBet) * minBet;
@@ -345,19 +345,19 @@ export function executeBettorBetting(
     case "Fibonacci": {
       const FIB = [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377];
       let idx = bettor.progression_index ?? 0;
-      
+
       if (previousWin === false) {
         idx = Math.min(FIB.length - 1, idx + 1);
       } else if (previousWin === true) {
         idx = Math.max(0, idx - 2);
       }
       bettor.progression_index = idx;
-      
+
       let target = Math.random() > 0.5 ? "Red" : "Black";
       if (isContradictoryBet(target, existingBets)) {
         target = target === "Red" ? "Black" : "Red";
       }
-      
+
       const units = FIB[idx]!;
       let amount = baseUnit * units;
       amount = Math.round(amount / minBet) * minBet;
@@ -371,7 +371,7 @@ export function executeBettorBetting(
 
     case "Tier_et_Tout": {
       let stage = bettor.progression_index ?? 0; // 0: Tier (1/3), 1: Tout (2/3)
-      
+
       if (previousWin === true) {
         stage = 0;
       } else if (previousWin === false && stage === 0) {
@@ -380,19 +380,19 @@ export function executeBettorBetting(
         stage = 0;
       }
       bettor.progression_index = stage;
-      
+
       let target = Math.random() > 0.5 ? "Even" : "Odd";
       if (isContradictoryBet(target, existingBets)) {
         target = target === "Even" ? "Odd" : "Even";
       }
-      
+
       let amount = 0;
       if (stage === 0) {
         amount = Math.max(minBet, Math.round((bettor.chips / 3) / minBet) * minBet);
       } else {
         amount = bettor.chips;
       }
-      
+
       amount = Math.min(amount, bettor.chips);
       if (amount >= minBet) {
         bets.push({ target, amount, payoutOdds: 1 });
@@ -405,7 +405,7 @@ export function executeBettorBetting(
       const history = bettor.recent_spins ?? [];
       let target = bettor.pivot_target ?? null;
       let count = bettor.progression_index ?? 0;
-      
+
       if (target) {
         count += 1;
         if (previousWin === true || count >= 35) {
@@ -413,7 +413,7 @@ export function executeBettorBetting(
           count = 0;
         }
       }
-      
+
       if (!target && history.length >= 2) {
         const seen = new Set<string>();
         for (const num of history) {
@@ -425,10 +425,10 @@ export function executeBettorBetting(
           seen.add(num);
         }
       }
-      
+
       bettor.pivot_target = target;
       bettor.progression_index = count;
-      
+
       if (target) {
         let amount = baseUnit;
         amount = Math.min(amount, bettor.chips);
@@ -437,7 +437,7 @@ export function executeBettorBetting(
           nextBetAmount = amount;
         }
       } else {
-        let shadowTarget = Math.random() > 0.5 ? "Red" : "Black";
+        const shadowTarget = Math.random() > 0.5 ? "Red" : "Black";
         let amount = minBet;
         amount = Math.min(amount, bettor.chips);
         if (amount >= minBet) {
@@ -450,15 +450,15 @@ export function executeBettorBetting(
 
     case "Angels_Split": {
       const uCol = baseUnit * 2;
-      const uZero = baseUnit;
-      
+      const uZero = baseUnit / 2;
+
       const tempBets = [
         { target: "Column_1", amount: uCol, payoutOdds: 2 },
         { target: "Column_2", amount: uCol, payoutOdds: 2 },
         { target: "0", amount: uZero, payoutOdds: 35 },
         { target: "00", amount: uZero, payoutOdds: 35 }
       ];
-      
+
       let availableChips = bettor.chips;
       tempBets.forEach(bet => {
         let amt = Math.round(bet.amount / minBet) * minBet;

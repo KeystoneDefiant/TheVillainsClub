@@ -90,7 +90,7 @@ export const sommelierTutorialCatalog: Record<string, SommelierTutorialStep[]> =
     },
     {
       title: "The Cellar Shop",
-      dialogue: "Between rounds, you will visit my shop.\n\nYou can buy additional parallel hands, wild cards, more cards drawn at the start of the round, an extra draw step, and dead cards. \n\nDead cards are quite the interesting varietal; you are paid credits for taking them into your deck, however they count as no suit or rank. It simply fills up room in your deck and these dead cards will always find their way into your hand at the worst possible moments. \n\nMuch like certain people we may have in our lives. I digress. \n\nYou can also pay to have these troublesome cards removed from your deck at a later time, should the option to do so appear in the shop.",
+      dialogue: "Between rounds, you will visit my shop.\n\nYou can buy additional parallel hands, wild cards, more cards drawn at the start of the round, an extra draw step, and dead cards.\n\nIndulging in these at the appropriate time is the key factor in a winning run and leaving with a full wallet instead of a hangover.",
       highlightSelector: ".oubliette-shop-card-wrap",
       mockState: {
         screen: "game",
@@ -100,7 +100,25 @@ export const sommelierTutorialCatalog: Record<string, SommelierTutorialStep[]> =
         selectedHandCount: 5,
         selectedShopOptions: [
           "wild-card",
-          "parallel-hands-bundle-5"
+          "parallel-hands-bundle-5",
+          "parallel-hands-bundle-10",
+          "parallel-hands-bundle-50",
+        ]
+      }
+    },
+    {
+      title: "Dead Cards",
+      dialogue: "Dead cards are quite the interesting varietal; you are paid credits for taking them into your deck, however they count as no suit or rank. It simply fills up room in your deck and these dead cards will always find their way into your hand at the worst possible moments. \n\nMuch like certain people we may have in our lives... I digress. \n\nYou can also pay to have these troublesome cards removed from your deck at a later time, should the option to do so appear in the shop.\n\nMuch like certain people in our lives.",
+      highlightSelector: ".oubliette-shop-card-wrap",
+      mockState: {
+        screen: "game",
+        showShopNextRound: true,
+        credits: 300,
+        handCount: 5,
+        selectedHandCount: 5,
+        selectedShopOptions: [
+          "dead-card",
+          "remove-single-dead-card"
         ]
       }
     },
@@ -111,7 +129,7 @@ export const sommelierTutorialCatalog: Record<string, SommelierTutorialStep[]> =
       mockState: {
         screen: "game",
         showShopNextRound: true,
-        credits: 300,
+        credits: 30000000,
         handCount: 5,
         selectedHandCount: 5,
         selectedShopOptions: [
@@ -123,16 +141,23 @@ export const sommelierTutorialCatalog: Record<string, SommelierTutorialStep[]> =
     {
       title: "The End Game",
       dialogue: "Should you find yourself making it to round 30, we have quite the digestif waiting for you. \n\nWhile you have technically 'won', we here at the Club always wish to see overachievement. As such, we present you with a unique challenge. \n\nGenerally, we will ask you to win 25% of your hands, then 30%, and so on, until you no longer can meet our criteria. Nothing untoward will happen if you fail at this state, simply a test of your strategy, skill, and luck with the cards.\n\nWith that, I believe our tasting for this game has come to a conclusion. I bid you good luck, happy wagering, and I'll be by later to check on your wine glass.",
+      highlightSelector: "#preDraw-screen",
       mockState: {
         screen: "game",
-        // showShopNextRound: true,
-        credits: 300,
+        gamePhase: "preDraw",
+        showShopNextRound: false,
+        isEndlessMode: true,
+        credits: 18500,
         handCount: 5,
         selectedHandCount: 5,
-        selectedShopOptions: [
-          "wild-card",
-          "parallel-hands-bundle-5"
-        ]
+        round: 32,
+        minimumBet: 200,
+        betAmount: 200,
+        baseMinimumBet: 100,
+        totalEarnings: 12000,
+        winningHandsLastRound: 3,
+        currentFailureState: null,
+        gameOver: false
       }
     }
   ],
@@ -273,7 +298,7 @@ export const sommelierTutorialCatalog: Record<string, SommelierTutorialStep[]> =
     },
     {
       title: "Rigging and Suspicion, Part 2",
-      dialogue: `As I mentioned, the more specifically you are rigging the wheel, the more obvious you are going to be to the players.\n\n•Low Suspicion rigging: 1:1 bets found in the bottom row.\n• Mid Suspicion rigging: Columns or Dozens.\n• High Suspicion rigging: Specific Numbers.\n\nIf a bettor wins on a rigged spin, they still get wise, but won't care as much.\n\nRunning a Fair Spin cools things down, reducing active suspicion by a small amount.\n\nKeep an eye on their whiskey glasses. As suspicion approaches the threshold, the glass clouds up with condensation and eventually cracks if they storm off.`,
+      dialogue: `As I mentioned, the more specifically you are rigging the wheel, the more obvious you are going to be to the players.\n\n• Low Suspicion rigging: 1:1 bets found in the bottom row.\n• Mid Suspicion rigging: Columns or Dozens.\n• High Suspicion rigging: Specific Numbers.\n\nIf a bettor wins on a rigged spin, they still get wise, but won't care as much.\n\nRunning a Fair Spin cools things down, reducing active suspicion by a small amount.\n\nKeep an eye on their whiskey glasses. As suspicion approaches the threshold, the glass clouds up with condensation and eventually cracks if they storm off.`,
       highlightSelector: ".masterson-whiskey-glass",
       mockState: {
         activeBettors: [
@@ -301,7 +326,7 @@ export const sommelierTutorialCatalog: Record<string, SommelierTutorialStep[]> =
     },
     {
       title: "Advanced Strategy - Bettor Behavior",
-      dialogue: `The players can bet in a number of different patterns. Knowing these patterns isn't essential, but it does help to know what they may be doing and how best to exploit them for maximum profit.\n\n• Martingale & D'Alembert: Systems that dynamically scale bet sizes based on wins/losses.\n• Random & Random 1:1: Erratic layout selections with varying risks.\n• Hedges: High-coverage bets covering multiple sections simultaneously.\n• Low Risk Grind: Conservative chips focused on safe outside bets.\n• High Risk: Chasing massive payouts on specific single-number fields.\n\nWith that, I believe our tasting for this game has come to a conclusion. Settle your shift, rig the wheel wisely, and try to pocket a handsome sum of commission. Best of luck!`,
+      dialogue: `The players can bet in a number of different patterns. Knowing these patterns isn't essential, but it does help to know what they may be doing and how best to exploit them for maximum profit.\n\nClicking on their player card will give you insight into their betting patterns, a description of how their betting strategy works, risk tolerance, and how much they can lose before they storm off.\n\nWith that, I believe our tasting for this game has come to a conclusion. Settle your shift, rig the wheel wisely, and try to pocket a handsome sum of commission. Best of luck!`,
       highlightSelector: "#betting-styles-guide",
       mockState: {
         activeBettors: [

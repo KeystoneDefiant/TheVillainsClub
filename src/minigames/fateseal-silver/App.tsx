@@ -293,6 +293,15 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
       onReturnToClubMenu?.({
         ...computeFatesealReturn(engine.sessionWallet, settlement),
         tableRound: engine.spinCount,
+        endReason: `Busted — insufficient credits to bet at spin ${engine.spinCount}`,
+        stats: [
+          { label: "Total Spins", value: engine.spinCount },
+          { label: "Starting Buy-in", value: `${buyIn.toLocaleString()} cr` },
+          { label: "Ending Wealth", value: `${engine.sessionWallet.toLocaleString()} cr` },
+          { label: "Net Outcome", value: `${(engine.sessionWallet - buyIn).toLocaleString()} cr` },
+          { label: "Active Omens", value: engine.activeProphecy.length },
+          { label: "Tome Spins", value: engine.tomeSpinsLeft }
+        ],
       });
     }
   }, [
@@ -303,9 +312,12 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
     engine.vassagoActive,
     engine.deadReelPaidSpinTimers.length,
     engine.spinCount,
+    engine.activeProphecy.length,
+    engine.tomeSpinsLeft,
     tableRules.minBaseBet,
     onReturnToClubMenu,
     settlement,
+    buyIn,
   ]);
 
   const clearCascadeTimers = useCallback(() => {
@@ -745,6 +757,15 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
 
   return (
     <Box className="fateseal-root" data-testid="fateseal-root">
+      {/* Ambient Occult Background Effects */}
+      <div className="fateseal-bg-ambient" aria-hidden="true">
+        <div className="fateseal-bg-nebula-purple" />
+        <div className="fateseal-bg-nebula-indigo" />
+        <div className="fateseal-bg-cracks" />
+        <div className="fateseal-bg-runic-seal" />
+        <div className="fateseal-bg-sparks" />
+      </div>
+
       <Stack gap="xs" className="fateseal-frame">
         <UnifiedGameHeader
           gameTitle="Fateseal Silver"
@@ -1279,6 +1300,16 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
                 props.onReturnToClubMenu?.({
                   ...computeFatesealReturn(engine.sessionWallet, props.settlement),
                   tableRound: engine.spinCount,
+                  endReason: `Voluntary cash-out at spin ${engine.spinCount}`,
+                  stats: [
+                    { label: "Total Spins", value: engine.spinCount },
+                    { label: "Starting Buy-in", value: `${buyIn.toLocaleString()} cr` },
+                    { label: "Ending Wealth", value: `${engine.sessionWallet.toLocaleString()} cr` },
+                    { label: "Net Outcome", value: `${(engine.sessionWallet - buyIn).toLocaleString()} cr` },
+                    { label: "Active Omens", value: engine.activeProphecy.length },
+                    { label: "Wild Reels", value: engine.wildReelPaidSpinTimers.length },
+                    { label: "Tome Spins", value: engine.tomeSpinsLeft }
+                  ],
                 });
               }}
             >

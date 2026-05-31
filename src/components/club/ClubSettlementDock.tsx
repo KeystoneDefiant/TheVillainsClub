@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Divider, Stack, Text, Title } from "@mantine/core";
 import { useMemo } from "react";
 import { ClubPanel } from "@/components/ui/ClubPanel";
+import { StatsTicker } from "@/components/club/StatsTicker";
 import type { BarRouteState } from "@/game/barRouteState";
 import {
   barSettlementTone,
@@ -71,10 +72,21 @@ export function ClubSettlementDock({ lastTable, reduceMotion }: ClubSettlementDo
           <Title order={3} size="h4" c={clubTokens.text.primary} style={{ fontFamily: "Georgia, serif" }}>
             {gameTitle}
           </Title>
+
+          {lastTable.endReason ? (
+            <Text size="xs" c={clubTokens.text.secondary} fs="italic">
+              {lastTable.endReason}
+            </Text>
+          ) : null}
+
           <Text size="sm" c={clubTokens.text.secondary}>
             Returned {Math.round(lastTable.totalReturn).toLocaleString()} credits from the table • Buy-in{" "}
             {Math.round(lastTable.buyIn).toLocaleString()}
           </Text>
+
+          {lastTable.stats && lastTable.stats.length > 0 ? (
+            <StatsTicker stats={lastTable.stats} reduceMotion={reduceMotion} />
+          ) : null}
 
           <Divider color={clubTokens.surface.brassStroke} opacity={0.45} />
 
@@ -94,7 +106,7 @@ export function ClubSettlementDock({ lastTable, reduceMotion }: ClubSettlementDo
 
           <blockquote className="club-settlement-dock__quip">
             <Text size="sm" fs="italic" c={clubTokens.text.secondary}>
-              “{quip}”
+              "{quip}"
             </Text>
             <Text size="xs" mt={6} c={clubTokens.text.muted}>
               — the bar

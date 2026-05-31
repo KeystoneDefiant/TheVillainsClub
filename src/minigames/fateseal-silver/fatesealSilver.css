@@ -18,6 +18,8 @@
 }
 
 .fateseal-frame {
+  position: relative;
+  z-index: 1;
   height: 100%;
   max-width: 980px;
   margin: 0 auto;
@@ -556,4 +558,146 @@
   flex: 1 1 100px;
   min-width: 100px;
   text-align: center;
+}
+
+/* Ambient Occult & Purple Energy Background Effects ------------------------- */
+.fateseal-bg-ambient {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.fateseal-bg-nebula-purple {
+  position: absolute;
+  top: -10%;
+  left: -10%;
+  width: 70vw;
+  height: 70vw;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.16;
+  mix-blend-mode: screen;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.45) 0%, transparent 70%);
+  animation: fateseal-nebula-float-purple 26s ease-in-out infinite;
+}
+
+.fateseal-bg-nebula-indigo {
+  position: absolute;
+  bottom: -20%;
+  right: -10%;
+  width: 80vw;
+  height: 80vw;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.12;
+  mix-blend-mode: screen;
+  background: radial-gradient(circle, rgba(79, 70, 229, 0.38) 0%, transparent 70%);
+  animation: fateseal-nebula-float-indigo 32s ease-in-out infinite;
+}
+
+.fateseal-bg-cracks {
+  position: absolute;
+  inset: 0;
+  opacity: 0.05;
+  background-image: 
+    radial-gradient(var(--fs-felt-line) 1px, transparent 1px),
+    linear-gradient(to right, rgba(168, 85, 247, 0.15) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(168, 85, 247, 0.15) 1px, transparent 1px);
+  background-size: 50px 50px, 150px 150px, 150px 150px;
+  animation: fateseal-cracks-pulse 10s ease-in-out infinite;
+}
+
+.fateseal-bg-runic-seal {
+  position: absolute;
+  width: 480px;
+  height: 480px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0.04;
+  border-radius: 50%;
+  border: 1px dashed rgba(168, 85, 247, 0.4);
+  box-shadow: inset 0 0 60px rgba(168, 85, 247, 0.15);
+  background: radial-gradient(circle, transparent 40%, rgba(168, 85, 247, 0.08) 41%, transparent 43%, rgba(168, 85, 247, 0.04) 55%, transparent 65%);
+  animation: fateseal-seal-spin 80s linear infinite;
+  transform-origin: center center;
+}
+
+.fateseal-bg-sparks {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    radial-gradient(rgba(244, 63, 94, 0.2) 1.5px, transparent 1.5px),
+    radial-gradient(rgba(168, 85, 247, 0.15) 1px, transparent 1px);
+  background-size: 90px 140px, 120px 180px;
+  background-position: 0 0, 45px 90px;
+  opacity: 0.15;
+  animation: fateseal-sparks-rise 20s linear infinite;
+}
+
+/* Background Animations ---------------------------------------------------- */
+@keyframes fateseal-nebula-float-purple {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(15%, 10%) scale(1.15);
+  }
+  66% {
+    transform: translate(-10%, 20%) scale(0.9);
+  }
+}
+
+@keyframes fateseal-nebula-float-indigo {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(-15%, -10%) scale(1.1);
+  }
+}
+
+@keyframes fateseal-cracks-pulse {
+  0%, 100% {
+    opacity: 0.04;
+    filter: hue-rotate(0deg);
+  }
+  50% {
+    opacity: 0.07;
+    filter: hue-rotate(25deg) brightness(1.2);
+  }
+}
+
+@keyframes fateseal-seal-spin {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes fateseal-sparks-rise {
+  from {
+    background-position: 0 0, 45px 90px;
+  }
+  to {
+    background-position: 0 -280px, 45px -90px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fateseal-bg-nebula-purple,
+  .fateseal-bg-nebula-indigo,
+  .fateseal-bg-cracks,
+  .fateseal-bg-runic-seal,
+  .fateseal-bg-sparks {
+    animation: none !important;
+  }
+  
+  .fateseal-bg-runic-seal {
+    transform: translate(-50%, -50%) rotate(15deg) !important;
+  }
 }

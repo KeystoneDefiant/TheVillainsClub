@@ -150,7 +150,27 @@ export function useGameState(shellBinding?: OublietteShellBinding | null) {
         const shell = shellRef.current;
         if (shell?.onReturnToClubMenu && shell.settlement) {
           const detail = computeOublietteReturn(prev.credits, shell.settlement);
-          shell.onReturnToClubMenu({ ...detail, tableRound: prev.round });
+          
+          let endReason = `Voluntary cash-out at round ${prev.round}`;
+          if (prev.gameOver && prev.gameOverReason) {
+            if (prev.gameOverReason === 'insufficient-credits') {
+              endReason = `Busted — insufficient credits at round ${prev.round}`;
+            } else {
+              endReason = `Busted — failed requirement (${prev.gameOverReason}) at round ${prev.round}`;
+            }
+          }
+
+          const stats = [
+            { label: "Rounds Played", value: prev.round },
+            { label: "Total Earnings", value: `${prev.totalEarnings.toLocaleString()} cr` },
+            { label: "Highest Combo", value: prev.runHighestCombo },
+            { label: "Max Multiplier", value: `${prev.runHighestMultiplier.toFixed(1)}x` },
+            { label: "Wild Cards", value: prev.wildCardCount },
+            { label: "Dead Cards", value: prev.deckModifications.deadCards.length },
+            { label: "Banished Cards", value: prev.deckModifications.removedCards.length }
+          ];
+
+          shell.onReturnToClubMenu({ ...detail, tableRound: prev.round, endReason, stats });
         }
         return createInitialState(shellRef.current ?? null, mode);
       });
@@ -339,18 +359,33 @@ export function useGameState(shellBinding?: OublietteShellBinding | null) {
     }));
   }, [mode]);
 
-  /**
-   * End the current run and return to the club menu / bar settlement.
-   * Directly invokes the shell's onReturnToClubMenu if available.
-   * @param reason - Why the run ended
-   */
   const endRun = useCallback(() => {
     startTransition(() => {
       setState((prev) => {
         const shell = shellRef.current;
         if (shell?.onReturnToClubMenu && shell.settlement) {
           const detail = computeOublietteReturn(prev.credits, shell.settlement);
-          shell.onReturnToClubMenu({ ...detail, tableRound: prev.round });
+          
+          let endReason = `Voluntary cash-out at round ${prev.round}`;
+          if (prev.gameOver && prev.gameOverReason) {
+            if (prev.gameOverReason === 'insufficient-credits') {
+              endReason = `Busted — insufficient credits at round ${prev.round}`;
+            } else {
+              endReason = `Busted — failed requirement (${prev.gameOverReason}) at round ${prev.round}`;
+            }
+          }
+
+          const stats = [
+            { label: "Rounds Played", value: prev.round },
+            { label: "Total Earnings", value: `${prev.totalEarnings.toLocaleString()} cr` },
+            { label: "Highest Combo", value: prev.runHighestCombo },
+            { label: "Max Multiplier", value: `${prev.runHighestMultiplier.toFixed(1)}x` },
+            { label: "Wild Cards", value: prev.wildCardCount },
+            { label: "Dead Cards", value: prev.deckModifications.deadCards.length },
+            { label: "Banished Cards", value: prev.deckModifications.removedCards.length }
+          ];
+
+          shell.onReturnToClubMenu({ ...detail, tableRound: prev.round, endReason, stats });
         }
         return createInitialState(shellRef.current ?? null, mode);
       });

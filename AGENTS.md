@@ -27,6 +27,25 @@ The **Agent cycle checklist** below is the same bar, itemized.
 - **Data / reference on disk:** **`content/`** catalogs (JSON/JSONC) are kept for future wiring; **`content/quips.json`** — settlement VO lines keyed by **`extreme_loss` / `loss` / `break_even` / `win` / `extreme_win`** for **`ClubSettlementDock`** on **`/bar`**; **`Fateseal_Specs.md`** for the cascading slot.
 - **Where to look next:** `PLAN.md` → **Current status** → **Immediate next steps** (persistence, bar flow, first minigame host, audio, architecture doc refresh).
 
+## Requirements for New Games (Tutorials & Settlement)
+
+Every new minigame integrated into the shell MUST adhere to the following architectural contracts:
+
+1. **Tutorial Mode**:
+   - All new games MUST have an interactive tutorial or guided pre-draw helper flow.
+   - The shell starts a tutorial session automatically on first play by calling `startTutorialSession(gameId)` in `clubWalletStore`.
+   - The minigame page receives `isTutorial: boolean` via its standard shell bindings / context (e.g. from the game router configuration or hooks).
+   - In tutorial mode, the game should show simplified instructions, highlight UI elements, bypass standard table buy-ins, or pre-rig the initial steps to teach the player the game.
+   - Add the game to the played games tracker to guarantee it is automatically triggered on the first session.
+
+2. **Game-Over & Settlement Data**:
+   - When a minigame completes or the player cashes out, the game page MUST return details to the `/bar` settlement screen via `onReturnToClubMenu(detail: ClubTableReturnDetail)`.
+   - Ensure you prevent the "no active session → /menu" redirect race during the transition by maintaining an `isReturningToClubRef` check in the page component.
+   - You MUST supply details about the game-over conditions in the settlement return payload:
+     - **`endReason`**: A concise string describing why the game ended (e.g., `"Voluntary cash-out at round 31"`, `"Busted at round 12"`).
+     - **`stats`**: A list of `{ label: string, value: string | number }` objects representing statistics of that run (e.g., `[{ label: "Total Spins", value: 42 }, { label: "Wilds hit", value: 3 }]`).
+     - These statistics automatically scroll across the horizontal ticker on the final settlement screen. If omitted, basic numeric indicators (rounds, credits, base payout) are auto-generated as fallback.
+
 ## Dev container (no local Node)
 
 - **Cursor / VS Code:** install Dev Containers, then **Dev Containers: Reopen in Container**. Image: Node 22 + Debian libraries for Vite, Vitest, and Electron (see **`.devcontainer/`**).

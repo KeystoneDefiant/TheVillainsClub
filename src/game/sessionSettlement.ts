@@ -22,6 +22,11 @@ export type OublietteSettlementProfile = {
   };
 };
 
+export type StatEntry = {
+  label: string;
+  value: string | number;
+};
+
 export type ClubTableReturnDetail = {
   uncappedCredits: number;
   basePayout: number;
@@ -30,6 +35,17 @@ export type ClubTableReturnDetail = {
   totalReturn: number;
   /** Last in-run round index from the minigame when settling (shell / bar copy only). */
   tableRound?: number;
+  /**
+   * Short human-readable sentence explaining why the session ended
+   * (e.g. "Voluntary cash-out at round 31"). Shown in the settlement panel.
+   */
+  endReason?: string;
+  /**
+   * Ordered key/value statistics surfaced in the settlement ticker.
+   * Games populate these; `buildBarRouteStateFromReturn` adds sensible defaults
+   * for any fields that are not already present.
+   */
+  stats?: ReadonlyArray<StatEntry>;
 };
 
 /** Props for Oubliette embedded in the club shell. */

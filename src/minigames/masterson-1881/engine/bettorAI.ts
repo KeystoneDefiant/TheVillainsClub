@@ -438,7 +438,7 @@ export function executeBettorBetting(
         }
       } else {
         const shadowTarget = Math.random() > 0.5 ? "Red" : "Black";
-        let amount = minBet;
+        let amount: number = minBet;
         amount = Math.min(amount, bettor.chips);
         if (amount >= minBet) {
           bets.push({ target: shadowTarget, amount, payoutOdds: 1 });

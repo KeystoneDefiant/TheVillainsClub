@@ -46,7 +46,7 @@ export const villainsGameDefaults = {
       /** Added to capMultiple as buy-in slabs (default 1 → “50× + buy-in”). */
       buyInSlab: 1,
       /** “5× over” the milestone: tier bar = this × milestoneTotal. */
-      tierStepMultiple: 5,
+      tierStepMultiple: 15,
       /** Bonus per tier, in multiples of buy-in (default 5 → +5× buy-in each tier). */
       bonusMultipleOfBuyInPerTier: 5,
     },

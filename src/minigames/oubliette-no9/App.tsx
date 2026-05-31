@@ -22,6 +22,9 @@ const GameOver = lazy(() => import('./components/screen-GameOver').then(m => ({ 
 const Credits = lazy(() => import('./components/Credits').then(m => ({ default: m.Credits })));
 const Settings = lazy(() => import('./components/Settings').then(m => ({ default: m.Settings })));
 import { SommelierLiveGuide } from "@/components/ui/SommelierLiveGuide";
+import { AnimatePresence, motion } from "framer-motion";
+import { usePrefersReducedMotion } from "@/motion/usePrefersReducedMotion";
+import { defaultMotionPreset } from "@/motion/presets";
 
 export function OublietteNo9Root(props?: OublietteShellBinding) {
   // Intentionally depend on shell fields, not the whole props object (parent may pass a new object each render).
@@ -133,6 +136,43 @@ export function OublietteNo9Root(props?: OublietteShellBinding) {
 
   const updateActiveSessionProgress = useClubWallet((s) => s.updateActiveSessionProgress);
 
+  const reduceMotion = usePrefersReducedMotion();
+
+  const presence = useMemo(() => {
+    if (reduceMotion) {
+      return {
+        initial: { opacity: 1, y: 0 },
+        animate: { opacity: 1, y: 0, transition: { duration: 0 } },
+        exit: { opacity: 1, y: 0, transition: { duration: 0 } },
+      };
+    }
+    const ease = [...defaultMotionPreset.easing] as [number, number, number, number];
+    const d = defaultMotionPreset.menuItemDuration;
+    return {
+      initial: { opacity: 0, y: 12 },
+      animate: {
+        opacity: 1,
+        y: 0,
+        transition: { duration: d, ease },
+      },
+      exit: {
+        opacity: 0,
+        y: -12,
+        transition: { duration: 0.2, ease },
+      },
+    };
+  }, [reduceMotion]);
+
+  const screenKey = useMemo(() => {
+    if (state.screen === 'menu') return 'menu';
+    if (state.screen === 'gameOver') return 'gameOver';
+    if (state.screen === 'game') {
+      if (state.showShopNextRound) return 'shop';
+      return state.gamePhase;
+    }
+    return 'unknown';
+  }, [state.screen, state.gamePhase, state.showShopNextRound]);
+
   useEffect(() => {
     if (!shellBinding) return;
     updateActiveSessionProgress({
@@ -147,24 +187,186 @@ export function OublietteNo9Root(props?: OublietteShellBinding) {
       className={`min-h-screen min-h-[100dvh] ${PLAYING_CARD_SURFACE_CLASS}`}
       data-card-theme={state.cardTheme}
       style={{
-        backgroundColor: clubTokens.surface.deepWalnut,
+        backgroundColor: "transparent",
         color: clubTokens.text.primary,
         minHeight: "100dvh",
         boxSizing: "border-box",
       }}
     >
-      {state.screen === 'menu' && (
-        <ErrorBoundary onReturnToMenu={returnToMenu}>
-          <div key="menu" className="screen-enter">
-            <MainMenu
-              onStartRun={startNewRun}
-              onTutorial={() => setShowTutorial(true)}
-              onCredits={() => setShowCredits(true)}
-              onSettings={() => setShowSettings(true)}
-            />
-          </div>
-        </ErrorBoundary>
-      )}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={screenKey}
+          {...presence}
+          style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column" }}
+        >
+          {screenKey === 'menu' && (
+            <ErrorBoundary onReturnToMenu={returnToMenu}>
+              <MainMenu
+                onStartRun={startNewRun}
+                onTutorial={() => setShowTutorial(true)}
+                onCredits={() => setShowCredits(true)}
+                onSettings={() => setShowSettings(true)}
+              />
+            </ErrorBoundary>
+          )}
+
+          {screenKey === 'preDraw' && (
+            <ErrorBoundary onReturnToMenu={returnToMenu}>
+              <Suspense fallback={<LoadingSpinner />}>
+                <PreDraw
+                  credits={state.credits}
+                  handCount={state.handCount}
+                  selectedHandCount={state.selectedHandCount}
+                  betAmount={state.betAmount}
+                  minimumBet={state.minimumBet}
+                  rewardTable={state.rewardTable}
+                  gameOver={state.gameOver}
+                  round={state.round}
+                  totalEarnings={state.totalEarnings}
+                  failureState={state.currentFailureState}
+                  gameState={state}
+                  onSetBetAmount={setBetAmount}
+                  onSetSelectedHandCount={setSelectedHandCount}
+                  onDealHand={dealHand}
+                  onEndRun={endRun}
+                  onShowPayoutTable={openPayoutTable}
+                  onShowSettings={() => setShowSettings(true)}
+                  onAbandonRun={shellBinding?.onAbandonRun}
+                />
+              </Suspense>
+            </ErrorBoundary>
+          )}
+
+          {screenKey === 'playing' && (
+            <ErrorBoundary onReturnToMenu={returnToMenu}>
+              <Suspense fallback={<LoadingSpinner />}>
+                <GameTable
+                  playerHand={state.playerHand}
+                  heldIndices={state.heldIndices}
+                  parallelHands={state.parallelHands}
+                  credits={state.credits}
+                  selectedHandCount={state.selectedHandCount}
+                  round={state.round}
+                  totalEarnings={state.totalEarnings}
+                  firstDrawComplete={state.drawsCompletedThisRound > 0}
+                  nextActionIsDraw={state.maxDraws >= 2 && state.drawsCompletedThisRound < state.maxDraws}
+                  failureState={state.currentFailureState}
+                  gameState={state}
+                  onToggleHold={toggleHold}
+                  onToggleDevilsDealHold={toggleDevilsDealHold}
+                  onDraw={drawParallelHands}
+                  onShowPayoutTable={openPayoutTable}
+                  onShowSettings={() => setShowSettings(true)}
+                  onAbandonRun={shellBinding?.onAbandonRun}
+                />
+              </Suspense>
+            </ErrorBoundary>
+          )}
+
+          {screenKey === 'parallelHandsAnimation' && (
+            <ErrorBoundary onReturnToMenu={returnToMenu}>
+              <Suspense fallback={<LoadingSpinner />}>
+                <ParallelHandsAnimation
+                  parallelHands={state.parallelHands}
+                  playerHand={state.playerHand}
+                  heldIndices={state.heldIndices}
+                  rewardTable={state.rewardTable}
+                  selectedHandCount={state.selectedHandCount}
+                  betAmount={state.betAmount}
+                  initialStreakCounter={state.streakCounter}
+                  animationSpeedMode={state.animationSpeedMode}
+                  onShowSettings={() => setShowSettings(true)}
+                  onAnimationComplete={({ finalStreakCount, highestCombo, highestMultiplier }) => {
+                    updateStreakCounter(finalStreakCount, {
+                      highestCombo,
+                      highestMultiplier,
+                    });
+                    moveToNextScreen();
+                  }}
+                />
+              </Suspense>
+            </ErrorBoundary>
+          )}
+
+          {screenKey === 'results' && (
+            <ErrorBoundary onReturnToMenu={returnToMenu}>
+              <Suspense fallback={<LoadingSpinner />}>
+                <Results
+                  playerHand={state.playerHand}
+                  heldIndices={state.heldIndices}
+                  parallelHands={state.parallelHands}
+                  rewardTable={state.rewardTable}
+                  betAmount={state.betAmount}
+                  credits={state.credits}
+                  round={state.round}
+                  totalEarnings={state.totalEarnings}
+                  selectedHandCount={state.selectedHandCount}
+                  failureState={state.currentFailureState}
+                  gameState={state}
+                  onReturnToPreDraw={returnToPreDraw}
+                  showShopNextRound={state.showShopNextRound}
+                  onShowPayoutTable={openPayoutTable}
+                  onShowSettings={() => setShowSettings(true)}
+                  onAbandonRun={shellBinding?.onAbandonRun}
+                />
+              </Suspense>
+            </ErrorBoundary>
+          )}
+
+          {screenKey === 'shop' && (
+            <ErrorBoundary onReturnToMenu={returnToMenu}>
+              <Suspense fallback={<LoadingSpinner />}>
+                <Shop
+                  credits={state.credits}
+                  creditsForPricing={state.creditsAtShopOpen ?? state.credits}
+                  handCount={state.handCount}
+                  betAmount={state.betAmount}
+                  selectedHandCount={state.selectedHandCount}
+                  nextRoundMinimumBet={state.minimumBet}
+                  shopDisplayBetAmount={state.shopDisplayBetAmount}
+                  deadCards={state.deckModifications.deadCards}
+                  deadCardRemovalCount={state.deckModifications.deadCardRemovalCount}
+                  wildCards={state.deckModifications.wildCards}
+                  wildCardCount={state.wildCardCount}
+                  extraDrawPurchased={state.extraDrawPurchased}
+                  selectedShopOptions={state.selectedShopOptions}
+                  onAddDeadCard={addDeadCard}
+                  onRemoveSingleDeadCard={removeSingleDeadCard}
+                  onRemoveAllDeadCards={removeAllDeadCards}
+                  onAddWildCard={addWildCard}
+                  onPurchaseExtraDraw={purchaseExtraDraw}
+                  onAddParallelHandsBundle={addParallelHandsBundle}
+                  onPurchaseDevilsDealChance={purchaseDevilsDealChance}
+                  onPurchaseDevilsDealCostReduction={purchaseDevilsDealCostReduction}
+                  devilsDealChancePurchases={state.devilsDealChancePurchases}
+                  devilsDealCostReductionPurchases={state.devilsDealCostReductionPurchases}
+                  extraCardsInHand={state.extraCardsInHand}
+                  onPurchaseExtraCardInHand={purchaseExtraCardInHand}
+                  onClose={proceedFromResults}
+                  onShowSettings={() => setShowSettings(true)}
+                  onAbandonRun={props?.onAbandonRun}
+                />
+              </Suspense>
+            </ErrorBoundary>
+          )}
+
+          {screenKey === 'gameOver' && (
+            <ErrorBoundary onReturnToMenu={returnToMenu}>
+              <Suspense fallback={<LoadingSpinner />}>
+                <GameOver
+                  round={state.round}
+                  totalEarnings={state.totalEarnings}
+                  credits={state.credits}
+                  gameOverReason={state.gameOverReason}
+                  gameState={state}
+                  settlementProfile={shellBinding?.settlement ?? null}
+                  onReturnToMenu={returnToMenu}
+                />
+              </Suspense>
+            </ErrorBoundary>
+          )}
+        </motion.div>
+      </AnimatePresence>
 
       {showCredits && (
         <Suspense fallback={<LoadingSpinner />}>
@@ -183,174 +385,6 @@ export function OublietteNo9Root(props?: OublietteShellBinding) {
             setMockState(null);
           }}
         />
-      )}
-
-      {state.screen === 'game' && state.gamePhase === 'preDraw' && !state.showShopNextRound && (
-        <ErrorBoundary onReturnToMenu={returnToMenu}>
-          <Suspense fallback={<LoadingSpinner />}>
-            <div key="preDraw" className="screen-enter">
-              <PreDraw
-              credits={state.credits}
-              handCount={state.handCount}
-              selectedHandCount={state.selectedHandCount}
-              betAmount={state.betAmount}
-              minimumBet={state.minimumBet}
-              rewardTable={state.rewardTable}
-              gameOver={state.gameOver}
-              round={state.round}
-              totalEarnings={state.totalEarnings}
-              failureState={state.currentFailureState}
-              gameState={state}
-              onSetBetAmount={setBetAmount}
-              onSetSelectedHandCount={setSelectedHandCount}
-              onDealHand={dealHand}
-              onEndRun={endRun}
-              onShowPayoutTable={openPayoutTable}
-              onShowSettings={() => setShowSettings(true)}
-              onAbandonRun={shellBinding?.onAbandonRun}
-            />
-          </div>
-          </Suspense>
-        </ErrorBoundary>
-      )}
-
-      {state.screen === 'game' && state.gamePhase === 'playing' && (
-        <ErrorBoundary onReturnToMenu={returnToMenu}>
-          <Suspense fallback={<LoadingSpinner />}>
-            <div key="gameTable" className="screen-enter">
-              <GameTable
-              playerHand={state.playerHand}
-              heldIndices={state.heldIndices}
-              parallelHands={state.parallelHands}
-              credits={state.credits}
-              selectedHandCount={state.selectedHandCount}
-              round={state.round}
-              totalEarnings={state.totalEarnings}
-              firstDrawComplete={state.drawsCompletedThisRound > 0}
-              nextActionIsDraw={state.maxDraws >= 2 && state.drawsCompletedThisRound < state.maxDraws}
-              failureState={state.currentFailureState}
-              gameState={state}
-              onToggleHold={toggleHold}
-              onToggleDevilsDealHold={toggleDevilsDealHold}
-              onDraw={drawParallelHands}
-              onShowPayoutTable={openPayoutTable}
-              onShowSettings={() => setShowSettings(true)}
-              onAbandonRun={shellBinding?.onAbandonRun}
-            />
-          </div>
-          </Suspense>
-        </ErrorBoundary>
-      )}
-
-      {state.screen === 'game' && state.gamePhase === 'parallelHandsAnimation' && (
-        <ErrorBoundary onReturnToMenu={returnToMenu}>
-          <Suspense fallback={<LoadingSpinner />}>
-            <div key="animation" className="screen-enter">
-              <ParallelHandsAnimation
-              parallelHands={state.parallelHands}
-              playerHand={state.playerHand}
-              heldIndices={state.heldIndices}
-              rewardTable={state.rewardTable}
-              selectedHandCount={state.selectedHandCount}
-              betAmount={state.betAmount}
-              initialStreakCounter={state.streakCounter}
-              animationSpeedMode={state.animationSpeedMode}
-              onShowSettings={() => setShowSettings(true)}
-              onAnimationComplete={({ finalStreakCount, highestCombo, highestMultiplier }) => {
-                updateStreakCounter(finalStreakCount, {
-                  highestCombo,
-                  highestMultiplier,
-                });
-                moveToNextScreen();
-              }}
-            />
-            </div>
-          </Suspense>
-        </ErrorBoundary>
-      )}
-
-      {state.screen === 'game' && state.gamePhase === 'results' && (
-        <ErrorBoundary onReturnToMenu={returnToMenu}>
-          <Suspense fallback={<LoadingSpinner />}>
-            <div key="results" className="screen-enter">
-              <Results
-                playerHand={state.playerHand}
-                heldIndices={state.heldIndices}
-                parallelHands={state.parallelHands}
-                rewardTable={state.rewardTable}
-                betAmount={state.betAmount}
-                credits={state.credits}
-                round={state.round}
-                totalEarnings={state.totalEarnings}
-                selectedHandCount={state.selectedHandCount}
-                failureState={state.currentFailureState}
-                gameState={state}
-                onReturnToPreDraw={returnToPreDraw}
-                showShopNextRound={state.showShopNextRound}
-                onShowPayoutTable={openPayoutTable}
-                onShowSettings={() => setShowSettings(true)}
-                onAbandonRun={shellBinding?.onAbandonRun}
-              />
-            </div>
-          </Suspense>
-        </ErrorBoundary>
-      )}
-
-      {state.screen === 'game' && state.showShopNextRound && (
-        <ErrorBoundary onReturnToMenu={returnToMenu}>
-          <Suspense fallback={<LoadingSpinner />}>
-            <div key="shop" className="screen-enter">
-              <Shop
-              credits={state.credits}
-              creditsForPricing={state.creditsAtShopOpen ?? state.credits}
-              handCount={state.handCount}
-              betAmount={state.betAmount}
-              selectedHandCount={state.selectedHandCount}
-              nextRoundMinimumBet={state.minimumBet}
-              shopDisplayBetAmount={state.shopDisplayBetAmount}
-              deadCards={state.deckModifications.deadCards}
-              deadCardRemovalCount={state.deckModifications.deadCardRemovalCount}
-              wildCards={state.deckModifications.wildCards}
-              wildCardCount={state.wildCardCount}
-              extraDrawPurchased={state.extraDrawPurchased}
-              selectedShopOptions={state.selectedShopOptions}
-              onAddDeadCard={addDeadCard}
-              onRemoveSingleDeadCard={removeSingleDeadCard}
-              onRemoveAllDeadCards={removeAllDeadCards}
-              onAddWildCard={addWildCard}
-              onPurchaseExtraDraw={purchaseExtraDraw}
-              onAddParallelHandsBundle={addParallelHandsBundle}
-              onPurchaseDevilsDealChance={purchaseDevilsDealChance}
-              onPurchaseDevilsDealCostReduction={purchaseDevilsDealCostReduction}
-              devilsDealChancePurchases={state.devilsDealChancePurchases}
-              devilsDealCostReductionPurchases={state.devilsDealCostReductionPurchases}
-              extraCardsInHand={state.extraCardsInHand}
-              onPurchaseExtraCardInHand={purchaseExtraCardInHand}
-              onClose={proceedFromResults}
-              onShowSettings={() => setShowSettings(true)}
-              onAbandonRun={props?.onAbandonRun}
-            />
-          </div>
-          </Suspense>
-        </ErrorBoundary>
-      )}
-
-      {state.screen === 'gameOver' && (
-        <ErrorBoundary onReturnToMenu={returnToMenu}>
-          <Suspense fallback={<LoadingSpinner />}>
-            <div key="gameOver" className="screen-enter">
-              <GameOver
-              round={state.round}
-              totalEarnings={state.totalEarnings}
-              credits={state.credits}
-              gameOverReason={state.gameOverReason}
-              gameState={state}
-              settlementProfile={shellBinding?.settlement ?? null}
-              onReturnToMenu={returnToMenu}
-            />
-          </div>
-          </Suspense>
-        </ErrorBoundary>
       )}
 
       {showSettings && (

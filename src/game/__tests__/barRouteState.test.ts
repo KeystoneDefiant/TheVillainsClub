@@ -34,6 +34,64 @@ describe("barRouteState", () => {
     ).toBe(false);
   });
 
+  it("isBarRouteState accepts valid endReason and stats", () => {
+    expect(
+      isBarRouteState({
+        lastTable: {
+          gameId: "oubliette_no9",
+          buyIn: defaultBuyIn,
+          totalReturn: 50,
+          tableRound: 5,
+          tiers: 0,
+          endReason: "Voluntary cash-out at round 5",
+          stats: [{ label: "Rounds", value: 5 }],
+        },
+      }),
+    ).toBe(true);
+  });
+
+  it("isBarRouteState rejects non-string endReason", () => {
+    expect(
+      isBarRouteState({
+        lastTable: {
+          gameId: "oubliette_no9",
+          buyIn: defaultBuyIn,
+          totalReturn: 50,
+          tableRound: 5,
+          tiers: 0,
+          endReason: 42,
+        },
+      }),
+    ).toBe(false);
+  });
+
+  it("isBarRouteState rejects malformed stats array", () => {
+    expect(
+      isBarRouteState({
+        lastTable: {
+          gameId: "oubliette_no9",
+          buyIn: defaultBuyIn,
+          totalReturn: 50,
+          tableRound: 5,
+          tiers: 0,
+          stats: [{ label: 99, value: "x" }],
+        },
+      }),
+    ).toBe(false);
+    expect(
+      isBarRouteState({
+        lastTable: {
+          gameId: "oubliette_no9",
+          buyIn: defaultBuyIn,
+          totalReturn: 50,
+          tableRound: 5,
+          tiers: 0,
+          stats: "not-an-array",
+        },
+      }),
+    ).toBe(false);
+  });
+
   it("buildBarRouteStateFromReturn copies detail fields and max win ceiling", () => {
     const settlement = buildOublietteSettlementProfile(defaultBuyIn, new Date("2026-01-01"));
     const state = buildBarRouteStateFromReturn("oubliette_no9", defaultBuyIn, {
@@ -64,6 +122,64 @@ describe("barRouteState", () => {
       tableRound: 32,
     }, settlement);
     expect(state.lastTable.totalReturn).toBe(maxWin);
+  });
+
+  it("buildBarRouteStateFromReturn forwards endReason", () => {
+    const settlement = buildOublietteSettlementProfile(defaultBuyIn, new Date("2026-01-01"));
+    const state = buildBarRouteStateFromReturn("oubliette_no9", defaultBuyIn, {
+      uncappedCredits: 100,
+      basePayout: 100,
+      overachievementBonus: 0,
+      tiers: 0,
+      totalReturn: 100,
+      tableRound: 8,
+      endReason: "Voluntary cash-out at round 8",
+    }, settlement);
+    expect(state.lastTable.endReason).toBe("Voluntary cash-out at round 8");
+  });
+
+  it("buildBarRouteStateFromReturn uses game-supplied stats when provided", () => {
+    const settlement = buildOublietteSettlementProfile(defaultBuyIn, new Date("2026-01-01"));
+    const customStats = [{ label: "Hands won", value: 42 }];
+    const state = buildBarRouteStateFromReturn("oubliette_no9", defaultBuyIn, {
+      uncappedCredits: 100,
+      basePayout: 100,
+      overachievementBonus: 0,
+      tiers: 0,
+      totalReturn: 100,
+      tableRound: 8,
+      stats: customStats,
+    }, settlement);
+    expect(state.lastTable.stats).toEqual(customStats);
+  });
+
+  it("buildBarRouteStateFromReturn auto-generates default stats from detail when no stats supplied", () => {
+    const settlement = buildOublietteSettlementProfile(defaultBuyIn, new Date("2026-01-01"));
+    const state = buildBarRouteStateFromReturn("oubliette_no9", defaultBuyIn, {
+      uncappedCredits: 200,
+      basePayout: 150,
+      overachievementBonus: 0,
+      tiers: 0,
+      totalReturn: 150,
+      tableRound: 5,
+    }, settlement);
+    // Should have at least "Rounds" and "Credits earned" from the defaults
+    expect(state.lastTable.stats).toBeDefined();
+    const labels = (state.lastTable.stats ?? []).map((s) => s.label);
+    expect(labels).toContain("Rounds");
+    expect(labels).toContain("Credits earned");
+  });
+
+  it("buildBarRouteStateFromReturn omits endReason when not provided", () => {
+    const settlement = buildOublietteSettlementProfile(defaultBuyIn, new Date("2026-01-01"));
+    const state = buildBarRouteStateFromReturn("oubliette_no9", defaultBuyIn, {
+      uncappedCredits: 100,
+      basePayout: 100,
+      overachievementBonus: 0,
+      tiers: 0,
+      totalReturn: 100,
+    }, settlement);
+    expect(state.lastTable.endReason).toBeUndefined();
   });
 
   it("tableReturnTagline picks tier and round lines", () => {

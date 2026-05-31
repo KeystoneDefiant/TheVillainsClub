@@ -78,7 +78,7 @@ export interface RouletteNumberInfo {
   column: 1 | 2 | 3 | null;
 }
 
-export const mastersonGameConfig: MastersonGameConfig = {
+export const mastersonGameConfig = {
   shift_duration_spins: 30,
   max_bettors: 4,
   base_commission_pct: 10.0,
@@ -112,7 +112,88 @@ export const mastersonGameConfig: MastersonGameConfig = {
       targets: ["Specific_Number"],
     },
   },
-};
+  defaultGameMode: {
+    shift_duration_spins: 30,
+    max_bettors: 4,
+    base_commission_pct: 10.0,
+    quarter_commission_bonus_pct: 5.0,
+    seat_fill_chance_per_spin: 0.40,
+    empty_table_last_chance_pct: 0.25,
+    consecutive_rig_suspicion_multiplier: 1.20,
+    rig_win_suspicion_scalar: 0.40,
+    no_rig_suspicion_decrease: 2,
+    betting_duration_seconds: 13,
+    no_more_bets_seconds: 6,
+    minimum_bet: 100,
+    min_bettor_max_suspicion: 4,
+    max_bettor_max_suspicion: 10,
+    min_bettor_herd_mentality_pct: 0.0,
+    max_bettor_herd_mentality_pct: 0.7,
+    herd_mentality_decay_rate: 0.35,
+  },
+  gameModes: {
+    normalGame: {},
+    grandSalon: {
+      displayName: "Grand Salon",
+      max_bettors: 5,
+      base_commission_pct: 12.0,
+      seat_fill_chance_per_spin: 0.50,
+    },
+  },
+} as const;
+
+export type MastersonGameModeConfig = typeof mastersonGameConfig.defaultGameMode;
+
+function mergeMastersonGameMode(
+  defaults: Record<string, unknown>,
+  overrides: Record<string, unknown>,
+): Record<string, unknown> {
+  const result = { ...defaults };
+  for (const key of Object.keys(overrides)) {
+    if (overrides[key] === undefined) continue;
+    const defVal = defaults[key];
+    const ovVal = overrides[key];
+    if (
+      ovVal !== null &&
+      typeof ovVal === "object" &&
+      !Array.isArray(ovVal) &&
+      defVal !== null &&
+      typeof defVal === "object" &&
+      !Array.isArray(defVal)
+    ) {
+      result[key] = mergeMastersonGameMode(
+        defVal as Record<string, unknown>,
+        ovVal as Record<string, unknown>,
+      );
+    } else {
+      result[key] = ovVal;
+    }
+  }
+  return result;
+}
+
+export function getCurrentMastersonGameMode(): MastersonGameModeConfig {
+  const base = { ...mastersonGameConfig.defaultGameMode } as unknown as Record<string, unknown>;
+  const overrides = mastersonGameConfig.gameModes.normalGame as unknown as Record<string, unknown>;
+  return mergeMastersonGameMode(base, overrides) as unknown as MastersonGameModeConfig;
+}
+
+export function getMastersonGameMode(
+  modeId: keyof typeof mastersonGameConfig.gameModes,
+): MastersonGameModeConfig {
+  const base = { ...mastersonGameConfig.defaultGameMode } as unknown as Record<string, unknown>;
+  const overrides = (mastersonGameConfig.gameModes[modeId] ?? {}) as unknown as Record<string, unknown>;
+  return mergeMastersonGameMode(base, overrides) as unknown as MastersonGameModeConfig;
+}
+
+export type MastersonGameModeId = keyof typeof mastersonGameConfig.gameModes;
+
+export function resolveMastersonGameMode(modeId: string | undefined): MastersonGameModeConfig {
+  if (modeId != null && modeId !== "" && modeId in mastersonGameConfig.gameModes) {
+    return getMastersonGameMode(modeId as MastersonGameModeId);
+  }
+  return getCurrentMastersonGameMode();
+}
 
 // Double-Zero Roulette layout array
 export const rouletteNumbers: RouletteNumberInfo[] = [

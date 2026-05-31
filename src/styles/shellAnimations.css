@@ -281,7 +281,8 @@
 
 .club-landing {
   position: relative;
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
   overflow-y: auto;
   isolation: isolate;
 }
@@ -662,6 +663,7 @@
   .club-landing__game {
     align-items: flex-start;
     padding-top: max(0.75rem, env(safe-area-inset-top, 0px));
+    padding-bottom: clamp(140px, 26vh, 280px);
   }
 }
 

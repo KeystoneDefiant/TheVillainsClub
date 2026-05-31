@@ -16,14 +16,6 @@ const SUIT_COLOR_CLASS: Record<string, string> = {
   spades: "card-suit-black",
 };
 
-const DENSITY_TEXT: Record<
-  PlayingCardSize,
-  { dead: string; wild: string; rank: string; suit: string }
-> = {
-  small: { dead: "1.5rem", wild: "0.65rem", rank: "0.7rem", suit: "1.1rem" },
-  medium: { dead: "2rem", wild: "0.8rem", rank: "0.85rem", suit: "1.35rem" },
-  large: { dead: "2.25rem", wild: "0.95rem", rank: "1rem", suit: "1.5rem" },
-};
 
 export type PlayingCardFaceProps = {
   card: PlayingCardFaceData;
@@ -65,36 +57,120 @@ export function PlayingCardFace({
     );
   }
 
-  const suitSymbol = SUIT_SYMBOLS[card.suit];
-  const suitColor = SUIT_COLOR_CLASS[card.suit];
-  const t = DENSITY_TEXT[density];
+  const suitSymbol = SUIT_SYMBOLS[card.suit] || "";
+  const suitColor = SUIT_COLOR_CLASS[card.suit] || "card-suit-black";
+
+  if (card.isDead) {
+    return (
+      <Box
+        className={`card-face-front card-face-dead ${className || ""}`}
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100%",
+          width: "100%",
+          padding: "4px",
+          position: "relative",
+          ...style,
+        }}
+      >
+        <div className="card-face-inner-border" />
+        <div className="card-index-top-left" style={{ color: "var(--game-card-suit-red)", fontSize: density === "small" ? "7px" : "9px" }}>💀</div>
+        <div className="card-index-bottom-right" style={{ color: "var(--game-card-suit-red)", fontSize: density === "small" ? "7px" : "9px", transform: "rotate(180deg)" }}>💀</div>
+
+        <div className="card-center-symbol card-dead-skull" style={{ fontSize: density === "small" ? "1.6rem" : density === "medium" ? "2.3rem" : "2.8rem" }}>
+          💀
+        </div>
+        <Text fz={density === "small" ? "8px" : "9px"} fw={900} c="red" tt="uppercase" style={{ letterSpacing: "1px", position: "absolute", bottom: density === "small" ? "6px" : "12px", zIndex: 2 }}>
+          DEAD
+        </Text>
+      </Box>
+    );
+  }
+
+  if (card.isWild) {
+    return (
+      <Box
+        className={`card-face-front card-face-wild ${className || ""}`}
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100%",
+          width: "100%",
+          padding: "4px",
+          position: "relative",
+          ...style,
+        }}
+      >
+        <div className="card-face-inner-border" style={{ borderColor: "rgba(249, 115, 22, 0.25)" }} />
+        <div className="card-index-top-left" style={{ color: "var(--game-card-wild-color)", fontSize: density === "small" ? "8px" : "10px" }}>✦</div>
+        <div className="card-index-bottom-right" style={{ color: "var(--game-card-wild-color)", fontSize: density === "small" ? "8px" : "10px", transform: "rotate(180deg)" }}>✦</div>
+
+        <div className="card-center-symbol card-wild" style={{ fontSize: density === "small" ? "1.6rem" : density === "medium" ? "2.4rem" : "3.0rem" }}>
+          ✦
+        </div>
+        <Text fz={density === "small" ? "8px" : "9px"} fw={900} className="card-wild" tt="uppercase" style={{ letterSpacing: "1px", position: "absolute", bottom: density === "small" ? "6px" : "12px", zIndex: 2 }}>
+          WILD
+        </Text>
+      </Box>
+    );
+  }
 
   return (
     <Box
-      className={className}
+      className={`card-face-front ${className || ""}`}
       style={{
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
         height: "100%",
+        width: "100%",
+        padding: "4px",
+        position: "relative",
         ...style,
       }}
     >
-      {card.isDead ? (
-        <Text fz={t.dead}>💀</Text>
-      ) : card.isWild ? (
-        <Text fz={t.wild} fw={700} className="card-wild">
-          WILD
-        </Text>
+      <div className="card-face-inner-border" />
+
+      {density === "small" ? (
+        <>
+          {/* Mobile Split Layout: Large Rank in Top-Left */}
+          <div className={`card-face-small-rank ${suitColor}`}>
+            {card.rank}
+          </div>
+
+          {/* Mobile Split Layout: Large Suit in Bottom-Right */}
+          <div className={`card-face-small-suit ${suitColor}`}>
+            {suitSymbol}
+          </div>
+        </>
       ) : (
         <>
-          <Text fw={700} fz={t.rank} className={suitColor} lh={1.1}>
-            {card.rank}
-          </Text>
-          <Text fz={t.suit} className={`suit ${suitColor}`} lh={1}>
+          {/* Top-Left Index (Clean Rank Only) */}
+          <div className={`card-index-top-left ${suitColor}`} style={{ fontSize: density === "large" ? "20px" : "15px" }}>
+            <div className="card-index-rank" style={{ fontWeight: 900 }}>{card.rank}</div>
+          </div>
+
+          {/* Bottom-Right Index (Clean Rank Only, Rotated 180) */}
+          <div className={`card-index-bottom-right ${suitColor}`} style={{ fontSize: density === "large" ? "20px" : "15px", transform: "rotate(180deg)" }}>
+            <div className="card-index-rank" style={{ fontWeight: 900 }}>{card.rank}</div>
+          </div>
+
+          {/* Large Center Pip */}
+          <div 
+            className={`card-center-symbol ${suitColor}`}
+            style={{ 
+              fontSize: density === "medium" ? "2.2rem" : "2.8rem",
+              opacity: 0.9,
+            }}
+          >
             {suitSymbol}
-          </Text>
+          </div>
         </>
       )}
     </Box>

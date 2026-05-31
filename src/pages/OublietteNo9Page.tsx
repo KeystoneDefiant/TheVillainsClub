@@ -113,6 +113,7 @@ export function OublietteNo9Page({ standalone = false }: OublietteNo9PageProps) 
       style={{
         height: "100%",
         overflow: "hidden",
+        position: "relative",
         transform: "translate3d(0, 0, 0)",
         backfaceVisibility: "hidden",
         opacity: reduceMotion ? 1 : undefined,
@@ -120,32 +121,36 @@ export function OublietteNo9Page({ standalone = false }: OublietteNo9PageProps) 
         ...(reduceMotion ? {} : { ["--shell-route-fade-dur" as string]: "0.35s" }),
       }}
     >
-      <MinigameLazyErrorBoundary onLeave={() => navigate(launchedStandalone ? OUBLIETTE_STANDALONE_ROUTE : "/bar", { replace: true })}>
-        <Suspense
-          fallback={
-            <Box
-              style={{
-                height: "100%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexDirection: "column",
-                gap: 16,
-                minHeight: 240,
-              }}
-            >
-              <Loader color="yellow" size="lg" />
-              <Text size="sm" c={clubTokens.text.muted} ta="center">
-                Loading Oubliette No. 9…
-              </Text>
-            </Box>
-          }
-        >
-          <OublietteGameModeProvider value={oublietteGameMode}>
-            <OublietteNo9Root {...shellProps} />
-          </OublietteGameModeProvider>
-        </Suspense>
-      </MinigameLazyErrorBoundary>
+      <div className="oubliette-damask-bg" aria-hidden="true" />
+      <Box style={{ position: "relative", zIndex: 1, height: "100%", overflow: "hidden" }}>
+        <MinigameLazyErrorBoundary onLeave={() => navigate(launchedStandalone ? OUBLIETTE_STANDALONE_ROUTE : "/bar", { replace: true })}>
+          <Suspense
+            fallback={
+              <Box
+                style={{
+                  height: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexDirection: "column",
+                  gap: 16,
+                  minHeight: 240,
+                }}
+              >
+                <Loader color="yellow" size="lg" />
+                <Text size="sm" c={clubTokens.text.muted} ta="center">
+                  Loading Oubliette No. 9…
+                </Text>
+              </Box>
+            }
+          >
+            <OublietteGameModeProvider value={oublietteGameMode}>
+              <OublietteNo9Root {...shellProps} />
+            </OublietteGameModeProvider>
+          </Suspense>
+        </MinigameLazyErrorBoundary>
+      </Box>
     </Box>
   );
 }
+

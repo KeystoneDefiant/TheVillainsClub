@@ -45,6 +45,7 @@ const SEAT_COLORS: Record<string, string> = {
   "Seat 2": "#ffb300", // Amber Gold
   "Seat 3": "#2e7d32", // Emerald Green
   "Seat 4": "#7b1fa2", // Royal Amethyst
+  "Seat 5": "#0288d1", // Cerulean Blue
 };
 
 const WHEEL_NUMBERS = [
@@ -69,6 +70,7 @@ interface MastertonRootProps {
   onAbandonRun?: () => void;
   onPauseToClub?: () => void;
   isTutorial?: boolean;
+  gameModeId?: string;
 }
 
 
@@ -85,8 +87,9 @@ export function MastertonRoot({
   onReturnToClubMenu,
   onAbandonRun,
   isTutorial = false,
+  gameModeId,
 }: MastertonRootProps) {
-  const realEngine = useMastertonEngine();
+  const realEngine = useMastertonEngine(gameModeId);
   const [mockState, setMockState] = useState<Record<string, unknown> | null>(null);
   const [hoveredTarget, setHoveredTarget] = useState<string | null>(null);
 
@@ -350,9 +353,27 @@ export function MastertonRoot({
           bonusMultipleOfBuyInPerTier: 0.1,
         },
       };
+
+      let endReason = `Voluntary Cash-out at spin ${engine.spinCount}`;
+      if (engine.gameOverReason === "MAX_SPINS") {
+        endReason = "Shift Completed — 30 spins completed";
+      } else if (engine.gameOverReason === "NO_PLAYERS") {
+        endReason = "Table Isolated — no active players left";
+      }
+
+      const stats = [
+        { label: "Spins Conducted", value: engine.spinCount },
+        { label: "Table House Ledger", value: `${engine.tableHouseLedger.toLocaleString()} cr` },
+        { label: "Commission Earned", value: `${engine.accumulatedCommission.toLocaleString()} cr` },
+        { label: "Active Bettors", value: engine.activeBettors.length },
+        { label: "Evicted Bettors", value: Object.keys(engine.evictedBettors).length }
+      ];
+
       onReturnToClubMenu({
         ...computeMastersonReturn(engine.accumulatedCommission, activeSettlement),
         tableRound: engine.spinCount,
+        endReason,
+        stats,
       });
     }
   };

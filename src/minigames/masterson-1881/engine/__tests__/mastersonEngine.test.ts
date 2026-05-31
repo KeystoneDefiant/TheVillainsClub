@@ -106,10 +106,17 @@ describe("useMastertonEngine Hook", () => {
     vi.mocked(bettorAI.generateRandomBettor).mockRestore();
   });
 
-  it("should initialize with spinCount 1 and 4 seat profiles", () => {
+  it("should initialize with spinCount 1 and 4 seat profiles by default", () => {
     const { result } = renderHook(() => useMastertonEngine());
     expect(result.current.spinCount).toBe(1);
     expect(result.current.activeBettors.length).toBe(4);
+    expect(result.current.phase).toBe("BETTING");
+  });
+
+  it("should initialize with 5 seat profiles when grandSalon gameModeId is provided", () => {
+    const { result } = renderHook(() => useMastertonEngine("grandSalon"));
+    expect(result.current.spinCount).toBe(1);
+    expect(result.current.activeBettors.length).toBe(5);
     expect(result.current.phase).toBe("BETTING");
   });
 

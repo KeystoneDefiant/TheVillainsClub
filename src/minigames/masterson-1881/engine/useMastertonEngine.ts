@@ -6,6 +6,7 @@ import {
   validateOutcomeAgainstRig,
   RigChoice,
   RouletteNumberInfo,
+  resolveMastersonGameMode,
 } from "@/config/minigames/mastersonRules";
 import { executeBettorBetting, BettorBet, generateRandomBettor } from "./bettorAI";
 
@@ -16,12 +17,12 @@ export interface SpinNotification {
   message: string;
 }
 
-export function useMastertonEngine() {
+export function useMastertonEngine(gameModeId?: string) {
   const [spinCount, setSpinCount] = useState<number>(1);
   const [phase, setPhase] = useState<GamePhase>("BETTING");
   const [activeBettors, setActiveBettors] = useState<BettorProfile[]>(() => {
-    // Spawn 4 initial random bettors
-    return Array.from({ length: 4 }, (_, i) => generateRandomBettor(i + 1));
+    const config = resolveMastersonGameMode(gameModeId);
+    return Array.from({ length: config.max_bettors }, (_, i) => generateRandomBettor(i + 1));
   });
 
   const [currentBets, setCurrentBets] = useState<Record<string, BettorBet[]>>({});
@@ -44,7 +45,7 @@ export function useMastertonEngine() {
 
   // Croupier's personal commission pocket
   const [accumulatedCommission, setAccumulatedCommission] = useState<number>(0);
-  const [commissionRate, setCommissionRate] = useState<number>(mastersonGameConfig.base_commission_pct);
+  const [commissionRate, setCommissionRate] = useState<number>(() => resolveMastersonGameMode(gameModeId).base_commission_pct);
 
   const [notifications, setNotifications] = useState<SpinNotification[]>([]);
 
@@ -56,9 +57,10 @@ export function useMastertonEngine() {
   }, []);
 
   const resetGame = useCallback(() => {
+    const config = resolveMastersonGameMode(gameModeId);
     setSpinCount(1);
     setPhase("BETTING");
-    setActiveBettors(Array.from({ length: 4 }, (_, i) => generateRandomBettor(i + 1)));
+    setActiveBettors(Array.from({ length: config.max_bettors }, (_, i) => generateRandomBettor(i + 1)));
     setCurrentBets({});
     setRoundRecaps({});
     setSessionTotals({});
@@ -70,10 +72,10 @@ export function useMastertonEngine() {
     setLastSpinHouseProfit(null);
     setGameOverReason(null);
     setAccumulatedCommission(0);
-    setCommissionRate(mastersonGameConfig.base_commission_pct);
+    setCommissionRate(config.base_commission_pct);
     setNotifications([]);
     previousBetsRef.current = {};
-  }, []);
+  }, [gameModeId]);
 
   const placeInitialBets = useCallback((isDeferred = false) => {
     if (phase !== "BETTING") return;
@@ -379,13 +381,15 @@ export function useMastertonEngine() {
     setCommissionRate(nextCommRate);
 
     // Seat Replenishment Checks
+    const config = resolveMastersonGameMode(gameModeId);
     const nextActiveBettors = [...cascadeBettors];
-    const seatsOpen = 4 - nextActiveBettors.length;
+    const seatsOpen = config.max_bettors - nextActiveBettors.length;
 
     if (seatsOpen > 0) {
-      if (Math.random() < mastersonGameConfig.seat_fill_chance_per_spin) {
+      if (Math.random() < config.seat_fill_chance_per_spin) {
         // Spawn one new bettor
-        const newSeatNum = [1, 2, 3, 4].find(
+        const possibleSeats = Array.from({ length: config.max_bettors }, (_, i) => i + 1);
+        const newSeatNum = possibleSeats.find(
           (num) => !nextActiveBettors.some((b) => b.id === `Seat ${num}`)
         ) || 1;
         const newBettor = generateRandomBettor(newSeatNum);
@@ -408,7 +412,7 @@ export function useMastertonEngine() {
     // Table isolation last chance check
     let noPlayers = false;
     if (nextActiveBettors.length === 0) {
-      if (Math.random() < mastersonGameConfig.empty_table_last_chance_pct) {
+      if (Math.random() < config.empty_table_last_chance_pct) {
         const fallbackBettor = generateRandomBettor(1);
         nextActiveBettors.push(fallbackBettor);
 
@@ -443,7 +447,7 @@ export function useMastertonEngine() {
       return next;
     });
     setPhase("EVALUATION");
-  }, [phase, spinCount, activeBettors, currentBets, selectedRig, consecutiveRigCount, tableHouseLedger, commissionRate, spinResult]);
+  }, [phase, spinCount, activeBettors, currentBets, selectedRig, consecutiveRigCount, tableHouseLedger, commissionRate, spinResult, gameModeId]);
 
   const advanceToSummary = useCallback(() => {
     if (phase !== "EVALUATION") return;

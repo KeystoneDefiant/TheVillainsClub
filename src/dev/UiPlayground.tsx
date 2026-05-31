@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Accordion,
@@ -39,15 +39,13 @@ import { GameButton } from "@/minigames/oubliette-no9/components/GameButton";
 import { MenuHazeBackground } from "@/components/layout/MenuHazeBackground";
 import { defaultMotionPreset } from "@/motion/presets";
 import { useMotionPresetStore } from "@/motion/motionPresetStore";
-import { buildClubTheme } from "@/theme/clubTheme";
 import { clubTokens } from "@/theme/clubTokens";
-import { useThemeLab } from "@/dev/themeLabStore";
 import { useClubWallet, getPlayerTitle } from "@/game/clubWalletStore";
 import { villainsGameDefaults } from "@/config/villainsGameDefaults";
 import "@/minigames/oubliette-no9/styles/global.css";
 
 
-const radiusOptions = ["xs", "sm", "md", "lg", "xl"] as const;
+
 
 const soundBase = () => `${import.meta.env.BASE_URL}sounds/Classic/`;
 
@@ -71,15 +69,44 @@ export function UiPlayground() {
 
   const preset = useMotionPresetStore((s) => s.preset);
   const setPartial = useMotionPresetStore((s) => s.setPartial);
-  const resetMotion = useMotionPresetStore((s) => s.reset);
-  const themeOverride = useThemeLab((s) => s.override);
-  const setThemeOverride = useThemeLab((s) => s.setOverride);
-  const resetTheme = useThemeLab((s) => s.reset);
 
   const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false);
   const [nestedOpened, { open: openNested, close: closeNested }] = useDisclosure(false);
   const [animCard, setAnimCard] = useState(false);
   const [introMock, setIntroMock] = useState<"enter" | "exit">("enter");
+
+  const [genText, setGenText] = useState("Interact");
+  const [genVariant, setGenVariant] = useState<"filled" | "light" | "outline" | "subtle" | "sheen">("filled");
+  const [genSize, setGenSize] = useState<"xs" | "sm" | "md" | "lg">("md");
+  const [genFancy, setGenFancy] = useState(false);
+  const [genDisabled, setGenDisabled] = useState(false);
+  const [genLoading, setGenLoading] = useState(false);
+  const [genFullWidth, setGenFullWidth] = useState(false);
+  const [genLeftSection, setGenLeftSection] = useState(false);
+  const [genCopied, setGenCopied] = useState(false);
+
+  const generatedCodeString = useMemo(() => {
+    const parts = [];
+    parts.push(`<ClubButton`);
+    if (genVariant !== "filled") parts.push(`  variant="${genVariant}"`);
+    if (genSize !== "md") parts.push(`  size="${genSize}"`);
+    if (genFancy) parts.push(`  fancy`);
+    if (genDisabled) parts.push(`  disabled`);
+    if (genLoading) parts.push(`  loading`);
+    if (genFullWidth) parts.push(`  fullWidth`);
+    if (genLeftSection) parts.push(`  leftSection={<span aria-hidden>✦</span>}`);
+    parts.push(`>`);
+    parts.push(`  ${genText}`);
+    parts.push(`</ClubButton>`);
+    return parts.join("\n");
+  }, [genText, genVariant, genSize, genFancy, genDisabled, genLoading, genFullWidth, genLeftSection]);
+
+  const handleCopyGenCode = () => {
+    navigator.clipboard.writeText(generatedCodeString).then(() => {
+      setGenCopied(true);
+      setTimeout(() => setGenCopied(false), 2000);
+    });
+  };
 
   const musicRef = useRef<HTMLAudioElement | null>(null);
   const [musicStatus, setMusicStatus] = useState<"idle" | "playing" | "error">("idle");
@@ -313,60 +340,16 @@ export function UiPlayground() {
           </Group>
         </Modal>
 
-        <Tabs defaultValue="theme" keepMounted={false}>
+        <Tabs defaultValue="components" keepMounted={false}>
           <Tabs.List>
-            <Tabs.Tab value="theme">Theme</Tabs.Tab>
             <Tabs.Tab value="components">Components</Tabs.Tab>
             <Tabs.Tab value="overlays">Overlays &amp; chrome</Tabs.Tab>
             <Tabs.Tab value="audio">Audio lab</Tabs.Tab>
             <Tabs.Tab value="bands">House bands</Tabs.Tab>
             <Tabs.Tab value="titles">Titles &amp; Wallet</Tabs.Tab>
-            <Tabs.Tab value="animation">Animation</Tabs.Tab>
-            <Tabs.Tab value="motion">Motion tuning</Tabs.Tab>
           </Tabs.List>
 
-          <Tabs.Panel value="theme" pt="md">
-            <ClubPanel>
-              <Stack gap="md">
-                <Select
-                  label="Default radius"
-                  data={[...radiusOptions]}
-                  value={String(themeOverride.defaultRadius ?? "md")}
-                  onChange={(value) => {
-                    if (!value) return;
-                    setThemeOverride({ defaultRadius: value });
-                  }}
-                />
-                <Group grow>
-                  <NumberInput
-                    label="Heading scale (h1)"
-                    min={2}
-                    max={4.5}
-                    step={0.05}
-                    decimalScale={2}
-                    value={
-                      Number(themeOverride.headings?.sizes?.h1?.fontSize?.toString().replace("rem", "")) || 2.75
-                    }
-                    onChange={(val) => {
-                      const v = typeof val === "number" ? val : Number(val);
-                      if (!Number.isFinite(v)) return;
-                      setThemeOverride({
-                        headings: {
-                          sizes: {
-                            ...buildClubTheme().headings?.sizes,
-                            h1: { fontSize: `${v}rem`, lineHeight: "1.05" },
-                          },
-                        },
-                      });
-                    }}
-                  />
-                </Group>
-                <Group>
-                  <ClubButton onClick={resetTheme}>Reset theme lab</ClubButton>
-                </Group>
-              </Stack>
-            </ClubPanel>
-          </Tabs.Panel>
+          {/* Theme panel removed */}
 
           <Tabs.Panel value="components" pt="md">
             <Stack gap="md">
@@ -531,6 +514,230 @@ export function UiPlayground() {
               </ClubPanel>
 
               <ClubPanel>
+                <ClubHeading order={4} mb="xs">
+                  ClubButton Code Generator
+                </ClubHeading>
+                <Text size="sm" c={clubTokens.text.muted} mb="md">
+                  Interactively configure a <code>ClubButton</code> component, see a live preview of its active and disabled states, and copy the generated React/TypeScript code block.
+                </Text>
+
+                <Grid gutter="md" align="stretch">
+                  <Grid.Col span={{ base: 12, md: 6 }}>
+                    <Stack gap="sm">
+                      <TextInput
+                        label="Button Text"
+                        value={genText}
+                        onChange={(e) => setGenText(e.currentTarget.value)}
+                        placeholder="e.g. Enter the Club"
+                      />
+                      <Select
+                        label="Variant"
+                        data={[
+                          { value: "filled", label: "Filled (Crimson / Default)" },
+                          { value: "light", label: "Light (Gold)" },
+                          { value: "outline", label: "Outline (Brass)" },
+                          { value: "subtle", label: "Subtle (Transparent / Gray)" },
+                          { value: "sheen", label: "Sheen (Gold Sheen)" },
+                        ]}
+                        value={genVariant}
+                        onChange={(val) => setGenVariant((val || "filled") as "filled" | "light" | "outline" | "subtle" | "sheen")}
+                        allowDeselect={false}
+                      />
+                      <Select
+                        label="Size"
+                        data={[
+                          { value: "xs", label: "Extra Small (xs)" },
+                          { value: "sm", label: "Small (sm)" },
+                          { value: "md", label: "Medium (md)" },
+                          { value: "lg", label: "Large (lg)" },
+                        ]}
+                        value={genSize}
+                        onChange={(val) => setGenSize((val || "md") as "xs" | "sm" | "md" | "lg")}
+                        allowDeselect={false}
+                      />
+                      <SimpleGrid cols={2} spacing="xs" mt="xs">
+                        <Switch
+                          label="Fancy (Oubliette Side-caps)"
+                          checked={genFancy}
+                          onChange={(e) => setGenFancy(e.currentTarget.checked)}
+                        />
+                        <Switch
+                          label="Full Width"
+                          checked={genFullWidth}
+                          onChange={(e) => setGenFullWidth(e.currentTarget.checked)}
+                        />
+                        <Switch
+                          label="Disabled State"
+                          checked={genDisabled}
+                          onChange={(e) => setGenDisabled(e.currentTarget.checked)}
+                        />
+                        <Switch
+                          label="Loading State"
+                          checked={genLoading}
+                          onChange={(e) => setGenLoading(e.currentTarget.checked)}
+                        />
+                        <Switch
+                          label="Left Section Icon"
+                          checked={genLeftSection}
+                          onChange={(e) => setGenLeftSection(e.currentTarget.checked)}
+                        />
+                      </SimpleGrid>
+                    </Stack>
+                  </Grid.Col>
+
+                  <Grid.Col span={{ base: 12, md: 6 }}>
+                    <Stack gap="md" justify="space-between" style={{ height: "100%" }}>
+                      <Box>
+                        <Text size="xs" fw={700} tt="uppercase" c="dimmed" mb="sm">
+                          Live Preview
+                        </Text>
+                        <Box
+                          p="md"
+                          style={{
+                            background: "rgba(0, 0, 0, 0.2)",
+                            border: "1px dashed rgba(255, 255, 255, 0.1)",
+                            borderRadius: "8px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            minHeight: 80,
+                          }}
+                        >
+                          <ClubButton
+                            variant={genVariant}
+                            size={genSize}
+                            fancy={genFancy}
+                            disabled={genDisabled}
+                            loading={genLoading}
+                            fullWidth={genFullWidth}
+                            leftSection={genLeftSection ? <span aria-hidden>✦</span> : undefined}
+                          >
+                            {genText}
+                          </ClubButton>
+                        </Box>
+                      </Box>
+
+                      <Box>
+                        <Group justify="space-between" align="center" mb={6}>
+                          <Text size="xs" fw={700} tt="uppercase" c="dimmed">
+                            Generated React Code
+                          </Text>
+                          <ClubButton
+                            size="xs"
+                            variant="light"
+                            onClick={handleCopyGenCode}
+                            style={{ minWidth: 80 }}
+                          >
+                            {genCopied ? "✓ COPIED" : "COPY CODE"}
+                          </ClubButton>
+                        </Group>
+                        <pre
+                          style={{
+                            margin: 0,
+                            padding: "10px 14px",
+                            background: "rgba(0, 0, 0, 0.4)",
+                            border: `1px solid ${clubTokens.surface.brassStroke}`,
+                            borderRadius: "6px",
+                            fontSize: "11px",
+                            color: clubTokens.text.brass,
+                            fontFamily: "monospace",
+                            whiteSpace: "pre-wrap",
+                            wordBreak: "break-all",
+                            overflowX: "auto",
+                          }}
+                        >
+                          {generatedCodeString}
+                        </pre>
+                      </Box>
+                    </Stack>
+                  </Grid.Col>
+                </Grid>
+              </ClubPanel>
+
+              <ClubPanel>
+                <ClubHeading order={4} mb="xs">
+                  Club Primitives Code References
+                </ClubHeading>
+                <Text size="sm" c={clubTokens.text.muted} mb="md">
+                  A reference index of import paths and standard layouts for our core UI components.
+                </Text>
+
+                <Stack gap="md">
+                  <Box>
+                    <Text size="sm" fw={700} c={clubTokens.text.primary} mb={4}>
+                      1. Polymorphic ClubButton
+                    </Text>
+                    <Text size="xs" c={clubTokens.text.secondary} mb={6}>
+                      Supports active, disabled, loading, custom sizing, side-cap chevron ornaments (<code>fancy</code>), and side-pip indicator (<code>sheen</code>) variants.
+                    </Text>
+                    <pre style={{ margin: 0, padding: "8px 12px", background: "rgba(0,0,0,0.3)", borderRadius: "6px", fontSize: "11px", color: "#f2e7d5", overflowX: "auto" }}>
+{`import { ClubButton } from "@/components/ui/ClubButton";
+
+// Standard filled button
+<ClubButton onClick={handleClick}>
+  Interact
+</ClubButton>
+
+// Large Oubliette-themed fancy button
+<ClubButton fancy variant="filled" size="lg">
+  Play Game
+</ClubButton>`}
+                    </pre>
+                  </Box>
+
+                  <Box>
+                    <Text size="sm" fw={700} c={clubTokens.text.primary} mb={4}>
+                      2. ClubHeading
+                    </Text>
+                    <Text size="xs" c={clubTokens.text.secondary} mb={6}>
+                      Polymorphic heading component defaulting to <code>Cinzel</code> serif typography.
+                    </Text>
+                    <pre style={{ margin: 0, padding: "8px 12px", background: "rgba(0,0,0,0.3)", borderRadius: "6px", fontSize: "11px", color: "#f2e7d5", overflowX: "auto" }}>
+{`import { ClubHeading } from "@/components/ui/ClubHeading";
+
+<ClubHeading order={2} size="h3">
+  The Crimson Altar
+</ClubHeading>`}
+                    </pre>
+                  </Box>
+
+                  <Box>
+                    <Text size="sm" fw={700} c={clubTokens.text.primary} mb={4}>
+                      3. ClubPanel
+                    </Text>
+                    <Text size="xs" c={clubTokens.text.secondary} mb={6}>
+                      Container surface implementing the luxurious Walnut dark wood texture paneling.
+                    </Text>
+                    <pre style={{ margin: 0, padding: "8px 12px", background: "rgba(0,0,0,0.3)", borderRadius: "6px", fontSize: "11px", color: "#f2e7d5", overflowX: "auto" }}>
+{`import { ClubPanel } from "@/components/ui/ClubPanel";
+
+<ClubPanel px="md" py="md">
+  <Text>Walnut panel content goes here.</Text>
+</ClubPanel>`}
+                    </pre>
+                  </Box>
+
+                  <Box>
+                    <Text size="sm" fw={700} c={clubTokens.text.primary} mb={4}>
+                      4. GameScaleContainer
+                    </Text>
+                    <Text size="xs" c={clubTokens.text.secondary} mb={6}>
+                      Viewport auto-scaling wrapper designed to dynamically fit game frames into bounding viewports.
+                    </Text>
+                    <pre style={{ margin: 0, padding: "8px 12px", background: "rgba(0,0,0,0.3)", borderRadius: "6px", fontSize: "11px", color: "#f2e7d5", overflowX: "auto" }}>
+{`import { GameScaleContainer } from "@/components/ui/GameScaleContainer";
+
+<GameScaleContainer width={1280} height={720}>
+  <div style={{ width: 1280, height: 720 }}>
+    Scaling Game Content
+  </div>
+</GameScaleContainer>`}
+                    </pre>
+                  </Box>
+                </Stack>
+              </ClubPanel>
+
+              <ClubPanel>
                 <ClubHeading order={4} mb="sm">
                   Form controls
                 </ClubHeading>
@@ -637,6 +844,116 @@ export function UiPlayground() {
                     Nested only
                   </ClubButton>
                 </Group>
+              </ClubPanel>
+
+              <ClubPanel>
+                <ClubHeading order={4} mb="sm">
+                  Menu-style stagger
+                </ClubHeading>
+                <Group mb="sm">
+                  <ClubButton size="sm" variant="light" onClick={() => setAnimCard((v) => !v)}>
+                    Toggle row
+                  </ClubButton>
+                </Group>
+                <motion.div
+                  initial="hidden"
+                  animate={animCard ? "show" : "hidden"}
+                  variants={{
+                    hidden: { opacity: 0 },
+                    show: {
+                      opacity: 1,
+                      transition: { staggerChildren: preset.menuStagger, delayChildren: 0.06 },
+                    },
+                  }}
+                  style={{ display: "flex", flexWrap: "wrap", gap: 10 }}
+                >
+                  {[1, 2, 3, 4].map((i) => (
+                    <motion.div
+                      key={i}
+                      variants={{
+                        hidden: { opacity: 0, y: 12 },
+                        show: {
+                          opacity: 1,
+                          y: 0,
+                          transition: { duration: preset.menuItemDuration, ease: easing },
+                        },
+                      }}
+                      style={{
+                        width: 120,
+                        height: 72,
+                        borderRadius: 12,
+                        border: `1px solid ${clubTokens.surface.brassStroke}`,
+                        background: clubTokens.surface.panel,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 13,
+                        color: clubTokens.text.muted,
+                      }}
+                    >
+                      Card {i}
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </ClubPanel>
+
+              <ClubPanel>
+                <ClubHeading order={4} mb="sm">
+                  Intro-style cross-fade (mock)
+                </ClubHeading>
+                <Group mb="sm">
+                  <ClubButton size="sm" variant="light" onClick={() => setIntroMock((p) => (p === "enter" ? "exit" : "enter"))}>
+                    Toggle phase
+                  </ClubButton>
+                </Group>
+                <Box style={{ minHeight: 120, position: "relative" }}>
+                  <AnimatePresence mode="wait">
+                    {introMock === "enter" ? (
+                      <motion.div
+                        key="in"
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10, transition: { duration: preset.introFadeOut, ease: easing } }}
+                        transition={{ duration: preset.introTitleDuration, ease: easing }}
+                        style={{ position: "absolute", inset: 0 }}
+                      >
+                        <ClubHeading order={3}>Title beat</ClubHeading>
+                        <Text size="sm" c={clubTokens.text.secondary}>
+                          Uses intro duration / fade from the motion preset.
+                        </Text>
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="out"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        style={{ position: "absolute", inset: 0 }}
+                      >
+                        <Text c={clubTokens.text.muted}>Exit / hold placeholder</Text>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </Box>
+              </ClubPanel>
+
+              <ClubPanel>
+                <ClubHeading order={4} mb="sm">
+                  Spring pop (decorative)
+                </ClubHeading>
+                <motion.div
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ type: "spring", stiffness: 420, damping: 22 }}
+                  style={{
+                    width: 100,
+                    height: 100,
+                    borderRadius: 16,
+                    border: `1px solid ${clubTokens.surface.brassStroke}`,
+                    background: `linear-gradient(145deg, ${clubTokens.surface.panel}, rgba(0,0,0,0.35))`,
+                    cursor: "pointer",
+                  }}
+                />
               </ClubPanel>
             </Stack>
           </Tabs.Panel>
@@ -844,239 +1161,7 @@ export function UiPlayground() {
             </Stack>
           </Tabs.Panel>
 
-          <Tabs.Panel value="animation" pt="md">
-            <Stack gap="md">
-              <ClubPanel>
-                <ClubHeading order={4} mb="sm">
-                  Menu-style stagger
-                </ClubHeading>
-                <Group mb="sm">
-                  <ClubButton size="sm" variant="light" onClick={() => setAnimCard((v) => !v)}>
-                    Toggle row
-                  </ClubButton>
-                </Group>
-                <motion.div
-                  initial="hidden"
-                  animate={animCard ? "show" : "hidden"}
-                  variants={{
-                    hidden: { opacity: 0 },
-                    show: {
-                      opacity: 1,
-                      transition: { staggerChildren: preset.menuStagger, delayChildren: 0.06 },
-                    },
-                  }}
-                  style={{ display: "flex", flexWrap: "wrap", gap: 10 }}
-                >
-                  {[1, 2, 3, 4].map((i) => (
-                    <motion.div
-                      key={i}
-                      variants={{
-                        hidden: { opacity: 0, y: 12 },
-                        show: {
-                          opacity: 1,
-                          y: 0,
-                          transition: { duration: preset.menuItemDuration, ease: easing },
-                        },
-                      }}
-                      style={{
-                        width: 120,
-                        height: 72,
-                        borderRadius: 12,
-                        border: `1px solid ${clubTokens.surface.brassStroke}`,
-                        background: clubTokens.surface.panel,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: 13,
-                        color: clubTokens.text.muted,
-                      }}
-                    >
-                      Card {i}
-                    </motion.div>
-                  ))}
-                </motion.div>
-              </ClubPanel>
-
-              <ClubPanel>
-                <ClubHeading order={4} mb="sm">
-                  Intro-style cross-fade (mock)
-                </ClubHeading>
-                <Group mb="sm">
-                  <ClubButton size="sm" variant="light" onClick={() => setIntroMock((p) => (p === "enter" ? "exit" : "enter"))}>
-                    Toggle phase
-                  </ClubButton>
-                </Group>
-                <Box style={{ minHeight: 120, position: "relative" }}>
-                  <AnimatePresence mode="wait">
-                    {introMock === "enter" ? (
-                      <motion.div
-                        key="in"
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10, transition: { duration: preset.introFadeOut, ease: easing } }}
-                        transition={{ duration: preset.introTitleDuration, ease: easing }}
-                        style={{ position: "absolute", inset: 0 }}
-                      >
-                        <ClubHeading order={3}>Title beat</ClubHeading>
-                        <Text size="sm" c={clubTokens.text.secondary}>
-                          Uses intro duration / fade from the motion preset.
-                        </Text>
-                      </motion.div>
-                    ) : (
-                      <motion.div
-                        key="out"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        style={{ position: "absolute", inset: 0 }}
-                      >
-                        <Text c={clubTokens.text.muted}>Exit / hold placeholder</Text>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </Box>
-              </ClubPanel>
-
-              <ClubPanel>
-                <ClubHeading order={4} mb="sm">
-                  Spring pop (decorative)
-                </ClubHeading>
-                <motion.div
-                  whileHover={{ scale: 1.04 }}
-                  whileTap={{ scale: 0.97 }}
-                  transition={{ type: "spring", stiffness: 420, damping: 22 }}
-                  style={{
-                    width: 100,
-                    height: 100,
-                    borderRadius: 16,
-                    border: `1px solid ${clubTokens.surface.brassStroke}`,
-                    background: `linear-gradient(145deg, ${clubTokens.surface.panel}, rgba(0,0,0,0.35))`,
-                    cursor: "pointer",
-                  }}
-                />
-              </ClubPanel>
-            </Stack>
-          </Tabs.Panel>
-
-          <Tabs.Panel value="motion" pt="md">
-            <ClubPanel>
-              <Stack gap="lg">
-                <Slider
-                  label="Intro title duration (s)"
-                  min={0.3}
-                  max={2}
-                  step={0.05}
-                  value={preset.introTitleDuration}
-                  onChange={(v) => setPartial({ introTitleDuration: v })}
-                />
-                <Slider
-                  label="Intro red draw-in (s)"
-                  min={0.15}
-                  max={1.2}
-                  step={0.02}
-                  value={preset.introRedDrawSec}
-                  onChange={(v) => setPartial({ introRedDrawSec: v })}
-                />
-                <Slider
-                  label="Intro red neon pulse (s)"
-                  min={0.2}
-                  max={2.5}
-                  step={0.05}
-                  value={preset.introRedNeonSec}
-                  onChange={(v) => setPartial({ introRedNeonSec: v })}
-                />
-                <Slider
-                  label="Intro red glow fade (s)"
-                  min={0.15}
-                  max={1.5}
-                  step={0.02}
-                  value={preset.introRedGlowFadeSec}
-                  onChange={(v) => setPartial({ introRedGlowFadeSec: v })}
-                />
-                <Slider
-                  label="Intro logo grey letter reveal (s each, bottom→top)"
-                  min={0.12}
-                  max={0.55}
-                  step={0.01}
-                  value={preset.introLogoLetterDrawSec}
-                  onChange={(v) => setPartial({ introLogoLetterDrawSec: v })}
-                />
-                <Slider
-                  label="Intro logo settle after letters (s)"
-                  min={0}
-                  max={1.2}
-                  step={0.02}
-                  value={preset.introLogoSettleSec}
-                  onChange={(v) => setPartial({ introLogoSettleSec: v })}
-                />
-                <Slider
-                  label="Intro hold before exit (s)"
-                  min={0.5}
-                  max={4}
-                  step={0.05}
-                  value={preset.introHoldSec}
-                  onChange={(v) => setPartial({ introHoldSec: v })}
-                />
-                <Slider
-                  label="Intro tagline delay after logo (s)"
-                  min={0}
-                  max={1.5}
-                  step={0.05}
-                  value={preset.introTaglineDelay}
-                  onChange={(v) => setPartial({ introTaglineDelay: v })}
-                />
-                <Slider
-                  label="Intro tagline duration (s)"
-                  min={0.2}
-                  max={2}
-                  step={0.05}
-                  value={preset.introTaglineDuration}
-                  onChange={(v) => setPartial({ introTaglineDuration: v })}
-                />
-                <Slider
-                  label="Intro fade out (s)"
-                  min={0.15}
-                  max={1.5}
-                  step={0.05}
-                  value={preset.introFadeOut}
-                  onChange={(v) => setPartial({ introFadeOut: v })}
-                />
-                <Slider
-                  label="Menu stagger (s)"
-                  min={0.02}
-                  max={0.3}
-                  step={0.01}
-                  value={preset.menuStagger}
-                  onChange={(v) => setPartial({ menuStagger: v })}
-                />
-                <Slider
-                  label="Menu item duration (s)"
-                  min={0.15}
-                  max={1.2}
-                  step={0.05}
-                  value={preset.menuItemDuration}
-                  onChange={(v) => setPartial({ menuItemDuration: v })}
-                />
-                <Box>
-                  <Text size="sm" mb={6}>
-                    Preview easing (oscillation demo)
-                  </Text>
-                  <motion.div
-                    animate={{ x: [0, 120, 0] }}
-                    transition={{ duration: 2.4, repeat: Infinity, ease: preset.easing }}
-                    style={{
-                      width: 56,
-                      height: 36,
-                      borderRadius: 10,
-                      border: `1px solid ${clubTokens.surface.brassStroke}`,
-                      background: clubTokens.surface.panel,
-                    }}
-                  />
-                </Box>
-                <ClubButton onClick={resetMotion}>Reset motion preset</ClubButton>
-              </Stack>
-            </ClubPanel>
-          </Tabs.Panel>
+          {/* Animation and Motion panels removed */}
 
           <Tabs.Panel value="titles" pt="md">
             <ClubPanel>

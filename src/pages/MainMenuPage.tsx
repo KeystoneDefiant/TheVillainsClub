@@ -17,7 +17,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { AnimatePresence, motion } from "framer-motion";
 import { useClubAudioStore } from "@/audio/clubAudioStore";
-import { barDateKey } from "@/audio/barBandSchedule";
+import { barDateKey, activeBandIndexForBarDate } from "@/audio/barBandSchedule";
 import { effectiveBandIndexForBarDate } from "@/audio/barBandOverrideStore";
 import { bandsCatalog } from "@/config/bandsCatalog";
 import { villainsGameDefaults } from "@/config/villainsGameDefaults";
@@ -28,6 +28,7 @@ import {
 } from "@/game/barSettlementQuips";
 import { VcLogoBarMark } from "@/components/club/VcLogoBarMark";
 import { MenuHazeBackground } from "@/components/layout/MenuHazeBackground";
+import { StatsTicker } from "@/components/club/StatsTicker";
 import { ClubButton } from "@/components/ui/ClubButton";
 import { ClubHeading } from "@/components/ui/ClubHeading";
 import { ClubPanel } from "@/components/ui/ClubPanel";
@@ -154,6 +155,7 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
   const [settingsOpened, { open: openSettings, close: closeSettings }] = useDisclosure(false);
   const [abandonOpened, { open: openAbandon, close: closeAbandon }] = useDisclosure(false);
   const [titlesOpened, { open: openTitles, close: closeTitles }] = useDisclosure(false);
+  const [bandScheduleOpened, { open: openBandSchedule, close: closeBandSchedule }] = useDisclosure(false);
   const [resetProgressArmed, setResetProgressArmed] = useState(false);
   const [selectedGame, setSelectedGame] = useState<GameMenuEntry | null>(null);
   const [ruleset, setRuleset] = useState("house");
@@ -198,6 +200,36 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
   const activeBandObj = useMemo(() => {
     const idx = effectiveBandIndexForBarDate(barDateKey(new Date()));
     return bandsCatalog.bands[idx] ?? null;
+  }, []);
+
+  const next5DaysSchedule = useMemo(() => {
+    const list = [];
+    const baseDate = new Date();
+    for (let i = 0; i < 5; i++) {
+      const target = new Date(baseDate.getTime());
+      target.setDate(baseDate.getDate() + i);
+      const dateKey = barDateKey(target);
+      const bandIdx =
+        i === 0
+          ? effectiveBandIndexForBarDate(dateKey)
+          : activeBandIndexForBarDate(dateKey, bandsCatalog);
+      const band = bandsCatalog.bands[bandIdx] ?? null;
+
+      let label = "";
+      if (i === 0) label = "Tonight’s Performance";
+      else if (i === 1) label = "Tomorrow";
+      else label = target.toLocaleDateString("en-US", { weekday: "long" });
+
+      const dateLabel = target.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+      list.push({
+        label,
+        dateLabel,
+        band,
+        isTonight: i === 0,
+      });
+    }
+    return list;
   }, []);
 
   const activeModifierLines = useMemo(() => {
@@ -424,6 +456,11 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
                     <Title order={2} size="h3" c={clubTokens.text.primary} style={{ fontFamily: "Georgia, serif", letterSpacing: "0.03em" }}>
                       {gameTitle}
                     </Title>
+                    {settlementFlash.lastTable.endReason ? (
+                      <Text size="sm" fs="italic" c={clubTokens.text.secondary} mt={2}>
+                        {settlementFlash.lastTable.endReason}
+                      </Text>
+                    ) : null}
                   </Stack>
 
                   <Divider color={clubTokens.surface.brassStroke} opacity={0.3} my="sm" />
@@ -442,6 +479,13 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
                       </Text>
                     </Group>
                   </Stack>
+
+                  {settlementFlash.lastTable.stats && settlementFlash.lastTable.stats.length > 0 ? (
+                    <StatsTicker
+                      stats={settlementFlash.lastTable.stats}
+                      reduceMotion={reduceMotion}
+                    />
+                  ) : null}
 
                   <Divider color={clubTokens.surface.brassStroke} opacity={0.3} my="sm" />
 
@@ -764,7 +808,23 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
                   </Stack>
                 </ClubPanel>
 
-                <ClubPanel maw={360} w="min(360px, 100%)" px="md" py="md">
+                <ClubPanel
+                  maw={360}
+                  w="min(360px, 100%)"
+                  px="md"
+                  py="md"
+                  className="players-card-hover-gold-sheen"
+                  styles={{
+                    root: {
+                      cursor: "pointer",
+                      outline: "none",
+                      "&:hover, &:focus, &:focus-visible, &:active": {
+                        outline: "none !important",
+                      },
+                    },
+                  }}
+                  onClick={openBandSchedule}
+                >
                   <Stack gap="xs">
                     <Group justify="space-between" gap="xs">
                       <Text size="sm" c={clubTokens.text.secondary}>
@@ -1080,6 +1140,119 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
             mt="xs"
           >
             DISMISS DOSSIER
+          </ClubButton>
+        </Stack>
+      </Modal>
+
+      {/* Bar Band Schedule Modal */}
+      <Modal
+        opened={bandScheduleOpened}
+        onClose={closeBandSchedule}
+        title={
+          <Text fw={700} c={clubTokens.text.brass} style={{ fontFamily: "Georgia, serif", fontSize: "1.1rem" }}>
+            Bar Band Schedule
+          </Text>
+        }
+        centered
+        size="md"
+        styles={{
+          content: {
+            background: "radial-gradient(circle at top, #2e1d13 0%, #140d08 100%)",
+            border: `2px solid ${clubTokens.surface.brassStroke}`,
+            borderRadius: "12px",
+            boxShadow: "0 12px 36px rgba(0, 0, 0, 0.9)",
+            color: "#ffffff",
+          },
+          header: {
+            background: "transparent",
+            borderBottom: "1px solid rgba(230, 184, 52, 0.25)",
+            paddingBottom: "10px",
+          },
+          close: {
+            color: clubTokens.text.brass,
+            "&:hover": {
+              background: "rgba(255, 255, 255, 0.05)",
+            },
+          },
+        }}
+      >
+        <Stack gap="md" p="xs" style={{ position: "relative" }}>
+          {/* Ornate inner dashed border */}
+          <Box
+            style={{
+              position: "absolute",
+              top: -8,
+              left: -8,
+              right: -8,
+              bottom: -8,
+              border: "1px dashed rgba(230, 184, 52, 0.1)",
+              borderRadius: "10px",
+              pointerEvents: "none",
+            }}
+          />
+
+          <Stack gap="sm">
+            {next5DaysSchedule.map(({ label, dateLabel, band, isTonight }) => (
+              <Box
+                key={label}
+                p="sm"
+                style={{
+                  background: isTonight ? "rgba(230, 184, 52, 0.08)" : "rgba(0, 0, 0, 0.25)",
+                  border: isTonight ? `1.5px solid ${clubTokens.surface.brassStroke}` : "1px solid rgba(255, 255, 255, 0.05)",
+                  borderRadius: "8px",
+                  boxShadow: isTonight ? "0 0 12px rgba(230, 184, 52, 0.15)" : "none",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                <Group justify="space-between" align="center" wrap="nowrap">
+                  <Stack gap={2}>
+                    <Group gap="xs" align="center">
+                      <Text size="xs" tt="uppercase" fw={800} c={isTonight ? clubTokens.text.brass : clubTokens.text.muted} style={{ letterSpacing: "0.05em" }}>
+                        {label}
+                      </Text>
+                      {isTonight && (
+                        <Box
+                          px={6}
+                          py={1}
+                          style={{
+                            background: clubTokens.text.brass,
+                            borderRadius: "4px",
+                          }}
+                        >
+                          <Text size="9px" fw={800} c="#000000" tt="uppercase" style={{ letterSpacing: "0.05em" }}>
+                            Tonight
+                          </Text>
+                        </Box>
+                      )}
+                    </Group>
+                    <Text size="sm" fw={700} c={isTonight ? "white" : "rgba(255, 255, 255, 0.9)"}>
+                      {band?.display_name ?? "House band"}
+                    </Text>
+                  </Stack>
+                  <Text size="11px" c={clubTokens.text.muted}>
+                    {dateLabel}
+                  </Text>
+                </Group>
+                {band?.modifier ? (
+                  <>
+                    <Divider color={isTonight ? clubTokens.surface.brassStroke : "rgba(255,255,255,0.05)"} opacity={isTonight ? 0.35 : 0.2} my={8} />
+                    <Text size="xs" c={isTonight ? clubTokens.text.brass : "dimmed"} style={{ fontStyle: "italic" }}>
+                      Modifier: {band.modifier.description}
+                    </Text>
+                  </>
+                ) : null}
+              </Box>
+            ))}
+          </Stack>
+
+          <ClubButton
+            onClick={closeBandSchedule}
+            variant="fancy"
+            size="sm"
+            fullWidth
+            mt="xs"
+          >
+            DISMISS SCHEDULE
           </ClubButton>
         </Stack>
       </Modal>

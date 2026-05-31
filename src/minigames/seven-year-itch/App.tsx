@@ -1035,6 +1035,14 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
                 props.onReturnToClubMenu?.({
                   ...computeSevenYearItchReturn(wealth, props.settlement),
                   tableRound: rollCount,
+                  endReason: `Clean Getaway — voluntary cash-out at roll ${rollCount}`,
+                  stats: [
+                    { label: "Total Rolls", value: rollCount },
+                    { label: "Starting Buy-in", value: `${buyIn.toLocaleString()} cr` },
+                    { label: "Ending Wealth", value: `${wealth.toLocaleString()} cr` },
+                    { label: "Net Take", value: `${(wealth - buyIn).toLocaleString()} cr` },
+                    { label: "Heat Level", value: `${Math.floor(heat)}%` }
+                  ],
                 });
               }}
             >

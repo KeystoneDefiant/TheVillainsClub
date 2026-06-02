@@ -30,7 +30,7 @@ export const ONBOARDING_SLIDES: OnboardingSlide[] = [
       "Plans are made in whispers. Deals are sealed with a handshake. Reputations are made and broken over a single roll of the dice.",
       "Discretion is absolute. What happens within the wood-paneled walls of the Club never leaves them."
     ],
-    image: "/images/onboarding/ClubOutside.png",
+    image: "images/onboarding/ClubOutside.png",
   },
   {
     type: "rules",
@@ -43,7 +43,7 @@ export const ONBOARDING_SLIDES: OnboardingSlide[] = [
       "Rule V: This place does not exist.",
       "Rule VI: Do not unsettle the spirits."
     ],
-    image: "/images/onboarding/InsideBar.png",
+    image: "images/onboarding/InsideBar.png",
   },
   {
     type: "rules",
@@ -56,7 +56,7 @@ export const ONBOARDING_SLIDES: OnboardingSlide[] = [
       "To restore your name, you must pay back the loan once you have amassed 30,000+ in your club account."
     ],
     dialogue: "A clean slate comes at a cost, friend. I can lend you a hand, but the smell of defeat takes a while to wash off.",
-    image: "/images/onboarding/intervention.png",
+    image: "images/onboarding/intervention.png",
   },
   {
     type: "staff",
@@ -65,7 +65,7 @@ export const ONBOARDING_SLIDES: OnboardingSlide[] = [
     title: "Pazillus A. Rabellum",
     description: "Immaculate host with dry wit, expert in fine wines, fine dining, and etiquette. \n\nYour guide when it comes to drinks and our games. \n\nPersonable and as elegant with a corkscrew as he is a switchblade.",
     dialogue: "Welcome, new patron. I shall ensure your glass is never empty, and your wagers... well, let us hope they are just as bountiful.",
-    image: "/images/onboarding/Paz.png",
+    image: "images/onboarding/Paz.png",
   },
   {
     type: "staff",
@@ -74,7 +74,7 @@ export const ONBOARDING_SLIDES: OnboardingSlide[] = [
     title: "Claudius L'Ausula",
     description: "Imposing but fair pit boss. Stern, unreadable face with a rare, devastating sense of humor at the most inappropriate times. He's the law of the club, but will also make sure your time spent here is entertaining. \n\nIf you require some help with a game, he's more than happy to lend you a few choice tips to keep you enough in the green so both you and he are happy.",
     dialogue: "The house is always watching... but I'm the one who decides when to smile.",
-    image: "/images/onboarding/Claudius.png",
+    image: "images/onboarding/Claudius.png",
   },
   {
     type: "staff",
@@ -83,7 +83,7 @@ export const ONBOARDING_SLIDES: OnboardingSlide[] = [
     title: "Octavia Beatrice Stare",
     description: "Polite and approachable bouncer who maintains order with a kind smile. Deadlifts cars for fun and profit, should you make that wager against her. \n\nOctavia has numbers scribbled on a paper behind her at the bouncer's post - the all time leaderboard for distance when throwing troublemakers out, but it's also said these can be used as lucky numbers in a pinch. \n\nKnown to act as a vocalist when a band needs a fill in.",
     dialogue: "I do love a friendly face. Shame if it happens to be a smear on the sidewalk at the end of the night.",
-    image: "/images/onboarding/Octavia.png",
+    image: "images/onboarding/Octavia.png",
   },
   {
     type: "staff",
@@ -92,20 +92,20 @@ export const ONBOARDING_SLIDES: OnboardingSlide[] = [
     title: "Francis Uriah Ndere",
     description: "Wise and charismatic bartender with an impossibly accurate memory for wagers and drinks. Terrifyingly perceptive and possessing a smile that can disarm armies. Pours are accurate, proportions are precise, and will make sure you're sober by the end of the night without you even noticing.\n\nMajored in psychology, with a minor in math. If you tell him about your bad beat, he'll be the first to listen to your troubles, and then tell you the exact odds that you had in your situation.",
     dialogue: "The usual, my friend? Or perhaps you'd care to try something a little more... ambitious?",
-    image: "/images/onboarding/Francis.png",
+    image: "images/onboarding/Francis.png",
   },
   {
     type: "lore",
     title: "The Villains Club",
     details: [
-      "You are now a member here at The Villains Club, with all the rights and privledges afforded to a new villain in our ranks.",
+      "You are now a member here at The Villains Club, with all the rights and privileges afforded to a new villain in our ranks.",
       "Paz will walk you through each game as you decide to imbibe in them. Failure to listen well to his advice will leave you in debt rather quickly.",
       "Claudius is usually near the card table, minding the house, but he's always happy to lend you a few tips.",
       "Octavia can be found near the door, ensuring that no one leaves without paying their dues. May you never meet her professionally.",
       "Francis is usually near the bar, mixing up drinks and listening to your troubles. Should you find yourself in need of a loan, he's your man.",
       "Welcome to The Villains Club."
     ],
-    image: "/images/logos/VC Logotype - Color.svg",
+    image: "images/logos/VC Logotype - Color.svg",
   },
 ];
 

@@ -32,6 +32,7 @@ import { StatsTicker } from "@/components/club/StatsTicker";
 import { ClubButton } from "@/components/ui/ClubButton";
 import { ClubHeading } from "@/components/ui/ClubHeading";
 import { ClubPanel } from "@/components/ui/ClubPanel";
+import { GameTipsModal } from "@/components/ui/GameTipsModal";
 import { isBarRouteState } from "@/game/barRouteState";
 import { useClubFlowStore } from "@/game/clubFlowStore";
 import { useClubWallet, getPlayerTitle } from "@/game/clubWalletStore";
@@ -158,6 +159,8 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
   const [bandScheduleOpened, { open: openBandSchedule, close: closeBandSchedule }] = useDisclosure(false);
   const [resetProgressArmed, setResetProgressArmed] = useState(false);
   const [selectedGame, setSelectedGame] = useState<GameMenuEntry | null>(null);
+  const [tipsOpened, setTipsOpened] = useState(false);
+  const [tipsGameId, setTipsGameId] = useState<GameKey | null>(null);
   const [ruleset, setRuleset] = useState("house");
   const [sessionError, setSessionError] = useState<string | null>(null);
   const [startingGame, setStartingGame] = useState<GameKey | null>(null);
@@ -564,11 +567,21 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
                     >
                       <ClubPanel maw={470} w="100%" className="club-menu-card">
                         <Stack gap="md">
-                          <Stack gap={3} ta="center">
                             <Box style={{ width: "100%", display: "flex", justifyContent: "center" }}>
-                              <VcLogoBarMark width={180} />
+                              <Link
+                                to="/onboarding"
+                                state={{ skipName: true }}
+                                style={{
+                                  cursor: "pointer",
+                                  display: "inline-flex",
+                                  textDecoration: "none",
+                                  transition: "transform 0.2s ease, filter 0.2s ease",
+                                }}
+                                className="club-logo-link"
+                              >
+                                <VcLogoBarMark width={180} />
+                              </Link>
                             </Box>
-                          </Stack>
                           <Stack gap={2}>
                             <Text size="xs" tt="uppercase" fw={700} c={clubTokens.text.muted}>
                               Club modifiers
@@ -701,6 +714,17 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
                                     fullWidth
                                   >
                                     Tutorial
+                                  </ClubButton>
+                                  <ClubButton
+                                    variant="light"
+                                    size="xs"
+                                    onClick={() => {
+                                      setTipsGameId(game.id);
+                                      setTipsOpened(true);
+                                    }}
+                                    fullWidth
+                                  >
+                                    Tips
                                   </ClubButton>
                                   <ClubButton variant="light" size="xs" onClick={() => setSelectedGame(null)} fullWidth>
                                     Menu
@@ -1256,6 +1280,15 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
           </ClubButton>
         </Stack>
       </Modal>
+
+      <GameTipsModal
+        opened={tipsOpened}
+        onClose={() => {
+          setTipsOpened(false);
+          setTipsGameId(null);
+        }}
+        gameId={tipsGameId}
+      />
 
       {/* Squeezed Out / Bankruptcy Dialogue Overlay */}
       <AnimatePresence>

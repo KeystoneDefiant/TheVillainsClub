@@ -1,13 +1,14 @@
 import { MantineProvider } from "@mantine/core";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { villainsGameDefaults } from "@/config/villainsGameDefaults";
 import { useClubWallet } from "@/game/clubWalletStore";
 import { isBarRouteState } from "@/game/barRouteState";
 import { buildSevenYearItchSettlementProfile } from "@/game/sessionSettlement";
 import { buildClubTheme } from "@/theme/clubTheme";
 import { SevenYearItchPage } from "./SevenYearItchPage";
+import { useBarBandOverrideStore } from "@/audio/barBandOverrideStore";
 
 /** Surfaces the router `location.state` so the test can assert the
  *  settlement payload survived the cash-out → /bar redirect. */
@@ -39,8 +40,13 @@ function renderGameRoute() {
 }
 
 describe("SevenYearItchPage", () => {
+  beforeEach(() => {
+    useBarBandOverrideStore.getState().setEveningBandIndexOverride(0);
+  });
+
   afterEach(() => {
     useClubWallet.getState().resetWalletAndSession();
+    useBarBandOverrideStore.getState().setEveningBandIndexOverride(null);
     vi.restoreAllMocks();
   });
 

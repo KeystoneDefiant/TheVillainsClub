@@ -1,0 +1,83 @@
+.tips-modal {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  max-height: 90vh;
+  width: 100%;
+}
+
+.tips-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1.5rem 1.5rem 1rem;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.tips-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0.25rem 0 0;
+  padding-right: 2rem;
+}
+
+.tips-close {
+  background: none;
+  border: none;
+  font-size: 1.8rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0.25rem;
+  transition: color 0.15s ease;
+  margin-top: -0.25rem;
+}
+
+.tips-close:hover {
+  color: #f0e8db !important;
+}
+
+.tips-content {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 120px;
+}
+
+.tips-body {
+  margin: 0;
+  white-space: pre-line;
+}
+
+.tips-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem 1.5rem;
+  flex-shrink: 0;
+}
+
+.tips-progress {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.tips-nav {
+  display: flex;
+  gap: 0.75rem;
+}
+
+@media (max-width: 480px) {
+  .tips-header {
+    padding: 1rem 1rem 0.75rem;
+  }
+  .tips-title {
+    font-size: 1.15rem;
+  }
+  .tips-content {
+    padding: 1rem;
+  }
+  .tips-footer {
+    padding: 0.75rem 1rem 1rem;
+  }
+}

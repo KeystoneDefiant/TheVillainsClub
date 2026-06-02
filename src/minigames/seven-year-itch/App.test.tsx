@@ -1,10 +1,11 @@
 import { MantineProvider } from "@mantine/core";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { villainsGameDefaults } from "@/config/villainsGameDefaults";
 import { buildSevenYearItchSettlementProfile } from "@/game/sessionSettlement";
 import { buildClubTheme } from "@/theme/clubTheme";
 import { SevenYearItchRoot } from "./App";
+import { useBarBandOverrideStore } from "@/audio/barBandOverrideStore";
 
 vi.mock("@/motion/usePrefersReducedMotion", () => ({
   usePrefersReducedMotion: () => true,
@@ -27,7 +28,12 @@ function renderGame(onReturnToClubMenu = vi.fn()) {
 }
 
 describe("SevenYearItchRoot", () => {
+  beforeEach(() => {
+    useBarBandOverrideStore.getState().setEveningBandIndexOverride(0);
+  });
+
   afterEach(() => {
+    useBarBandOverrideStore.getState().setEveningBandIndexOverride(null);
     vi.restoreAllMocks();
   });
 

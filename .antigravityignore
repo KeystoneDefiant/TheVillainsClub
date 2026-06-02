@@ -1,0 +1,85 @@
+# 🚀 Global Antigravity Rules
+
+# Comments start with hashtags, exactly like standard gitignore files
+
+# Version Control & Local Agent Logs
+
+.git/
+
+.antigravity/
+
+.vscode/
+
+# Virtual Environments & Dependencies (Massive token drains)
+
+node_modules/
+
+venv/
+
+.venv/
+
+env/
+
+# Build, Framework & Compiler Artifacts
+
+dist/
+
+_dist/
+
+build/
+
+bin/
+
+out/
+
+.next/
+
+.expo/
+
+*.o
+
+*.out
+
+# Package Lockfiles (Crucial to block: highly token-heavy and agents rarely edit them)
+
+package-lock.json
+
+yarn.lock
+
+pnpm-lock.yaml
+
+poetry.lock
+
+Gemfile.lock
+
+# Cache Directories
+
+__pycache__/
+
+.pytest_cache/
+
+*.pyc
+
+# Logs & Metrics
+
+*.log
+
+npm-debug.log*
+
+yarn-debug.log*
+
+# Large Media, Binaries, and Archives
+
+*.mp4
+
+*.mov
+
+*.wav
+
+*.zip
+
+*.tar.gz
+
+*.pdf
+
+*.mp3

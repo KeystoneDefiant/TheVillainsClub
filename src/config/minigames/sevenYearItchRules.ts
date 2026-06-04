@@ -158,14 +158,14 @@ export const sevenYearItchHeatBonuses: readonly SevenYearItchHeatBonus[] = [
   {
     id: "look_the_other_way",
     title: "The Look the Other Way",
-    description: "Ignore the next 7. Heat drops and the investigation keeps breathing.",
+    description: "Ignore the next 7. You didn't see nothin'.",
     pullWeight: 38,
     effect: { type: "shield_next_seven", value: 1 },
   },
   {
     id: "kingpins_cut",
     title: "The Kingpin's Cut",
-    description: "Maximize all place bets and Legitimate Business Investment for free, but any returns are reduced by 35% on this roll.",
+    description: "Maximize all place bets and Legitimate Business Investment for free, but any returns are reduced by 35% for the rest of this hand.",
     pullWeight: 22,
     effect: { type: "kingpins_cut", value: 0.65 },
   },

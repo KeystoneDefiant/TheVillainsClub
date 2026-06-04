@@ -51,6 +51,7 @@ export type CraplessTableFeltProps = {
   hideInlineDice: boolean;
   maxBet: number;
   recentPlacePayout: { pk: PointNumber; amount: number; triggerKey: number } | null;
+  diceContainerRef?: React.RefObject<HTMLDivElement | null>;
 };
 
 function preventCtx(e: React.MouseEvent) {
@@ -92,6 +93,7 @@ export function CraplessTableFelt({
   hideInlineDice,
   maxBet,
   recentPlacePayout,
+  diceContainerRef,
 }: CraplessTableFeltProps) {
   const topPlaces = POINT_NUMBERS.filter((n) => n <= 6);
   const bottomPlaces = POINT_NUMBERS.filter((n) => n >= 8);
@@ -168,19 +170,35 @@ export function CraplessTableFelt({
               onOddsSecondary();
             }}
           >
-            <span className="yi-felt-odds-label">Free odds</span>
+            <span className="yi-felt-odds-label">Legitimate Business Investment</span>
             <span className="yi-felt-odds-meta">
               {bets.freeOdds > 0 ? `${bets.freeOdds}` : "—"} / cap {maxOddsDisplay}
             </span>
             <span className="yi-felt-chipHint">+{chip} · right-click −{chip}</span>
           </button>
         ) : (
-          <div aria-hidden />
+          <div className="yi-felt-come-out-instruction" style={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: "8px 12px",
+            borderRadius: "8px",
+            border: "1px dashed rgba(255, 255, 255, 0.2)",
+            background: "rgba(0, 0, 0, 0.4)",
+            textAlign: "center",
+            height: "100%",
+            boxSizing: "border-box"
+          }}>
+            <Text size="xs" style={{ color: "rgba(232, 223, 212, 0.8)", fontWeight: 500, lineHeight: 1.3 }}>
+              Place your initial investment and then roll the dice.
+            </Text>
+          </div>
         )}
 
         <button
           type="button"
-          className={`yi-felt-pass ${passLocked ? "yi-felt-pass--locked" : ""}`}
+          className={`yi-felt-pass ${passLocked ? "yi-felt-pass--locked" : ""} ${table.phase === "comeOut" && bets.passLine === 0 ? "yi-felt-pass--pulse-glow" : ""}`}
           data-testid="felt-pass"
           disabled={passLocked}
           onClick={onPassPrimary}
@@ -303,7 +321,7 @@ export function CraplessTableFelt({
           )}
         </div>
 
-        <div className="yi-felt-dice-container">
+        <div className="yi-felt-dice-container" ref={diceContainerRef as React.RefObject<HTMLDivElement>}>
           {hideInlineDice ? (
             <div className="yi-felt-dicePlaceholder" aria-hidden />
           ) : (
@@ -439,7 +457,7 @@ function PlaceCell({
         {sevenYearItchRackets[pk].name}
       </span>
       <span className="yi-felt-place-amt" style={{ fontSize: "0.62rem", zIndex: 1 }}>
-        {amount > 0 ? `${retPreview.toLocaleString()} return` : `${retPreview.toLocaleString()} on ${chip}`}
+        {amount > 0 ? `+${(retPreview - amount).toLocaleString()} payout` : `+${(retPreview - chip).toLocaleString()} on ${chip}`}
       </span>
 
       {!disabled ? <span className="yi-felt-chipHintSm" style={{ marginTop: 2, zIndex: 1 }}>+{chip}</span> : null}

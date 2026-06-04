@@ -1,11 +1,19 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import { villainsGameDefaults } from "@/config/villainsGameDefaults";
+import { useBarBandOverrideStore } from "@/audio/barBandOverrideStore";
 import { buildOublietteSettlementProfile } from "../sessionSettlement";
 import { buildBarRouteStateFromReturn, isBarRouteState, tableReturnTagline } from "../barRouteState";
 
 const defaultBuyIn = villainsGameDefaults.oublietteNo9.defaultBuyIn;
 
 describe("barRouteState", () => {
+  beforeEach(() => {
+    useBarBandOverrideStore.getState().setEveningBandIndexOverride(0);
+  });
+
+  afterEach(() => {
+    useBarBandOverrideStore.getState().setEveningBandIndexOverride(null);
+  });
   it("isBarRouteState validates shape", () => {
     expect(isBarRouteState(null)).toBe(false);
     expect(isBarRouteState({})).toBe(false);

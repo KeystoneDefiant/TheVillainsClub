@@ -287,7 +287,7 @@ export function resolveRoll(table: CraplessTableState, bets: TableBets, roll: Di
     if (bets.freeOdds > 0) {
       const pr = freeOddsProfit(pt, bets.freeOdds);
       walletDelta += bets.freeOdds + pr;
-      lines.push({ kind: "win", text: `Free odds rake in ${(bets.freeOdds + pr).toLocaleString()} credits.` });
+      lines.push({ kind: "win", text: `Legitimate Business Investment rakes in ${(bets.freeOdds + pr).toLocaleString()} credits.` });
     }
 
     // Process and refund/payout place bets

@@ -94,6 +94,7 @@ export function DieCube({
           <DieFace value={2} />
         </div>
       </div>
+      <div className={`yi-die-shadow ${rolling && !reduceMotion ? "yi-die-shadow--rolling" : ""}`} />
     </div>
   );
 }

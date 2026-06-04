@@ -1,6 +1,10 @@
 import { Modal, Table, Stack, Tabs, Text, Divider, Alert } from "@mantine/core";
 import { clubTokens } from "@/theme/clubTokens";
 import { ClubButton } from "@/components/ui/ClubButton";
+import {
+  placeBetScaledReturn,
+  type PointNumber
+} from "@/config/minigames/sevenYearItchRules";
 
 interface SevenYearItchOddsModalProps {
   opened: boolean;
@@ -16,6 +20,16 @@ export function SevenYearItchOddsModal({ opened, onClose, placePayoutScale }: Se
   };
 
   const isSkimmed = placePayoutScale < 1;
+
+  // Dynamically computes place bet payout ratio text to ensure alignment with engine payouts
+  function getPlacePayoutText(pk: PointNumber, scale: number): string {
+    const stake = pk === 6 || pk === 8 ? 6 : 5;
+    const ret = placeBetScaledReturn(pk, stake, scale);
+    const profit = ret - stake;
+    const ratio = profit / stake;
+    const ratioStr = Number(ratio.toFixed(2)).toString();
+    return `${ratioStr} : 1 (${profit} to ${stake})`;
+  }
 
   return (
     <Modal
@@ -37,14 +51,14 @@ export function SevenYearItchOddsModal({ opened, onClose, placePayoutScale }: Se
       <Stack gap="md">
         {isSkimmed && (
           <Alert color="red" variant="light" title="Post-Divest Skim Active">
-            Winning place payouts are skimmed at {Math.round(placePayoutScale * 100)}% on profit. Back-line bets and free odds are unaffected.
+            Winning place payouts are skimmed at {Math.round(placePayoutScale * 100)}% on profit. Seed investments and legitimate business investments are unaffected.
           </Alert>
         )}
 
         <Tabs defaultValue="place" color="yellow" variant="outline">
           <Tabs.List style={{ borderBottom: `1px solid ${clubTokens.surface.brassStroke}` }}>
             <Tabs.Tab value="place" style={{ color: clubTokens.text.primary }}>Place / Line</Tabs.Tab>
-            <Tabs.Tab value="free" style={{ color: clubTokens.text.primary }}>Free Odds</Tabs.Tab>
+            <Tabs.Tab value="free" style={{ color: clubTokens.text.primary }}>Business Investment</Tabs.Tab>
             <Tabs.Tab value="prop" style={{ color: clubTokens.text.primary }}>Props & Hardways</Tabs.Tab>
           </Tabs.List>
 
@@ -69,47 +83,47 @@ export function SevenYearItchOddsModal({ opened, onClose, placePayoutScale }: Se
                 </Table.Tr>
                 <Table.Tr>
                   <Table.Td style={tableStyles.td}>Place 2 & 12</Table.Td>
-                  <Table.Td style={tableStyles.td}>5 : 1 (25 to 5)</Table.Td>
+                  <Table.Td style={tableStyles.td}>{getPlacePayoutText(2, 1.0)}</Table.Td>
                   <Table.Td style={tableStyles.td}>
-                    {isSkimmed ? "3 : 1 (15 to 5)" : "5 : 1 (25 to 5)"}
+                    {getPlacePayoutText(2, placePayoutScale)}
                   </Table.Td>
                 </Table.Tr>
                 <Table.Tr>
                   <Table.Td style={tableStyles.td}>Place 3 & 11</Table.Td>
-                  <Table.Td style={tableStyles.td}>2.6 : 1 (13 to 5)</Table.Td>
+                  <Table.Td style={tableStyles.td}>{getPlacePayoutText(3, 1.0)}</Table.Td>
                   <Table.Td style={tableStyles.td}>
-                    {isSkimmed ? "1.8 : 1 (9 to 5)" : "2.6 : 1 (13 to 5)"}
+                    {getPlacePayoutText(3, placePayoutScale)}
                   </Table.Td>
                 </Table.Tr>
                 <Table.Tr>
                   <Table.Td style={tableStyles.td}>Place 4 & 10</Table.Td>
-                  <Table.Td style={tableStyles.td}>1.8 : 1 (9 to 5)</Table.Td>
+                  <Table.Td style={tableStyles.td}>{getPlacePayoutText(4, 1.0)}</Table.Td>
                   <Table.Td style={tableStyles.td}>
-                    {isSkimmed ? "1.4 : 1 (7 to 5)" : "1.8 : 1 (9 to 5)"}
+                    {getPlacePayoutText(4, placePayoutScale)}
                   </Table.Td>
                 </Table.Tr>
                 <Table.Tr>
                   <Table.Td style={tableStyles.td}>Place 5 & 9</Table.Td>
-                  <Table.Td style={tableStyles.td}>1.4 : 1 (7 to 5)</Table.Td>
+                  <Table.Td style={tableStyles.td}>{getPlacePayoutText(5, 1.0)}</Table.Td>
                   <Table.Td style={tableStyles.td}>
-                    {isSkimmed ? "1.2 : 1 (6 to 5)" : "1.4 : 1 (7 to 5)"}
+                    {getPlacePayoutText(5, placePayoutScale)}
                   </Table.Td>
                 </Table.Tr>
                 <Table.Tr>
                   <Table.Td style={tableStyles.td}>Place 6 & 8</Table.Td>
-                  <Table.Td style={tableStyles.td}>1.16 : 1 (7 to 6)</Table.Td>
+                  <Table.Td style={tableStyles.td}>{getPlacePayoutText(6, 1.0)}</Table.Td>
                   <Table.Td style={tableStyles.td}>
-                    {isSkimmed ? "1.08 : 1 (13 to 12)" : "1.16 : 1 (7 to 6)"}
+                    {getPlacePayoutText(6, placePayoutScale)}
                   </Table.Td>
                 </Table.Tr>
               </Table.Tbody>
             </Table>
           </Tabs.Panel>
 
-          {/* Free Odds Tab */}
+          {/* Business Investment Tab */}
           <Tabs.Panel value="free" pt="xs">
             <Text size="xs" c="dimmed" mb="sm">
-              Free Odds are bet behind established Pass Line stakes. They carry 0% house edge.
+              Legitimate Business Investments (Odds) are bet behind established Seed Investment stakes. They carry 0% house edge.
             </Text>
             <Table style={{ width: "100%" }}>
               <Table.Thead style={tableStyles.thead}>

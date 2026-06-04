@@ -171,6 +171,8 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
   const [lastD1, setLastD1] = useState(1);
   const [lastD2, setLastD2] = useState(1);
   const [diceRunActive, setDiceRunActive] = useState(false);
+  const [diceState, setDiceState] = useState<"idle" | "rolling" | "sliding">("idle");
+  const diceContainerRef = useRef<HTMLDivElement | null>(null);
   const [die1RunStyle, setDie1RunStyle] = useState<CSSProperties>({});
   const [die2RunStyle, setDie2RunStyle] = useState<CSSProperties>({});
   const [die1CubeStyle, setDie1CubeStyle] = useState<CSSProperties>({});
@@ -464,13 +466,13 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
       setRollCount((n) => n + 1);
 
       // Detect if a place bet on this roll total paid out
-      if (r.total !== 7 && isPointNumber(r.total)) {
+      if (currentTable.phase === "point" && r.total !== 7 && isPointNumber(r.total)) {
         const pk = r.total as PointNumber;
         const st = currentBets.place[pk] ?? 0;
         if (st > 0) {
           let paidAmount = 0;
           if (currentTable.phase === "point" && pk === currentTable.point) {
-            paidAmount = placeBetScaledReturn(pk, st, currentTable.placePayoutScale);
+            paidAmount = placeBetScaledReturn(pk, st, currentTable.placePayoutScale) - st;
           } else {
             const ret = placeBetTotalReturn(pk, st);
             const profit = ret - st;
@@ -639,17 +641,60 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
       ["--yi-settle-transform" as string]: settle2,
     });
 
+    setDiceState("rolling");
     setDiceRunActive(true);
     const t1 = window.setTimeout(() => {
       setLastD1(r.d1);
       setLastD2(r.d2);
     }, 50);
     animTimersRef.current.push(t1);
-    const t2 = window.setTimeout(() => {
+
+    const tSlide = window.setTimeout(() => {
+      setDiceState("sliding");
+
+      const container = diceContainerRef.current;
+      let targetX = window.innerWidth / 2;
+      let targetY = 60;
+      if (container) {
+        const rect = container.getBoundingClientRect();
+        targetX = rect.left + rect.width / 2;
+        targetY = window.innerHeight - (rect.top + rect.height / 2);
+      }
+
+      setDie1RunStyle({
+        position: "absolute",
+        left: `${targetX - 22}px`,
+        bottom: `${targetY - 22}px`,
+        transform: "translate(0, 0) scale(0.8)",
+        transition: "left 0.5s cubic-bezier(0.25, 1, 0.5, 1), bottom 0.5s cubic-bezier(0.25, 1, 0.5, 1), transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)",
+      });
+
+      setDie2RunStyle({
+        position: "absolute",
+        left: `${targetX + 22}px`,
+        bottom: `${targetY - 22}px`,
+        transform: "translate(0, 0) scale(0.8)",
+        transition: "left 0.5s cubic-bezier(0.25, 1, 0.5, 1), bottom 0.5s cubic-bezier(0.25, 1, 0.5, 1), transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)",
+      });
+
+      setDie1CubeStyle({
+        transform: settle1,
+        transition: "transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)",
+      });
+
+      setDie2CubeStyle({
+        transform: settle2,
+        transition: "transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)",
+      });
+    }, 880);
+    animTimersRef.current.push(tSlide);
+
+    const tEnd = window.setTimeout(() => {
       applyRollResult(r);
+      setDiceState("idle");
       setDiceRunActive(false);
-    }, 1080);
-    animTimersRef.current.push(t2);
+    }, 1380);
+    animTimersRef.current.push(tEnd);
   }, [applyRollResult, canRoll, diceRunActive, reduceMotion]);
 
 
@@ -720,11 +765,33 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
     <Box className="seven-year-itch-root" data-testid="seven-year-itch-root">
       {diceRunActive ? (
         <div className="yi-diceOverlay" aria-hidden>
-          <div className="yi-diceOverlay-inner yi-diceOverlay-inner--roll" style={die1RunStyle}>
-            <DieCube value={lastD1} rolling reduceMotion={false} animKey={rollCount} style={die1CubeStyle} />
+          <div
+            className={`yi-diceOverlay-inner ${
+              diceState === "rolling" ? "yi-diceOverlay-inner--roll" : "yi-diceOverlay-inner--slide"
+            }`}
+            style={die1RunStyle}
+          >
+            <DieCube
+              value={lastD1}
+              rolling={diceState === "rolling"}
+              reduceMotion={false}
+              animKey={rollCount}
+              style={die1CubeStyle}
+            />
           </div>
-          <div className="yi-diceOverlay-inner yi-diceOverlay-inner--roll" style={die2RunStyle}>
-            <DieCube value={lastD2} rolling reduceMotion={false} animKey={rollCount + 17} style={die2CubeStyle} />
+          <div
+            className={`yi-diceOverlay-inner ${
+              diceState === "rolling" ? "yi-diceOverlay-inner--roll" : "yi-diceOverlay-inner--slide"
+            }`}
+            style={die2RunStyle}
+          >
+            <DieCube
+              value={lastD2}
+              rolling={diceState === "rolling"}
+              reduceMotion={false}
+              animKey={rollCount + 17}
+              style={die2CubeStyle}
+            />
           </div>
         </div>
       ) : null}
@@ -874,6 +941,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
               hideInlineDice={diceRunActive}
               maxBet={bets.passLine * 3}
               recentPlacePayout={recentPlacePayout}
+              diceContainerRef={diceContainerRef}
             />
 
             <Paper

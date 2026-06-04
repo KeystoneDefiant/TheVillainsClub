@@ -1,7 +1,16 @@
-import { describe, expect, it, beforeEach } from "vitest";
+import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import { villainsGameDefaults } from "@/config/villainsGameDefaults";
+import { useBarBandOverrideStore } from "@/audio/barBandOverrideStore";
 import { buildOublietteSettlementProfile } from "../sessionSettlement";
 import { useClubWallet } from "../clubWalletStore";
+
+beforeEach(() => {
+  useBarBandOverrideStore.getState().setEveningBandIndexOverride(0);
+});
+
+afterEach(() => {
+  useBarBandOverrideStore.getState().setEveningBandIndexOverride(null);
+});
 
 describe("clubWalletStore forfeitActiveSession", () => {
   beforeEach(() => {

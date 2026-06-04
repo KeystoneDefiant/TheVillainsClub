@@ -45,6 +45,7 @@ type HandEndSummary = {
   creditsThisRoll: number;
   netWealthVsHandStart: number;
   roll: DiceRoll;
+  evidenceLockerRefund?: number;
 };
 
 function lineColor(kind: RollLine["kind"]): string {
@@ -94,11 +95,11 @@ function pickWeightedWithoutReplacement<T extends { pullWeight: number }>(pool: 
 
 
 
-function getTargetSettleTransform(value: number, isDie2: boolean): string {
+function getTargetSettleRotations(value: number, isDie2: boolean) {
   const baseRot = rotationForValue(value);
-  const rotMultiplierX = 2 + Math.floor(Math.random() * 3);
-  const rotMultiplierY = 2 + Math.floor(Math.random() * 3);
-  const rotMultiplierZ = 2 + Math.floor(Math.random() * 3);
+  const rotMultiplierX = 3 + Math.floor(Math.random() * 3); // 3, 4, or 5 full rotations
+  const rotMultiplierY = 3 + Math.floor(Math.random() * 3); // 3, 4, or 5 full rotations
+  const rotMultiplierZ = 2 + Math.floor(Math.random() * 3); // 2, 3, or 4 full rotations
 
   const addX = rotMultiplierX * 360 * (isDie2 ? -1 : 1);
   const addY = rotMultiplierY * 360 * (isDie2 ? -1 : 1);
@@ -117,7 +118,8 @@ function getTargetSettleTransform(value: number, isDie2: boolean): string {
   const finalX = rx + addX;
   const finalY = ry + addY;
   const finalZ = addZ;
-  return `rotateX(${finalX}deg) rotateY(${finalY}deg) rotateZ(${finalZ}deg)`;
+
+  return { finalX, finalY, finalZ };
 }
 
 interface SevenYearItchMockState {
@@ -188,6 +190,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
   const tableRef = useRef(table);
   const betsRef = useRef(bets);
   const balanceRef = useRef(balance);
+  const heatRollsRef = useRef(heatRolls);
   const handStartWealthRef = useRef(props.sessionCredits);
   const animTimersRef = useRef<number[]>([]);
 
@@ -200,6 +203,10 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
   useEffect(() => {
     balanceRef.current = balance;
   }, [balance]);
+
+  useEffect(() => {
+    heatRollsRef.current = heatRolls;
+  }, [heatRolls]);
 
   useEffect(() => {
     const timers = animTimersRef;
@@ -254,10 +261,11 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
     }
   }, [cannotAffordComeOut, diceRunActive, wealth, rollCount, buyIn, heat, props]);
 
-  const pickHeatChoices = useCallback(() => {
-    const excludeId = activeBonus?.id;
+  const pickHeatChoices = useCallback((currentActiveBonus: SevenYearItchHeatBonus | null) => {
+    const excludeId = currentActiveBonus?.id;
     const pool = excludeId ? sevenYearItchHeatBonuses.filter((b) => b.id !== excludeId) : [...sevenYearItchHeatBonuses];
 
+    console.log("pickHeatChoices: wealth =", wealth, "buyIn =", buyIn);
     let adjustedPool = pool;
     if (wealth > buyIn) {
       adjustedPool = pool.map((b) =>
@@ -268,10 +276,11 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
     }
 
     const picks = pickWeightedWithoutReplacement(adjustedPool, 3, Math.random);
+    console.log("FAVOR PICKS:", picks.map((p) => p.id));
     setFavorPicks(picks);
-    setFavorOfferKeep(!!activeBonus);
+    setFavorOfferKeep(!!currentActiveBonus);
     setMainView("favors");
-  }, [activeBonus, wealth, buyIn]);
+  }, [wealth, buyIn]);
 
   const addPassChip = useCallback(() => {
     if (passLocked) return;
@@ -306,7 +315,10 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
       if (table.phase !== "point") return;
       const old = bets.place[pk] ?? 0;
 
-      const maxPlaceLimit = bets.passLine * 3;
+      const limitMult = activeBonus?.effect.type === "aggressive_expansion"
+        ? (tableRules.aggressiveExpansionCapMultiplier ?? 2)
+        : 1;
+      const maxPlaceLimit = bets.passLine * 3 * limitMult;
       const walletCap = old + balance;
       const cap = Math.min(walletCap, maxPlaceLimit);
 
@@ -320,7 +332,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
         return { ...prev, place };
       });
     },
-    [balance, bets.place, bets.passLine, chip, table.phase],
+    [balance, bets.place, bets.passLine, chip, table.phase, activeBonus, tableRules.aggressiveExpansionCapMultiplier],
   );
 
   const removePlaceChip = useCallback(
@@ -435,24 +447,43 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
       const bonusLines: RollLine[] = [];
       let nextTable = res.nextTable;
       let nextBets = res.nextBets;
-      if (bonus && r.total !== 7 && walletDelta > 0) {
-        if (bonus.effect.type === "next_non_seven_multiplier" || bonus.effect.type === "risk_reward_multiplier") {
-          const extra = Math.floor(walletDelta * (bonus.effect.value - 1));
-          walletDelta += extra;
-          bonusLines.push({ kind: "win", text: `${bonus.title} adds ${extra.toLocaleString()} credits.` });
+      let nextActiveBonus = activeBonus;
+
+      if (bonus) {
+        if (bonus.effect.type === "kingpins_cut") {
+          if (walletDelta > 0) {
+            const skim = Math.floor(walletDelta * tableRules.kingpinReturnsReduction);
+            walletDelta -= skim;
+            bonusLines.push({
+              kind: "loss",
+              text: `${bonus.title} skim: returns reduced by ${Math.round(tableRules.kingpinReturnsReduction * 100)}% (-${skim.toLocaleString()} credits).`
+            });
+          }
+          if (endsHand) {
+            nextActiveBonus = null;
+            setActiveBonus(null);
+          }
+        } else if (bonus.effect.type === "evidence_locker_key" && r.total === 7 && currentTable.phase === "point") {
+          const refund = Math.floor(feltBeforeRoll * tableRules.evidenceLockerRefundRate);
+          walletDelta += refund;
+          bonusLines.push({
+            kind: "win",
+            text: `${bonus.title}: recovered ${Math.round(tableRules.evidenceLockerRefundRate * 100)}% of lost layout (+${refund.toLocaleString()} credits).`
+          });
+          nextActiveBonus = null;
           setActiveBonus(null);
-        } else if (bonus.effect.type === "place_hit_multiplier" && res.lines.some((line) => line.text.includes("Place on"))) {
-          const extra = Math.floor(walletDelta * (bonus.effect.value - 1));
-          walletDelta += extra;
-          bonusLines.push({ kind: "win", text: `${bonus.title} doubles the take by ${extra.toLocaleString()} credits.` });
+        } else if (bonus.effect.type === "aggressive_expansion") {
+          nextActiveBonus = null;
           setActiveBonus(null);
         }
       }
+
       if (shieldAbsorbsSeven) {
         nextTable = { ...currentTable, rollsSincePoint: currentTable.rollsSincePoint + 1 };
         nextBets = currentBets;
         walletDelta = 0;
         bonusLines.push({ kind: "win", text: `${bonus.title} burns the warrant. The felt survives.` });
+        nextActiveBonus = null;
         setActiveBonus(null);
       }
 
@@ -479,10 +510,8 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
             paidAmount = currentTable.placePayoutScale >= 1 ? profit : Math.floor(profit * currentTable.placePayoutScale);
           }
 
-          // Apply potential active bonus multiplier
-          if (bonus && bonus.effect.type === "place_hit_multiplier" && res.lines.some((line) => line.text.includes("Place on"))) {
-            paidAmount = Math.floor(paidAmount * bonus.effect.value);
-          } else if (bonus && (bonus.effect.type === "next_non_seven_multiplier" || bonus.effect.type === "risk_reward_multiplier")) {
+          // Apply potential active bonus multiplier/skim
+          if (bonus && bonus.effect.type === "kingpins_cut") {
             paidAmount = Math.floor(paidAmount * bonus.effect.value);
           }
 
@@ -524,11 +553,17 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
 
       const wealthAfter = balBefore + walletDelta + totalOnLayout(nextBets);
       if (endsHand) {
+        const wasEvidenceActive = bonus?.effect.type === "evidence_locker_key";
+        const refundAmt = (wasEvidenceActive && r.total === 7 && currentTable.phase === "point")
+          ? Math.floor(feltBeforeRoll * tableRules.evidenceLockerRefundRate)
+          : 0;
+
         setLoreHandRecap({
           feltBeforeRoll,
           creditsThisRoll: walletDelta,
           netWealthVsHandStart: wealthAfter - handStartWealthRef.current,
           roll: r,
+          evidenceLockerRefund: wasEvidenceActive ? refundAmt : undefined,
         });
         handStartWealthRef.current = wealthAfter;
       } else {
@@ -541,34 +576,32 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
         setLoreOpen(true);
       }
 
-      setHeatRolls((prev) => {
-        const activeBetsCount =
-          (betsRef.current.passLine > 0 ? 1 : 0) +
-          (betsRef.current.freeOdds > 0 ? 1 : 0) +
-          Object.keys(betsRef.current.place).length +
-          (betsRef.current.field > 0 ? 1 : 0) +
-          Object.keys(betsRef.current.hardways).length +
-          Object.keys(betsRef.current.hops).length +
-          (betsRef.current.hornUnit > 0 ? 1 : 0);
+      const activeBetsCount =
+        (betsRef.current.passLine > 0 ? 1 : 0) +
+        (betsRef.current.freeOdds > 0 ? 1 : 0) +
+        Object.keys(betsRef.current.place).length +
+        (betsRef.current.field > 0 ? 1 : 0) +
+        Object.keys(betsRef.current.hardways).length +
+        Object.keys(betsRef.current.hops).length +
+        (betsRef.current.hornUnit > 0 ? 1 : 0);
 
-        const next = prev + Math.max(1, activeBetsCount);
+      const prevHeat = heatRollsRef.current;
+      const nextHeat = prevHeat + Math.max(1, activeBetsCount);
 
-        if (next >= heatRollsPerFavorOffer) {
-          pickHeatChoices();
-          return 0;
+      if (nextHeat >= heatRollsPerFavorOffer) {
+        pickHeatChoices(nextActiveBonus);
+        setHeatRolls(0);
+      } else if (endsHand) {
+        if (r.total !== 7) {
+          setHeatRolls(activeBetsCount); // Bonus head start for next hand
+        } else {
+          setHeatRolls(0); // 7-out resets completely
         }
-
-        if (endsHand) {
-          if (r.total !== 7) {
-            return activeBetsCount; // Bonus head start for next hand
-          }
-          return 0; // 7-out resets completely
-        }
-
-        return next;
-      });
+      } else {
+        setHeatRolls(nextHeat);
+      }
     },
-    [activeBonus, heatRollsPerFavorOffer, pickHeatChoices],
+    [activeBonus, heatRollsPerFavorOffer, pickHeatChoices, tableRules.evidenceLockerRefundRate, tableRules.kingpinReturnsReduction],
   );
 
   const beginNextHand = useCallback(() => {
@@ -582,6 +615,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
   }, [loreHandRecap, beginNextHand]);
 
   const handleRoll = useCallback(() => {
+    console.log(`DEBUG handleRoll: canRoll=${canRoll}, diceRunActive=${diceRunActive}, reduceMotion=${reduceMotion}, rollCount=${rollCount}, phase=${table.phase}`);
     if (!canRoll || diceRunActive) return;
     const r = rollDice();
     if (reduceMotion) {
@@ -590,54 +624,65 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
     }
     const startX1 = 5 + Math.random() * 20;
     const deltaX1 = 25 + Math.random() * 15;
-    const deltaY1 = -35 - Math.random() * 15;
+    const deltaY1 = 35 + Math.random() * 15;
 
     const startX2 = 55 + Math.random() * 20;
     const deltaX2 = -25 - Math.random() * 15;
-    const deltaY2 = -35 - Math.random() * 15;
+    const deltaY2 = 35 + Math.random() * 15;
 
     setDie1RunStyle({
-      left: `${startX1.toFixed(2)}vw`,
-      bottom: "7vh",
+      left: `${(startX1 + deltaX1).toFixed(2)}vw`,
+      bottom: `${(7 + deltaY1).toFixed(2)}vh`,
       ["--yi-dx" as string]: `${deltaX1.toFixed(2)}vw`,
       ["--yi-dy" as string]: `${deltaY1.toFixed(2)}vh`,
-      ["--yi-spin-35" as string]: `${(180 + Math.random() * 100).toFixed(1)}deg`,
-      ["--yi-spin-65" as string]: `${(400 + Math.random() * 150).toFixed(1)}deg`,
-      ["--yi-spin-85" as string]: `${(600 + Math.random() * 100).toFixed(1)}deg`,
-      ["--yi-spin-100" as string]: `${(720 + Math.random() * 90).toFixed(1)}deg`,
     });
 
     setDie2RunStyle({
-      left: `${startX2.toFixed(2)}vw`,
-      bottom: "7vh",
+      left: `${(startX2 + deltaX2).toFixed(2)}vw`,
+      bottom: `${(7 + deltaY2).toFixed(2)}vh`,
       ["--yi-dx" as string]: `${deltaX2.toFixed(2)}vw`,
       ["--yi-dy" as string]: `${deltaY2.toFixed(2)}vh`,
-      ["--yi-spin-35" as string]: `${(-180 - Math.random() * 100).toFixed(1)}deg`,
-      ["--yi-spin-65" as string]: `${(-400 - Math.random() * 150).toFixed(1)}deg`,
-      ["--yi-spin-85" as string]: `${(-600 - Math.random() * 100).toFixed(1)}deg`,
-      ["--yi-spin-100" as string]: `${(-720 - Math.random() * 90).toFixed(1)}deg`,
     });
 
-    const settle1 = getTargetSettleTransform(r.d1, false);
-    const settle2 = getTargetSettleTransform(r.d2, true);
+    const rot1 = getTargetSettleRotations(r.d1, false);
+    const rot2 = getTargetSettleRotations(r.d2, true);
+
+    const settle1 = `rotateX(${rot1.finalX}deg) rotateY(${rot1.finalY}deg) rotateZ(${rot1.finalZ}deg)`;
+    const settle2 = `rotateX(${rot2.finalX}deg) rotateY(${rot2.finalY}deg) rotateZ(${rot2.finalZ}deg)`;
+
+    const rot1_x30 = rot1.finalX * 0.35 + (Math.random() * 80 - 40);
+    const rot1_y30 = rot1.finalY * 0.35 + (Math.random() * 80 - 40);
+    const rot1_z30 = rot1.finalZ * 0.35 + (Math.random() * 80 - 40);
+
+    const rot1_x65 = rot1.finalX * 0.70 + (Math.random() * 40 - 20);
+    const rot1_y65 = rot1.finalY * 0.70 + (Math.random() * 40 - 20);
+    const rot1_z65 = rot1.finalZ * 0.70 + (Math.random() * 40 - 20);
+
+    const rot2_x30 = rot2.finalX * 0.35 + (Math.random() * 80 - 40);
+    const rot2_y30 = rot2.finalY * 0.35 + (Math.random() * 80 - 40);
+    const rot2_z30 = rot2.finalZ * 0.35 + (Math.random() * 80 - 40);
+
+    const rot2_x65 = rot2.finalX * 0.70 + (Math.random() * 40 - 20);
+    const rot2_y65 = rot2.finalY * 0.70 + (Math.random() * 40 - 20);
+    const rot2_z65 = rot2.finalZ * 0.70 + (Math.random() * 40 - 20);
 
     setDie1CubeStyle({
-      ["--yi-rot-x1" as string]: `${(100 + Math.random() * 100).toFixed(1)}deg`,
-      ["--yi-rot-y1" as string]: `${(80 + Math.random() * 80).toFixed(1)}deg`,
-      ["--yi-rot-z1" as string]: `${(10 + Math.random() * 30).toFixed(1)}deg`,
-      ["--yi-rot-x2" as string]: `${(350 + Math.random() * 100).toFixed(1)}deg`,
-      ["--yi-rot-y2" as string]: `${(250 + Math.random() * 100).toFixed(1)}deg`,
-      ["--yi-rot-z2" as string]: `${(-10 - Math.random() * 20).toFixed(1)}deg`,
+      ["--yi-rot-x1" as string]: `${rot1_x30.toFixed(1)}deg`,
+      ["--yi-rot-y1" as string]: `${rot1_y30.toFixed(1)}deg`,
+      ["--yi-rot-z1" as string]: `${rot1_z30.toFixed(1)}deg`,
+      ["--yi-rot-x2" as string]: `${rot1_x65.toFixed(1)}deg`,
+      ["--yi-rot-y2" as string]: `${rot1_y65.toFixed(1)}deg`,
+      ["--yi-rot-z2" as string]: `${rot1_z65.toFixed(1)}deg`,
       ["--yi-settle-transform" as string]: settle1,
     });
 
     setDie2CubeStyle({
-      ["--yi-rot-x1" as string]: `${(-100 - Math.random() * 100).toFixed(1)}deg`,
-      ["--yi-rot-y1" as string]: `${(-80 - Math.random() * 80).toFixed(1)}deg`,
-      ["--yi-rot-z1" as string]: `${(-10 - Math.random() * 30).toFixed(1)}deg`,
-      ["--yi-rot-x2" as string]: `${(-350 - Math.random() * 100).toFixed(1)}deg`,
-      ["--yi-rot-y2" as string]: `${(-250 - Math.random() * 100).toFixed(1)}deg`,
-      ["--yi-rot-z2" as string]: `${(10 + Math.random() * 20).toFixed(1)}deg`,
+      ["--yi-rot-x1" as string]: `${rot2_x30.toFixed(1)}deg`,
+      ["--yi-rot-y1" as string]: `${rot2_y30.toFixed(1)}deg`,
+      ["--yi-rot-z1" as string]: `${rot2_z30.toFixed(1)}deg`,
+      ["--yi-rot-x2" as string]: `${rot2_x65.toFixed(1)}deg`,
+      ["--yi-rot-y2" as string]: `${rot2_y65.toFixed(1)}deg`,
+      ["--yi-rot-z2" as string]: `${rot2_z65.toFixed(1)}deg`,
       ["--yi-settle-transform" as string]: settle2,
     });
 
@@ -695,7 +740,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
       setDiceRunActive(false);
     }, 1380);
     animTimersRef.current.push(tEnd);
-  }, [applyRollResult, canRoll, diceRunActive, reduceMotion]);
+  }, [applyRollResult, canRoll, diceRunActive, reduceMotion, rollCount, table.phase]);
 
 
   const favorSelectionBody = (
@@ -729,11 +774,13 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
                 ? "Consumes on the next seven while a point is active — the bust is ignored once."
                 : bonus.effect.type === "free_divest"
                   ? "The next Divest costs no skim: place payouts stay full odds for the hand."
-                  : bonus.effect.type === "place_hit_multiplier"
-                    ? "Multiplies table winnings on the next roll that pays a place hit."
-                    : bonus.effect.type === "risk_reward_multiplier"
-                      ? "Multiplies the next non-seven payout; risky tables may still seize on a seven."
-                      : "Multiplies the next non-seven payout that hits the layout."}
+                  : bonus.effect.type === "kingpins_cut"
+                    ? `Maximizes all place bets and Legitimate Business Investment for free on the felt. All returns on this roll are reduced by ${Math.round((1 - bonus.effect.value) * 100)}%.`
+                    : bonus.effect.type === "aggressive_expansion"
+                      ? `Doubles the place bet limits from 3x to 6x of your Seed Investment.`
+                      : bonus.effect.type === "evidence_locker_key"
+                        ? `Refunds ${Math.round(bonus.effect.value * 100)}% of your bets on the felt if you roll a 7.`
+                        : "Special bonus favor."}
             </Text>
             <ClubButton
               variant="light"
@@ -741,6 +788,19 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
               size="xs"
               onClick={() => {
                 setActiveBonus(bonus);
+                if (bonus.id === "kingpins_cut") {
+                  const maxPlace = bets.passLine * 3;
+                  const nextPlace = { ...bets.place };
+                  for (const pk of POINT_NUMBERS) {
+                    nextPlace[pk] = maxPlace;
+                  }
+                  const maxOdds = bets.passLine * tableRules.maxFreeOddsMultipleOfPass;
+                  setBets((prev) => ({
+                    ...prev,
+                    place: nextPlace,
+                    freeOdds: maxOdds,
+                  }));
+                }
                 setFavorPicks([]);
                 setMainView("table");
               }}
@@ -764,7 +824,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
   return (
     <Box className="seven-year-itch-root" data-testid="seven-year-itch-root">
       {diceRunActive ? (
-        <div className="yi-diceOverlay" aria-hidden>
+        <div className="yi-diceOverlay" key={`overlay-${rollCount}`} aria-hidden>
           <div
             className={`yi-diceOverlay-inner ${
               diceState === "rolling" ? "yi-diceOverlay-inner--roll" : "yi-diceOverlay-inner--slide"
@@ -777,6 +837,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
               reduceMotion={false}
               animKey={rollCount}
               style={die1CubeStyle}
+              dieIndex={1}
             />
           </div>
           <div
@@ -791,6 +852,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
               reduceMotion={false}
               animKey={rollCount + 17}
               style={die2CubeStyle}
+              dieIndex={2}
             />
           </div>
         </div>
@@ -856,9 +918,9 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
               </Paper>
               <Paper radius="md" p="xs" withBorder style={{ borderColor: "var(--7yi-amber-dim)", background: "var(--7yi-paper)" }}>
                 <Text size="xs" c="dimmed">
-                  Net vs buy-in
+                  Net this hand
                 </Text>
-                <Text fw={700}>{(wealth - buyIn).toLocaleString()}</Text>
+                <Text fw={700}>{(wealth - handStartWealthRef.current).toLocaleString()}</Text>
               </Paper>
               <Paper radius="md" p="xs" withBorder style={{ borderColor: "var(--7yi-amber-dim)", background: "var(--7yi-paper)" }}>
                 <Group justify="space-between" wrap="nowrap" className="yi-felt-heat-meter">
@@ -982,7 +1044,7 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
         ) : null}
       </Stack>
 
-      <Modal opened={loreOpen} onClose={closeLoreModal} title={loreState.title} centered data-testid="yi-roll-modal">
+      <Modal opened={loreOpen} onClose={closeLoreModal} title={loreState.title} centered data-testid="yi-roll-modal" withinPortal={false}>
         <Stack gap="sm">
           <Text size="sm">{loreState.body}</Text>
           {loreHandRecap ? (
@@ -1009,6 +1071,16 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
                   </Text>
                   <Text fw={700}>{loreHandRecap.creditsThisRoll.toLocaleString()}</Text>
                 </Paper>
+                {loreHandRecap.evidenceLockerRefund !== undefined ? (
+                  <Paper p="sm" withBorder style={{ gridColumn: "1 / -1", borderColor: "var(--7yi-amber-dim)" }}>
+                    <Text size="xs" c="dimmed">
+                      Evidence Locker Key recovery
+                    </Text>
+                    <Text fw={700} c="var(--7yi-amber)">
+                      +{loreHandRecap.evidenceLockerRefund.toLocaleString()} credits returned from felt
+                    </Text>
+                  </Paper>
+                ) : null}
                 <Paper p="sm" withBorder style={{ gridColumn: "1 / -1" }}>
                   <Text size="xs" c="dimmed">
                     Net this hand (wallet + table vs hand start)
@@ -1052,9 +1124,9 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
             </Paper>
             <Paper p="xs" withBorder>
               <Text size="xs" c="dimmed">
-                Net
+                Net this hand
               </Text>
-              <Text fw={700}>{(wealth - buyIn).toLocaleString()}</Text>
+              <Text fw={700}>{(wealth - handStartWealthRef.current).toLocaleString()}</Text>
             </Paper>
             <Paper p="xs" withBorder>
               <Text size="xs" c="dimmed">

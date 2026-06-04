@@ -335,7 +335,7 @@ export function resolveRoll(table: CraplessTableState, bets: TableBets, roll: Di
     };
   }
 
-  if (isPointNumber(roll.total)) {
+  if (table.phase === "point" && isPointNumber(roll.total)) {
     const pk = roll.total as PointNumber;
     const st = bets.place[pk] ?? 0;
     if (st > 0) {

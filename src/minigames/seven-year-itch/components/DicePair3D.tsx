@@ -56,42 +56,54 @@ export function DieCube({
   reduceMotion,
   animKey,
   style,
+  dieIndex = 1,
 }: {
   value: number;
   rolling: boolean;
   reduceMotion: boolean;
   animKey: number;
   style?: CSSProperties;
+  dieIndex?: number;
 }) {
   const v = Math.min(6, Math.max(1, Math.floor(value))) as FaceProps["value"];
   const settle = rotationForValue(v);
 
+  const cleanedStyle = { ...style };
+  if (rolling && !reduceMotion) {
+    delete cleanedStyle.transform;
+    delete cleanedStyle.transition;
+  }
+
   return (
     <div className="yi-die-scene" key={animKey}>
       <div
-        className={`yi-die-cube ${rolling && !reduceMotion ? "yi-die-cube--rolling" : ""}`}
-        style={{
-          transform: rolling && !reduceMotion ? undefined : settle,
-          ...style,
-        }}
+        className={`yi-die-bounce-wrapper ${rolling && !reduceMotion ? "yi-die-bounce-wrapper--rolling" : ""}`}
       >
-        <div className="yi-die-faceWrap yi-die-faceWrap--front">
-          <DieFace value={1} />
-        </div>
-        <div className="yi-die-faceWrap yi-die-faceWrap--back">
-          <DieFace value={6} />
-        </div>
-        <div className="yi-die-faceWrap yi-die-faceWrap--right">
-          <DieFace value={3} />
-        </div>
-        <div className="yi-die-faceWrap yi-die-faceWrap--left">
-          <DieFace value={4} />
-        </div>
-        <div className="yi-die-faceWrap yi-die-faceWrap--top">
-          <DieFace value={5} />
-        </div>
-        <div className="yi-die-faceWrap yi-die-faceWrap--bottom">
-          <DieFace value={2} />
+        <div
+          className={`yi-die-cube ${rolling && !reduceMotion ? `yi-die-cube--rolling-${dieIndex}` : ""}`}
+          style={{
+            transform: rolling && !reduceMotion ? undefined : settle,
+            ...cleanedStyle,
+          }}
+        >
+          <div className="yi-die-faceWrap yi-die-faceWrap--front">
+            <DieFace value={1} />
+          </div>
+          <div className="yi-die-faceWrap yi-die-faceWrap--back">
+            <DieFace value={6} />
+          </div>
+          <div className="yi-die-faceWrap yi-die-faceWrap--right">
+            <DieFace value={3} />
+          </div>
+          <div className="yi-die-faceWrap yi-die-faceWrap--left">
+            <DieFace value={4} />
+          </div>
+          <div className="yi-die-faceWrap yi-die-faceWrap--top">
+            <DieFace value={5} />
+          </div>
+          <div className="yi-die-faceWrap yi-die-faceWrap--bottom">
+            <DieFace value={2} />
+          </div>
         </div>
       </div>
       <div className={`yi-die-shadow ${rolling && !reduceMotion ? "yi-die-shadow--rolling" : ""}`} />
@@ -120,8 +132,8 @@ export function DicePair3D({ d1, d2, rolling, reduceMotion }: DicePair3DProps) {
 
   return (
     <Group gap="lg" justify="center" wrap="nowrap" className="yi-dice-pair">
-      <DieCube value={show1} rolling={rolling} reduceMotion={reduceMotion} animKey={spinKey} />
-      <DieCube value={show2} rolling={rolling} reduceMotion={reduceMotion} animKey={spinKey + 17} />
+      <DieCube value={show1} rolling={rolling} reduceMotion={reduceMotion} animKey={spinKey} dieIndex={1} />
+      <DieCube value={show2} rolling={rolling} reduceMotion={reduceMotion} animKey={spinKey + 17} dieIndex={2} />
     </Group>
   );
 }

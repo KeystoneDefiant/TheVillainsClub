@@ -35,6 +35,12 @@ export const sevenYearItchGameConfig = {
     /** Max free-odds stake as a multiple of the current pass line stake (simplified table rule). */
     maxFreeOddsMultipleOfPass: 2,
     maxPassBetFractionOfBuyIn: 0.25 as number,
+    /** Skim rate reduction for Kingpin's Cut. */
+    kingpinReturnsReduction: 0.35,
+    /** Cap multiplier for place bets under Aggressive Expansion. */
+    aggressiveExpansionCapMultiplier: 2,
+    /** Refund percentage for Evidence Locker Key when a 7 is rolled. */
+    evidenceLockerRefundRate: 0.30,
   },
   /** Mode overrides keyed by id. Empty object = use defaultGameMode as-is. */
   gameModes: {
@@ -127,10 +133,10 @@ export const sevenYearItchRackets = {
 
 export type SevenYearItchHeatBonusId =
   | "look_the_other_way"
-  | "inside_man"
   | "kingpins_cut"
   | "aggressive_expansion"
-  | "clean_getaway";
+  | "clean_getaway"
+  | "evidence_locker_key";
 
 export type SevenYearItchHeatBonus = {
   id: SevenYearItchHeatBonusId;
@@ -140,12 +146,11 @@ export type SevenYearItchHeatBonus = {
   effect: {
     type:
     | "shield_next_seven"
-    | "next_non_seven_multiplier"
-    | "place_hit_multiplier"
-    | "risk_reward_multiplier"
-    | "free_divest";
+    | "kingpins_cut"
+    | "aggressive_expansion"
+    | "free_divest"
+    | "evidence_locker_key";
     value: number;
-    risk?: "seven_forfeits_table";
   };
 };
 
@@ -158,25 +163,18 @@ export const sevenYearItchHeatBonuses: readonly SevenYearItchHeatBonus[] = [
     effect: { type: "shield_next_seven", value: 1 },
   },
   {
-    id: "inside_man",
-    title: "The Inside Man",
-    description: "Next non-7 roll pays an extra 25% as a crooked clerk tips the ledger.",
-    pullWeight: 28,
-    effect: { type: "next_non_seven_multiplier", value: 1.25 },
-  },
-  {
     id: "kingpins_cut",
     title: "The Kingpin's Cut",
-    description: "The next place hit pays double. Miss it and the boss still wants his name on the door.",
+    description: "Maximize all place bets and Legitimate Business Investment for free, but any returns are reduced by 35% on this roll.",
     pullWeight: 22,
-    effect: { type: "place_hit_multiplier", value: 2 },
+    effect: { type: "kingpins_cut", value: 0.65 },
   },
   {
     id: "aggressive_expansion",
     title: "Aggressive Expansion",
-    description: "Double the next non-7 payout, but a 7 forfeits everything still on the felt.",
-    pullWeight: 12,
-    effect: { type: "risk_reward_multiplier", value: 2, risk: "seven_forfeits_table" },
+    description: "Double the bet cap on place bets for this roll (increases limit from 3x to 6x of Seed Investment).",
+    pullWeight: 18,
+    effect: { type: "aggressive_expansion", value: 2 },
   },
   {
     id: "clean_getaway",
@@ -185,6 +183,13 @@ export const sevenYearItchHeatBonuses: readonly SevenYearItchHeatBonus[] = [
       "The next time you Divest, you sweep the back-line bets with no skim — place numbers still pay full street odds for the rest of the hand.",
     pullWeight: 18,
     effect: { type: "free_divest", value: 1 },
+  },
+  {
+    id: "evidence_locker_key",
+    title: "Evidence Locker Key",
+    description: "Recover 30% of all credits currently on the felt if you roll a 7 (the bust).",
+    pullWeight: 28,
+    effect: { type: "evidence_locker_key", value: 0.30 },
   },
 ] as const;
 

@@ -179,6 +179,16 @@ describe("resolveRoll crapless", () => {
     expect(r.nextTable.placePayoutScale).toBe(1);
     expect(r.nextTable.hasUsedDivest).toBe(false);
   });
+
+  it("place bet does not score on a come-out roll", () => {
+    const t0 = initialTableState();
+    const b0 = { ...initialBets(), passLine: 100, place: { 6: 50 } };
+    const r = resolveRoll(t0, b0, roll(3, 3));
+    expect(r.walletDelta).toBe(0);
+    expect(r.nextTable.phase).toBe("point");
+    expect(r.nextTable.point).toBe(6);
+    expect(r.nextBets.place[6]).toBe(50);
+  });
 });
 
 describe("clampFreeOdds", () => {

@@ -109,59 +109,147 @@ export function CraplessTableFelt({
         </div>
       ) : null}
 
-      {placePayoutScale < 1 && showGrid ? (
-        <Text size="xs" c="orange" mb={6} data-testid="felt-divest-skim">
-          Post-divest skim: place hits pay half profit until this hand ends.
-        </Text>
-      ) : null}
+      <div className={`yi-felt-unfurl-container ${showGrid ? "unfurled" : ""}`}>
+        <div className="yi-felt-unfurl-content">
+          {placePayoutScale < 1 ? (
+            <Text size="xs" c="orange" mb={6} data-testid="felt-divest-skim">
+              Post-divest skim: place hits pay half profit until this hand ends.
+            </Text>
+          ) : null}
 
-      {showGrid ? (
-        <div className="yi-felt-placeArc" aria-label="Place bets">
-          <div className="yi-felt-placeRow">
-            {topPlaces.map((pk) => (
-              <PlaceCell
-                key={pk}
-                pk={pk}
-                amount={bets.place[pk] ?? 0}
-                isPoint={table.phase === "point" && table.point === pk}
-                disabled={table.phase !== "point"}
-                chip={chip}
-                placePayoutScale={placePayoutScale}
-                onPrimary={() => onPlacePrimary(pk)}
-                onSecondary={() => onPlaceSecondary(pk)}
-                maxBet={maxBet}
-                recentPlacePayout={recentPlacePayout}
-              />
-            ))}
+          <div className="yi-felt-placeArc" aria-label="Place bets">
+            <div className="yi-felt-placeRow">
+              {topPlaces.map((pk) => (
+                <PlaceCell
+                  key={pk}
+                  pk={pk}
+                  amount={bets.place[pk] ?? 0}
+                  isPoint={table.phase === "point" && table.point === pk}
+                  disabled={table.phase !== "point"}
+                  chip={chip}
+                  placePayoutScale={placePayoutScale}
+                  onPrimary={() => onPlacePrimary(pk)}
+                  onSecondary={() => onPlaceSecondary(pk)}
+                  maxBet={maxBet}
+                  recentPlacePayout={recentPlacePayout}
+                />
+              ))}
+            </div>
+            <div className="yi-felt-no7" aria-hidden="true">
+              <span className="yi-felt-no7-inner">7 · The Bust</span>
+            </div>
+            <div className="yi-felt-placeRow">
+              {bottomPlaces.map((pk) => (
+                <PlaceCell
+                  key={pk}
+                  pk={pk}
+                  amount={bets.place[pk] ?? 0}
+                  isPoint={table.phase === "point" && table.point === pk}
+                  disabled={table.phase !== "point"}
+                  chip={chip}
+                  placePayoutScale={placePayoutScale}
+                  onPrimary={() => onPlacePrimary(pk)}
+                  onSecondary={() => onPlaceSecondary(pk)}
+                  maxBet={maxBet}
+                  recentPlacePayout={recentPlacePayout}
+                />
+              ))}
+            </div>
           </div>
-          <div className="yi-felt-no7" aria-hidden="true">
-            <span className="yi-felt-no7-inner">7 · The Bust</span>
-          </div>
-          <div className="yi-felt-placeRow">
-            {bottomPlaces.map((pk) => (
-              <PlaceCell
-                key={pk}
-                pk={pk}
-                amount={bets.place[pk] ?? 0}
-                isPoint={table.phase === "point" && table.point === pk}
-                disabled={table.phase !== "point"}
-                chip={chip}
-                placePayoutScale={placePayoutScale}
-                onPrimary={() => onPlacePrimary(pk)}
-                onSecondary={() => onPlaceSecondary(pk)}
-                maxBet={maxBet}
-                recentPlacePayout={recentPlacePayout}
-              />
-            ))}
-          </div>
+
+          <details className="yi-felt-oneRoll">
+            <summary>One-roll bets</summary>
+            <div className="yi-felt-hopBlock" aria-label="Hopping bets">
+              <Text className="yi-felt-sectionLabel" size="xs" tt="uppercase" c="dimmed" fw={600}>
+                Hop
+              </Text>
+              <div className="yi-felt-hopGrid">
+                {ALL_HOP_KEYS.map((key) => (
+                  <button
+                    type="button"
+                    key={key}
+                    className="yi-felt-hop"
+                    data-testid={`felt-hop-${key}`}
+                    onClick={() => onHopPrimary(key)}
+                    onContextMenu={(e) => {
+                      preventCtx(e);
+                      onHopSecondary(key);
+                    }}
+                  >
+                    <span className="yi-felt-hop-key">{key}</span>
+                    <span className="yi-felt-hop-amt">{(bets.hops[key] ?? 0) > 0 ? bets.hops[key] : ""}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="yi-felt-hardBlock" aria-label="Hardways">
+              <Text className="yi-felt-sectionLabel" size="xs" tt="uppercase" c="dimmed" fw={600}>
+                Hardways
+              </Text>
+              <div className="yi-felt-hardRow">
+                {HARDWAY_NUMBERS.map((hw) => (
+                  <button
+                    type="button"
+                    key={hw}
+                    className="yi-felt-hard"
+                    data-testid={`felt-hard-${hw}`}
+                    onClick={() => onHardwayPrimary(hw)}
+                    onContextMenu={(e) => {
+                      preventCtx(e);
+                      onHardwaySecondary(hw);
+                    }}
+                  >
+                    <span className="yi-felt-hard-label">Hard {hw}</span>
+                    <span className="yi-felt-hard-amt">{(bets.hardways[hw] ?? 0) > 0 ? bets.hardways[hw] : ""}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {showFieldAndHorn ? (
+              <div className="yi-felt-propRow yi-felt-propRow--afterOneRoll" aria-label="Field and horn">
+                <button
+                  type="button"
+                  className="yi-felt-field"
+                  data-testid="felt-field"
+                  onClick={onFieldPrimary}
+                  onContextMenu={(e) => {
+                    preventCtx(e);
+                    onFieldSecondary();
+                  }}
+                >
+                  <span className="yi-felt-prop-label">Field</span>
+                  <span className="yi-felt-prop-meta">2·3·4·9·10·11·12</span>
+                  <span className="yi-felt-prop-amt">{bets.field > 0 ? bets.field : "—"}</span>
+                  <span className="yi-felt-chipHint">+{chip}</span>
+                </button>
+                <button
+                  type="button"
+                  className="yi-felt-horn"
+                  data-testid="felt-horn"
+                  onClick={onHornPrimary}
+                  onContextMenu={(e) => {
+                    preventCtx(e);
+                    onHornSecondary();
+                  }}
+                >
+                  <span className="yi-felt-prop-label">Horn</span>
+                  <span className="yi-felt-prop-meta">2·3·11·12 · {hornOnLayout > 0 ? `${hornOnLayout} out` : "—"}</span>
+                  <span className="yi-felt-prop-amt">{bets.hornUnit > 0 ? `${bets.hornUnit} ea` : "—"}</span>
+                  <span className="yi-felt-chipHint">+{chip} each leg (×4)</span>
+                </button>
+              </div>
+            ) : null}
+          </details>
         </div>
-      ) : null}
+      </div>
 
       <div className="yi-felt-oddsPassStack">
-        {showGrid ? (
+        <div className="yi-felt-left-stack">
           <button
             type="button"
-            className={`yi-felt-odds ${table.phase !== "point" ? "yi-felt-odds--off" : ""}`}
+            className={`yi-felt-odds ${table.phase !== "point" ? "yi-felt-odds--off" : ""} ${showGrid ? "active" : "inactive"}`}
             data-testid="felt-odds"
             disabled={table.phase !== "point"}
             onClick={onOddsPrimary}
@@ -174,10 +262,10 @@ export function CraplessTableFelt({
             <span className="yi-felt-odds-meta">
               {bets.freeOdds > 0 ? `${bets.freeOdds}` : "—"} / cap {maxOddsDisplay}
             </span>
-            <span className="yi-felt-chipHint">+{chip} · right-click −{chip}</span>
+            <span className="yi-felt-chipHint">Invest more money into the legitimate business. Pays even money if you roll {table.point}</span>
           </button>
-        ) : (
-          <div className="yi-felt-come-out-instruction" style={{
+
+          <div className={`yi-felt-come-out-instruction ${!showGrid ? "active" : "inactive"}`} style={{
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
@@ -194,7 +282,7 @@ export function CraplessTableFelt({
               Place your initial investment and then roll the dice.
             </Text>
           </div>
-        )}
+        </div>
 
         <button
           type="button"

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, afterEach } from "vitest";
+import { describe, expect, it, vi, afterEach, beforeEach } from "vitest";
 import { villainsGameDefaults } from "@/config/villainsGameDefaults";
 import * as specials from "./specialsResolver";
 import * as barBandOverrideStore from "@/audio/barBandOverrideStore";
@@ -11,6 +11,10 @@ import {
   computeSevenYearItchReturn,
   getOublietteBaseReturnCeiling,
 } from "./sessionSettlement";
+
+beforeEach(() => {
+  vi.spyOn(barBandOverrideStore, "effectiveBandIndexForBarDate").mockReturnValue(-1);
+});
 
 afterEach(() => {
   vi.restoreAllMocks();

@@ -8,6 +8,10 @@ import { bandsCatalog } from "@/config/bandsCatalog";
 import { effectiveBandIndexForBarDate } from "@/audio/barBandOverrideStore";
 import { barDateKey } from "@/audio/barBandSchedule";
 import type { GameState as OublietteGameState } from "@/minigames/oubliette-no9/types";
+import { resolveOublietteGameMode } from "@/config/minigames/oublietteNo9GameRules";
+import { resolveSevenYearItchGameMode } from "@/config/minigames/sevenYearItchRules";
+import { resolveFatesealGameMode } from "@/config/minigames/fatesealRules";
+import { resolveMastersonGameMode } from "@/config/minigames/mastersonRules";
 
 /** Snapshot at table open; used when settling the session. */
 export type OublietteSettlementProfile = {
@@ -95,57 +99,65 @@ export type MastersonShellBinding = {
   isTutorial?: boolean;
 };
 
-export function buildOublietteSettlementProfile(buyIn: number, now: Date = new Date()): OublietteSettlementProfile {
+export function buildOublietteSettlementProfile(buyIn: number, gameModeId?: string, now: Date = new Date()): OublietteSettlementProfile {
   const b = Math.floor(buyIn);
   const special = resolveActiveClubSpecial(now);
   const row = resolveSpecialDefinitionRow(special);
   const { oublietteCapMult, allMinigamesCapMult } = capModifiersFromSpecialDefinition(row);
+  const resolvedMode = resolveOublietteGameMode(gameModeId);
+  const maxReturnMult = resolvedMode?.maxReturnMultipleOfBuyIn ?? villainsGameDefaults.oublietteNo9.maxReturnMultipleOfBuyIn;
   const cfg = villainsGameDefaults.oublietteNo9;
   return {
     buyIn: b,
-    maxReturnMultipleOfBuyIn: cfg.maxReturnMultipleOfBuyIn,
+    maxReturnMultipleOfBuyIn: maxReturnMult,
     capModifierProduct: oublietteCapMult * allMinigamesCapMult,
     overachievement: { ...cfg.overachievement },
   };
 }
 
-export function buildMastersonSettlementProfile(buyIn: number, now: Date = new Date()): OublietteSettlementProfile {
+export function buildMastersonSettlementProfile(buyIn: number, gameModeId?: string, now: Date = new Date()): OublietteSettlementProfile {
   const b = Math.floor(buyIn);
   const special = resolveActiveClubSpecial(now);
   const row = resolveSpecialDefinitionRow(special);
   const { allMinigamesCapMult } = capModifiersFromSpecialDefinition(row);
+  const resolvedMode = resolveMastersonGameMode(gameModeId);
+  const maxReturnMult = resolvedMode?.maxReturnMultipleOfBuyIn ?? villainsGameDefaults.masterson1881.maxReturnMultipleOfBuyIn;
   const cfg = villainsGameDefaults.masterson1881;
   return {
     buyIn: b,
-    maxReturnMultipleOfBuyIn: cfg.maxReturnMultipleOfBuyIn,
+    maxReturnMultipleOfBuyIn: maxReturnMult,
     capModifierProduct: allMinigamesCapMult,
     overachievement: { ...cfg.overachievement },
   };
 }
 
-export function buildSevenYearItchSettlementProfile(buyIn: number, now: Date = new Date()): OublietteSettlementProfile {
+export function buildSevenYearItchSettlementProfile(buyIn: number, gameModeId?: string, now: Date = new Date()): OublietteSettlementProfile {
   const b = Math.floor(buyIn);
   const special = resolveActiveClubSpecial(now);
   const row = resolveSpecialDefinitionRow(special);
   const { sevenYearItchCapMult, allMinigamesCapMult } = capModifiersFromSpecialDefinition(row);
+  const resolvedMode = resolveSevenYearItchGameMode(gameModeId);
+  const maxReturnMult = resolvedMode?.maxReturnMultipleOfBuyIn ?? villainsGameDefaults.sevenYearItch.maxReturnMultipleOfBuyIn;
   const cfg = villainsGameDefaults.sevenYearItch;
   return {
     buyIn: b,
-    maxReturnMultipleOfBuyIn: cfg.maxReturnMultipleOfBuyIn,
+    maxReturnMultipleOfBuyIn: maxReturnMult,
     capModifierProduct: sevenYearItchCapMult * allMinigamesCapMult,
     overachievement: { ...cfg.overachievement },
   };
 }
 
-export function buildFatesealSettlementProfile(buyIn: number, now: Date = new Date()): OublietteSettlementProfile {
+export function buildFatesealSettlementProfile(buyIn: number, gameModeId?: string, now: Date = new Date()): OublietteSettlementProfile {
   const b = Math.floor(buyIn);
   const special = resolveActiveClubSpecial(now);
   const row = resolveSpecialDefinitionRow(special);
   const { fatesealCapMult, allMinigamesCapMult } = capModifiersFromSpecialDefinition(row);
+  const resolvedMode = resolveFatesealGameMode(gameModeId);
+  const maxReturnMult = resolvedMode?.maxReturnMultipleOfBuyIn ?? villainsGameDefaults.fatesealSilver.maxReturnMultipleOfBuyIn;
   const cfg = villainsGameDefaults.fatesealSilver;
   return {
     buyIn: b,
-    maxReturnMultipleOfBuyIn: cfg.maxReturnMultipleOfBuyIn,
+    maxReturnMultipleOfBuyIn: maxReturnMult,
     capModifierProduct: fatesealCapMult * allMinigamesCapMult,
     overachievement: { ...cfg.overachievement },
   };

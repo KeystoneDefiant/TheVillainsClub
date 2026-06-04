@@ -144,6 +144,8 @@ export const fatesealScatterRitual = {
 export const fatesealGameConfig = {
   defaultGameMode: {
     displayName: "Normal ritual",
+    buyIn: 2000,
+    maxReturnMultipleOfBuyIn: 50,
     /** Primary chip step for base bet control. */
     chipIncrement: 10,
     minBaseBet: 100,
@@ -152,10 +154,19 @@ export const fatesealGameConfig = {
   },
   gameModes: {
     normalGame: {},
-    /** Example low-stakes profile (not shell-selected until wired). */
     quickBet: {
+      displayName: "Quick Bet",
+      buyIn: 1000,
+      maxReturnMultipleOfBuyIn: 30,
       chipIncrement: 5,
       minBaseBet: 5,
+    },
+    highRoller: {
+      displayName: "High Roller Ritual",
+      buyIn: 5000,
+      maxReturnMultipleOfBuyIn: 70,
+      chipIncrement: 50,
+      minBaseBet: 500,
     },
   },
 } as const;

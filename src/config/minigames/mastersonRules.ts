@@ -113,6 +113,9 @@ export const mastersonGameConfig = {
     },
   },
   defaultGameMode: {
+    displayName: "House rules",
+    buyIn: 2000,
+    maxReturnMultipleOfBuyIn: 50,
     shift_duration_spins: 30,
     max_bettors: 4,
     base_commission_pct: 10.0,
@@ -135,9 +138,19 @@ export const mastersonGameConfig = {
     normalGame: {},
     grandSalon: {
       displayName: "Grand Salon",
+      buyIn: 3000,
+      maxReturnMultipleOfBuyIn: 50,
       max_bettors: 5,
       base_commission_pct: 12.0,
       seat_fill_chance_per_spin: 0.50,
+    },
+    highRoller: {
+      displayName: "High Roller Salon",
+      buyIn: 10000,
+      maxReturnMultipleOfBuyIn: 80,
+      minimum_bet: 500,
+      shift_duration_spins: 20,
+      max_bettors: 3,
     },
   },
 } as const;

@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import "@mantine/core/styles.css";
 import "./styles/fonts.css";
 import "./ui/cards/playingCardSurface.css";
+import "./components/ui/ClubForm.css";
 import "./index.css";
 import "./styles/shellAnimations.css";
 import App from "./App";

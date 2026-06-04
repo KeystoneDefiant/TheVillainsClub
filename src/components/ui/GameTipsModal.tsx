@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
-import { Box, Group, Modal, Text } from "@mantine/core";
+import { Box, Group, Modal, Text, Stack, Title } from "@mantine/core";
+import { motion, AnimatePresence } from "framer-motion";
+import { usePrefersReducedMotion } from "@/motion/usePrefersReducedMotion";
 import { ClubButton } from "./ClubButton";
 import { clubTokens } from "@/theme/clubTokens";
 import { gameTipsCatalog } from "@/config/gameTipsCatalog";
@@ -20,6 +22,7 @@ const GAME_NAMES: Record<string, string> = {
 
 export function GameTipsModal({ opened, onClose, gameId }: GameTipsModalProps) {
   const [slideIndex, setSlideIndex] = useState(0);
+  const reduceMotion = usePrefersReducedMotion();
 
   const slides = gameId ? (gameTipsCatalog[gameId] || []) : [];
 
@@ -87,7 +90,7 @@ export function GameTipsModal({ opened, onClose, gameId }: GameTipsModalProps) {
       padding={0}
       size="lg"
       centered
-      overlayProps={{ backgroundOpacity: 0.65 }}
+      overlayProps={{ backgroundOpacity: 0.65, blur: 4 }}
       styles={{
         content: {
           backgroundColor: clubTokens.surface.walnut,
@@ -107,44 +110,115 @@ export function GameTipsModal({ opened, onClose, gameId }: GameTipsModalProps) {
         aria-labelledby="tips-title"
         aria-describedby="tips-content"
       >
-        <div className="tips-header" style={{ borderBottom: `1px solid ${clubTokens.surface.brassStroke}2b` }}>
-          <div>
-            <Text size="xs" tt="uppercase" fw={800} c={clubTokens.text.muted} style={{ letterSpacing: "0.08em" }}>
-              {gameName} Strategy Guide
-            </Text>
-            <h2 id="tips-title" className="tips-title" style={{ color: clubTokens.text.brass, fontFamily: "Georgia, serif" }}>
-              {slide.title}
-            </h2>
-          </div>
-          <button
+        {/* Speaker Header mimicking Sommelier Live Guide */}
+        <div className="tips-header" style={{ borderBottom: `1px solid ${clubTokens.surface.brassStroke}3b` }}>
+          <Group justify="space-between" align="center" wrap="nowrap" style={{ width: "100%" }}>
+            <Group gap="xs" wrap="nowrap">
+              <span
+                style={{
+                  fontSize: "1.25rem",
+                  lineHeight: 1,
+                  filter: "drop-shadow(0 0 4px rgba(199,158,87,0.5))",
+                }}
+                aria-hidden
+              >
+                🎲
+              </span>
+              <Stack gap={1}>
+                <h2 id="tips-title" className="tips-speaker-name" style={{ margin: 0, color: clubTokens.text.brass, fontFamily: "Georgia, serif", fontSize: "0.95rem", fontWeight: 700 }}>
+                  Claudius L'Ausula
+                </h2>
+                <Text size="10px" c={clubTokens.text.muted} tt="uppercase" fw={600} style={{ letterSpacing: "0.08em" }}>
+                  Club Pit Boss — {gameName} Tips
+                </Text>
+              </Stack>
+            </Group>
+            <Group gap="sm" wrap="nowrap" align="center">
+              <Text className="tips-progress" size="xs" c={clubTokens.text.muted} fw={700}>
+                Tip {slideIndex + 1} of {slides.length}
+              </Text>
+              <button
+                type="button"
+                onClick={onClose}
+                className="tips-close"
+                aria-label="Close tips"
+                style={{ color: clubTokens.text.muted }}
+              >
+                ×
+              </button>
+            </Group>
+          </Group>
+        </div>
+
+        {/* Content Container animating size differences */}
+        <motion.div
+          id="tips-content"
+          className="tips-content"
+          layout={!reduceMotion}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+          style={{ overflow: "hidden" }}
+        >
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={slideIndex}
+              initial={reduceMotion ? { opacity: 1 } : { opacity: 0, x: 15 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={reduceMotion ? { opacity: 0 } : { opacity: 0, x: -15 }}
+              transition={{ duration: 0.22, ease: "easeInOut" }}
+              style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}
+            >
+              <Title
+                order={3}
+                c={clubTokens.text.brass}
+                style={{
+                  fontSize: "0.78rem",
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                  fontFamily: "Montserrat, sans-serif",
+                }}
+              >
+                {slide.title}
+              </Title>
+              <div className="tips-quote-block">
+                <Text
+                  size="sm"
+                  className="tips-body"
+                  c={clubTokens.text.primary}
+                  style={{
+                    fontStyle: "italic",
+                    lineHeight: 1.55,
+                    minHeight: 48,
+                    whiteSpace: "pre-line",
+                  }}
+                >
+                  “{slide.content}”
+                </Text>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+        </motion.div>
+
+        {/* Navigation Footer */}
+        <div className="tips-footer" style={{ borderTop: `1px solid ${clubTokens.surface.brassStroke}3b` }}>
+          <ClubButton
             type="button"
+            variant="subtle"
+            size="xs"
             onClick={onClose}
-            className="tips-close"
-            aria-label="Close tips"
-            style={{ color: clubTokens.text.muted }}
+            style={{ color: clubTokens.text.accent }}
           >
-            ×
-          </button>
-        </div>
-
-        <div id="tips-content" className="tips-content">
-          <Text size="sm" className="tips-body" c={clubTokens.text.primary} style={{ lineHeight: 1.6 }}>
-            {slide.content}
-          </Text>
-        </div>
-
-        <div className="tips-footer" style={{ borderTop: `1px solid ${clubTokens.surface.brassStroke}2b` }}>
-          <Text className="tips-progress" size="sm" c={clubTokens.text.muted} aria-live="polite">
-            Tip {slideIndex + 1} of {slides.length}
-          </Text>
-          <Group gap="sm" className="tips-nav">
+            Close Guide
+          </ClubButton>
+          <Group gap="xs" className="tips-nav">
             <ClubButton
               type="button"
               variant="outline"
               size="xs"
               onClick={goBack}
+              disabled={isFirst}
             >
-              {isFirst ? "Back to Menu" : "Back"}
+              Back
             </ClubButton>
             <ClubButton
               type="button"

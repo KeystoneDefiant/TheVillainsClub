@@ -185,6 +185,8 @@ export const gameConfig = {
    */
   defaultGameMode: {
     displayName: 'Normal Game',
+    buyIn: 2000,
+    maxReturnMultipleOfBuyIn: 50,
     startingCredits: 5000,
     startingBet: 2,
     startingHandCount: 10,
@@ -243,10 +245,23 @@ export const gameConfig = {
     },
   },
 
-  // Mode overrides keyed by mode id. Empty object = use defaultGameMode as-is.
   gameModes: {
     normalGame: {},
-    // Example future mode: hardMode: { startingCredits: 3000, displayName: 'Hard' },
+    carnivalRules: {
+      displayName: "Carnival Rules",
+      buyIn: 3000,
+      maxReturnMultipleOfBuyIn: 40,
+      startingHandCount: 15,
+      shopFrequency: 1,
+    },
+    highStakes: {
+      displayName: "High Stakes",
+      buyIn: 10000,
+      maxReturnMultipleOfBuyIn: 60,
+      startingCredits: 10000,
+      startingBet: 10,
+      maxHandSize: 10,
+    },
   },
 
   // Default deck contents (standard 52-card deck)

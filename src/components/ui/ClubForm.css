@@ -1,0 +1,528 @@
+/* Custom Gothic Walnut-Brass Club Form Elements Styling */
+
+/* TextInput, Textarea, Select, and NumberInput fields */
+.mantine-Input-input,
+.mantine-TextInput-input,
+.mantine-Textarea-input,
+.mantine-Select-input,
+.mantine-NumberInput-input {
+  background: radial-gradient(circle at center, #2d2621 0%, #171210 70%, #0a0807 100%) !important;
+  color: #f0e8db !important;
+  border-top: 1.5px solid rgba(199, 158, 87, 0.65) !important;
+  border-bottom: 2px solid rgba(199, 158, 87, 0.95) !important;
+  border-left: 1.5px solid rgba(199, 158, 87, 0.5) !important;
+  border-right: 1.5px solid rgba(199, 158, 87, 0.5) !important;
+  font-family: "Montserrat", "Outfit", "Inter", sans-serif !important;
+  border-radius: 4px !important;
+  font-weight: 500 !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.85), 0 2px 4px rgba(0, 0, 0, 0.4) !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease !important;
+}
+
+/* Hover and Focus states */
+.mantine-Input-input:hover,
+.mantine-TextInput-input:hover,
+.mantine-Textarea-input:hover,
+.mantine-Select-input:hover,
+.mantine-NumberInput-input:hover {
+  border-color: rgba(255, 235, 180, 0.8) !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8), 0 0 8px rgba(199, 158, 87, 0.3) !important;
+}
+
+.mantine-Input-input:focus,
+.mantine-TextInput-input:focus,
+.mantine-Textarea-input:focus,
+.mantine-Select-input:focus,
+.mantine-NumberInput-input:focus,
+.mantine-Input-input[data-focus],
+.mantine-Select-input[data-focus] {
+  border-color: rgba(255, 235, 180, 1) !important;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 12px rgba(199, 158, 87, 0.6) !important;
+  outline: none !important;
+}
+
+/* Disabled Form Inputs */
+.mantine-Input-input:disabled,
+.mantine-TextInput-input:disabled,
+.mantine-Textarea-input:disabled,
+.mantine-Select-input:disabled,
+.mantine-NumberInput-input:disabled,
+.mantine-Input-input[data-disabled],
+.mantine-Select-input[data-disabled] {
+  background: radial-gradient(circle at center, #1c1815 0%, #100d0b 70%, #070605 100%) !important;
+  border-color: rgba(199, 158, 87, 0.25) !important;
+  color: rgba(220, 210, 190, 0.4) !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.9) !important;
+  cursor: not-allowed !important;
+}
+
+/* Select Dropdown Popover */
+.mantine-Select-dropdown,
+.mantine-Combobox-dropdown {
+  background-color: #1a100d !important;
+  border: 1px solid rgba(199, 158, 87, 0.7) !important;
+  border-radius: 6px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.9), 0 0 18px rgba(199, 158, 87, 0.2) !important;
+  padding: 4px !important;
+}
+
+/* Select Dropdown Options */
+.mantine-Select-option,
+.mantine-Combobox-option {
+  background: transparent !important;
+  color: #c7bdce !important;
+  border-radius: 4px !important;
+  font-weight: 500 !important;
+  padding: 8px 12px !important;
+  transition: all 0.1s ease !important;
+  font-family: "Montserrat", sans-serif !important;
+}
+
+.mantine-Select-option:hover,
+.mantine-Select-option[data-hovered],
+.mantine-Combobox-option:hover,
+.mantine-Combobox-option[data-hovered] {
+  background: radial-gradient(circle at center, #3d2a24 0%, #241814 100%) !important;
+  color: #f0e8db !important;
+  border-left: 3px solid rgba(199, 158, 87, 0.85) !important;
+  padding-left: 9px !important;
+}
+
+.mantine-Select-option[data-selected],
+.mantine-Combobox-option[data-selected] {
+  background: radial-gradient(circle at center, #6a0b12 0%, #2e0508 100%) !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  border-left: 3px solid rgba(255, 235, 180, 1) !important;
+  padding-left: 9px !important;
+  box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Labels and Descriptions */
+.mantine-InputWrapper-label,
+.mantine-TextInput-label,
+.mantine-Textarea-label,
+.mantine-Select-label,
+.mantine-NumberInput-label,
+.mantine-Slider-label,
+.mantine-Switch-label,
+.mantine-Checkbox-label,
+.mantine-Radio-label,
+.mantine-RadioGroup-label {
+  color: #d6b87a !important;
+  font-family: "Cinzel", "Montserrat", serif !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  font-size: 0.78rem !important;
+  margin-bottom: 4px !important;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.9) !important;
+}
+
+.mantine-InputWrapper-description,
+.mantine-TextInput-description,
+.mantine-Textarea-description,
+.mantine-Select-description,
+.mantine-NumberInput-description {
+  color: #948aa3 !important;
+  font-size: 0.72rem !important;
+  margin-bottom: 4px !important;
+}
+
+/* Slider Track */
+.mantine-Slider-track {
+  background-color: #140c0a !important;
+  border: 1px solid rgba(199, 158, 87, 0.4) !important;
+  height: 8px !important;
+  border-radius: 4px !important;
+}
+
+.mantine-Slider-bar {
+  background: linear-gradient(90deg, #c79e57 0%, #e6c587 100%) !important;
+  box-shadow: 0 0 8px rgba(199, 158, 87, 0.4) !important;
+}
+
+/* Slider Thumb */
+.mantine-Slider-thumb {
+  background: radial-gradient(circle at center, #faf6ef 0%, #c79e57 80%, #634824 100%) !important;
+  border: 2px solid #faf6ef !important;
+  width: 18px !important;
+  height: 18px !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.85), 0 0 8px rgba(199, 158, 87, 0.5) !important;
+  cursor: pointer !important;
+  transition: transform 0.1s ease, filter 0.1s ease !important;
+}
+
+.mantine-Slider-thumb:hover {
+  transform: scale(1.15) !important;
+  filter: brightness(1.15) !important;
+}
+
+.mantine-Slider-thumb:active {
+  transform: scale(0.95) !important;
+  filter: brightness(0.9) !important;
+}
+
+/* Switch Track */
+.mantine-Switch-track {
+  background-color: #140c0a !important;
+  border: 1px solid rgba(199, 158, 87, 0.4) !important;
+  height: 24px !important;
+  width: 44px !important;
+  border-radius: 12px !important;
+  transition: all 0.15s ease !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.85) !important;
+  cursor: pointer !important;
+}
+
+.mantine-Switch-root[data-checked] .mantine-Switch-track,
+.mantine-Switch-track[data-checked="true"],
+input:checked + .mantine-Switch-track {
+  background: radial-gradient(circle at center, #6a0b12 0%, #2e0508 100%) !important;
+  border-color: rgba(199, 158, 87, 0.85) !important;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8), 0 0 10px rgba(185, 28, 40, 0.45) !important;
+}
+
+/* Switch Thumb */
+.mantine-Switch-thumb {
+  background: radial-gradient(circle at center, #faf6ef 0%, #c79e57 85%) !important;
+  border: 1.5px solid #faf6ef !important;
+  width: 18px !important;
+  height: 18px !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6) !important;
+  transition: transform 0.15s ease, background 0.15s ease !important;
+}
+
+.mantine-Switch-root[data-checked] .mantine-Switch-thumb,
+.mantine-Switch-thumb[data-checked="true"],
+input:checked + .mantine-Switch-track .mantine-Switch-thumb {
+  background: radial-gradient(circle at center, #ffffff 0%, #e6c587 85%) !important;
+  transform: translateX(20px) !important;
+}
+
+/* Checkbox Styling */
+.mantine-Checkbox-inner {
+  position: relative !important;
+}
+
+.mantine-Checkbox-icon {
+  color: #faf6ef !important;
+  filter: drop-shadow(1px 1px 1px rgba(0, 0, 0, 0.8)) !important;
+}
+
+.mantine-Checkbox-checkbox {
+  background: radial-gradient(circle at center, #2d2621 0%, #171210 70%, #0a0807 100%) !important;
+  border: 1.5px solid rgba(199, 158, 87, 0.6) !important;
+  border-radius: 4px !important;
+  box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.8) !important;
+  width: 20px !important;
+  height: 20px !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.mantine-Checkbox-checkbox:hover {
+  border-color: rgba(255, 235, 180, 0.85) !important;
+  box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.8), 0 0 6px rgba(199, 158, 87, 0.3) !important;
+}
+
+.mantine-Checkbox-root[data-checked] .mantine-Checkbox-checkbox,
+.mantine-Checkbox-checkbox[data-checked="true"],
+input:checked + .mantine-Checkbox-checkbox {
+  background: radial-gradient(circle at center, #6a0b12 0%, #2e0508 100%) !important;
+  border-color: rgba(199, 158, 87, 0.9) !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.8), 0 0 8px rgba(185, 28, 40, 0.4) !important;
+}
+
+/* Radio Styling */
+.mantine-Radio-radio {
+  background: radial-gradient(circle at center, #2d2621 0%, #171210 70%, #0a0807 100%) !important;
+  border: 1.5px solid rgba(199, 158, 87, 0.6) !important;
+  box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.8) !important;
+  width: 20px !important;
+  height: 20px !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.mantine-Radio-radio:hover {
+  border-color: rgba(255, 235, 180, 0.85) !important;
+  box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.8), 0 0 6px rgba(199, 158, 87, 0.3) !important;
+}
+
+.mantine-Radio-root[data-checked] .mantine-Radio-radio,
+.mantine-Radio-radio[data-checked="true"],
+input:checked + .mantine-Radio-radio {
+  background: radial-gradient(circle at center, #6a0b12 0%, #2e0508 100%) !important;
+  border-color: rgba(199, 158, 87, 0.9) !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.8), 0 0 8px rgba(185, 28, 40, 0.4) !important;
+}
+
+.mantine-Radio-radio::before {
+  background-color: #faf6ef !important;
+  width: 8px !important;
+  height: 8px !important;
+}
+
+/* ==========================================
+   Custom gothic skeuomorphic club input wrappers
+   ========================================== */
+.club-field-root {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  width: 100% !important;
+}
+
+.club-field-label {
+  color: #d6b87a !important;
+  font-family: "Cinzel", "Montserrat", serif !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  font-size: 0.78rem !important;
+  margin-bottom: 2px !important;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.9) !important;
+  display: inline-block !important;
+}
+
+.club-field-desc {
+  color: #948aa3 !important;
+  font-size: 0.72rem !important;
+  margin-bottom: 4px !important;
+}
+
+.club-field-input-container {
+  position: relative !important;
+  overflow: visible !important;
+  width: 100% !important;
+}
+
+/* Base custom input styles targeting the inner input wrapper and element */
+.club-input .mantine-Input-input {
+  font-family: "Montserrat", "Outfit", "Inter", sans-serif !important;
+  font-weight: 500 !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease !important;
+}
+
+/* Fancy side padding adjustments for inputs and selects */
+.club-input-fancy .mantine-Input-input {
+  padding-left: 20px !important;
+  padding-right: 28px !important;
+  border-left: none !important;
+  border-right: none !important;
+}
+
+/* Select Section Adjustments for dropdown arrow when fancy */
+.club-input-fancy.mantine-Select-root .mantine-Select-section {
+  right: 12px !important;
+}
+
+/* Chevron elements for form inputs */
+.club-field-chevron {
+  position: absolute !important;
+  top: -2px !important;
+  bottom: -2px !important;
+  width: 16px !important;
+  z-index: 5 !important;
+  pointer-events: none !important;
+  transition: all 0.15s ease !important;
+  opacity: 1 !important;
+}
+
+.club-field-chevron-left {
+  left: -8px !important;
+  clip-path: polygon(0% 50%, 60% 0%, 100% 0%, 100% 100%, 60% 100%) !important;
+}
+
+.club-field-chevron-right {
+  right: -8px !important;
+  clip-path: polygon(100% 50%, 40% 0%, 0% 0%, 0% 100%, 40% 100%) !important;
+}
+
+/* Variant: FILLED (Crimson) */
+.club-input-filled .mantine-Input-input {
+  background: radial-gradient(circle at center, #6a0b12 0%, #2e0508 55%, #100102 100%) !important;
+  color: #ffffff !important;
+  border-top: 2px solid rgba(199, 158, 87, 0.85) !important;
+  border-bottom: 2px solid rgba(199, 158, 87, 0.85) !important;
+  border-left: none !important;
+  border-right: none !important;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.15), inset 0 0 0 1px rgba(199, 158, 87, 0.2), inset 0 0 6px rgba(0, 0, 0, 0.8), 0 4px 8px rgba(0, 0, 0, 0.6) !important;
+}
+
+.club-input-filled .mantine-Input-input:hover:not(:disabled) {
+  background: radial-gradient(circle at center, #a8101d 0%, #4a050a 60%, #150102 100%) !important;
+  border-top-color: rgba(255, 235, 180, 1) !important;
+  border-bottom-color: rgba(255, 235, 180, 1) !important;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.2), inset 0 0 6px rgba(0, 0, 0, 0.8), 0 8px 16px rgba(0, 0, 0, 0.55), 0 0 12px rgba(230, 20, 30, 0.7) !important;
+}
+
+.club-input-filled .mantine-Input-input:focus:not(:disabled) {
+  border-top-color: rgba(255, 235, 180, 1) !important;
+  border-bottom-color: rgba(255, 235, 180, 1) !important;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 12px rgba(199, 158, 87, 0.6) !important;
+}
+
+.club-field-filled .club-field-chevron {
+  background: radial-gradient(circle at center, #2e0508 0%, #150204 40%, #8b6508 85%, #cf9e52 100%) !important;
+}
+
+.club-field-filled:hover:not(.club-field-disabled) .club-field-chevron {
+  background: radial-gradient(circle at center, #540910 0%, #1d0305 40%, #a87e22 85%, #ffd700 100%) !important;
+}
+
+/* Variant: LIGHT (Walnut Brown) */
+.club-input-light .mantine-Input-input {
+  background: radial-gradient(circle at center, #2d2621 0%, #171210 70%, #0a0807 100%) !important;
+  color: rgba(240, 230, 210, 0.9) !important;
+  border-top: 2px solid rgba(199, 158, 87, 0.85) !important;
+  border-bottom: 2px solid rgba(199, 158, 87, 0.85) !important;
+  border-left: none !important;
+  border-right: none !important;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.08), inset 0 0 0 1px rgba(199, 158, 87, 0.15), inset 0 0 6px rgba(0, 0, 0, 0.8), 0 4px 8px rgba(0, 0, 0, 0.6) !important;
+}
+
+.club-input-light .mantine-Input-input:hover:not(:disabled) {
+  background: radial-gradient(circle at center, #42352b 0%, #1c1511 65%, #0a0807 100%) !important;
+  border-top-color: rgba(255, 235, 180, 1) !important;
+  border-bottom-color: rgba(255, 235, 180, 1) !important;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.12), inset 0 0 6px rgba(0, 0, 0, 0.8), 0 8px 16px rgba(0, 0, 0, 0.55), 0 0 12px rgba(220, 120, 30, 0.5) !important;
+}
+
+.club-input-light .mantine-Input-input:focus:not(:disabled) {
+  border-top-color: rgba(255, 235, 180, 1) !important;
+  border-bottom-color: rgba(255, 235, 180, 1) !important;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 12px rgba(199, 158, 87, 0.6) !important;
+}
+
+.club-field-light .club-field-chevron {
+  background: radial-gradient(circle at center, #14100e 0%, #080605 40%, #8b6508 85%, #cf9e52 100%) !important;
+}
+
+.club-field-light:hover:not(.club-field-disabled) .club-field-chevron {
+  background: radial-gradient(circle at center, #221510 0%, #0a0807 40%, #a87e22 85%, #ffd700 100%) !important;
+}
+
+/* Variant: OUTLINE (Silver Metal) */
+.club-input-outline .mantine-Input-input {
+  background: radial-gradient(circle at center, #1b1e20 0%, #0d0f10 70%, #050607 100%) !important;
+  color: rgba(200, 205, 210, 0.95) !important;
+  border-top: 2px solid rgba(140, 145, 150, 0.7) !important;
+  border-bottom: 2px solid rgba(140, 145, 150, 0.7) !important;
+  border-left: none !important;
+  border-right: none !important;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.08), inset 0 0 0 1px rgba(140, 145, 150, 0.15), inset 0 0 6px rgba(0, 0, 0, 0.8), 0 2px 4px rgba(0, 0, 0, 0.4) !important;
+}
+
+.club-input-outline .mantine-Input-input:hover:not(:disabled) {
+  background: radial-gradient(circle at center, #2b3034 0%, #131618 70%, #070809 100%) !important;
+  border-top-color: rgba(255, 255, 255, 0.9) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.9) !important;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.12), inset 0 0 6px rgba(0, 0, 0, 0.8), 0 6px 12px rgba(0, 0, 0, 0.45), 0 0 10px rgba(140, 145, 150, 0.45) !important;
+}
+
+.club-input-outline .mantine-Input-input:focus:not(:disabled) {
+  border-top-color: rgba(255, 255, 255, 0.9) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.9) !important;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 12px rgba(140, 145, 150, 0.5) !important;
+}
+
+.club-field-outline .club-field-chevron {
+  background: radial-gradient(circle at center, #0f1011 0%, #060607 40%, #8c9196 85%, #cfd2d6 100%) !important;
+}
+
+.club-field-outline:hover:not(.club-field-disabled) .club-field-chevron {
+  background: radial-gradient(circle at center, #131618 0%, #0a0b0c 40%, #b3b8bd 85%, #ffffff 100%) !important;
+}
+
+/* Variant: SUBTLE (Transparent) */
+.club-input-subtle .mantine-Input-input {
+  background: transparent !important;
+  color: #c7bdce !important;
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
+}
+
+.club-input-subtle .mantine-Input-input:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: #f0e8db !important;
+}
+
+/* Variant: SHEEN (Crimson with reflection) */
+.club-input-sheen .mantine-Input-input {
+  background: radial-gradient(circle at center, #6a0b12 0%, #2e0508 55%, #100102 100%) !important;
+  color: #ffffff !important;
+  border-top: 2px solid rgba(230, 184, 52, 0.9) !important;
+  border-bottom: 2px solid rgba(230, 184, 52, 0.9) !important;
+  border-left: none !important;
+  border-right: none !important;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.15), inset 0 0 0 1px rgba(230, 184, 52, 0.2), inset 0 0 6px rgba(0, 0, 0, 0.8), 0 4px 8px rgba(0, 0, 0, 0.6) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.club-input-sheen .mantine-Input-input::before {
+  content: '' !important;
+  position: absolute !important;
+  top: -50% !important;
+  left: -50% !important;
+  width: 200% !important;
+  height: 200% !important;
+  background: linear-gradient(
+    135deg,
+    transparent 0%,
+    transparent 35%,
+    rgba(230, 184, 52, 0.0) 40%,
+    rgba(230, 184, 52, 0.2) 50%,
+    rgba(230, 184, 52, 0.0) 60%,
+    transparent 65%,
+    transparent 100%
+  ) !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+  opacity: 0 !important;
+  transform: translate(-30%, -30%) !important;
+  transition: opacity 0.4s ease !important;
+}
+
+.club-input-sheen .mantine-Input-input:hover:not(:disabled) {
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.2), inset 0 0 6px rgba(0, 0, 0, 0.8), 0 8px 16px rgba(0, 0, 0, 0.55), 0 0 16px rgba(230, 184, 52, 0.6) !important;
+  background: radial-gradient(circle at center, #8a1017 0%, #3e0306 60%, #100102 100%) !important;
+  border-top-color: rgba(255, 235, 180, 1) !important;
+  border-bottom-color: rgba(255, 235, 180, 1) !important;
+}
+
+.club-input-sheen .mantine-Input-input:hover:not(:disabled)::before {
+  opacity: 1 !important;
+  animation: playcard-gold-sheen 2.5s ease-in-out infinite !important;
+}
+
+.club-field-sheen .club-field-chevron {
+  background: radial-gradient(circle at center, #2e0508 0%, #150204 40%, #8b6508 85%, #cf9e52 100%) !important;
+}
+
+.club-field-sheen:hover:not(.club-field-disabled) .club-field-chevron {
+  background: radial-gradient(circle at center, #540910 0%, #1d0305 40%, #a87e22 85%, #ffd700 100%) !important;
+}
+
+/* Disabled Field Overrides */
+.club-field-disabled {
+  opacity: 0.7 !important;
+}
+
+.club-field-disabled .club-field-chevron {
+  opacity: 0.4 !important;
+}
+
+.club-field-disabled:hover:not(.club-field-disabled) .club-field-chevron {
+  filter: none !important;
+  transform: none !important;
+}
+
+.club-input:disabled,
+.club-input[data-disabled] {
+  filter: grayscale(0.4) brightness(0.7) contrast(0.9) !important;
+  cursor: not-allowed !important;
+}
+

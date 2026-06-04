@@ -6,7 +6,6 @@ import {
   Divider,
   Group,
   Modal,
-  Select,
   Slider,
   Stack,
   Switch,
@@ -32,6 +31,7 @@ import { StatsTicker } from "@/components/club/StatsTicker";
 import { ClubButton } from "@/components/ui/ClubButton";
 import { ClubHeading } from "@/components/ui/ClubHeading";
 import { ClubPanel } from "@/components/ui/ClubPanel";
+import { ClubSelect } from "@/components/ui/ClubSelect";
 import { GameTipsModal } from "@/components/ui/GameTipsModal";
 import { isBarRouteState } from "@/game/barRouteState";
 import { useClubFlowStore } from "@/game/clubFlowStore";
@@ -51,6 +51,10 @@ import {
 import { useMotionPresetStore } from "@/motion/motionPresetStore";
 import { usePrefersReducedMotion } from "@/motion/usePrefersReducedMotion";
 import { clubTokens } from "@/theme/clubTokens";
+import { gameConfig as oublietteConfig, resolveOublietteGameMode } from "@/config/minigames/oublietteNo9GameRules";
+import { sevenYearItchGameConfig, resolveSevenYearItchGameMode } from "@/config/minigames/sevenYearItchRules";
+import { fatesealGameConfig, resolveFatesealGameMode } from "@/config/minigames/fatesealRules";
+import { mastersonGameConfig, resolveMastersonGameMode } from "@/config/minigames/mastersonRules";
 
 type GameKey = "oubliette_no9" | "seven_year_itch" | "fateseal_silver" | "masterson_1881";
 
@@ -70,7 +74,15 @@ const GAME_ENTRIES: GameMenuEntry[] = [
     subtitle: "Why Play One Hand of Poker When You Can Play Hundreds",
     route: "/minigames/oubliette-no9",
     buyIn: villainsGameDefaults.oublietteNo9.defaultBuyIn,
-    rulesets: [{ value: "house", label: "House rules" }],
+    get rulesets() {
+      return Object.keys(oublietteConfig.gameModes).map((key) => {
+        const mode = oublietteConfig.gameModes[key as keyof typeof oublietteConfig.gameModes] as { displayName?: string };
+        return {
+          value: key,
+          label: mode.displayName || oublietteConfig.defaultGameMode.displayName,
+        };
+      });
+    },
   },
   {
     id: "seven_year_itch",
@@ -78,7 +90,15 @@ const GAME_ENTRIES: GameMenuEntry[] = [
     subtitle: "Illicit Business Dealings at the Roll of the Dice",
     route: "/minigames/seven-year-itch",
     buyIn: villainsGameDefaults.sevenYearItch.defaultBuyIn,
-    rulesets: [{ value: "nv-crapless", label: "NV crapless" }],
+    get rulesets() {
+      return Object.keys(sevenYearItchGameConfig.gameModes).map((key) => {
+        const mode = sevenYearItchGameConfig.gameModes[key as keyof typeof sevenYearItchGameConfig.gameModes] as { displayName?: string };
+        return {
+          value: key,
+          label: mode.displayName || sevenYearItchGameConfig.defaultGameMode.displayName,
+        };
+      });
+    },
   },
   {
     id: "fateseal_silver",
@@ -86,7 +106,15 @@ const GAME_ENTRIES: GameMenuEntry[] = [
     subtitle: "See the Future, for a Price",
     route: "/minigames/fateseal-silver",
     buyIn: villainsGameDefaults.fatesealSilver.defaultBuyIn,
-    rulesets: [{ value: "silver", label: "House Fateseal" }],
+    get rulesets() {
+      return Object.keys(fatesealGameConfig.gameModes).map((key) => {
+        const mode = fatesealGameConfig.gameModes[key as keyof typeof fatesealGameConfig.gameModes] as { displayName?: string };
+        return {
+          value: key,
+          label: mode.displayName || fatesealGameConfig.defaultGameMode.displayName,
+        };
+      });
+    },
   },
   {
     id: "masterson_1881",
@@ -94,21 +122,76 @@ const GAME_ENTRIES: GameMenuEntry[] = [
     subtitle: "Run a Roulette Game or Run a Scam - It's All The Same.",
     route: "/minigames/masterson-1881",
     buyIn: villainsGameDefaults.masterson1881.defaultBuyIn,
-    rulesets: [{ value: "normalGame", label: "House rules" }],
+    get rulesets() {
+      return Object.keys(mastersonGameConfig.gameModes).map((key) => {
+        const mode = mastersonGameConfig.gameModes[key as keyof typeof mastersonGameConfig.gameModes] as { displayName?: string };
+        return {
+          value: key,
+          label: mode.displayName || mastersonGameConfig.defaultGameMode.displayName,
+        };
+      });
+    },
   },
 ];
 
-function gameReturnCeiling(game: GameMenuEntry): number {
-  if (game.id === "oubliette_no9") {
-    return getOublietteBaseReturnCeiling(buildOublietteSettlementProfile(game.buyIn));
+const CONFIG_LABEL_MAP: Record<string, string> = {
+  startingCredits: "Starting Credits",
+  startingBet: "Starting Bet",
+  startingHandCount: "Starting Hand Count",
+  maxHandSize: "Max Hand Size",
+  maxDraws: "Max Draw Phases",
+  minimumBetIncreasePercent: "Min Bet Increase %",
+  minimumBetIncreaseInterval: "Min Bet Increase Interval",
+  shopFrequency: "Shop Frequency",
+  minimumPairRank: "Min Pair Rank for Payout",
+  chipIncrement: "Chip Increment",
+  minPassBet: "Minimum Pass Bet",
+  minPlaceBet: "Minimum Place Bet",
+  showFieldAndHornSection: "Show Field & Horn Rows",
+  heatRollsPerFavorOffer: "Rolls per Favor Offer",
+  maxFreeOddsMultipleOfPass: "Max Free Odds Multiple",
+  maxPassBetFractionOfBuyIn: "Max Pass Bet Fraction",
+  minBaseBet: "Minimum Base Bet",
+  maxBaseBetFractionOfSession: "Max Base Bet Fraction",
+  shift_duration_spins: "Shift Duration (Spins)",
+  max_bettors: "Maximum Bettors",
+  base_commission_pct: "Base Commission %",
+  seat_fill_chance_per_spin: "Seat Fill Chance",
+  minimum_bet: "Minimum Bet",
+  buyIn: "Buy-in",
+  maxReturnMultipleOfBuyIn: "Max Return Multiple",
+};
+
+function getActiveGameModeConfig(gameId: GameKey, rulesetId: string) {
+  if (gameId === "oubliette_no9") {
+    return resolveOublietteGameMode(rulesetId);
   }
-  if (game.id === "fateseal_silver") {
-    return getFatesealBaseReturnCeiling(buildFatesealSettlementProfile(game.buyIn));
+  if (gameId === "seven_year_itch") {
+    return resolveSevenYearItchGameMode(rulesetId);
   }
-  if (game.id === "masterson_1881") {
-    return getMastersonBaseReturnCeiling(buildMastersonSettlementProfile(game.buyIn));
+  if (gameId === "fateseal_silver") {
+    return resolveFatesealGameMode(rulesetId);
   }
-  return getSevenYearItchBaseReturnCeiling(buildSevenYearItchSettlementProfile(game.buyIn));
+  if (gameId === "masterson_1881") {
+    return resolveMastersonGameMode(rulesetId);
+  }
+  return null;
+}
+
+function getGameModeDefaultConfig(gameId: GameKey) {
+  if (gameId === "oubliette_no9") {
+    return oublietteConfig.defaultGameMode;
+  }
+  if (gameId === "seven_year_itch") {
+    return sevenYearItchGameConfig.defaultGameMode;
+  }
+  if (gameId === "fateseal_silver") {
+    return fatesealGameConfig.defaultGameMode;
+  }
+  if (gameId === "masterson_1881") {
+    return mastersonGameConfig.defaultGameMode;
+  }
+  return null;
 }
 
 function startSessionErrorMessage(reason: "session_active" | "insufficient_funds" | "invalid_buy_in"): string {
@@ -248,6 +331,74 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
     return lines.length > 0 ? lines : ["No club modifiers tonight"];
   }, [activeSpecial, specialRow]);
 
+  const activeModeConfig = useMemo(() => {
+    if (!selectedGame) return null;
+    return getActiveGameModeConfig(selectedGame.id, ruleset);
+  }, [selectedGame, ruleset]);
+
+  const defaultModeConfig = useMemo(() => {
+    if (!selectedGame) return null;
+    return getGameModeDefaultConfig(selectedGame.id);
+  }, [selectedGame]);
+
+  const activeBuyIn = useMemo(() => {
+    if (activeModeConfig && "buyIn" in activeModeConfig) {
+      return activeModeConfig.buyIn;
+    }
+    return selectedGame?.buyIn ?? 2000;
+  }, [activeModeConfig, selectedGame]);
+
+  const activeReturnCeiling = useMemo(() => {
+    if (!selectedGame) return 0;
+    if (selectedGame.id === "oubliette_no9") {
+      return getOublietteBaseReturnCeiling(buildOublietteSettlementProfile(activeBuyIn, ruleset));
+    }
+    if (selectedGame.id === "fateseal_silver") {
+      return getFatesealBaseReturnCeiling(buildFatesealSettlementProfile(activeBuyIn, ruleset));
+    }
+    if (selectedGame.id === "masterson_1881") {
+      return getMastersonBaseReturnCeiling(buildMastersonSettlementProfile(activeBuyIn, ruleset));
+    }
+    return getSevenYearItchBaseReturnCeiling(buildSevenYearItchSettlementProfile(activeBuyIn, ruleset));
+  }, [selectedGame, activeBuyIn, ruleset]);
+
+  const rulesetDifferences = useMemo(() => {
+    if (!defaultModeConfig || !activeModeConfig) return [];
+    const diffs: { label: string; before: string | number; after: string | number }[] = [];
+    const def = defaultModeConfig as Record<string, unknown>;
+    const sel = activeModeConfig as Record<string, unknown>;
+    for (const key of Object.keys(def)) {
+      if (key === "displayName") {
+        continue;
+      }
+      const defVal = def[key];
+      const selVal = sel[key];
+      if (typeof defVal === "object" && defVal !== null) {
+        continue;
+      }
+      if (defVal !== selVal) {
+        const label = CONFIG_LABEL_MAP[key] || key;
+        const formatVal = (val: unknown) => {
+          if (typeof val === "boolean") return val ? "Yes" : "No";
+          if (typeof val === "number") return val.toLocaleString();
+          return String(val);
+        };
+        diffs.push({
+          label,
+          before: formatVal(defVal),
+          after: formatVal(selVal),
+        });
+      }
+    }
+    return diffs;
+  }, [defaultModeConfig, activeModeConfig]);
+
+  useEffect(() => {
+    if (selectedGame && activeSession && activeSession.gameId === selectedGame.id) {
+      setRuleset(activeSession.gameModeId ?? selectedGame.rulesets[0]?.value ?? "");
+    }
+  }, [selectedGame, activeSession]);
+
   const enterClub = () => {
     setHasEnteredClub(true);
     if (location.pathname !== "/bar") {
@@ -257,7 +408,11 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
 
   const openGameLanding = (game: GameMenuEntry) => {
     setSelectedGame(game);
-    setRuleset(game.rulesets[0]?.value ?? "");
+    if (activeSession && activeSession.gameId === game.id) {
+      setRuleset(activeSession.gameModeId ?? game.rulesets[0]?.value ?? "");
+    } else {
+      setRuleset(game.rulesets[0]?.value ?? "");
+    }
     setSessionError(null);
   };
 
@@ -280,19 +435,23 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
         return;
       }
 
-      if (clubBalance < game.buyIn) {
+      // Resolve dynamic buy-in for current selection
+      const resolvedConfig = getActiveGameModeConfig(game.id, ruleset);
+      const buyInToUse = resolvedConfig?.buyIn ?? game.buyIn;
+
+      if (clubBalance < buyInToUse) {
         setSessionError(startSessionErrorMessage("insufficient_funds"));
         return;
       }
       setStartingGame(game.id);
       const settlement =
         game.id === "oubliette_no9"
-          ? buildOublietteSettlementProfile(game.buyIn)
+          ? buildOublietteSettlementProfile(buyInToUse, ruleset)
           : game.id === "fateseal_silver"
-            ? buildFatesealSettlementProfile(game.buyIn)
+            ? buildFatesealSettlementProfile(buyInToUse, ruleset)
             : game.id === "masterson_1881"
-              ? buildMastersonSettlementProfile(game.buyIn)
-              : buildSevenYearItchSettlementProfile(game.buyIn);
+              ? buildMastersonSettlementProfile(buyInToUse, ruleset)
+              : buildSevenYearItchSettlementProfile(buyInToUse, ruleset);
       const drinkId =
         game.id === "oubliette_no9"
           ? "club_table"
@@ -304,8 +463,9 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
       const result = startSession({
         gameId: game.id,
         drinkId,
-        buyIn: game.buyIn,
+        buyIn: buyInToUse,
         settlement,
+        gameModeId: ruleset,
       });
       if (!result.ok) {
         setSessionError(startSessionErrorMessage(result.reason));
@@ -314,7 +474,7 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
       }
       navigate(game.route);
     },
-    [activeSession, clubBalance, navigate, startSession, playedGames, startTutorialSession],
+    [activeSession, clubBalance, navigate, startSession, playedGames, startTutorialSession, ruleset],
   );
 
   const tone = useMemo(() => {
@@ -732,9 +892,9 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
                                 </Group>
 
                               </Group>
-                              <Text size="sm" c={clubTokens.text.secondary}>
-                                Buy-in {game.buyIn.toLocaleString()} credits. Base return ceiling{" "}
-                                {gameReturnCeiling(game).toLocaleString()} credits before tonight’s specials.
+                               <Text size="sm" c={clubTokens.text.secondary}>
+                                Buy-in {activeBuyIn.toLocaleString()} credits. Base return ceiling{" "}
+                                {activeReturnCeiling.toLocaleString()} credits before tonight’s specials.
                               </Text>
                               <Stack gap={4}>
                                 <Text size="xs" tt="uppercase" fw={700} c={clubTokens.text.muted}>
@@ -746,13 +906,41 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
                                   </Text>
                                 ))}
                               </Stack>
-                              <Select
+                              <ClubSelect
+                                fancy
+                                variant="light"
                                 label="Ruleset"
                                 data={game.rulesets}
                                 value={ruleset}
                                 onChange={(value) => setRuleset(value ?? game.rulesets[0]?.value ?? "")}
                                 allowDeselect={false}
+                                disabled={Boolean(activeSession && activeSession.gameId === game.id)}
                               />
+                              {rulesetDifferences.length > 0 ? (
+                                <Stack gap={6} style={{ 
+                                  backgroundColor: "rgba(0, 0, 0, 0.2)", 
+                                  borderRadius: "6px", 
+                                  padding: "10px",
+                                  border: `1px solid ${clubTokens.surface.brassStroke}`,
+                                  marginTop: "4px"
+                                }}>
+                                  <Text size="xs" tt="uppercase" fw={700} c={clubTokens.text.brass}>
+                                    Ruleset Modifications
+                                  </Text>
+                                  <Stack gap={4}>
+                                    {rulesetDifferences.map((diff) => (
+                                      <Group key={diff.label} justify="space-between">
+                                        <Text size="xs" c={clubTokens.text.secondary}>
+                                          {diff.label}
+                                        </Text>
+                                        <Text size="xs" fw={600} c={clubTokens.text.goldHighlight}>
+                                          {diff.after} <span style={{ color: clubTokens.text.muted, fontWeight: 450 }}>({diff.before})</span>
+                                        </Text>
+                                      </Group>
+                                    ))}
+                                  </Stack>
+                                </Stack>
+                              ) : null}
                               {sessionError ? (
                                 <Alert color="red" variant="light" title="Cannot start table" onClose={() => setSessionError(null)} withCloseButton>
                                   {sessionError}

@@ -24,6 +24,8 @@ export const POINT_NUMBERS: readonly PointNumber[] = [2, 3, 4, 5, 6, 8, 9, 10, 1
 export const sevenYearItchGameConfig = {
   defaultGameMode: {
     displayName: "Normal table",
+    buyIn: 2000,
+    maxReturnMultipleOfBuyIn: 50,
     /** Table clicks add/remove this many credits per tap (primary / context). */
     chipIncrement: 50,
     minPassBet: 50,
@@ -42,19 +44,25 @@ export const sevenYearItchGameConfig = {
     /** Refund percentage for Evidence Locker Key when a 7 is rolled. */
     evidenceLockerRefundRate: 0.30,
   },
-  /** Mode overrides keyed by id. Empty object = use defaultGameMode as-is. */
   gameModes: {
     normalGame: {},
-    /**
-     * Example alternate profile (not shell-selected yet). Shows how modes override the base.
-     * Delete or replace when product adds real variants.
-     */
     quickTable: {
+      displayName: "Quick Table",
+      buyIn: 1000,
+      maxReturnMultipleOfBuyIn: 30,
       chipIncrement: 25,
       minPassBet: 25,
       minPlaceBet: 25,
       showFieldAndHornSection: false,
       heatRollsPerFavorOffer: 3,
+    },
+    highOdds: {
+      displayName: "High Odds Table",
+      buyIn: 5000,
+      maxReturnMultipleOfBuyIn: 70,
+      maxFreeOddsMultipleOfPass: 5,
+      chipIncrement: 100,
+      minPassBet: 100,
     },
   },
 } as const;

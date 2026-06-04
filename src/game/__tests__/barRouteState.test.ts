@@ -101,7 +101,7 @@ describe("barRouteState", () => {
   });
 
   it("buildBarRouteStateFromReturn copies detail fields and max win ceiling", () => {
-    const settlement = buildOublietteSettlementProfile(defaultBuyIn, new Date("2026-01-01"));
+    const settlement = buildOublietteSettlementProfile(defaultBuyIn, undefined, new Date("2026-01-01"));
     const state = buildBarRouteStateFromReturn("oubliette_no9", defaultBuyIn, {
       uncappedCredits: 200,
       basePayout: 50,
@@ -119,7 +119,7 @@ describe("barRouteState", () => {
   });
 
   it("buildBarRouteStateFromReturn caps totalReturn at maxWinCredits", () => {
-    const settlement = buildOublietteSettlementProfile(defaultBuyIn, new Date("2026-01-01"));
+    const settlement = buildOublietteSettlementProfile(defaultBuyIn, undefined, new Date("2026-01-01"));
     const maxWin = defaultBuyIn * 50; // 100000
     const state = buildBarRouteStateFromReturn("oubliette_no9", defaultBuyIn, {
       uncappedCredits: 1_000_000,
@@ -133,7 +133,7 @@ describe("barRouteState", () => {
   });
 
   it("buildBarRouteStateFromReturn forwards endReason", () => {
-    const settlement = buildOublietteSettlementProfile(defaultBuyIn, new Date("2026-01-01"));
+    const settlement = buildOublietteSettlementProfile(defaultBuyIn, undefined, new Date("2026-01-01"));
     const state = buildBarRouteStateFromReturn("oubliette_no9", defaultBuyIn, {
       uncappedCredits: 100,
       basePayout: 100,
@@ -147,7 +147,7 @@ describe("barRouteState", () => {
   });
 
   it("buildBarRouteStateFromReturn uses game-supplied stats when provided", () => {
-    const settlement = buildOublietteSettlementProfile(defaultBuyIn, new Date("2026-01-01"));
+    const settlement = buildOublietteSettlementProfile(defaultBuyIn, undefined, new Date("2026-01-01"));
     const customStats = [{ label: "Hands won", value: 42 }];
     const state = buildBarRouteStateFromReturn("oubliette_no9", defaultBuyIn, {
       uncappedCredits: 100,
@@ -162,7 +162,7 @@ describe("barRouteState", () => {
   });
 
   it("buildBarRouteStateFromReturn auto-generates default stats from detail when no stats supplied", () => {
-    const settlement = buildOublietteSettlementProfile(defaultBuyIn, new Date("2026-01-01"));
+    const settlement = buildOublietteSettlementProfile(defaultBuyIn, undefined, new Date("2026-01-01"));
     const state = buildBarRouteStateFromReturn("oubliette_no9", defaultBuyIn, {
       uncappedCredits: 200,
       basePayout: 150,
@@ -179,7 +179,7 @@ describe("barRouteState", () => {
   });
 
   it("buildBarRouteStateFromReturn omits endReason when not provided", () => {
-    const settlement = buildOublietteSettlementProfile(defaultBuyIn, new Date("2026-01-01"));
+    const settlement = buildOublietteSettlementProfile(defaultBuyIn, undefined, new Date("2026-01-01"));
     const state = buildBarRouteStateFromReturn("oubliette_no9", defaultBuyIn, {
       uncappedCredits: 100,
       basePayout: 100,

@@ -21,7 +21,6 @@ import {
   Switch,
   Tabs,
   Text,
-  Textarea,
   TextInput,
   Title,
   Tooltip,
@@ -35,6 +34,10 @@ import { bandPublicUrl, bandsCatalog } from "@/config/bandsCatalog";
 import { ClubButton } from "@/components/ui/ClubButton";
 import { ClubHeading } from "@/components/ui/ClubHeading";
 import { ClubPanel } from "@/components/ui/ClubPanel";
+import { ClubTextInput } from "@/components/ui/ClubTextInput";
+import { ClubSelect } from "@/components/ui/ClubSelect";
+import { ClubTextarea } from "@/components/ui/ClubTextarea";
+import { ClubNumberInput } from "@/components/ui/ClubNumberInput";
 import { GameButton } from "@/minigames/oubliette-no9/components/GameButton";
 import { MenuHazeBackground } from "@/components/layout/MenuHazeBackground";
 import { defaultMotionPreset } from "@/motion/presets";
@@ -84,6 +87,51 @@ export function UiPlayground() {
   const [genFullWidth, setGenFullWidth] = useState(false);
   const [genLeftSection, setGenLeftSection] = useState(false);
   const [genCopied, setGenCopied] = useState(false);
+
+  const [formGenType, setFormGenType] = useState<"text" | "select" | "textarea" | "number" | "switch" | "slider" | "checkbox" | "radio">("text");
+  const [formGenLabel, setFormGenLabel] = useState("Label Title");
+  const [formGenDesc, setFormGenDesc] = useState("Description text");
+  const [formGenPlaceholder, setFormGenPlaceholder] = useState("Placeholder...");
+  const [formGenDisabled, setFormGenDisabled] = useState(false);
+  const [formGenCopied, setFormGenCopied] = useState(false);
+  const [formGenVariant, setFormGenVariant] = useState<"filled" | "light" | "outline" | "subtle" | "sheen">("light");
+  const [formGenFancy, setFormGenFancy] = useState(true);
+
+  const generatedFormCodeString = useMemo(() => {
+    const disabledStr = formGenDisabled ? "  disabled\n" : "";
+    const fancyStr = formGenFancy ? "  fancy\n" : "";
+    const variantStr = formGenVariant !== "light" ? `  variant="${formGenVariant}"\n` : "";
+
+    if (formGenType === "text") {
+      return `<ClubTextInput\n  label="${formGenLabel}"\n  placeholder="${formGenPlaceholder}"\n  description="${formGenDesc}"\n${variantStr}${fancyStr}${disabledStr}/>`;
+    }
+    if (formGenType === "select") {
+      return `<ClubSelect\n  label="${formGenLabel}"\n  description="${formGenDesc}"\n  data={["Option A", "Option B"]}\n  defaultValue="Option A"\n${variantStr}${fancyStr}${disabledStr}/>`;
+    }
+    if (formGenType === "textarea") {
+      return `<ClubTextarea\n  label="${formGenLabel}"\n  placeholder="${formGenPlaceholder}"\n  description="${formGenDesc}"\n${variantStr}${fancyStr}${disabledStr}/>`;
+    }
+    if (formGenType === "number") {
+      return `<ClubNumberInput\n  label="${formGenLabel}"\n  description="${formGenDesc}"\n  defaultValue={100}\n${variantStr}${fancyStr}${disabledStr}/>`;
+    }
+    if (formGenType === "switch") {
+      return `<Switch\n  label="${formGenLabel}"\n${disabledStr}/>`;
+    }
+    if (formGenType === "slider") {
+      return `<Slider\n  label="${formGenLabel}"\n  min={0}\n  max={100}\n  defaultValue={50}\n${disabledStr}/>`;
+    }
+    if (formGenType === "checkbox") {
+      return `<Checkbox\n  label="${formGenLabel}"\n${disabledStr}/>`;
+    }
+    return `<Radio\n  label="${formGenLabel}"\n  value="value"\n${disabledStr}/>`;
+  }, [formGenType, formGenLabel, formGenDesc, formGenPlaceholder, formGenDisabled, formGenVariant, formGenFancy]);
+
+  const handleCopyFormCode = () => {
+    navigator.clipboard.writeText(generatedFormCodeString).then(() => {
+      setFormGenCopied(true);
+      setTimeout(() => setFormGenCopied(false), 2000);
+    });
+  };
 
   const generatedCodeString = useMemo(() => {
     const parts = [];
@@ -739,14 +787,16 @@ export function UiPlayground() {
 
               <ClubPanel>
                 <ClubHeading order={4} mb="sm">
-                  Form controls
+                  Form controls (Skeuomorphic Club Wrappers)
                 </ClubHeading>
                 <Grid gutter="md">
                   <Grid.Col span={{ base: 12, md: 6 }}>
                     <Stack gap="sm">
-                      <TextInput label="Text input" placeholder="Placeholder" description="Description line" />
-                      <Textarea label="Textarea" placeholder="Longer copy…" minRows={3} />
-                      <Select label="Select" data={["Option A", "Option B", "Option C"]} defaultValue="Option A" />
+                      <ClubTextInput fancy variant="light" label="Club Text Input (Fancy, Light)" placeholder="Enter credentials..." description="Gothic walnut styling" />
+                      <ClubTextarea fancy variant="filled" label="Club Textarea (Fancy, Filled)" placeholder="Confess your crimes..." minRows={2} description="Crimson backing" />
+                      <ClubSelect fancy variant="sheen" label="Club Select (Fancy, Sheen)" data={["High Stakes", "House Rules", "Low Stakes"]} defaultValue="House Rules" description="Animated gold sheen hover" />
+                      <ClubNumberInput fancy variant="outline" label="Club Number Input (Fancy, Outline)" defaultValue={2000} description="Silver metal styling" />
+                      <Slider label="Slider" min={0} max={100} defaultValue={60} />
                     </Stack>
                   </Grid.Col>
                   <Grid.Col span={{ base: 12, md: 6 }}>
@@ -775,6 +825,213 @@ export function UiPlayground() {
                           Ring progress for compact status (loading, sync, etc.).
                         </Text>
                       </Group>
+                    </Stack>
+                  </Grid.Col>
+                </Grid>
+              </ClubPanel>
+
+              <ClubPanel>
+                <ClubHeading order={4} mb="xs">
+                  Form Elements Interactive Sandbox
+                </ClubHeading>
+                <Text size="sm" c={clubTokens.text.muted} mb="md">
+                  Standard Mantine components enhanced with skeuomorphic <code>Club</code> wrapper components. Configure a control, test active/disabled states and hover effects, and copy the React code.
+                </Text>
+
+                <Grid gutter="md" align="stretch">
+                  <Grid.Col span={{ base: 12, md: 6 }}>
+                    <Stack gap="sm">
+                      <Select
+                        label="Control Type"
+                        data={[
+                          { value: "text", label: "ClubTextInput" },
+                          { value: "select", label: "ClubSelect" },
+                          { value: "textarea", label: "ClubTextarea" },
+                          { value: "number", label: "ClubNumberInput" },
+                          { value: "switch", label: "Switch Toggle" },
+                          { value: "slider", label: "Slider Range" },
+                          { value: "checkbox", label: "Checkbox Option" },
+                          { value: "radio", label: "Radio Option" },
+                        ]}
+                        value={formGenType}
+                        onChange={(val) => setFormGenType((val || "text") as typeof formGenType)}
+                        allowDeselect={false}
+                      />
+                      {["text", "select", "textarea", "number"].includes(formGenType) && (
+                        <>
+                          <Select
+                            label="Variant"
+                            data={[
+                              { value: "filled", label: "Filled (Crimson / Red)" },
+                              { value: "light", label: "Light (Walnut Brown)" },
+                              { value: "outline", label: "Outline (Silver Metal)" },
+                              { value: "subtle", label: "Subtle (Transparent)" },
+                              { value: "sheen", label: "Sheen (Animated Gold)" },
+                            ]}
+                            value={formGenVariant}
+                            onChange={(val) => setFormGenVariant((val || "light") as typeof formGenVariant)}
+                            allowDeselect={false}
+                          />
+                          <Switch
+                            label="Fancy (Chevrons)"
+                            checked={formGenFancy}
+                            onChange={(e) => setFormGenFancy(e.currentTarget.checked)}
+                          />
+                        </>
+                      )}
+                      <TextInput
+                        label="Label Text"
+                        value={formGenLabel}
+                        onChange={(e) => setFormGenLabel(e.currentTarget.value)}
+                      />
+                      {formGenType === "text" && (
+                        <TextInput
+                          label="Placeholder Text"
+                          value={formGenPlaceholder}
+                          onChange={(e) => setFormGenPlaceholder(e.currentTarget.value)}
+                        />
+                      )}
+                      {(formGenType === "text" || formGenType === "select" || formGenType === "textarea" || formGenType === "number") && (
+                        <TextInput
+                          label="Description Text"
+                          value={formGenDesc}
+                          onChange={(e) => setFormGenDesc(e.currentTarget.value)}
+                        />
+                      )}
+                      <Switch
+                        label="Disabled State"
+                        checked={formGenDisabled}
+                        onChange={(e) => setFormGenDisabled(e.currentTarget.checked)}
+                      />
+                    </Stack>
+                  </Grid.Col>
+
+                  <Grid.Col span={{ base: 12, md: 6 }}>
+                    <Stack gap="md" justify="space-between" style={{ height: "100%" }}>
+                      <Box>
+                        <Text size="xs" fw={700} tt="uppercase" c="dimmed" mb="sm">
+                          Live Preview
+                        </Text>
+                        <Box
+                          p="md"
+                          style={{
+                            background: "rgba(0, 0, 0, 0.2)",
+                            border: "1px dashed rgba(255, 255, 255, 0.1)",
+                            borderRadius: "8px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            minHeight: 80,
+                          }}
+                        >
+                          <Box style={{ width: "100%" }}>
+                            {formGenType === "text" && (
+                              <ClubTextInput
+                                label={formGenLabel}
+                                placeholder={formGenPlaceholder}
+                                description={formGenDesc}
+                                disabled={formGenDisabled}
+                                variant={formGenVariant}
+                                fancy={formGenFancy}
+                              />
+                            )}
+                            {formGenType === "select" && (
+                              <ClubSelect
+                                label={formGenLabel}
+                                description={formGenDesc}
+                                data={["Option A", "Option B"]}
+                                defaultValue="Option A"
+                                disabled={formGenDisabled}
+                                variant={formGenVariant}
+                                fancy={formGenFancy}
+                              />
+                            )}
+                            {formGenType === "textarea" && (
+                              <ClubTextarea
+                                label={formGenLabel}
+                                placeholder={formGenPlaceholder}
+                                description={formGenDesc}
+                                disabled={formGenDisabled}
+                                variant={formGenVariant}
+                                fancy={formGenFancy}
+                              />
+                            )}
+                            {formGenType === "number" && (
+                              <ClubNumberInput
+                                label={formGenLabel}
+                                description={formGenDesc}
+                                disabled={formGenDisabled}
+                                variant={formGenVariant}
+                                fancy={formGenFancy}
+                              />
+                            )}
+                            {formGenType === "switch" && (
+                              <Switch
+                                label={formGenLabel}
+                                disabled={formGenDisabled}
+                                defaultChecked
+                              />
+                            )}
+                            {formGenType === "slider" && (
+                              <Slider
+                                label={formGenLabel}
+                                min={0}
+                                max={100}
+                                defaultValue={50}
+                                disabled={formGenDisabled}
+                              />
+                            )}
+                            {formGenType === "checkbox" && (
+                              <Checkbox
+                                label={formGenLabel}
+                                disabled={formGenDisabled}
+                                defaultChecked
+                              />
+                            )}
+                            {formGenType === "radio" && (
+                              <Radio
+                                label={formGenLabel}
+                                disabled={formGenDisabled}
+                                defaultChecked
+                                value="value"
+                              />
+                            )}
+                          </Box>
+                        </Box>
+                      </Box>
+
+                      <Box>
+                        <Group justify="space-between" align="center" mb={6}>
+                          <Text size="xs" fw={700} tt="uppercase" c="dimmed">
+                            Generated React Code
+                          </Text>
+                          <ClubButton
+                            size="xs"
+                            variant="light"
+                            onClick={handleCopyFormCode}
+                            style={{ minWidth: 80 }}
+                          >
+                            {formGenCopied ? "✓ COPIED" : "COPY CODE"}
+                          </ClubButton>
+                        </Group>
+                        <pre
+                          style={{
+                            margin: 0,
+                            padding: "10px 14px",
+                            background: "rgba(0, 0, 0, 0.4)",
+                            border: `1px solid ${clubTokens.surface.brassStroke}`,
+                            borderRadius: "6px",
+                            fontSize: "11px",
+                            color: clubTokens.text.brass,
+                            fontFamily: "monospace",
+                            whiteSpace: "pre-wrap",
+                            wordBreak: "break-all",
+                            overflowX: "auto",
+                          }}
+                        >
+                          {generatedFormCodeString}
+                        </pre>
+                      </Box>
                     </Stack>
                   </Grid.Col>
                 </Grid>

@@ -9,7 +9,7 @@ import { usePrefersReducedMotion } from "@/motion/usePrefersReducedMotion";
 import { clubTokens } from "@/theme/clubTokens";
 
 
-import "@/minigames/fateseal-silver/fatesealSilver.css";
+import "@/minigames/fateseal-silver/fatesealSilver.scss";
 
 const FatesealSilverRoot = lazy(() =>
   import("@/minigames/fateseal-silver/App").then((m) => ({ default: m.FatesealSilverRoot })),

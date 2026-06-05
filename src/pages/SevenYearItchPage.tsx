@@ -9,7 +9,7 @@ import { usePrefersReducedMotion } from "@/motion/usePrefersReducedMotion";
 import { clubTokens } from "@/theme/clubTokens";
 
 
-import "@/minigames/seven-year-itch/sevenYearItch.css";
+import "@/minigames/seven-year-itch/sevenYearItch.scss";
 
 const SevenYearItchRoot = lazy(() =>
   import("@/minigames/seven-year-itch/App").then((m) => ({ default: m.SevenYearItchRoot })),

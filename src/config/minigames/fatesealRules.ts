@@ -9,169 +9,63 @@
  * so average session wallet drift over long runs stays negative vs. base bet under `npm run sim:fateseal`.
  */
 
-/** Standard occult icons (§3A — 8 unique). */
-export const FATESEAL_STANDARD_SYMBOLS = [
-  "dagger",
-  "chalice",
-  "goat",
-  "eye",
-  "serpent",
-  "moon",
-  "flame",
-  "key",
-] as const;
+import {
+  FATESEAL_STANDARD_SYMBOLS,
+  FATESEAL_SPECIAL_SYMBOLS,
+  fatesealSymbolLore,
+  FATESEAL_GRID_SIZE,
+  fatesealProphecyMode,
+  fatesealCascadePayoutScale,
+  fatesealCascadeMultipliers,
+  fatesealProgressionRules,
+  fatesealScatterSymbolPoolWeight,
+  fatesealScatterRitual,
+  fatesealGameConfig,
+  fatesealCrossroadsNewShop,
+  fatesealDefaultSymbolPool,
+  fatesealWagerLevels,
+  fatesealUnsettleSpiritsConfig,
+  fatesealFaustianBargainConfig,
+  fatesealVassagoGambitConfig
+} from './fatesealConfig';
 
-export type FatesealStandardId = (typeof FATESEAL_STANDARD_SYMBOLS)[number];
+import type {
+  FatesealStandardId,
+  FatesealSpecialId,
+  FatesealSymbolId,
+  FatesealProphecyModeKey,
+  FatesealGameModeConfig,
+  FatesealPoolEntry
+} from './fatesealConfig';
 
-export const FATESEAL_SPECIAL_SYMBOLS = ["wild", "scatter", "void"] as const;
-export type FatesealSpecialId = (typeof FATESEAL_SPECIAL_SYMBOLS)[number];
-
-export type FatesealSymbolId = FatesealStandardId | FatesealSpecialId;
-
-export const fatesealSymbolLore: Record<FatesealStandardId, { title: string; blurb: string }> = {
-  dagger: { title: "The Dagger", blurb: "A promise cut in silver." },
-  chalice: { title: "The Chalice", blurb: "Wine dark as a sealed oath." },
-  goat: { title: "The Goat", blurb: "Horns against a thin veil." },
-  eye: { title: "The Eye", blurb: "It blinks when nobody is watching." },
-  serpent: { title: "The Serpent", blurb: "Coils in the corner of the vision." },
-  moon: { title: "The Moon", blurb: "A thin sickle over charcoal stone." },
-  flame: { title: "The Flame", blurb: "Cold fire that eats the edges." },
-  key: { title: "The Key", blurb: "Teeth that fit a lock you never saw." },
+export {
+  FATESEAL_STANDARD_SYMBOLS,
+  FATESEAL_SPECIAL_SYMBOLS,
+  fatesealSymbolLore,
+  FATESEAL_GRID_SIZE,
+  fatesealProphecyMode,
+  fatesealCascadePayoutScale,
+  fatesealCascadeMultipliers,
+  fatesealProgressionRules,
+  fatesealScatterSymbolPoolWeight,
+  fatesealScatterRitual,
+  fatesealGameConfig,
+  fatesealCrossroadsNewShop,
+  fatesealDefaultSymbolPool,
+  fatesealWagerLevels,
+  fatesealUnsettleSpiritsConfig,
+  fatesealFaustianBargainConfig,
+  fatesealVassagoGambitConfig
 };
 
-/** Grid is 5×5 per spec §3. */
-export const FATESEAL_GRID_SIZE = 5 as const;
-
-/**
- * §3B — Single Focus: 10× base bet per prophecy match instance.
- * Triple Focus: 1× base bet per instance of any of the three symbols.
- */
-export const fatesealProphecyMode = {
-  single: { pickCount: 1 as const, winMultipleOfBaseBet: 10 },
-  /** Retained for tests / alternate modes; shell seals a single omen only (TODO.md). */
-  triple: { pickCount: 3 as const, winMultipleOfBaseBet: 1 },
-} as const;
-
-export type FatesealProphecyModeKey = keyof typeof fatesealProphecyMode;
-
-/**
- * Applied to every cascade step payout after §3B × §3C math (floor). Tightens long-run RTP vs. raw
- * symbolic multipliers alone. Re-tune with `npm run sim:fateseal`.
- */
-/** Monte Carlo (see `npm run sim:fateseal` with `FATESEAL_SIM_BASE_ONLY=1`) targets ~88–95% payout/paid bet. */
-export const fatesealCascadePayoutScale = 0.0082 as const;
-
-/**
- * §3C step 3 — payout uses a per-cascade multiplier that rises with chain depth.
- * Index 0 = first evaluation after a spin / inflow; further cascades use successive entries (clamped).
- * Softer ramp than early prototypes — pairs with {@link fatesealCascadePayoutScale}.
- */
-export const fatesealCascadeMultipliers = [1, 1, 2, 3, 4, 6] as readonly number[];
-
-
-/**
- * TODO.md Fateseal backlog — tunables for engine/UI work in progress.
- * Import from tests and `cascadeEngine` so values cannot drift from production.
- */
-export const fatesealProgressionRules = {
-  crossroads: {
-    /**
-     * Crossroads opens after this many **scatter** symbols land on the **final
-     * settled grid** of completed spins (v1 stand-in for “bonus symbols revealed”).
-     */
-    scatterSymbolsToTriggerShop: 6,
-  },
-  linking: {
-    /** Non–actively-prophesied standards need this many orthogonally linked tiles to clear. */
-    minOrthogonalRunForNonProphecyRemoval: 5,
-    /**
-     * Each undirected orthogonal adjacency between two prophecy-hit cells adds this to the
-     * cascade step multiplier (before `fatesealCascadePayoutScale`), capped by `maxCascadeMultBonusFromLinking`.
-     * Used only when {@link usePowProphecyLinkingForCascadeMult} is false.
-     */
-    cascadeMultAddPerProphecyAdjacency: 0.2,
-    /** Upper bound on the sum added to the depth cascade mult from prophecy linking (additive mode). */
-    maxCascadeMultBonusFromLinking: 5,
-    /**
-     * TODO.md — “2× multiplier per matched linking symbols”: multiply the depth cascade mult by
-     * `powBase` raised to `min(prophecyAdjacencyEdges, maxEdgesForPow)` (configurable per game mode).
-     */
-    usePowProphecyLinkingForCascadeMult: true,
-    prophecyLinkingPowBasePerAdjacency: 2,
-    maxProphecyEdgesForLinkingPow: 2,
-  },
-  sympatheticVibrations: {
-    /** Lump payout vs base bet when enough ritual meter fires occur in a single spin. */
-    payoutMultipleOfBaseBet: 75,
-    /** Minimum number of Free Ritual grants from the meter in this spin to pay Sympathetic Vibrations once. */
-    bonusRoundIndexTrigger: 4,
-  },
-  purchasedReels: {
-    wildChancePerActiveReel: 0.20,
-    /** Decay rate for wild reel chance per cascade depth step. Set to 1.0 for no decay. */
-    wildChanceDecayPerDepth: 0.50,
-    markedSymbolPayoutMultiplier: 1.5,
-    /** Payout scaling multiplier per symbol as the count of active omens increases (1, 2, 3, 4). */
-    omenScalingFactors: [1.2, 0.4, 0.25, 0.1] as readonly number[],
-    /** Free Ritual spins (zero bet) do not decrement Crossroads wild/dead/mark spin timers. */
-    bonusSpinsExcludeFromReelDecay: true,
-  },
-  bonusGrid: {
-    maxGridSize: 9,
-  },
-} as const;
-
-/** Pool weight for scatter drops — lower = rarer bonus (TODO.md). */
-export const fatesealScatterSymbolPoolWeight = 0.7 as const;
-
-/** §3A / §5 — Scatter meter ticks mid-cascade for Sympathetic accumulation; meter fires that enqueue bonus append waves log `scatter_ritual_started` (see `runSpin`). */
-export const fatesealScatterRitual = {
-  /** Scatters on the board added to the meter after each spin settles. */
-  meterToTrigger: 12,
-  /**
-   * Log label / legacy copy — each meter fire **appends one in-spin bonus wave** to the current
-   * ritual (TODO.md); meter no longer banks separate “free ritual” charges.
-   */
-  freeSpinsGranted: 1,
-  /** During Free Ritual fills, extra wild weight is applied in generation (soft guarantee). */
-  freeRitualWildWeightBoost: 1,
-} as const;
-
-/**
- * Game mode container (same pattern as Oubliette / 7 Year Itch): **defaultGameMode** plus
- * **gameModes** partial overrides. Shell passes `gameModeId` on `TableSession`.
- */
-export const fatesealGameConfig = {
-  defaultGameMode: {
-    displayName: "Normal ritual",
-    buyIn: 2000,
-    maxReturnMultipleOfBuyIn: 50,
-    /** Primary chip step for base bet control. */
-    chipIncrement: 10,
-    minBaseBet: 100,
-    /** Max base bet as a fraction of current session credits (session wallet). */
-    maxBaseBetFractionOfSession: 0.5 as number,
-  },
-  gameModes: {
-    normalGame: {},
-    quickBet: {
-      displayName: "Quick Bet",
-      buyIn: 1000,
-      maxReturnMultipleOfBuyIn: 30,
-      chipIncrement: 5,
-      minBaseBet: 5,
-    },
-    highRoller: {
-      displayName: "High Roller Ritual",
-      buyIn: 5000,
-      maxReturnMultipleOfBuyIn: 70,
-      chipIncrement: 50,
-      minBaseBet: 500,
-    },
-  },
-} as const;
-
-export type FatesealGameModeConfig = (typeof fatesealGameConfig)["defaultGameMode"];
+export type {
+  FatesealStandardId,
+  FatesealSpecialId,
+  FatesealSymbolId,
+  FatesealProphecyModeKey,
+  FatesealGameModeConfig,
+  FatesealPoolEntry
+};
 
 function mergeFatesealGameMode(
   defaults: Record<string, unknown>,
@@ -222,48 +116,12 @@ export function resolveFatesealGameMode(modeId: string | undefined): FatesealGam
   return getCurrentFatesealGameMode();
 }
 
-/**
- * TODO.md Crossroads — absolute-credit SKUs (reel counters are stored on session state; column
- * gravity / dead-column behavior is not simulated in the cascade engine yet).
- */
-export const fatesealCrossroadsNewShop = {
-  addOmenSymbol: {
-    costs: [3500, 6000, 12000],
-    /** Extra symbols that can be bought this session (sealed omen + extras, max 4 total). */
-    maxExtraPurchases: 3,
-  },
-} as const;
-
 /** Credits for the next “add omen symbol” purchase this session (`alreadyPurchased` in 0..max-1). */
 export function crossroadsNextOmenAdditionCostCredits(alreadyPurchased: number): number {
   const c = fatesealCrossroadsNewShop.addOmenSymbol;
   if (alreadyPurchased >= c.maxExtraPurchases) return Number.POSITIVE_INFINITY;
   return c.costs[alreadyPurchased] ?? Number.POSITIVE_INFINITY;
 }
-
-/** Weighted pool row used for drops / shop bookkeeping. */
-export type FatesealPoolEntry = {
-  symbol: FatesealSymbolId;
-  weight: number;
-};
-
-/**
- * Starting symbol pool — weights tuned with the payout scale and cascade ramp for controlled
- * volatility at default buy-in. Void starts at 0 (Faustian adds it).
- */
-export const fatesealDefaultSymbolPool: readonly FatesealPoolEntry[] = [
-  { symbol: "dagger", weight: 9 },
-  { symbol: "chalice", weight: 9 },
-  { symbol: "goat", weight: 9 },
-  { symbol: "eye", weight: 9 },
-  { symbol: "serpent", weight: 9 },
-  { symbol: "moon", weight: 9 },
-  { symbol: "flame", weight: 9 },
-  { symbol: "key", weight: 9 },
-  { symbol: "wild", weight: 2 },
-  /** Tunable via {@link fatesealScatterSymbolPoolWeight} — tune with `npm run sim:fateseal`. */
-  { symbol: "scatter", weight: fatesealScatterSymbolPoolWeight },
-];
 
 export function totalPoolWeight(pool: readonly FatesealPoolEntry[]): number {
   let s = 0;
@@ -274,32 +132,3 @@ export function totalPoolWeight(pool: readonly FatesealPoolEntry[]): number {
 export function clonePool(pool: readonly FatesealPoolEntry[]): FatesealPoolEntry[] {
   return pool.map((e) => ({ ...e }));
 }
-
-/** Configurable wagers for Fateseal Silver (TODO.md) */
-export const fatesealWagerLevels = [100, 200, 500, 1000] as const;
-
-/** "Unsettle the Spirits" (Wild Reel) configurations */
-export const fatesealUnsettleSpiritsConfig = {
-  durationSpins: 5,
-  costRatioOfBank: 0.75,
-  minPrice: 6500,
-  betSize: 250,
-} as const;
-
-/** "Faustian Bargain" (Dead Reel) configurations */
-export const fatesealFaustianBargainConfig = {
-  creditRatioOfBuyIn: 0.75,
-  durationSpinsPerLevel: 5,
-  lockedBetSize: 250,
-  maxLevel: 3,
-} as const;
-
-/** "Vassago's Gambit" configurations */
-export const fatesealVassagoGambitConfig = {
-  costRatioOfBank: 0.90,
-  minPrice: 10000,
-  betSize: 250,
-  scatterChanceMultiplier: 1.5,
-} as const;
-
-

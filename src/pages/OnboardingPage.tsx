@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Box, Group, Stack, TextInput, Title, Text } from "@mantine/core";
+import { Box, Stack, TextInput, Title, Text } from "@mantine/core";
 import { ClubButton } from "@/components/ui/ClubButton";
-import { ClubPanel } from "@/components/ui/ClubPanel";
+import { ClubGuidePanel } from "@/components/ui/ClubGuidePanel";
 import { useClubWallet } from "@/game/clubWalletStore";
 import { clubTokens } from "@/theme/clubTokens";
 import { motion, AnimatePresence } from "framer-motion";
-import { usePrefersReducedMotion } from "@/motion/usePrefersReducedMotion";
-import "./OnboardingPage.css";
+import { useGuideNavigator } from "@/hooks/useGuideNavigator";
+import "./OnboardingPage.scss";
 
 interface OnboardingSlide {
   type: "staff" | "lore" | "rules";
@@ -109,21 +109,6 @@ export const ONBOARDING_SLIDES: OnboardingSlide[] = [
   },
 ];
 
-const textVariants = {
-  initial: (custom: { direction: "next" | "back"; reduceMotion: boolean }) => ({
-    opacity: 0,
-    x: custom.reduceMotion ? 0 : (custom.direction === "next" ? 80 : -80),
-  }),
-  animate: {
-    opacity: 1,
-    x: 0,
-  },
-  exit: (custom: { direction: "next" | "back"; reduceMotion: boolean }) => ({
-    opacity: 0,
-    x: custom.reduceMotion ? 0 : (custom.direction === "next" ? -80 : 80),
-  }),
-};
-
 export function OnboardingPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -133,10 +118,22 @@ export function OnboardingPage() {
 
   const [phase, setPhase] = useState<"name" | "staff" | "zoom">(shouldSkipName ? "staff" : "name");
   const [name, setName] = useState("");
-  const [slideIndex, setSlideIndex] = useState(0);
-  const [direction, setDirection] = useState<"next" | "back">("next");
   const [isZooming, setIsZooming] = useState(false);
-  const reduceMotion = usePrefersReducedMotion();
+
+  const {
+    slideIndex,
+    isFirst,
+    isLast,
+    goBack,
+    goNext,
+    reduceMotion,
+  } = useGuideNavigator({
+    stepsCount: ONBOARDING_SLIDES.length,
+    onClose: () => {
+      setPhase("zoom");
+    },
+    opened: phase === "staff",
+  });
 
   const handleNameSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -146,7 +143,6 @@ export function OnboardingPage() {
   };
 
   const handleBack = () => {
-    setDirection("back");
     if (slideIndex === 0) {
       if (shouldSkipName) {
         navigate(-1);
@@ -154,17 +150,12 @@ export function OnboardingPage() {
         setPhase("name");
       }
     } else {
-      setSlideIndex((i) => i - 1);
+      goBack();
     }
   };
 
   const handleNext = () => {
-    setDirection("next");
-    if (slideIndex < ONBOARDING_SLIDES.length - 1) {
-      setSlideIndex((i) => i + 1);
-    } else {
-      setPhase("zoom");
-    }
+    goNext();
   };
 
   useEffect(() => {
@@ -178,7 +169,6 @@ export function OnboardingPage() {
   }, [phase, navigate]);
 
   const slide = ONBOARDING_SLIDES[slideIndex];
-  const isLast = slideIndex === ONBOARDING_SLIDES.length - 1;
 
   return (
     <Box
@@ -283,112 +273,37 @@ export function OnboardingPage() {
               className="onboarding-staff-card-wrap"
               style={{ display: "flex", flexDirection: "column" }}
             >
-              <ClubPanel
-                p="xl"
-                style={{
-                  border: `2px solid ${clubTokens.surface.brassStroke}`,
-                  height: "100%",
-                  display: "flex",
-                  flexDirection: "column",
-                }}
-              >
-                <Stack gap="md" style={{ flex: 1, position: "relative", overflow: "hidden" }}>
-                  <AnimatePresence mode="popLayout" custom={{ direction, reduceMotion }}>
-                    <motion.div
-                      key={slideIndex}
-                      custom={{ direction, reduceMotion }}
-                      variants={textVariants}
-                      initial="initial"
-                      animate="animate"
-                      exit="exit"
-                      layout={!reduceMotion}
-                      transition={{ duration: 0.3, ease: "easeInOut" }}
-                      style={{ display: "flex", flexDirection: "column", gap: "1rem", width: "100%" }}
-                    >
-                      <Stack gap={2}>
-                        {(slide.category || slide.role) && (
-                          <Text size="xs" tt="uppercase" fw={800} c={clubTokens.text.muted} style={{ letterSpacing: "0.08em" }}>
-                            {slide.category}
-                            {slide.category && slide.role && " • "}
-                            {slide.role}
-                          </Text>
-                        )}
-                        {slide.title && (
-                          <Title order={2} c={clubTokens.text.brass} style={{ fontFamily: "Georgia, serif", fontSize: "1.8rem" }}>
-                            {slide.title}
-                          </Title>
-                        )}
-                      </Stack>
-
-                      <Stack gap="xs">
-                        {slide.type === "staff" ? (
-                          <>
-                            {slide.description && (
-                              Array.isArray(slide.description) ? (
-                                <Stack gap="xs">
-                                  {slide.description.map((paragraph, idx) => (
-                                    <Text key={idx} size="xs" c={clubTokens.text.secondary} lh={1.5}>
-                                      {paragraph}
-                                    </Text>
-                                  ))}
-                                </Stack>
-                              ) : (
-                                <Stack gap="xs">
-                                  {slide.description.split(/\n+/).map((line) => line.trim()).filter(Boolean).map((paragraph, idx) => (
-                                    <Text key={idx} size="xs" c={clubTokens.text.secondary} lh={1.5}>
-                                      {paragraph}
-                                    </Text>
-                                  ))}
-                                </Stack>
-                              )
-                            )}
-                          </>
-                        ) : (
-                          <Stack gap="xs">
-                            {slide.details?.map((detail, idx) => (
-                              <Text key={idx} size="xs" c={clubTokens.text.secondary} lh={1.4}>
-                                {detail}
-                              </Text>
-                            ))}
-                          </Stack>
-                        )}
-                      </Stack>
-
-                      {slide.dialogue && (
-                        <div className="staff-quote-block">
-                          <Text size="sm" fs="italic" c={clubTokens.text.primary} className="staff-quote-glow">
-                            “{slide.dialogue}”
-                          </Text>
-                        </div>
-                      )}
-                    </motion.div>
-                  </AnimatePresence>
-
-                  <Group justify="space-between" align="center" mt="sm">
-                    <Text size="xs" c={clubTokens.text.muted} fw={600}>
-                      {slideIndex + 1} of {ONBOARDING_SLIDES.length}
-                    </Text>
-                    <Group gap="md" style={{ marginRight: "12px" }}>
-                      <ClubButton
-                        type="button"
-                        variant="outline"
-                        size="xs"
-                        onClick={handleBack}
-                      >
-                        Back
-                      </ClubButton>
-                      <ClubButton
-                        type="button"
-                        variant="filled"
-                        size="xs"
-                        onClick={handleNext}
-                      >
-                        {isLast ? "Enter Club" : "Next"}
-                      </ClubButton>
-                    </Group>
-                  </Group>
-                </Stack>
-              </ClubPanel>
+              <ClubGuidePanel
+                title={slide.type !== "staff" ? slide.title : undefined}
+                speakerName={slide.type === "staff" ? slide.title : undefined}
+                speakerRole={slide.category ? `${slide.category}${slide.role ? ` • ${slide.role}` : ''}` : slide.role}
+                dialogue={slide.dialogue}
+                details={
+                  slide.type === "staff" ? (
+                    slide.description ? (
+                      Array.isArray(slide.description) ? (
+                        slide.description
+                      ) : (
+                        slide.description.split(/\n+/).map((line) => line.trim()).filter(Boolean)
+                      )
+                    ) : undefined
+                  ) : (
+                    slide.details
+                  )
+                }
+                isFirst={isFirst}
+                isLast={isLast}
+                onBack={handleBack}
+                onNext={handleNext}
+                nextLabel={isLast ? "Enter Club" : "Next"}
+                slideIndex={slideIndex}
+                reduceMotion={reduceMotion}
+                extraFooterAction={
+                  <Text size="xs" c={clubTokens.text.muted} fw={600}>
+                    {slideIndex + 1} of {ONBOARDING_SLIDES.length}
+                  </Text>
+                }
+              />
             </motion.div>
 
             <motion.div
@@ -443,8 +358,8 @@ export function OnboardingPage() {
               }}
               transition={{
                 duration: 1.4,
-                ease: "easeInOut",
-              }}
+                defaultMotionPreset: "easeInOut",
+              } as Record<string, unknown>}
               style={{
                 position: "absolute",
                 top: "calc(50% - 190px)",

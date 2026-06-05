@@ -8,7 +8,7 @@ import { useClubWallet } from "@/game/clubWalletStore";
 import { usePrefersReducedMotion } from "@/motion/usePrefersReducedMotion";
 import { clubTokens } from "@/theme/clubTokens";
 
-import "@/minigames/masterson-1881/masterson.css";
+import "@/minigames/masterson-1881/masterson.scss";
 
 const MastertonRoot = lazy(() =>
   import("@/minigames/masterson-1881/App").then((m) => ({ default: m.MastertonRoot })),

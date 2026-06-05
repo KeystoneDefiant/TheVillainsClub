@@ -1,6 +1,6 @@
 import React from "react";
 import { Button, ButtonProps } from "@mantine/core";
-import "./ClubButton.css";
+import "./ClubButton.scss";
 
 export type ClubButtonProps<C extends React.ElementType = "button"> = ButtonProps & {
   fancy?: boolean;

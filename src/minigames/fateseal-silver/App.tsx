@@ -49,7 +49,7 @@ import {
   vassagoGambitCost,
 } from "./engine/shopEngine";
 import { FatesealSymbolIcon } from "./components/FatesealSymbolIcon";
-import "./fatesealSilver.css";
+import "./fatesealSilver.scss";
 
 type FatesealPhase = "altar" | "ritual" | "crossroads";
 

@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { Box, Group, Paper, Text, Title, Stack } from "@mantine/core";
+import { useEffect, useCallback, useRef, useMemo, useState } from "react";
+import { Box } from "@mantine/core";
+import { useGuideNavigator } from "@/hooks/useGuideNavigator";
+import { ClubGuidePanel } from "./ClubGuidePanel";
 import { clubTokens } from "@/theme/clubTokens";
-import { ClubButton } from "./ClubButton";
 import { sommelierTutorialCatalog } from "@/config/sommelierTutorialCatalog";
 import { useClubWallet, getPlayerTitle } from "@/game/clubWalletStore";
 
@@ -17,8 +18,23 @@ export function SommelierLiveGuide({
   onClose,
 }: SommelierLiveGuideProps) {
   const steps = useMemo(() => sommelierTutorialCatalog[gameId] || [], [gameId]);
-  const [activeStep, setActiveStep] = useState(0);
-  // One rect per highlighted element; the dim mask uses the bounding envelope.
+  
+  const {
+    slideIndex: activeStep,
+    isFirst,
+    isLast,
+    goBack,
+    goNext,
+    reduceMotion,
+  } = useGuideNavigator({
+    stepsCount: steps.length,
+    onClose: () => {
+      onStepChangeRef.current?.(null);
+      onClose();
+    },
+    opened: true,
+  });
+
   const [spotlightRects, setSpotlightRects] = useState<{
     left: number;
     top: number;
@@ -30,7 +46,6 @@ export function SommelierLiveGuide({
   const retryTimerRef = useRef<number | null>(null);
   const stepsRef = useRef(steps);
   stepsRef.current = steps;
-  // Keep a stable ref to onStepChange so effects don't need it as a dependency
   const onStepChangeRef = useRef(onStepChange);
   onStepChangeRef.current = onStepChange;
 
@@ -67,7 +82,6 @@ export function SommelierLiveGuide({
     for (const sel of selectors) {
       for (const el of document.querySelectorAll(sel)) {
         const r = el.getBoundingClientRect();
-        // Check both existence and visibility to prevent highlighting hidden dummy/transitioning elements
         if (r.width > 0 || r.height > 0) {
           if (scale > 0) {
             rects.push({
@@ -83,8 +97,6 @@ export function SommelierLiveGuide({
       }
     }
 
-    // If elements are not yet mounted or visible in the DOM (e.g. during a screen transition),
-    // poll and retry measuring up to 25 times (2.5 seconds total) before giving up.
     if (rects.length === 0 && retryCount < 25) {
       retryTimerRef.current = window.setTimeout(() => {
         updateSpotlight(retryCount + 1);
@@ -100,7 +112,6 @@ export function SommelierLiveGuide({
     const currentStep = steps[activeStep];
     if (currentStep) {
       onStepChangeRef.current?.(currentStep.mockState || {});
-      // Reset any active timers and start measuring
       if (retryTimerRef.current !== null) {
         window.clearTimeout(retryTimerRef.current);
         retryTimerRef.current = null;
@@ -115,7 +126,6 @@ export function SommelierLiveGuide({
     };
   }, [activeStep, steps, updateSpotlight]);
 
-  // Listen to resize and scroll to keep spotlight aligned
   useEffect(() => {
     window.addEventListener("resize", updateSpotlight);
     window.addEventListener("scroll", updateSpotlight, true);
@@ -124,26 +134,6 @@ export function SommelierLiveGuide({
       window.removeEventListener("scroll", updateSpotlight, true);
     };
   }, [updateSpotlight]);
-
-  const handleNext = () => {
-    if (activeStep < steps.length - 1) {
-      setActiveStep((prev) => prev + 1);
-    } else {
-      onStepChangeRef.current?.(null);
-      onClose();
-    }
-  };
-
-  const handleBack = () => {
-    if (activeStep > 0) {
-      setActiveStep((prev) => prev - 1);
-    }
-  };
-
-  const handleExit = () => {
-    onStepChangeRef.current?.(null);
-    onClose();
-  };
 
   const currentStep = steps[activeStep];
   const {
@@ -186,7 +176,6 @@ export function SommelierLiveGuide({
     >
       {/* 1. Viewport dimming mask with bounding-envelope cutout */}
       {(() => {
-        // Compute bounding envelope across all highlighted rects
         const envelope =
           spotlightRects.length > 0
             ? spotlightRects.reduce(
@@ -256,110 +245,25 @@ export function SommelierLiveGuide({
           pointerEvents: "auto",
         }}
       >
-        <Paper
-          p="md"
-          radius="md"
-          style={{
-            background: `linear-gradient(135deg, ${clubTokens.surface.walnutHi} 0%, ${clubTokens.surface.panel} 100%)`,
-            border: `2px solid ${clubTokens.surface.brassStroke}`,
-            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.75)",
-            display: "flex",
-            flexDirection: "column",
-            gap: 12,
+        <ClubGuidePanel
+          speakerIcon="🍷"
+          speakerName="Pazillus A. Rabellum"
+          speakerRole="Club Sommelier"
+          progressText={`Step ${activeStep + 1} of ${steps.length}`}
+          onClose={() => {
+            onStepChangeRef.current?.(null);
+            onClose();
           }}
-        >
-          {/* Header */}
-          <Group justify="space-between" align="center" wrap="nowrap">
-            <Group gap="xs" wrap="nowrap">
-              <span
-                style={{
-                  fontSize: "1.25rem",
-                  lineHeight: 1,
-                  filter: "drop-shadow(0 0 4px rgba(199,158,87,0.5))",
-                }}
-                aria-hidden
-              >
-                🍷
-              </span>
-              <Stack gap={1}>
-                <Title
-                  order={4}
-                  fz="sm"
-                  c={clubTokens.text.brass}
-                  style={{ fontFamily: "Georgia, serif", fontWeight: 700 }}
-                >
-                  Pazillus A. Rabellum
-                </Title>
-                <Text size="10px" c={clubTokens.text.muted} tt="uppercase" fw={600} style={{ letterSpacing: "0.08em" }}>
-                  Club Sommelier
-                </Text>
-              </Stack>
-            </Group>
-            <Text size="xs" c={clubTokens.text.muted} fw={700}>
-              Step {activeStep + 1} of {steps.length}
-            </Text>
-          </Group>
-
-          <hr style={{ margin: 0, border: 0, borderTop: `1px solid ${clubTokens.surface.brassStroke}`, opacity: 0.35 }} />
-
-          {/* Dialogue Bubble */}
-          <Stack gap={2}>
-            <Text
-              size="xs"
-              fw={700}
-              c={clubTokens.text.brass}
-              tt="uppercase"
-              style={{ letterSpacing: "0.06em" }}
-            >
-              {currentStep.title}
-            </Text>
-            <Text
-              size="sm"
-              c={clubTokens.text.primary}
-              style={{
-                fontStyle: "italic",
-                lineHeight: 1.45,
-                minHeight: 48,
-                whiteSpace: "pre-line",
-              }}
-            >
-              "{dialogueText}"
-            </Text>
-          </Stack>
-
-          <hr style={{ margin: 0, border: 0, borderTop: `1px solid ${clubTokens.surface.brassStroke}`, opacity: 0.35 }} />
-
-          {/* Actions */}
-          <Group justify="space-between" wrap="nowrap">
-            <ClubButton
-              size="xs"
-              variant="subtle"
-              onClick={handleExit}
-              style={{ color: clubTokens.text.accent }}
-            >
-              Exit Tutorial
-            </ClubButton>
-            <Group gap="xs" wrap="nowrap">
-              <ClubButton
-                size="xs"
-                variant="outline"
-                disabled={activeStep === 0}
-                onClick={handleBack}
-              >
-                Back
-              </ClubButton>
-              <ClubButton
-                size="xs"
-                variant="filled"
-                color="yellow"
-                onClick={handleNext}
-                styles={{ label: { fontWeight: 700 } }}
-              >
-                {activeStep === steps.length - 1 ? "Finish" : "Next"}
-              </ClubButton>
-            </Group>
-          </Group>
-        </Paper>
+          closeLabel="Exit Tutorial"
+          title={currentStep.title}
+          dialogue={dialogueText}
+          isFirst={isFirst}
+          isLast={isLast}
+          onBack={goBack}
+          onNext={goNext}
+          slideIndex={activeStep}
+          reduceMotion={reduceMotion}
+        />
       </Box>
     </Box>
   );

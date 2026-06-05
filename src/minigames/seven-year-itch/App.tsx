@@ -36,7 +36,7 @@ import { DieCube, rotationForValue } from "./components/DicePair3D";
 import { UnifiedGameHeader } from "@/components/ui/UnifiedGameHeader";
 import { GameSettingsModal } from "@/components/ui/GameSettingsModal";
 import { SevenYearItchOddsModal } from "./components/SevenYearItchOddsModal";
-import "./sevenYearItch.css";
+import "./sevenYearItch.scss";
 
 type MainView = "table" | "favors";
 

@@ -193,7 +193,7 @@
     opacity: 0;
     transform: translate3d(0, 10px, 0);
     backface-visibility: hidden;
-    will-change: transform, opacity;
+    /* will-change removed */
     animation-name: shell-intro-fade-up;
     animation-duration: var(--shell-intro-tag-dur, 0.65s);
     animation-timing-function: var(--shell-intro-ease, cubic-bezier(0.22, 1, 0.36, 1));
@@ -205,7 +205,7 @@
     opacity: 0;
     transform: translate3d(0, 0, 0);
     backface-visibility: hidden;
-    will-change: opacity;
+    /* will-change removed */
     animation-name: shell-intro-fade;
     animation-duration: var(--shell-intro-hint-dur, 0.6s);
     animation-timing-function: ease;
@@ -217,7 +217,7 @@
     opacity: 0;
     transform: translate3d(0, 0, 0);
     backface-visibility: hidden;
-    will-change: opacity, transform;
+    /* will-change removed */
     animation: shell-route-fade-in var(--shell-route-fade-dur, 0.35s) ease-out forwards;
   }
 }
@@ -749,7 +749,7 @@
     box-shadow: 0 0 6px rgba(214,166,92,0.5);
     filter: blur(0.5px);
     pointer-events: none;
-    will-change: transform, opacity;
+    /* will-change removed */
   }
   
   .haze-particle:nth-child(1) { left: 8%; width: 4px; height: 4px; animation: float-ember 14s infinite linear; animation-delay: 0s; }

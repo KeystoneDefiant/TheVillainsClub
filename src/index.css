@@ -1,3 +1,12 @@
+
+:root {
+  --club-walnut: #1a100d;
+  --club-brass-stroke: #c79e5788;
+  --club-brass: #c79e57;
+  --club-accent: #d16166;
+  --club-bg: #0a0a0a;
+}
+
 :root {
   color-scheme: dark;
 }

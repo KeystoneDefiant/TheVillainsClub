@@ -20,7 +20,7 @@ import { useMastertonEngine } from "./engine/useMastertonEngine";
 import { rouletteNumbers, mastersonGameConfig, validateOutcomeAgainstRig, bettorStrategyDescriptions, type BettorProfile, type BettorStrategy } from "@/config/minigames/mastersonRules";
 import { computeMastersonReturn, type ClubTableReturnDetail, type OublietteSettlementProfile } from "@/game/sessionSettlement";
 
-import "./masterson.css";
+import "./masterson.scss";
 
 const ROULETTE_ROWS = [
   {

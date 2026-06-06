@@ -51,6 +51,11 @@ export const fatesealProgressionRules = {
     usePowProphecyLinkingForCascadeMult: true,
     prophecyLinkingPowBasePerAdjacency: 2,
     maxProphecyEdgesForLinkingPow: 2,
+    nonProphecyClearPayoutWeight: 0.5,
+  },
+  forbiddenTome: {
+    betSizeMultiplier: 1.25,
+    scatterChanceMultiplier: 1.25,
   },
   sympatheticVibrations: {
     payoutMultipleOfBaseBet: 75,
@@ -94,7 +99,7 @@ export const fatesealGameConfig = {
       maxReturnMultipleOfBuyIn: 30,
       chipIncrement: 5,
       minBaseBet: 5,
-      betMultipliers: [1, 2, 5, 10, 15] as readonly number[],
+      betMultipliers: [1, 2, 5] as readonly number[],
     },
     highRoller: {
       displayName: "High Roller Ritual",
@@ -102,7 +107,7 @@ export const fatesealGameConfig = {
       maxReturnMultipleOfBuyIn: 70,
       chipIncrement: 50,
       minBaseBet: 500,
-      betMultipliers: [1, 2, 5] as readonly number[],
+      betMultipliers: [1, 2, 5, 10, 20] as readonly number[],
     },
   },
 } as const;
@@ -136,24 +141,24 @@ export const fatesealDefaultSymbolPool: readonly FatesealPoolEntry[] = [
 
 export const fatesealUnsettleSpiritsConfig = {
   durationSpins: 5,
-  costRatioOfBank: 0.75,
-  minPrice: 6500,
-  betSize: 250,
+  minPriceMultipleOfBuyIn: 3, // 3x base buy in (e.g. 2000 * 3 = 6000)
+  costRatioOfBank: 0.75, // Wallet percentage (75%)
+  betSizeMultipleOfBuyIn: 0.125, // 12.5% of base buy in (e.g. 2000 * 0.125 = 250)
   omenScalingFactors: [0.655, 0.38, 0.214, 0.102] as readonly number[],
 } as const;
 
 export const fatesealFaustianBargainConfig = {
   creditRatioOfBuyIn: 0.75,
   durationSpinsPerLevel: 5,
-  lockedBetSize: 250,
+  lockedBetSizeMultipleOfBuyIn: 0.125, // 12.5% of base buy in (e.g. 2000 * 0.125 = 250)
   maxLevel: 3,
 } as const;
 
 export const fatesealVassagoGambitConfig = {
-  costRatioOfBank: 0.90,
-  minPrice: 10000,
-  betSize: 2500,
   durationSpins: 1,
+  minPriceMultipleOfBuyIn: 5, // 5x base buy in (e.g. 2000 * 5 = 10000)
+  costRatioOfBank: 0.90, // Wallet percentage (90%)
+  betSizeMultipleOfBuyIn: 1.25, // 125% of base buy in (e.g. 2000 * 1.25 = 2500)
   scatterChanceMultiplier: 1.5,
   deadColDecayPerLevel: 1,
   omenScalingFactors: [2.91, 0.79, 0.248, 0.016] as readonly number[],

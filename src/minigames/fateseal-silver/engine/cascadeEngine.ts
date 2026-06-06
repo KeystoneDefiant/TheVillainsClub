@@ -153,7 +153,9 @@ export function buildEffectivePool(
   }
   if (opts.tomeToggleActive) {
     for (const e of p) {
-      if (e.symbol === "scatter") e.weight *= 1.25;
+      if (e.symbol === "scatter") {
+        e.weight *= fatesealProgressionRules.forbiddenTome.scatterChanceMultiplier;
+      }
     }
   }
   if (opts.freeRitualSpinsLeft > 0 || opts.inFreeRitualCascadeWave) {
@@ -490,7 +492,7 @@ function runCascadeStep(
   }
 
   const prophecyContribution = prophecy.size * base * scale;
-  const nonSelectedContribution = clusters.size * 0.5;
+  const nonSelectedContribution = clusters.size * fatesealProgressionRules.linking.nonProphecyClearPayoutWeight;
 
   let stepPayout = Math.floor(
     (prophecyContribution + nonSelectedContribution) *
@@ -633,18 +635,25 @@ export function runSpin(
 
   if (isVassago || isUnsettle) {
     bet = 0;
-    activeBetSize = isVassago ? fatesealVassagoGambitConfig.betSize : fatesealUnsettleSpiritsConfig.betSize;
+    activeBetSize = isVassago
+      ? Math.floor(state.buyIn * fatesealVassagoGambitConfig.betSizeMultipleOfBuyIn)
+      : Math.floor(state.buyIn * fatesealUnsettleSpiritsConfig.betSizeMultipleOfBuyIn);
   } else if (isFaustian) {
-    bet = fatesealFaustianBargainConfig.lockedBetSize;
-    activeBetSize = fatesealFaustianBargainConfig.lockedBetSize;
+    const fbBet = Math.floor(state.buyIn * fatesealFaustianBargainConfig.lockedBetSizeMultipleOfBuyIn);
+    bet = fbBet;
+    activeBetSize = fbBet;
   } else {
     const useFreeSpin = state.freeRitualSpinsLeft > 0;
     if (useFreeSpin) {
       bet = 0;
     } else {
-      bet = state.tomeToggleActive ? Math.floor(state.baseBet * 1.25) : state.baseBet;
+      bet = state.tomeToggleActive 
+        ? Math.floor(state.baseBet * fatesealProgressionRules.forbiddenTome.betSizeMultiplier) 
+        : state.baseBet;
     }
-    activeBetSize = state.tomeToggleActive ? Math.floor(state.baseBet * 1.25) : state.baseBet;
+    activeBetSize = state.tomeToggleActive 
+      ? Math.floor(state.baseBet * fatesealProgressionRules.forbiddenTome.betSizeMultiplier) 
+      : state.baseBet;
   }
 
   if (state.sessionWallet < bet) {

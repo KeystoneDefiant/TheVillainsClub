@@ -46,7 +46,7 @@ describe("fateseal shopEngine", () => {
 
   it("Unsettle the Spirits purchase deducts correct cost and sets wild timers", () => {
     const s = createInitialFatesealState(20_000, 2000, Math.random);
-    const cost = unsettleSpiritsCost(s.sessionWallet);
+    const cost = unsettleSpiritsCost(s.sessionWallet, s.buyIn);
     const r = applyCrossroadsUnsettleSpirits(s);
     expect(r.ok).toBe(true);
     if (!r.ok) return;
@@ -68,7 +68,7 @@ describe("fateseal shopEngine", () => {
 
   it("Vassago's Gambit purchase deducts cost and sets active flag", () => {
     const s = createInitialFatesealState(20_000, 2000, Math.random);
-    const cost = vassagoGambitCost(s.sessionWallet);
+    const cost = vassagoGambitCost(s.sessionWallet, s.buyIn);
     const r = applyCrossroadsVassagoGambit(s);
     expect(r.ok).toBe(true);
     if (!r.ok) return;

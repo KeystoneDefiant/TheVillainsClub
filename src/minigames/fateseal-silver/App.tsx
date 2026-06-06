@@ -26,6 +26,7 @@ import {
   resolveFatesealGameMode,
   fatesealUnsettleSpiritsConfig,
   fatesealFaustianBargainConfig,
+  fatesealVassagoGambitConfig,
   fatesealCascadePayoutScale,
   type FatesealStandardId,
   type FatesealSymbolId,
@@ -623,13 +624,13 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
   ]);
 
   const unsettleSpiritsShop = useMemo(() => {
-    const cost = unsettleSpiritsCost(engine.sessionWallet);
+    const cost = unsettleSpiritsCost(engine.sessionWallet, engine.buyIn);
     const spins = fatesealUnsettleSpiritsConfig.durationSpins;
     const active = engine.wildReelPaidSpinTimers.length > 0;
     const canBuy = !active && engine.sessionWallet >= cost;
     const timers = engine.wildReelPaidSpinTimers;
     return { cost, spins, active, canBuy, timers };
-  }, [engine.sessionWallet, engine.wildReelPaidSpinTimers]);
+  }, [engine.sessionWallet, engine.buyIn, engine.wildReelPaidSpinTimers]);
 
   const faustianBargainShop = useMemo(() => {
     const grant = faustianBargainGrant(engine.buyIn);
@@ -642,11 +643,11 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
   }, [engine.buyIn, engine.deadReelPaidSpinTimers]);
 
   const vassagoGambitShop = useMemo(() => {
-    const cost = vassagoGambitCost(engine.sessionWallet);
+    const cost = vassagoGambitCost(engine.sessionWallet, engine.buyIn);
     const active = engine.vassagoActive;
     const canBuy = !active && engine.sessionWallet >= cost;
     return { cost, active, canBuy };
-  }, [engine.sessionWallet, engine.vassagoActive]);
+  }, [engine.sessionWallet, engine.buyIn, engine.vassagoActive]);
 
   const crossroadsScatterThreshold = fatesealProgressionRules.crossroads.scatterSymbolsToTriggerShop;
   const displayGrid = cascadeOverlay?.grid ?? engine.grid;
@@ -1032,17 +1033,22 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
                                   }}
                                 >
                                   {engine.deadReelPaidSpinTimers.length > 0 ? (
-                                    <ClubButton
-                                      fancy
-                                      variant="filled"
-                                      color="red"
-                                      data-testid="fateseal-ritual-spin"
-                                      disabled={busy || atCrossroads || engine.activeProphecy.length === 0 || engine.sessionWallet < 250}
-                                      onClick={() => handleSpin(250)}
-                                      style={{ width: "100%" }}
-                                    >
-                                      Ritual (250)
-                                    </ClubButton>
+                                    (() => {
+                                      const faustianBet = Math.floor(engine.buyIn * fatesealFaustianBargainConfig.lockedBetSizeMultipleOfBuyIn);
+                                      return (
+                                        <ClubButton
+                                          fancy
+                                          variant="filled"
+                                          color="red"
+                                          data-testid="fateseal-ritual-spin"
+                                          disabled={busy || atCrossroads || engine.activeProphecy.length === 0 || engine.sessionWallet < faustianBet}
+                                          onClick={() => handleSpin(faustianBet)}
+                                          style={{ width: "100%" }}
+                                        >
+                                          Ritual ({faustianBet.toLocaleString()})
+                                        </ClubButton>
+                                      );
+                                    })()
                                   ) : (
                                     wagerLevels.map((rawBet, idx) => {
                                       const betSize = tomeToggle ? Math.floor(rawBet * 1.25) : rawBet;
@@ -1185,7 +1191,11 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
                           <Text size="xs" c="dimmed">
                             {unsettleSpiritsShop.active
                               ? `Wild Reel active: ${unsettleSpiritsShop.timers[0]} spins left.`
-                              : `High Risk. Minimum of 6,000 credits. Sets bet size to 250, spins are free for ${unsettleSpiritsShop.spins} spins. Wild symbols are more prevalent.`}
+                              : (() => {
+                                  const minPrice = (engine.buyIn * fatesealUnsettleSpiritsConfig.minPriceMultipleOfBuyIn).toLocaleString();
+                                  const betSize = Math.floor(engine.buyIn * fatesealUnsettleSpiritsConfig.betSizeMultipleOfBuyIn).toLocaleString();
+                                  return `High Risk. Minimum of ${minPrice} credits. Sets bet size to ${betSize}, spins are free for ${unsettleSpiritsShop.spins} spins. Wild symbols are more prevalent.`;
+                                })()}
                           </Text>
                         </div>
                       </div>
@@ -1212,7 +1222,10 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
                           <Text size="xs" c="dimmed">
                             {faustianBargainShop.activeLevels > 0
                               ? `Void Reels active: Level ${faustianBargainShop.activeLevels} (${faustianBargainShop.timers.join(", ")} spins left).`
-                              : `Sell a portion of your vision temporarily in exchange for immediate credits. Sets bet size to 250, locks cash-out, and blocks the rightmost column with void reels for ${faustianBargainShop.spins} spins per level.`}
+                              : (() => {
+                                  const betSize = Math.floor(engine.buyIn * fatesealFaustianBargainConfig.lockedBetSizeMultipleOfBuyIn).toLocaleString();
+                                  return `Sell a portion of your vision temporarily in exchange for immediate credits. Sets bet size to ${betSize}, locks cash-out, and blocks the rightmost column with void reels for ${faustianBargainShop.spins} spins per level.`;
+                                })()}
                           </Text>
                           {faustianBargainShop.activeLevels > 0 && (
                             <Text size="10px" c="red" style={{ marginTop: "2px" }}>
@@ -1244,7 +1257,12 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
                           <Text size="xs" c="dimmed">
                             {vassagoGambitShop.active
                               ? "Next spin is Vassago's free scatter bonus."
-                              : `High risk. Costs 90% of wallet (min 10,000). Next spin is free at bet 250, guarantees scatter bonus, but scatters do not count to Crossroads.`}
+                              : (() => {
+                                  const walletPct = Math.round(fatesealVassagoGambitConfig.costRatioOfBank * 100);
+                                  const minPrice = (engine.buyIn * fatesealVassagoGambitConfig.minPriceMultipleOfBuyIn).toLocaleString();
+                                  const betSize = Math.floor(engine.buyIn * fatesealVassagoGambitConfig.betSizeMultipleOfBuyIn).toLocaleString();
+                                  return `High risk. Costs ${walletPct}% of wallet (min ${minPrice}). Next spin is free at bet ${betSize}, guarantees scatter bonus, but scatters do not count to Crossroads.`;
+                                })()}
                           </Text>
                         </div>
                       </div>

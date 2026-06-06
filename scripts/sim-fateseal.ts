@@ -69,9 +69,9 @@ export function runFatesealSimulations() {
       const stdRtp = stdBet > 0 ? (stdPayout / stdBet) * 100 : 0;
 
       // 2. Unsettle Spirits (Wild Reels) Play Simulation
-      const minPrice = fatesealUnsettleSpiritsConfig.minPrice;
+      const minPrice = tableConfig.buyIn * fatesealUnsettleSpiritsConfig.minPriceMultipleOfBuyIn;
       const wildDuration = fatesealUnsettleSpiritsConfig.durationSpins;
-      const wildBetSize = fatesealUnsettleSpiritsConfig.betSize;
+      const wildBetSize = Math.floor(tableConfig.buyIn * fatesealUnsettleSpiritsConfig.betSizeMultipleOfBuyIn);
       let wildPayout = 0;
       let wildTotalCost = 0;
       let wildSpinsCount = 0;
@@ -99,7 +99,7 @@ export function runFatesealSimulations() {
       // 3. Faustian Bargain (Dead Reels) Play Simulation
       const grant = Math.max(0, Math.floor(tableConfig.buyIn * fatesealFaustianBargainConfig.creditRatioOfBuyIn));
       const deadDuration = fatesealFaustianBargainConfig.durationSpinsPerLevel;
-      const deadBetSize = fatesealFaustianBargainConfig.lockedBetSize;
+      const deadBetSize = Math.floor(tableConfig.buyIn * fatesealFaustianBargainConfig.lockedBetSizeMultipleOfBuyIn);
       let deadPayout = 0;
       let deadTotalBets = 0;
       let deadTotalGrant = 0;
@@ -125,9 +125,9 @@ export function runFatesealSimulations() {
       const deadNetRtp = ((deadPayout + deadTotalGrant) / deadTotalBets) * 100;
 
       // 4. Vassago's Gambit Play Simulation
-      const vassagoMinPrice = fatesealVassagoGambitConfig.minPrice;
+      const vassagoMinPrice = tableConfig.buyIn * fatesealVassagoGambitConfig.minPriceMultipleOfBuyIn;
       const vassagoDuration = fatesealVassagoGambitConfig.durationSpins;
-      const vassagoBetSize = fatesealVassagoGambitConfig.betSize;
+      const vassagoBetSize = Math.floor(tableConfig.buyIn * fatesealVassagoGambitConfig.betSizeMultipleOfBuyIn);
       let vassagoPayout = 0;
       let vassagoTotalCost = 0;
       let vassagoSpinsCount = 0;

@@ -4,6 +4,7 @@ import {
   fatesealFaustianBargainConfig,
   fatesealVassagoGambitConfig,
   crossroadsNextOmenAdditionCostCredits,
+  fatesealCrossroadsNewShop,
 } from "@/config/minigames/fatesealRules";
 import type { FatesealEngineState } from "./cascadeEngine";
 
@@ -19,7 +20,7 @@ export function applyCrossroadsAddOmenSymbol(
   state: FatesealEngineState,
   symbol: FatesealStandardId,
 ): ApplyShopResult {
-  const maxSyms = 4;
+  const maxSyms = 1 + fatesealCrossroadsNewShop.addOmenSymbol.maxExtraPurchases;
   if (state.activeProphecy.length >= maxSyms) {
     return { ok: false, reason: "at_capacity" };
   }
@@ -47,16 +48,17 @@ export function applyCrossroadsAddOmenSymbol(
 }
 
 /** "Unsettle the Spirits" (Wild Reel) Cost */
-export function unsettleSpiritsCost(bank: number): number {
+export function unsettleSpiritsCost(bank: number, buyIn: number): number {
+  const minPrice = buyIn * fatesealUnsettleSpiritsConfig.minPriceMultipleOfBuyIn;
   return Math.max(
-    fatesealUnsettleSpiritsConfig.minPrice,
+    minPrice,
     Math.floor(bank * fatesealUnsettleSpiritsConfig.costRatioOfBank),
   );
 }
 
 /** Activate "Unsettle the Spirits" */
 export function applyCrossroadsUnsettleSpirits(state: FatesealEngineState): ApplyShopResult {
-  const cost = unsettleSpiritsCost(state.sessionWallet);
+  const cost = unsettleSpiritsCost(state.sessionWallet, state.buyIn);
   const spins = fatesealUnsettleSpiritsConfig.durationSpins;
   if (state.wildReelPaidSpinTimers.length >= 1) {
     return { ok: false, reason: "at_capacity" };
@@ -100,9 +102,10 @@ export function applyCrossroadsFaustianBargain(state: FatesealEngineState): Appl
 }
 
 /** "Vassago's Gambit" Cost */
-export function vassagoGambitCost(bank: number): number {
+export function vassagoGambitCost(bank: number, buyIn: number): number {
+  const minPrice = buyIn * fatesealVassagoGambitConfig.minPriceMultipleOfBuyIn;
   return Math.max(
-    fatesealVassagoGambitConfig.minPrice,
+    minPrice,
     Math.floor(bank * fatesealVassagoGambitConfig.costRatioOfBank),
   );
 }
@@ -112,7 +115,7 @@ export function applyCrossroadsVassagoGambit(state: FatesealEngineState): ApplyS
   if (state.vassagoActive) {
     return { ok: false, reason: "at_capacity" };
   }
-  const cost = vassagoGambitCost(state.sessionWallet);
+  const cost = vassagoGambitCost(state.sessionWallet, state.buyIn);
   if (state.sessionWallet < cost) {
     return { ok: false, reason: "insufficient_credits" };
   }

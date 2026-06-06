@@ -1315,12 +1315,7 @@ export function MastertonRoot({
                 ${engine.accumulatedCommission.toLocaleString()}
               </Text>
             </Text>
-            <Text size="xs" c={engine.tableHouseLedger > 0 ? "dimmed" : "#ef5350"} fw={engine.tableHouseLedger > 0 ? undefined : 700}>
-              Projected Return:{" "}
-              <span style={{ color: engine.tableHouseLedger > 0 ? "#81c784" : "#ef5350", fontWeight: "bold" }}>
-                ${(engine.tableHouseLedger > 0 ? (settlement?.buyIn ?? 2000) + engine.accumulatedCommission : 0).toLocaleString()}
-              </span>
-            </Text>
+
           </Stack>
         </Box>
       </Box>

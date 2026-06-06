@@ -2,6 +2,7 @@ import React from "react";
 import { Group, Stack, Text, Title, Paper } from "@mantine/core";
 import { clubTokens } from "@/theme/clubTokens";
 import { ClubButton } from "./ClubButton";
+import { motion, AnimatePresence } from "framer-motion";
 
 export interface ClubGuidePanelProps {
   speakerIcon?: React.ReactNode;
@@ -46,26 +47,56 @@ export function ClubGuidePanel({
   onBack,
   onNext,
   nextLabel,
+  slideIndex = 0,
+  reduceMotion = false,
 
   extraFooterAction,
   headerBorderColor = `${clubTokens.surface.brassStroke}3b`,
   style,
 }: ClubGuidePanelProps) {
-  
+  // Track previous slideIndex to determine transition direction (left vs right)
+  const [prevSlideIndex, setPrevSlideIndex] = React.useState(slideIndex);
+  const [direction, setDirection] = React.useState(0);
+
+  if (slideIndex !== prevSlideIndex) {
+    setDirection(slideIndex > prevSlideIndex ? 1 : -1);
+    setPrevSlideIndex(slideIndex);
+  }
+
+  const variants = {
+    enter: (dir: number) => ({
+      x: reduceMotion ? 0 : dir > 0 ? "100%" : dir < 0 ? "-100%" : 0,
+      opacity: 0,
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+    },
+    exit: (dir: number) => ({
+      x: reduceMotion ? 0 : dir > 0 ? "-100%" : dir < 0 ? "100%" : 0,
+      opacity: 0,
+    }),
+  };
+
   return (
-    <Paper
-      p="md"
-      radius="md"
-      style={{
-        background: `linear-gradient(135deg, ${clubTokens.surface.walnutHi} 0%, ${clubTokens.surface.panel} 100%)`,
-        border: `2px solid ${clubTokens.surface.brassStroke}`,
-        boxShadow: "0 8px 32px rgba(0, 0, 0, 0.75)",
-        display: "flex",
-        flexDirection: "column",
-        gap: 12,
-        ...style,
-      }}
+    <motion.div
+      layout={!reduceMotion}
+      transition={{ duration: 0.4, ease: "easeInOut" }}
+      style={{ display: "flex", flexDirection: "column", width: "100%", ...style }}
     >
+      <Paper
+        p="md"
+        radius="md"
+        style={{
+          background: `linear-gradient(135deg, ${clubTokens.surface.walnutHi} 0%, ${clubTokens.surface.panel} 100%)`,
+          border: `2px solid ${clubTokens.surface.brassStroke}`,
+          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.75)",
+          display: "flex",
+          flexDirection: "column",
+          gap: 12,
+          flex: 1,
+        }}
+      >
       {/* Header */}
       {(speakerName || speakerRole || speakerIcon || progressText || onClose) && (
         <>
@@ -136,69 +167,102 @@ export function ClubGuidePanel({
       )}
 
       {/* Body Content */}
-      <Stack gap={2} style={{ flex: 1 }}>
-        {title && (
-          <Title
-            order={4}
-            fz="xs"
-            fw={700}
-            c={clubTokens.text.brass}
-            tt="uppercase"
-            style={{ letterSpacing: "0.06em" }}
-          >
-            {title}
-          </Title>
-        )}
-        
-        {/* Render optional details */}
-        {details && (
-          <div style={{ marginTop: 4, marginBottom: 4 }}>
-            {typeof details === "string" ? (
-              <Text size="xs" c={clubTokens.text.secondary} lh={1.4}>
-                {details}
-              </Text>
-            ) : Array.isArray(details) ? (
-              <Stack gap="xs">
-                {details.map((d, idx) => (
-                  <Text key={idx} size="xs" c={clubTokens.text.secondary} lh={1.4}>
-                    {d}
-                  </Text>
-                ))}
-              </Stack>
-            ) : (
-              details
-            )}
-          </div>
-        )}
-
-        {dialogue && (
-          <div
-            className="tips-quote-block"
+      <motion.div
+        layout="position"
+        style={{
+          overflow: "hidden",
+          position: "relative",
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <AnimatePresence initial={false} custom={direction} mode="popLayout">
+          <motion.div
+            key={slideIndex}
+            custom={direction}
+            variants={variants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{
+              x: { type: "spring", stiffness: 300, damping: 30 },
+              opacity: { duration: 0.2 },
+            }}
             style={{
-              position: "relative",
-              background: "rgba(0, 0, 0, 0.35)",
-              borderLeft: `3px solid ${clubTokens.text.accent || "#d16166"}`,
-              padding: "0.85rem 1rem",
-              borderRadius: "0 6px 6px 0",
-              boxShadow: "inset 0 0 8px rgba(0, 0, 0, 0.6)",
-              marginTop: "0.25rem",
+              width: "100%",
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
             }}
           >
-            <Text
-              size="sm"
-              c={clubTokens.text.primary}
-              style={{
-                fontStyle: "italic",
-                lineHeight: 1.45,
-                minHeight: 48,
-                whiteSpace: "pre-line",
-              }}
-            >
-              “{dialogue}”
-            </Text>
-          </div>
-        )}
-      </Stack>
+            <Stack gap={2} style={{ flex: 1 }}>
+              {title && (
+                <Title
+                  order={4}
+                  fz="xs"
+                  fw={700}
+                  c={clubTokens.text.brass}
+                  tt="uppercase"
+                  style={{ letterSpacing: "0.06em" }}
+                >
+                  {title}
+                </Title>
+              )}
+              
+              {/* Render optional details */}
+              {details && (
+                <div style={{ marginTop: 4, marginBottom: 4 }}>
+                  {typeof details === "string" ? (
+                    <Text size="xs" c={clubTokens.text.secondary} lh={1.4}>
+                      {details}
+                    </Text>
+                  ) : Array.isArray(details) ? (
+                    <Stack gap="xs">
+                      {details.map((d, idx) => (
+                        <Text key={idx} size="xs" c={clubTokens.text.secondary} lh={1.4}>
+                          {d}
+                        </Text>
+                      ))}
+                    </Stack>
+                  ) : (
+                    details
+                  )}
+                </div>
+              )}
+
+              {dialogue && (
+                <div
+                  className="tips-quote-block"
+                  style={{
+                    position: "relative",
+                    background: "rgba(0, 0, 0, 0.35)",
+                    borderLeft: `3px solid ${clubTokens.text.accent || "#d16166"}`,
+                    padding: "0.85rem 1rem",
+                    borderRadius: "0 6px 6px 0",
+                    boxShadow: "inset 0 0 8px rgba(0, 0, 0, 0.6)",
+                    marginTop: "0.25rem",
+                  }}
+                >
+                  <Text
+                    size="sm"
+                    c={clubTokens.text.primary}
+                    style={{
+                      fontStyle: "italic",
+                      lineHeight: 1.45,
+                      minHeight: 48,
+                      whiteSpace: "pre-line",
+                    }}
+                  >
+                    “{dialogue}”
+                  </Text>
+                </div>
+              )}
+            </Stack>
+          </motion.div>
+        </AnimatePresence>
+      </motion.div>
 
       {/* Footer Controls */}
       <hr style={{ margin: 0, border: 0, borderTop: `1px solid ${headerBorderColor}`, opacity: 0.35 }} />
@@ -245,5 +309,6 @@ export function ClubGuidePanel({
         </Group>
       </Group>
     </Paper>
+    </motion.div>
   );
 }

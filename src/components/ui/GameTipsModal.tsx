@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { Modal, Box } from "@mantine/core";
 import { useGuideNavigator } from "@/hooks/useGuideNavigator";
 import { ClubGuidePanel } from "./ClubGuidePanel";
-import { clubTokens } from "@/theme/clubTokens";
 import { gameTipsCatalog } from "@/config/gameTipsCatalog";
 import "./GameTipsModal.scss";
 
@@ -61,10 +60,10 @@ export function GameTipsModal({ opened, onClose, gameId }: GameTipsModalProps) {
       overlayProps={{ backgroundOpacity: 0.65, blur: 4 }}
       styles={{
         content: {
-          backgroundColor: clubTokens.surface.walnut,
-          border: `2px solid ${clubTokens.surface.brassStroke}`,
+          backgroundColor: "transparent",
+          border: "none",
           borderRadius: "12px",
-          boxShadow: "0 12px 36px rgba(0, 0, 0, 0.8)",
+          boxShadow: "none",
           overflow: "hidden",
           maxHeight: "90vh",
         },
@@ -88,7 +87,6 @@ export function GameTipsModal({ opened, onClose, gameId }: GameTipsModalProps) {
           onNext={goNext}
           slideIndex={slideIndex}
           reduceMotion={reduceMotion}
-          style={{ border: "none", background: "none", boxShadow: "none" }}
         />
       </Box>
     </Modal>

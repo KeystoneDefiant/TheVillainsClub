@@ -35,9 +35,43 @@
     line-height: 1.25 !important;
   }
 
+  .club-btn-text {
+    position: relative !important;
+    z-index: 2 !important;
+    display: inline-block !important;
+  }
+
+  .mantine-Button-section {
+    position: relative !important;
+    z-index: 2 !important;
+  }
+
   &:not(.club-btn-fancy) {
     border-radius: 3px !important;
     padding: 4px 28px !important;
+
+    &.club-btn-has-left {
+      padding-left: 24px !important;
+    }
+    &.club-btn-has-right {
+      padding-right: 24px !important;
+    }
+  }
+
+  &.club-btn-has-left {
+    &.club-btn-fancy-xs { padding-left: 16px !important; }
+    &.club-btn-fancy-sm { padding-left: 20px !important; }
+    &.club-btn-fancy-md { padding-left: 24px !important; }
+    &.club-btn-fancy-lg { padding-left: 28px !important; }
+    &.club-btn-fancy-xl { padding-left: 32px !important; }
+  }
+
+  &.club-btn-has-right {
+    &.club-btn-fancy-xs { padding-right: 16px !important; }
+    &.club-btn-fancy-sm { padding-right: 20px !important; }
+    &.club-btn-fancy-md { padding-right: 24px !important; }
+    &.club-btn-fancy-lg { padding-right: 28px !important; }
+    &.club-btn-fancy-xl { padding-right: 32px !important; }
   }
 
   &-fancy {
@@ -46,27 +80,27 @@
 
     &-xs {
       border-radius: 4px !important;
-      padding: 6px 12px !important;
+      padding: 6px 16px !important;
       font-size: 12px !important;
     }
     &-sm {
       border-radius: 6px !important;
-      padding: 8px 16px !important;
+      padding: 8px 20px !important;
       font-size: 14px !important;
     }
     &-md {
       border-radius: 8px !important;
-      padding: 12px 24px !important;
+      padding: 12px 28px !important;
       font-size: 16px !important;
     }
     &-lg {
       border-radius: 12px !important;
-      padding: 16px 32px !important;
+      padding: 16px 36px !important;
       font-size: 18px !important;
     }
     &-xl {
       border-radius: 16px !important;
-      padding: 20px 40px !important;
+      padding: 20px 44px !important;
       font-size: 20px !important;
     }
   }
@@ -286,7 +320,7 @@
   }
 
   &-sheen {
-    background: radial-gradient(circle at center, #6a0b12 0%, #2e0508 55%, #100102 100%) !important;
+    background: transparent !important;
     color: #ffffff !important;
     border-top: 2px solid rgba(230, 184, 52, 0.9) !important;
     border-bottom: 2px solid rgba(230, 184, 52, 0.9) !important;
@@ -296,47 +330,55 @@
     text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.95), 0 0 4px rgba(0, 0, 0, 0.7) !important;
     box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.15), inset 0 0 0 1px rgba(230, 184, 52, 0.2), inset 0 0 6px rgba(0, 0, 0, 0.8), 0 4px 8px rgba(0, 0, 0, 0.6) !important;
     position: relative !important;
-    overflow: hidden !important;
+    overflow: visible !important;
 
-    &::before {
-      content: '' !important;
+    .club-btn-sheen-bg {
       position: absolute !important;
-      top: -50% !important;
-      left: -50% !important;
-      width: 200% !important;
-      height: 200% !important;
-      background: linear-gradient(
-        135deg,
-        transparent 0%,
-        transparent 35%,
-        rgba(230, 184, 52, 0.0) 40%,
-        rgba(230, 184, 52, 0.2) 50%,
-        rgba(230, 184, 52, 0.0) 60%,
-        transparent 65%,
-        transparent 100%
-      ) !important;
+      inset: 0 !important;
+      border-radius: inherit !important;
+      overflow: hidden !important;
       pointer-events: none !important;
-      z-index: 0 !important;
-      opacity: 0 !important;
-      transform: translate(-30%, -30%) !important;
-      transition: opacity 0.4s ease !important;
+      z-index: 1 !important;
+      background: radial-gradient(circle at center, #6a0b12 0%, #2e0508 55%, #100102 100%) !important;
+
+      &::before {
+        content: '' !important;
+        position: absolute !important;
+        top: -50% !important;
+        left: -50% !important;
+        width: 200% !important;
+        height: 200% !important;
+        background: linear-gradient(
+          135deg,
+          transparent 0%,
+          transparent 35%,
+          rgba(230, 184, 52, 0.0) 40%,
+          rgba(230, 184, 52, 0.2) 50%,
+          rgba(230, 184, 52, 0.0) 60%,
+          transparent 65%,
+          transparent 100%
+        ) !important;
+        pointer-events: none !important;
+        z-index: 1 !important;
+        opacity: 0 !important;
+        transform: translate(-30%, -30%);
+        transition: opacity 0.4s ease !important;
+      }
     }
 
     &:hover:not([data-loading]):not(:disabled):not([data-disabled]) {
       box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.2), inset 0 0 6px rgba(0, 0, 0, 0.8), 0 8px 16px rgba(0, 0, 0, 0.55), 0 0 16px rgba(230, 184, 52, 0.6) !important;
-      background: radial-gradient(circle at center, #8a1017 0%, #3e0306 60%, #100102 100%) !important;
       border-top-color: rgba(255, 235, 180, 1) !important;
       border-bottom-color: rgba(255, 235, 180, 1) !important;
 
-      &::before {
-        opacity: 1 !important;
-        animation: playcard-gold-sheen 2.5s ease-in-out infinite !important;
-      }
-    }
+      .club-btn-sheen-bg {
+        background: radial-gradient(circle at center, #8a1017 0%, #3e0306 60%, #100102 100%) !important;
 
-    .mantine-Button-inner {
-      position: relative !important;
-      z-index: 2 !important;
+        &::before {
+          opacity: 1 !important;
+          animation: playcard-gold-sheen 2.5s ease-in-out infinite !important;
+        }
+      }
     }
 
     .club-btn-chevron {
@@ -349,6 +391,9 @@
     }
 
     &:disabled, &[data-disabled] {
+      .club-btn-sheen-bg {
+        background: radial-gradient(circle at center, #35080c 0%, #1c0305 60%, #0d0102 100%) !important;
+      }
       .club-btn-chevron {
         background: radial-gradient(circle at center, #1c0305 0%, #0d0102 40%, #5c4015 85%, #7a5822 100%) !important;
         opacity: 0.5 !important;

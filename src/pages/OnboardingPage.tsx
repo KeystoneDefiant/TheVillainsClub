@@ -267,9 +267,7 @@ export function OnboardingPage() {
             className="onboarding-split-container"
             layout={!reduceMotion}
           >
-            <motion.div
-              layout={!reduceMotion}
-              transition={{ duration: 0.4, ease: "easeInOut" }}
+            <div
               className="onboarding-staff-card-wrap"
               style={{ display: "flex", flexDirection: "column" }}
             >
@@ -304,7 +302,7 @@ export function OnboardingPage() {
                   </Text>
                 }
               />
-            </motion.div>
+            </div>
 
             <motion.div
               layout={!reduceMotion}

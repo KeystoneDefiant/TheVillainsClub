@@ -8,13 +8,29 @@ export type ClubButtonProps<C extends React.ElementType = "button"> = ButtonProp
 } & Omit<React.ComponentPropsWithoutRef<C>, keyof ButtonProps | "component">;
 
 export function ClubButton<C extends React.ElementType = "button">(props: ClubButtonProps<C>) {
-  const { variant = "filled", fancy, size, styles, style, className, disabled, onClick, children, component, ...rest } = props;
+  const {
+    variant = "filled",
+    fancy,
+    size,
+    styles,
+    style,
+    className,
+    disabled,
+    onClick,
+    children,
+    component,
+    leftSection,
+    rightSection,
+    ...rest
+  } = props;
 
   const isFancy = !!fancy;
 
   const classNamesList = [
     "club-btn",
     `club-btn-${variant}`,
+    leftSection ? "club-btn-has-left" : "",
+    rightSection ? "club-btn-has-right" : "",
     isFancy ? "club-btn-fancy" : "",
     isFancy ? `club-btn-fancy-${size || "md"}` : "",
     className || "",
@@ -47,10 +63,13 @@ export function ClubButton<C extends React.ElementType = "button">(props: ClubBu
       disabled={disabled}
       data-disabled={disabled || undefined}
       onClick={handleClick}
+      leftSection={leftSection}
+      rightSection={rightSection}
       {...rest}
     >
+      {variant === "sheen" && <span className="club-btn-sheen-bg" />}
       {variant !== "subtle" && <span className="club-btn-chevron club-btn-chevron-left" />}
-      {children}
+      <span className="club-btn-text">{children}</span>
       {variant !== "subtle" && <span className="club-btn-chevron club-btn-chevron-right" />}
     </Button>
   );

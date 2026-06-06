@@ -32,6 +32,7 @@ This document describes **how** the project is built and operated. Overarching o
 - **Pazillus Interactive Live-Render Tutorial System:** A zero-screenshot, data-driven tutorial manager (`SommelierLiveGuide.tsx`) refactored under the new unified guide framework.
 - **Player Titles, Bankruptcy, and Played Game Tracking:** Fully integrated dynamic Player Titles, dossier modal, and Bartender bankruptcy overlay.
 - **Game Tips Modal & Unified Guides Framework:** Shared hook `useGuideNavigator` and `ClubGuidePanel` component consolidate step-by-step navigation, keyboards, and animations across `SommelierLiveGuide`, `GameTipsModal`, and `OnboardingPage`.
+- **Balance Tuning Simulators:** Built custom Monte Carlo balance verification scripts under `scripts/` supporting all minigames with dynamic game mode extraction. Fateseal Silver (`sim:fateseal`) runs a matrix measuring 1-4 omen counts under standard, Unsettle Spirits, and Faustian Bargain setups. Seven Year Itch (`sim:itch`) calculates isolated RTPs for Pass Line, Field, Horn, and all individual Place and Hardway wagers. Oubliette No. 9 (`sim:oubliette`) runs hands using a rule-based AI video-poker player following Jacks-or-Better strategy. Masterton 1881 (`sim:masterson`) simulates croupier shifts under fair and optimal rigging models to compare table house edge vs. croupier commission ROI. Rollup script (`sim:all`) executes the entire suite to print a unified balancing dashboard.
 
 
 **Immediate next steps (suggested order):**

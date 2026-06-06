@@ -23,7 +23,6 @@ import {
   fatesealGameConfig,
   fatesealCrossroadsNewShop,
   fatesealDefaultSymbolPool,
-  fatesealWagerLevels,
   fatesealUnsettleSpiritsConfig,
   fatesealFaustianBargainConfig,
   fatesealVassagoGambitConfig
@@ -52,7 +51,6 @@ export {
   fatesealGameConfig,
   fatesealCrossroadsNewShop,
   fatesealDefaultSymbolPool,
-  fatesealWagerLevels,
   fatesealUnsettleSpiritsConfig,
   fatesealFaustianBargainConfig,
   fatesealVassagoGambitConfig

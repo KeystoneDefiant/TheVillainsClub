@@ -70,6 +70,8 @@ export function runFatesealSimulations() {
 
       // 2. Unsettle Spirits (Wild Reels) Play Simulation
       const minPrice = fatesealUnsettleSpiritsConfig.minPrice;
+      const wildDuration = fatesealUnsettleSpiritsConfig.durationSpins;
+      const wildBetSize = fatesealUnsettleSpiritsConfig.betSize;
       let wildPayout = 0;
       let wildTotalCost = 0;
       let wildSpinsCount = 0;
@@ -82,46 +84,50 @@ export function runFatesealSimulations() {
         let stateWild = createInitialFatesealState(100_000_000, tableConfig.buyIn, rng, tableConfig);
         stateWild.activeProphecy = [...activeOmens];
         stateWild.prophecyMode = "single";
-        stateWild.wildReelPaidSpinTimers = [5];
+        stateWild.wildReelPaidSpinTimers = [wildDuration];
 
-        for (let s = 0; s < 5; s++) {
+        for (let s = 0; s < wildDuration; s++) {
           const r = runSpin(stateWild, rng, { forBaseRitualSim: false });
           wildPayout += r.totalPayout;
           stateWild = r.nextState;
           wildSpinsCount++;
         }
       }
-      const wildSpinsRtp = (wildPayout / (wildSpinsCount * 250)) * 100;
+      const wildSpinsRtp = (wildPayout / (wildSpinsCount * wildBetSize)) * 100;
       const wildNetRtp = (wildPayout / wildTotalCost) * 100;
 
       // 3. Faustian Bargain (Dead Reels) Play Simulation
       const grant = Math.max(0, Math.floor(tableConfig.buyIn * fatesealFaustianBargainConfig.creditRatioOfBuyIn));
+      const deadDuration = fatesealFaustianBargainConfig.durationSpinsPerLevel;
+      const deadBetSize = fatesealFaustianBargainConfig.lockedBetSize;
       let deadPayout = 0;
       let deadTotalBets = 0;
       let deadTotalGrant = 0;
       let deadSpinsCount = 0;
 
       while (deadSpinsCount < SPINS) {
-        deadTotalBets += 5 * 250;
+        deadTotalBets += deadDuration * deadBetSize;
         deadTotalGrant += grant;
 
         let stateDead = createInitialFatesealState(100_000_000, tableConfig.buyIn, rng, tableConfig);
         stateDead.activeProphecy = [...activeOmens];
         stateDead.prophecyMode = "single";
-        stateDead.deadReelPaidSpinTimers = [5];
+        stateDead.deadReelPaidSpinTimers = [deadDuration];
 
-        for (let s = 0; s < 5; s++) {
+        for (let s = 0; s < deadDuration; s++) {
           const r = runSpin(stateDead, rng, { forBaseRitualSim: false });
           deadPayout += r.totalPayout;
           stateDead = r.nextState;
           deadSpinsCount++;
         }
       }
-      const deadSpinsRtp = (deadPayout / (deadSpinsCount * 250)) * 100;
+      const deadSpinsRtp = (deadPayout / (deadSpinsCount * deadBetSize)) * 100;
       const deadNetRtp = ((deadPayout + deadTotalGrant) / deadTotalBets) * 100;
 
       // 4. Vassago's Gambit Play Simulation
       const vassagoMinPrice = fatesealVassagoGambitConfig.minPrice;
+      const vassagoDuration = fatesealVassagoGambitConfig.durationSpins;
+      const vassagoBetSize = fatesealVassagoGambitConfig.betSize;
       let vassagoPayout = 0;
       let vassagoTotalCost = 0;
       let vassagoSpinsCount = 0;
@@ -138,9 +144,9 @@ export function runFatesealSimulations() {
 
         const r = runSpin(stateVassago, rng, { forBaseRitualSim: false });
         vassagoPayout += r.totalPayout;
-        vassagoSpinsCount++;
+        vassagoSpinsCount += vassagoDuration;
       }
-      const vassagoSpinsRtp = (vassagoPayout / (vassagoSpinsCount * 250)) * 100;
+      const vassagoSpinsRtp = (vassagoPayout / (vassagoSpinsCount * vassagoBetSize)) * 100;
       const vassagoNetRtp = (vassagoPayout / vassagoTotalCost) * 100;
 
       console.log(

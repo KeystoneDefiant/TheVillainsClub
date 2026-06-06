@@ -8,6 +8,8 @@ import {
   fatesealProgressionRules,
   fatesealScatterRitual,
   fatesealVassagoGambitConfig,
+  fatesealUnsettleSpiritsConfig,
+  fatesealFaustianBargainConfig,
   getCurrentFatesealGameMode,
   type FatesealGameModeConfig,
   type FatesealPoolEntry,
@@ -423,7 +425,10 @@ function modeMult(mode: FatesealProphecyModeKey): number {
 
 function runCascadeStep(
   grid: FatesealSymbolId[][],
-  state: Pick<FatesealEngineState, "prophecyMode" | "activeProphecy" | "baseBet" | "markedOmenSymbol">,
+  state: Pick<FatesealEngineState, "prophecyMode" | "activeProphecy" | "baseBet" | "markedOmenSymbol"> & {
+    vassagoActive?: boolean;
+    wildReelPaidSpinTimers?: readonly number[];
+  },
   pool: readonly FatesealPoolEntry[],
   rng: Rng,
   depth: number,
@@ -468,11 +473,21 @@ function runCascadeStep(
   }
   const base = modeMult(state.prophecyMode);
   const activeCount = state.activeProphecy.length || 1;
-  const factors = fatesealProgressionRules.purchasedReels.omenScalingFactors;
-  const scale =
-    state.prophecyMode === "single"
-      ? (factors[Math.min(activeCount - 1, factors.length - 1)] ?? 1.0)
-      : 1.0;
+  const isUnsettle = (state.wildReelPaidSpinTimers?.length ?? 0) > 0;
+  const isVassago = state.vassagoActive;
+  let scale = 1.0;
+  if (state.prophecyMode === "single") {
+    if (isUnsettle) {
+      const unsettleFactors = fatesealUnsettleSpiritsConfig.omenScalingFactors;
+      scale = unsettleFactors[Math.min(activeCount - 1, unsettleFactors.length - 1)] ?? 1.0;
+    } else if (isVassago) {
+      const vassagoFactors = fatesealVassagoGambitConfig.omenScalingFactors;
+      scale = vassagoFactors[Math.min(activeCount - 1, vassagoFactors.length - 1)] ?? 1.0;
+    } else {
+      const factors = fatesealProgressionRules.purchasedReels.omenScalingFactors;
+      scale = factors[Math.min(activeCount - 1, factors.length - 1)] ?? 1.0;
+    }
+  }
 
   const prophecyContribution = prophecy.size * base * scale;
   const nonSelectedContribution = clusters.size * 0.5;
@@ -618,10 +633,10 @@ export function runSpin(
 
   if (isVassago || isUnsettle) {
     bet = 0;
-    activeBetSize = 250;
+    activeBetSize = isVassago ? fatesealVassagoGambitConfig.betSize : fatesealUnsettleSpiritsConfig.betSize;
   } else if (isFaustian) {
-    bet = 250;
-    activeBetSize = 250;
+    bet = fatesealFaustianBargainConfig.lockedBetSize;
+    activeBetSize = fatesealFaustianBargainConfig.lockedBetSize;
   } else {
     const useFreeSpin = state.freeRitualSpinsLeft > 0;
     if (useFreeSpin) {
@@ -647,7 +662,7 @@ export function runSpin(
   const baseSim = options?.forBaseRitualSim === true;
 
   let grid = state.grid.map((row) => [...row]);
-  let bonusQueue = isVassago ? 1 : 0;
+  let bonusQueue = isVassago ? fatesealVassagoGambitConfig.durationSpins : 0;
   if (isVassago) {
     log.push({ kind: "scatter_ritual_started", spins: fatesealScatterRitual.freeSpinsGranted });
   }
@@ -668,7 +683,9 @@ export function runSpin(
 
   const colCtxForWave = (bonusDeadColCount: number): FatesealFillColumnContext => {
     const n = grid.length;
-    const effectiveBonusDead = isVassago ? Math.max(0, bonusDeadColCount - 1) : bonusDeadColCount;
+    const effectiveBonusDead = isVassago 
+      ? Math.max(0, Math.floor((bonusDeadColCount - 1) * fatesealVassagoGambitConfig.deadColDecayPerLevel)) 
+      : bonusDeadColCount;
     return {
       bonusDeadColCount: Math.min(effectiveBonusDead, n),
       wildColCount: Math.min(state.wildReelPaidSpinTimers.length, n),

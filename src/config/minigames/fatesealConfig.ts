@@ -36,7 +36,7 @@ export const fatesealProphecyMode = {
 
 export type FatesealProphecyModeKey = keyof typeof fatesealProphecyMode;
 
-export const fatesealCascadePayoutScale = 0.0082 as const;
+export const fatesealCascadePayoutScale = 0.00984 as const;
 
 export const fatesealCascadeMultipliers = [1, 1, 2, 3, 4, 6] as readonly number[];
 
@@ -60,7 +60,7 @@ export const fatesealProgressionRules = {
     wildChancePerActiveReel: 0.20,
     wildChanceDecayPerDepth: 0.50,
     markedSymbolPayoutMultiplier: 1.5,
-    omenScalingFactors: [1.2, 0.4, 0.25, 0.1] as readonly number[],
+    omenScalingFactors: [1.0, 0.3125, 0.13, 0.039] as readonly number[],
     bonusSpinsExcludeFromReelDecay: true,
   },
   bonusGrid: {
@@ -72,8 +72,8 @@ export const fatesealScatterSymbolPoolWeight = 0.7 as const;
 
 export const fatesealScatterRitual = {
   meterToTrigger: 12,
-  freeSpinsGranted: 1,
-  freeRitualWildWeightBoost: 1,
+  freeSpinsGranted: 4,
+  freeRitualWildWeightBoost: 2,
 } as const;
 
 export const fatesealGameConfig = {
@@ -84,6 +84,7 @@ export const fatesealGameConfig = {
     chipIncrement: 10,
     minBaseBet: 100,
     maxBaseBetFractionOfSession: 0.5 as number,
+    betMultipliers: [1, 2, 5, 10] as readonly number[],
   },
   gameModes: {
     normalGame: {},
@@ -93,6 +94,7 @@ export const fatesealGameConfig = {
       maxReturnMultipleOfBuyIn: 30,
       chipIncrement: 5,
       minBaseBet: 5,
+      betMultipliers: [1, 2, 5, 10, 15] as readonly number[],
     },
     highRoller: {
       displayName: "High Roller Ritual",
@@ -100,6 +102,7 @@ export const fatesealGameConfig = {
       maxReturnMultipleOfBuyIn: 70,
       chipIncrement: 50,
       minBaseBet: 500,
+      betMultipliers: [1, 2, 5] as readonly number[],
     },
   },
 } as const;
@@ -131,13 +134,12 @@ export const fatesealDefaultSymbolPool: readonly FatesealPoolEntry[] = [
   { symbol: "scatter", weight: fatesealScatterSymbolPoolWeight },
 ];
 
-export const fatesealWagerLevels = [100, 200, 500, 1000] as const;
-
 export const fatesealUnsettleSpiritsConfig = {
   durationSpins: 5,
   costRatioOfBank: 0.75,
   minPrice: 6500,
   betSize: 250,
+  omenScalingFactors: [0.655, 0.38, 0.214, 0.102] as readonly number[],
 } as const;
 
 export const fatesealFaustianBargainConfig = {
@@ -150,6 +152,9 @@ export const fatesealFaustianBargainConfig = {
 export const fatesealVassagoGambitConfig = {
   costRatioOfBank: 0.90,
   minPrice: 10000,
-  betSize: 250,
+  betSize: 2500,
+  durationSpins: 1,
   scatterChanceMultiplier: 1.5,
+  deadColDecayPerLevel: 1,
+  omenScalingFactors: [2.91, 0.79, 0.248, 0.016] as readonly number[],
 } as const;

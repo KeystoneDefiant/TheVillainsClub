@@ -24,7 +24,6 @@ import {
   fatesealProgressionRules,
   fatesealSymbolLore,
   resolveFatesealGameMode,
-  fatesealWagerLevels,
   fatesealUnsettleSpiritsConfig,
   fatesealFaustianBargainConfig,
   fatesealCascadePayoutScale,
@@ -230,6 +229,9 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
   const { onReturnToClubMenu, settlement } = props;
   const buyIn = settlement.buyIn;
   const tableRules = useMemo(() => resolveFatesealGameMode(props.gameModeId), [props.gameModeId]);
+  const wagerLevels = useMemo(() => {
+    return tableRules.betMultipliers.map((m) => m * tableRules.minBaseBet);
+  }, [tableRules]);
   const reduceMotion = usePrefersReducedMotion();
   const [realEngine, setEngine] = useState<FatesealEngineState>(() =>
     createInitialFatesealState(props.sessionCredits, buyIn, Math.random, resolveFatesealGameMode(props.gameModeId)),
@@ -1042,7 +1044,7 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
                                       Ritual (250)
                                     </ClubButton>
                                   ) : (
-                                    fatesealWagerLevels.map((rawBet, idx) => {
+                                    wagerLevels.map((rawBet, idx) => {
                                       const betSize = tomeToggle ? Math.floor(rawBet * 1.25) : rawBet;
                                       const canAfford = engine.sessionWallet >= betSize;
                                       return (

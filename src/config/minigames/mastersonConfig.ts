@@ -140,7 +140,7 @@ export const mastersonGameConfig = {
       displayName: "Grand Salon",
       buyIn: 3000,
       maxReturnMultipleOfBuyIn: 50,
-      max_bettors: 5,
+      max_bettors: 4,
       base_commission_pct: 12.0,
       seat_fill_chance_per_spin: 0.50,
     },

@@ -260,7 +260,7 @@ export const sommelierTutorialCatalog: Record<string, SommelierTutorialStep[]> =
     },
     {
       title: "The Shift",
-      dialogue: `In Masterton 1881, you are the croupier (That's the roulette dealer...) running a rigged roulette table. Your shift lasts exactly ${mastersonGameConfig.shift_duration_spins} spins or until you scare off all of the bettors at the table. Your primary objective is to maximize the house's total earnings and pocket a massive personal commission cut, all while keeping the seats filled.\n\nLet me pour you a glass of Cabernet and show you how to pull the strings.`,
+      dialogue: `In Masterton 1881, you are the croupier (That's the roulette dealer) running a rigged roulette table. Your shift lasts exactly ${mastersonGameConfig.shift_duration_spins} spins or until you scare off all of the bettors at the table. Your primary objective is to maximize the house's total earnings and pocket a massive personal commission cut of the house's final profit. But beware: if the house ends up in the negative, you will forfeit your entire buy-in! Keep the seats filled, rig wisely, and make sure the house stays in the black.\n\nLet me pour you a glass of Cabernet and show you how to pull the strings.`,
       highlightSelector: ".masterson-felt-board"
     },
     {
@@ -319,14 +319,14 @@ export const sommelierTutorialCatalog: Record<string, SommelierTutorialStep[]> =
         tableHouseLedger: 24500,
         accumulatedCommission: 3675,
         notifications: [
-          { type: "upkeep", message: "📈 House commission rate increased! You now pocket 15% of positive take!" },
+          { type: "upkeep", message: "📈 House commission rate increased! You now pocket 15% of final table profit!" },
           { type: "eviction", message: "💥 Victor Lupin left the table: Frustration Limit." }
         ]
       }
     },
     {
       title: "Advanced Strategy - Bettor Behavior",
-      dialogue: `The players can bet in a number of different patterns. Knowing these patterns isn't essential, but it does help to know what they may be doing and how best to exploit them for maximum profit.\n\nClicking on their player card will give you insight into their betting patterns, a description of how their betting strategy works, risk tolerance, and how much they can lose before they storm off.\n\nWith that, I believe our tasting for this game has come to a conclusion. Settle your shift, rig the wheel wisely, and try to pocket a handsome sum of commission. Best of luck!`,
+      dialogue: `The players can bet in a number of different patterns. Knowing these patterns isn't essential, but it does help to know what they may be doing and how best to exploit them for maximum profit.\n\nClicking on their player card will give you insight into their betting patterns, a description of how their betting strategy works, risk tolerance, and how much they can lose before they storm off.\n\nWith that, I believe our tasting for this game has come to a conclusion. Settle your shift when the house is in profit, rig the wheel wisely, and try to pocket a handsome sum of commission. But remember: if you cash out while the table ledger is negative, your entire buy-in will be lost! Best of luck!`,
       highlightSelector: "#betting-styles-guide",
       mockState: {
         activeBettors: [

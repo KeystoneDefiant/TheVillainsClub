@@ -285,16 +285,6 @@ export function useMastertonEngine(gameModeId?: string) {
     const nextTableLedger = tableHouseLedger + spinTableProfit;
     setTableHouseLedger(nextTableLedger);
 
-    // Personal commission
-    if (spinTableProfit > 0) {
-      const cut = Math.floor(spinTableProfit * (commissionRate / 100));
-      setAccumulatedCommission((prev) => prev + cut);
-      newNotifications.push({
-        type: "upkeep",
-        message: `You earned a commission cut of ${cut.toLocaleString()} chips (+${commissionRate}% of positive take).`,
-      });
-    }
-
     // Step 6: Morale and Evictions
     const remainingBettors: BettorProfile[] = [];
     const evictedIds = new Set<string>();
@@ -375,10 +365,36 @@ export function useMastertonEngine(gameModeId?: string) {
       nextCommRate += mastersonGameConfig.quarter_commission_bonus_pct;
       newNotifications.push({
         type: "upkeep",
-        message: `📈 House commission rate increased! You now pocket ${nextCommRate}% of positive take!`,
+        message: `📈 House commission rate increased! You now pocket ${nextCommRate}% of final table profit!`,
       });
     }
     setCommissionRate(nextCommRate);
+
+    // Personal commission cut of the house's final/current ledger
+    const projectedCommission = nextTableLedger > 0
+      ? Math.floor(nextTableLedger * (nextCommRate / 100))
+      : 0;
+    setAccumulatedCommission(projectedCommission);
+
+    // Notifications of spin outcomes and overall status
+    if (spinTableProfit > 0) {
+      newNotifications.push({
+        type: "upkeep",
+        message: `House won +$${spinTableProfit.toLocaleString()} this spin. Projected commission: $${projectedCommission.toLocaleString()} (${nextCommRate}% cut).`,
+      });
+    } else if (spinTableProfit < 0) {
+      newNotifications.push({
+        type: "loss",
+        message: `House lost -$${Math.abs(spinTableProfit).toLocaleString()} this spin. Projected commission: $${projectedCommission.toLocaleString()} (${nextCommRate}% cut).`,
+      });
+    }
+
+    if (nextTableLedger <= 0) {
+      newNotifications.push({
+        type: "loss",
+        message: `⚠️ WARNING: Table ledger is negative ($${nextTableLedger.toLocaleString()}). You will forfeit your entire buy-in if the shift ends now!`,
+      });
+    }
 
     // Seat Replenishment Checks
     const config = resolveMastersonGameMode(gameModeId);

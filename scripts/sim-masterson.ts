@@ -175,11 +175,6 @@ function runShift(
     const spinTableProfit = -Object.values(recaps).reduce((sum, val) => sum + val, 0);
     totalTableProfit += spinTableProfit;
 
-    // Commission cut
-    if (spinTableProfit > 0) {
-      totalCommission += Math.floor(spinTableProfit * (commissionRate / 100));
-    }
-
     // Evictions
     const survivors: BettorProfile[] = [];
     let triggeredSuspicionBreach = false;
@@ -238,10 +233,14 @@ function runShift(
     }
   }
 
+  const finalCommission = totalTableProfit > 0
+    ? Math.floor(totalTableProfit * (commissionRate / 100))
+    : 0;
+
   return {
     totalPlayerBets,
     totalTableProfit,
-    totalCommission,
+    totalCommission: finalCommission,
     totalSpins,
     totalEvictions
   };
@@ -265,6 +264,7 @@ export function runMastersonSimulations() {
       let totalCommission = 0;
       let totalSpins = 0;
       let totalEvictions = 0;
+      let totalReturnedCredits = 0;
 
       for (let s = 0; s < SHIFTS; s++) {
         const metrics = runShift(modeId, rigged, rng);
@@ -273,13 +273,18 @@ export function runMastersonSimulations() {
         totalCommission += metrics.totalCommission;
         totalSpins += metrics.totalSpins;
         totalEvictions += metrics.totalEvictions;
+
+        const returned = metrics.totalTableProfit > 0
+          ? config.buyIn + metrics.totalCommission
+          : 0;
+        totalReturnedCredits += returned;
       }
 
       const avgSpins = totalSpins / SHIFTS;
       const houseEdge = totalBets > 0 ? (totalTableProfit / totalBets) * 100 : 0;
       const avgCommission = totalCommission / SHIFTS;
-      // Croupier RTP = (Buy-in + Commission) / Buy-in
-      const croupierRtp = ((config.buyIn + avgCommission) / config.buyIn) * 100;
+      // Croupier RTP = totalReturnedCredits / (buyIn * SHIFTS)
+      const croupierRtp = (totalReturnedCredits / (config.buyIn * SHIFTS)) * 100;
       const avgEvictions = totalEvictions / SHIFTS;
 
       console.log(`  Croupier Strategy: [${rigged ? "OPTIMAL RIGGING" : "FAIR PLAY"}]`);

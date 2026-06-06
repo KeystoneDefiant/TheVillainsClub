@@ -361,16 +361,21 @@ export function MastertonRoot({
         endReason = "Table Isolated — no active players left";
       }
 
+      const buyIn = activeSettlement.buyIn;
+      const finalUncapped = engine.tableHouseLedger > 0
+        ? buyIn + engine.accumulatedCommission
+        : 0;
+
       const stats = [
         { label: "Spins Conducted", value: engine.spinCount },
         { label: "Table House Ledger", value: `${engine.tableHouseLedger.toLocaleString()} cr` },
-        { label: "Commission Earned", value: `${engine.accumulatedCommission.toLocaleString()} cr` },
+        { label: "Commission Cut", value: `${engine.accumulatedCommission.toLocaleString()} cr` },
         { label: "Active Bettors", value: engine.activeBettors.length },
         { label: "Evicted Bettors", value: Object.keys(engine.evictedBettors).length }
       ];
 
       onReturnToClubMenu({
-        ...computeMastersonReturn(engine.accumulatedCommission, activeSettlement),
+        ...computeMastersonReturn(finalUncapped, activeSettlement),
         tableRound: engine.spinCount,
         endReason,
         stats,
@@ -1305,10 +1310,16 @@ export function MastertonRoot({
               ${engine.tableHouseLedger.toLocaleString()}
             </Title>
             <Text size="xs" c="white">
-              Croupier Commission ({engine.commissionRate}%):{" "}
+              Projected Commission ({engine.commissionRate}%):{" "}
               <Text span c="yellow" fw={700}>
                 ${engine.accumulatedCommission.toLocaleString()}
               </Text>
+            </Text>
+            <Text size="xs" c={engine.tableHouseLedger > 0 ? "dimmed" : "#ef5350"} fw={engine.tableHouseLedger > 0 ? undefined : 700}>
+              Projected Return:{" "}
+              <span style={{ color: engine.tableHouseLedger > 0 ? "#81c784" : "#ef5350", fontWeight: "bold" }}>
+                ${(engine.tableHouseLedger > 0 ? (settlement?.buyIn ?? 2000) + engine.accumulatedCommission : 0).toLocaleString()}
+              </span>
             </Text>
           </Stack>
         </Box>
@@ -1710,6 +1721,10 @@ export function MastertonRoot({
                   <Text size="xs" fw={700} c="white">{engine.spinCount} / 30</Text>
                 </Group>
                 <Group justify="space-between">
+                  <Text size="xs" c="dimmed">BUY-IN</Text>
+                  <Text size="xs" fw={700} c="white">${(settlement?.buyIn ?? 2000).toLocaleString()}</Text>
+                </Group>
+                <Group justify="space-between">
                   <Text size="xs" c="dimmed">TABLE HOUSE LEDGER</Text>
                   <Text size="xs" fw={700} c={engine.tableHouseLedger >= 0 ? "#81c784" : "#ef5350"}>
                     {engine.tableHouseLedger >= 0 ? `+$${engine.tableHouseLedger.toLocaleString()}` : `-$${Math.abs(engine.tableHouseLedger).toLocaleString()}`}
@@ -1717,10 +1732,21 @@ export function MastertonRoot({
                 </Group>
                 <Group justify="space-between" style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "8px" }}>
                   <Text size="xs" c="dimmed">YOUR COMMISSION ({engine.commissionRate}%)</Text>
-                  <Text size="sm" fw={800} c="yellow">
+                  <Text size="sm" fw={800} c={engine.tableHouseLedger > 0 ? "yellow" : "dimmed"}>
                     ${engine.accumulatedCommission.toLocaleString()}
                   </Text>
                 </Group>
+                <Group justify="space-between" style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "8px" }}>
+                  <Text size="xs" c="dimmed">FINAL RETURN</Text>
+                  <Text size="sm" fw={800} c={engine.tableHouseLedger > 0 ? "#81c784" : "#ef5350"}>
+                    ${(engine.tableHouseLedger > 0 ? (settlement?.buyIn ?? 2000) + engine.accumulatedCommission : 0).toLocaleString()}
+                  </Text>
+                </Group>
+                {engine.tableHouseLedger <= 0 && (
+                  <Text size="xs" c="#ef5350" fw={700} mt="xs">
+                    ⚠️ HOUSE WAS NEGATIVE. BUY-IN FORFEITED!
+                  </Text>
+                )}
               </Stack>
 
               <ClubButton

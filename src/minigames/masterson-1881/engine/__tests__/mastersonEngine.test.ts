@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { act, renderHook } from "@testing-library/react";
 import { executeBettorBetting } from "../bettorAI";
-import { rouletteNumbers, validateOutcomeAgainstRig, mastersonGameConfig } from "@/config/minigames/mastersonRules";
+import { rouletteNumbers, validateOutcomeAgainstRig, mastersonGameConfig, resolveMastersonGameMode } from "@/config/minigames/mastersonRules";
 
 // vi.mock is hoisted by Vitest so it intercepts the engine's ESM named imports of
 // executeBettorBetting and generateRandomBettor. vi.spyOn only patches the namespace
@@ -113,10 +113,11 @@ describe("useMastertonEngine Hook", () => {
     expect(result.current.phase).toBe("BETTING");
   });
 
-  it("should initialize with 5 seat profiles when grandSalon gameModeId is provided", () => {
+  it("should initialize with configured seat profiles when grandSalon gameModeId is provided", () => {
     const { result } = renderHook(() => useMastertonEngine("grandSalon"));
     expect(result.current.spinCount).toBe(1);
-    expect(result.current.activeBettors.length).toBe(5);
+    const expectedBettors = resolveMastersonGameMode("grandSalon").max_bettors;
+    expect(result.current.activeBettors.length).toBe(expectedBettors);
     expect(result.current.phase).toBe("BETTING");
   });
 
@@ -233,4 +234,88 @@ describe("useMastertonEngine Hook", () => {
 
     spyMath.mockRestore();
   });
+
+  it("should calculate commission dynamically on overall ledger and generate warning notifications if negative", () => {
+    const makeBettor = (seatIndex: number) => ({
+      id: `Seat ${seatIndex}`,
+      name: `Villain ${seatIndex}`,
+      strategy: "Martingale" as const,
+      chips: 10000,
+      initial_chips: 10000,
+      max_suspicion: 10,
+      current_suspicion: 0,
+      loss_tolerance_pct: 1.0,
+      max_consecutive_losses: 100,
+      current_consecutive_losses: 0,
+      double_bet_frequency: 0,
+      herd_mentality_pct: 0,
+    });
+
+    vi.mocked(bettorAI.generateRandomBettor).mockImplementation(makeBettor);
+    
+    // Rig player wins (house losses)
+    vi.mocked(bettorAI.executeBettorBetting).mockImplementation(() => ({
+      bets: [{ target: "Red", amount: 1000, payoutOdds: 1 }],
+      nextBetAmount: 1000,
+    }));
+
+    const { result } = renderHook(() => useMastertonEngine());
+
+    // Rig outcome to Red so player wins (house loses 1000)
+    act(() => {
+      result.current.selectRig("low", "Red");
+    });
+    act(() => {
+      result.current.placeInitialBets();
+    });
+    act(() => {
+      result.current.determineResultAndLock();
+    });
+    act(() => {
+      result.current.resolveSpin();
+    });
+
+    // House lost 4 bettors * 1000 = 4000. Wait, 4 active bettors, each bet 1000 on Red, and they won 1000 payout + kept 1000 bet.
+    // So house paid out 4000 net profit to players. Ledger is -4000.
+    expect(result.current.tableHouseLedger).toBe(-4000);
+    // Commission is 0 because ledger is negative
+    expect(result.current.accumulatedCommission).toBe(0);
+    // Warning warning notification should exist
+    expect(result.current.notifications.some(n => n.message.includes("WARNING: Table ledger is negative"))).toBe(true);
+
+    // Now rig player loss (house wins)
+    vi.mocked(bettorAI.executeBettorBetting).mockImplementation(() => ({
+      bets: [{ target: "Red", amount: 3000, payoutOdds: 1 }],
+      nextBetAmount: 3000,
+    }));
+
+    act(() => {
+      result.current.advanceToSummary();
+    });
+    act(() => {
+      result.current.nextSpinTurn();
+    });
+    
+    // Rig outcome to Black so player loses (house wins 4 bettors * 3000 = 12000)
+    // Ledger: -4000 + 12000 = 8000
+    act(() => {
+      result.current.selectRig("low", "Black");
+    });
+    act(() => {
+      result.current.placeInitialBets();
+    });
+    act(() => {
+      result.current.determineResultAndLock();
+    });
+    act(() => {
+      result.current.resolveSpin();
+    });
+
+    expect(result.current.tableHouseLedger).toBe(8000);
+    // Commission rate is 10% on spin 2
+    // Commission: 8000 * 0.1 = 800
+    expect(result.current.accumulatedCommission).toBe(800);
+    expect(result.current.notifications.some(n => n.message.includes("WARNING"))).toBe(false);
+  });
 });
+

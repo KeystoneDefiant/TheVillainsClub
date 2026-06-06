@@ -18,8 +18,8 @@
       "interlude_files": [],
       "modifier": {
         "game_id": "masterson_1881",
-        "payout_multiplier": 1.10,
-        "max_win_multiplier": 1.10,
+        "payout_multiplier": 1.1,
+        "max_win_multiplier": 1.1,
         "description": "+10% payout and max win in Masterson 1881"
       }
     },
@@ -68,8 +68,8 @@
       "interlude_files": [],
       "modifier": {
         "game_id": "oubliette_no9",
-        "payout_multiplier": 1.10,
-        "max_win_multiplier": 1.10,
+        "payout_multiplier": 1.1,
+        "max_win_multiplier": 1.1,
         "description": "+10% payout and max win in Oubliette Number 9"
       }
     },
@@ -78,11 +78,19 @@
       "display_name": "Pillowcase",
       "asset_root": "audio/bands/pillowcase",
       "music_files": [
-        "dustAndBone.mp3",
-        "fadedPortraits.mp3",
-        "ghostlyEchoes.mp3",
-        "shadowPlay.mp3",
-        "staticHaze.mp3"
+        "dustAndEchoes.mp3",
+        "feltedMidnightNoir.mp3",
+        "gritAndRhodes.mp3",
+        "heavySubReflection.mp3",
+        "hypnoticHookNoir.mp3",
+        "loFiNoirGrit.mp3",
+        "mellowMidnightHook.mp3",
+        "muffledEchoes.mp3",
+        "nightshadeRhodes.mp3",
+        "nocturnalDrift.mp3",
+        "noirShadows.mp3",
+        "organNoir.mp3",
+        "rawShadows(noStrings).mp3"
       ],
       "interlude_files": [],
       "modifier": {
@@ -130,8 +138,8 @@
       "interlude_files": [],
       "modifier": {
         "game_id": "fateseal_silver",
-        "payout_multiplier": 1.10,
-        "max_win_multiplier": 1.10,
+        "payout_multiplier": 1.1,
+        "max_win_multiplier": 1.1,
         "description": "+10% payout and max win in Fateseal Silver"
       }
     }

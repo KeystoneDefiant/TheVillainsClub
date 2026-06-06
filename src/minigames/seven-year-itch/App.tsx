@@ -126,6 +126,7 @@ interface SevenYearItchMockState {
   balance?: number;
   table?: Partial<CraplessTableState>;
   bets?: Partial<TableBets>;
+  easyMode?: boolean;
 }
 
 export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
@@ -137,9 +138,16 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
   const [realBalance, setBalance] = useState(props.sessionCredits);
   const [realTable, setTable] = useState(initialTableState);
   const [realBets, setBets] = useState(initialBets);
+  const [realEasyMode, setRealEasyMode] = useState(() => tableRules.bettingMode !== "normal");
+
+  useEffect(() => {
+    setRealEasyMode(tableRules.bettingMode !== "normal");
+  }, [tableRules.bettingMode]);
 
   const [showTutorial, setShowTutorial] = useState(props.isTutorial ?? false);
   const [mockState, setMockState] = useState<SevenYearItchMockState | null>(null);
+
+  const easyMode = mockState?.easyMode !== undefined ? mockState.easyMode : realEasyMode;
 
   const balance = mockState?.balance ?? realBalance;
   const table = useMemo(() => {
@@ -313,26 +321,42 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
   const addPlaceChip = useCallback(
     (pk: PointNumber) => {
       if (table.phase !== "point") return;
+      const sister = (14 - pk) as PointNumber;
       const old = bets.place[pk] ?? 0;
 
       const limitMult = activeBonus?.effect.type === "aggressive_expansion"
         ? (tableRules.aggressiveExpansionCapMultiplier ?? 2)
         : 1;
       const maxPlaceLimit = bets.passLine * 3 * limitMult;
-      const walletCap = old + balance;
-      const cap = Math.min(walletCap, maxPlaceLimit);
 
-      const next = Math.min(old + chip, cap);
-      if (next <= old) return;
-      const d = next - old;
-      setBalance((b) => b - d);
-      setBets((prev) => {
-        const place = { ...prev.place };
-        place[pk] = next;
-        return { ...prev, place };
-      });
+      if (easyMode) {
+        const walletCap = old + Math.floor(balance / 2);
+        const cap = Math.min(walletCap, maxPlaceLimit);
+        const next = Math.min(old + chip, cap);
+        if (next <= old) return;
+        const d = next - old;
+        setBalance((b) => b - 2 * d);
+        setBets((prev) => {
+          const place = { ...prev.place };
+          place[pk] = next;
+          place[sister] = next;
+          return { ...prev, place };
+        });
+      } else {
+        const walletCap = old + balance;
+        const cap = Math.min(walletCap, maxPlaceLimit);
+        const next = Math.min(old + chip, cap);
+        if (next <= old) return;
+        const d = next - old;
+        setBalance((b) => b - d);
+        setBets((prev) => {
+          const place = { ...prev.place };
+          place[pk] = next;
+          return { ...prev, place };
+        });
+      }
     },
-    [balance, bets.place, bets.passLine, chip, table.phase, activeBonus, tableRules.aggressiveExpansionCapMultiplier],
+    [easyMode, balance, bets.place, bets.passLine, chip, table.phase, activeBonus, tableRules.aggressiveExpansionCapMultiplier],
   );
 
   const removePlaceChip = useCallback(
@@ -969,6 +993,9 @@ export function SevenYearItchRoot(props: SevenYearItchShellBinding) {
             </Paper>
 
             <CraplessTableFelt
+              easyMode={easyMode}
+              onEasyModeToggle={setRealEasyMode}
+              tableRules={tableRules}
               table={table}
               bets={bets}
               lastD1={lastD1}

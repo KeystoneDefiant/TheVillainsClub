@@ -110,18 +110,31 @@ export function SommelierLiveGuide({
   // Sync mock state & spotlight on step change.
   useEffect(() => {
     const currentStep = steps[activeStep];
+    let settleTimer: number | null = null;
+
     if (currentStep) {
       onStepChangeRef.current?.(currentStep.mockState || {});
       if (retryTimerRef.current !== null) {
         window.clearTimeout(retryTimerRef.current);
         retryTimerRef.current = null;
       }
+      
+      // Calculate immediately for fast responsiveness
       updateSpotlight(0);
+
+      // Re-run highlight positioning after 1000ms once layout transitions and animations settle
+      settleTimer = window.setTimeout(() => {
+        updateSpotlight(0);
+      }, 1000);
     }
+
     return () => {
       if (retryTimerRef.current !== null) {
         window.clearTimeout(retryTimerRef.current);
         retryTimerRef.current = null;
+      }
+      if (settleTimer !== null) {
+        window.clearTimeout(settleTimer);
       }
     };
   }, [activeStep, steps, updateSpotlight]);

@@ -24,6 +24,8 @@ export const sevenYearItchGameConfig = {
     aggressiveExpansionCapMultiplier: 2,
     /** Refund percentage for Evidence Locker Key when a 7 is rolled. */
     evidenceLockerRefundRate: 0.30,
+    /** Forced betting mode or switchable. */
+    bettingMode: "switch" as "easy" | "normal" | "switch",
   },
   gameModes: {
     normalGame: {},
@@ -44,6 +46,14 @@ export const sevenYearItchGameConfig = {
       maxFreeOddsMultipleOfPass: 5,
       chipIncrement: 100,
       minPassBet: 100,
+    },
+    easyTable: {
+      displayName: "Forced Easy Table",
+      bettingMode: "easy",
+    },
+    normalTable: {
+      displayName: "Forced Normal Table",
+      bettingMode: "normal",
     },
   },
 } as const;

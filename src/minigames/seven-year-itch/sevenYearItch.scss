@@ -97,6 +97,7 @@
 .yi-felt-pass,
 .yi-felt-hop,
 .yi-felt-hard {
+  position: relative;
   border: 1px solid var(--7yi-felt-line);
   background: rgba(10, 8, 7, 0.35);
   color: #e8dfd4;
@@ -152,6 +153,7 @@
 }
 
 .yi-felt-place {
+  position: relative;
   min-height: 58px;
   border-radius: 7px;
   padding: 4px 2px;
@@ -770,5 +772,68 @@
   pointer-events: auto;
   visibility: visible;
   transform: scale(1) translateY(0);
+}
+
+/* Easy Mode place cell layouts and responsive circle headers */
+.yi-felt-place-easy {
+  position: relative;
+  min-height: 72px;
+  padding-top: 18px !important;
+  padding-bottom: 6px !important;
+
+  @media (max-height: 680px) {
+    min-height: 62px;
+  }
+
+  @media (max-width: 520px) {
+    min-height: 54px;
+    padding-top: 14px !important;
+  }
+}
+
+.yi-felt-place-easy-circle {
+  position: absolute;
+  top: -12px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #0c0a09;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+  z-index: 2;
+
+  span {
+    font-size: 0.85rem;
+    font-weight: 900;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  @media (max-width: 520px) {
+    width: 20px;
+    height: 20px;
+    top: -10px;
+    span {
+      font-size: 0.72rem;
+    }
+  }
+}
+
+.yi-felt-place-easy-circle--left {
+  left: 6px;
+  @media (max-width: 520px) {
+    left: 2px;
+  }
+}
+
+.yi-felt-place-easy-circle--right {
+  right: 6px;
+  @media (max-width: 520px) {
+    right: 2px;
+  }
 }
 

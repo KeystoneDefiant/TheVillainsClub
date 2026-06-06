@@ -11,10 +11,14 @@ import {
   type HardwayNumber,
   type HopKey,
   type PointNumber,
+  type SevenYearItchGameModeConfig,
 } from "@/config/minigames/sevenYearItchRules";
 import { DicePair3D } from "./DicePair3D";
 
 export type CraplessTableFeltProps = {
+  easyMode: boolean;
+  onEasyModeToggle: (val: boolean) => void;
+  tableRules: SevenYearItchGameModeConfig;
   table: CraplessTableState;
   bets: TableBets;
   lastD1: number;
@@ -59,6 +63,9 @@ function preventCtx(e: React.MouseEvent) {
 }
 
 export function CraplessTableFelt({
+  easyMode,
+  onEasyModeToggle,
+  tableRules,
   table,
   bets,
   lastD1,
@@ -100,6 +107,11 @@ export function CraplessTableFelt({
   const hornOnLayout = bets.hornUnit * 4;
   const showGrid = !passOnlyLayout;
 
+  const easyPairs = topPlaces.map((left) => ({
+    left,
+    right: (14 - left) as PointNumber,
+  }));
+
   return (
     <div className="yi-felt">
       {activeFavorTitle ? (
@@ -118,43 +130,68 @@ export function CraplessTableFelt({
           ) : null}
 
           <div className="yi-felt-placeArc" aria-label="Place bets">
-            <div className="yi-felt-placeRow">
-              {topPlaces.map((pk) => (
-                <PlaceCell
-                  key={pk}
-                  pk={pk}
-                  amount={bets.place[pk] ?? 0}
-                  isPoint={table.phase === "point" && table.point === pk}
-                  disabled={table.phase !== "point"}
-                  chip={chip}
-                  placePayoutScale={placePayoutScale}
-                  onPrimary={() => onPlacePrimary(pk)}
-                  onSecondary={() => onPlaceSecondary(pk)}
-                  maxBet={maxBet}
-                  recentPlacePayout={recentPlacePayout}
-                />
-              ))}
-            </div>
-            <div className="yi-felt-no7" aria-hidden="true">
-              <span className="yi-felt-no7-inner">7 · The Bust</span>
-            </div>
-            <div className="yi-felt-placeRow">
-              {bottomPlaces.map((pk) => (
-                <PlaceCell
-                  key={pk}
-                  pk={pk}
-                  amount={bets.place[pk] ?? 0}
-                  isPoint={table.phase === "point" && table.point === pk}
-                  disabled={table.phase !== "point"}
-                  chip={chip}
-                  placePayoutScale={placePayoutScale}
-                  onPrimary={() => onPlacePrimary(pk)}
-                  onSecondary={() => onPlaceSecondary(pk)}
-                  maxBet={maxBet}
-                  recentPlacePayout={recentPlacePayout}
-                />
-              ))}
-            </div>
+            {easyMode ? (
+              <div className="yi-felt-placeRow">
+                {easyPairs.map(({ left, right }) => (
+                  <EasyPlaceCell
+                    key={left}
+                    left={left}
+                    right={right}
+                    amount={bets.place[left] ?? 0}
+                    isPoint={table.phase === "point" && (table.point === left || table.point === right)}
+                    leftIsPoint={table.phase === "point" && table.point === left}
+                    rightIsPoint={table.phase === "point" && table.point === right}
+                    disabled={table.phase !== "point"}
+                    chip={chip}
+                    placePayoutScale={placePayoutScale}
+                    onPrimary={() => onPlacePrimary(left)}
+                    onSecondary={() => onPlaceSecondary(left)}
+                    maxBet={maxBet}
+                    recentPlacePayout={recentPlacePayout}
+                  />
+                ))}
+              </div>
+            ) : (
+              <>
+                <div className="yi-felt-placeRow">
+                  {topPlaces.map((pk) => (
+                    <PlaceCell
+                      key={pk}
+                      pk={pk}
+                      amount={bets.place[pk] ?? 0}
+                      isPoint={table.phase === "point" && table.point === pk}
+                      disabled={table.phase !== "point"}
+                      chip={chip}
+                      placePayoutScale={placePayoutScale}
+                      onPrimary={() => onPlacePrimary(pk)}
+                      onSecondary={() => onPlaceSecondary(pk)}
+                      maxBet={maxBet}
+                      recentPlacePayout={recentPlacePayout}
+                    />
+                  ))}
+                </div>
+                <div className="yi-felt-no7" aria-hidden="true">
+                  <span className="yi-felt-no7-inner">7 · The Bust</span>
+                </div>
+                <div className="yi-felt-placeRow">
+                  {bottomPlaces.map((pk) => (
+                    <PlaceCell
+                      key={pk}
+                      pk={pk}
+                      amount={bets.place[pk] ?? 0}
+                      isPoint={table.phase === "point" && table.point === pk}
+                      disabled={table.phase !== "point"}
+                      chip={chip}
+                      placePayoutScale={placePayoutScale}
+                      onPrimary={() => onPlacePrimary(pk)}
+                      onSecondary={() => onPlaceSecondary(pk)}
+                      maxBet={maxBet}
+                      recentPlacePayout={recentPlacePayout}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
           </div>
 
           <details className="yi-felt-oneRoll">
@@ -392,21 +429,73 @@ export function CraplessTableFelt({
 
       <div className="yi-felt-controls">
         <div className="yi-felt-divest-container">
-          {showGrid ? (
-            <ClubButton
-              fancy
-              variant="light"
-              size="sm"
-              data-testid="felt-divest"
-              disabled={!canDivest}
-              onClick={onDivest}
-              title={canDivest ? "Return all bets except pass (once per hand)" : "Already divested this hand"}
-            >
-              Divest
-            </ClubButton>
-          ) : (
-            <div className="yi-felt-divest-placeholder" aria-hidden />
-          )}
+          <div className="yi-felt-left-stack" style={{ width: "auto" }}>
+            <div className={showGrid ? "active" : "inactive"}>
+              <ClubButton
+                fancy
+                variant="light"
+                size="sm"
+                data-testid="felt-divest"
+                disabled={!canDivest}
+                onClick={onDivest}
+                title={canDivest ? "Return all bets except pass (once per hand)" : "Already divested this hand"}
+              >
+                Divest
+              </ClubButton>
+            </div>
+            {tableRules.bettingMode === "switch" && (
+              <div
+                className={!showGrid ? "active" : "inactive"}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  height: "38px"
+                }}
+              >
+                <label className="yi-easy-toggle-label" style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                  <input
+                    type="checkbox"
+                    data-testid="felt-easy-toggle"
+                    checked={easyMode}
+                    onChange={(e) => onEasyModeToggle(e.target.checked)}
+                    style={{ display: "none" }}
+                  />
+                  <div className="yi-easy-toggle-track" style={{
+                    width: "38px",
+                    height: "20px",
+                    borderRadius: "10px",
+                    background: easyMode ? "radial-gradient(circle at center, #6a0b12 0%, #2e0508 100%)" : "#140c0a",
+                    border: "1px solid rgba(199, 158, 87, 0.4)",
+                    position: "relative",
+                    transition: "all 0.15s ease",
+                    boxShadow: "inset 0 2px 4px rgba(0, 0, 0, 0.85)",
+                  }}>
+                    <div className="yi-easy-toggle-thumb" style={{
+                      width: "14px",
+                      height: "14px",
+                      borderRadius: "50%",
+                      background: easyMode ? "radial-gradient(circle at center, #ffffff 0%, #e6c587 85%)" : "radial-gradient(circle at center, #faf6ef 0%, #c79e57 85%)",
+                      border: "1.5px solid #faf6ef",
+                      position: "absolute",
+                      top: "2px",
+                      left: easyMode ? "20px" : "2px",
+                      transition: "all 0.15s ease",
+                      boxShadow: "0 2px 4px rgba(0, 0, 0, 0.6)",
+                    }} />
+                  </div>
+                  <span className="yi-easy-toggle-text" style={{
+                    fontSize: "0.72rem",
+                    fontFamily: "Cinzel, Montserrat, serif",
+                    fontWeight: 700,
+                    color: "#d6b87a",
+                    userSelect: "none",
+                  }}>
+                    Easy Mode
+                  </span>
+                </label>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="yi-felt-dice-container" ref={diceContainerRef as React.RefObject<HTMLDivElement>}>
@@ -549,6 +638,127 @@ function PlaceCell({
       </span>
 
       {!disabled ? <span className="yi-felt-chipHintSm" style={{ marginTop: 2, zIndex: 1 }}>+{chip}</span> : null}
+
+      {showPayoutAnim && (
+        <span className="yi-felt-payout-float">
+          +${payoutAmount.toLocaleString()}
+        </span>
+      )}
+    </button>
+  );
+}
+
+function EasyPlaceCell({
+  left,
+  right,
+  amount,
+  isPoint,
+  leftIsPoint,
+  rightIsPoint,
+  disabled,
+  chip,
+  placePayoutScale,
+  onPrimary,
+  onSecondary,
+  maxBet,
+  recentPlacePayout,
+}: {
+  left: PointNumber;
+  right: PointNumber;
+  amount: number;
+  isPoint: boolean;
+  leftIsPoint: boolean;
+  rightIsPoint: boolean;
+  disabled: boolean;
+  chip: number;
+  placePayoutScale: number;
+  onPrimary: () => void;
+  onSecondary: () => void;
+  maxBet: number;
+  recentPlacePayout: { pk: PointNumber; amount: number; triggerKey: number } | null;
+}) {
+  const [showPayoutAnim, setShowPayoutAnim] = useState(false);
+  const [payoutAmount, setPayoutAmount] = useState(0);
+
+  useEffect(() => {
+    if (recentPlacePayout && (recentPlacePayout.pk === left || recentPlacePayout.pk === right)) {
+      setPayoutAmount(recentPlacePayout.amount);
+      setShowPayoutAnim(true);
+      const t = setTimeout(() => {
+        setShowPayoutAnim(false);
+      }, 1500);
+      return () => clearTimeout(t);
+    }
+  }, [recentPlacePayout, left, right]);
+
+  const previewStake = amount > 0 ? amount : chip;
+  const retPreview = placeBetScaledReturn(left, previewStake, placePayoutScale);
+  const progressPercent = maxBet > 0 ? Math.min(100, (amount / maxBet) * 100) : 0;
+
+  return (
+    <button
+      type="button"
+      className={`yi-felt-place yi-felt-place-easy ${isPoint ? "yi-felt-place--point" : ""} ${disabled ? "yi-felt-place--off" : ""} ${showPayoutAnim ? "yi-felt-place--payout-pulse" : ""}`}
+      data-testid={`felt-place-easy-${left}-${right}`}
+      disabled={disabled}
+      onClick={onPrimary}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        onSecondary();
+      }}
+    >
+      {/* Background Progress Bar */}
+      {amount > 0 && maxBet > 0 && (
+        <div style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          bottom: 0,
+          width: `${progressPercent}%`,
+          background: "linear-gradient(90deg, rgba(196, 120, 45, 0.22) 0%, rgba(196, 120, 45, 0.42) 90%, rgba(255, 215, 128, 0.08) 100%)",
+          transition: "width 0.2s ease",
+          pointerEvents: "none",
+          zIndex: 0,
+          borderRadius: 6,
+        }} />
+      )}
+
+      {/* Left Number Circle */}
+      <div className="yi-felt-place-easy-circle yi-felt-place-easy-circle--left" style={{
+        border: `1.5px solid ${leftIsPoint ? "#ffd780" : "var(--7yi-amber)"}`,
+      }}>
+        <span style={{
+          color: leftIsPoint ? "#ffd780" : "var(--7yi-amber)",
+        }}>
+          {left}
+        </span>
+      </div>
+
+      {/* Right Number Circle */}
+      <div className="yi-felt-place-easy-circle yi-felt-place-easy-circle--right" style={{
+        border: `1.5px solid ${rightIsPoint ? "#ffd780" : "var(--7yi-amber)"}`,
+      }}>
+        <span style={{
+          color: rightIsPoint ? "#ffd780" : "var(--7yi-amber)",
+        }}>
+          {right}
+        </span>
+      </div>
+
+      {/* Stacked Scheme Names in the center */}
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1, zIndex: 1, marginTop: 4, marginBottom: 4 }}>
+        <span className="yi-felt-place-name" style={{ fontSize: "0.72rem", fontWeight: 700, lineHeight: 1.1 }}>
+          {sevenYearItchRackets[left].name}
+        </span>
+        <span className="yi-felt-place-name" style={{ fontSize: "0.72rem", fontWeight: 700, lineHeight: 1.1 }}>
+          {sevenYearItchRackets[right].name}
+        </span>
+      </div>
+
+      {/* Payline */}
+      <span className="yi-felt-place-amt" style={{ fontSize: "0.62rem", zIndex: 1 }}>
+        {amount > 0 ? `+${(retPreview - amount).toLocaleString()} payout` : `+${(retPreview - chip).toLocaleString()} on ${chip}`}
+      </span>
 
       {showPayoutAnim && (
         <span className="yi-felt-payout-float">

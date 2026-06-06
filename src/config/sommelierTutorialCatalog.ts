@@ -171,31 +171,43 @@ export const sommelierTutorialCatalog: Record<string, SommelierTutorialStep[]> =
       title: "The Seed Investment",
       dialogue: "In 7 Year Itch, you are investing in a business that deals with trade of a more illicit flavour. \n\nFor this to work in our city, we of course need a business to act as a front for the rest of our enterprise. The seed investment covers this cost. \n\nYou may bet as much as you like, but remember that the taller the tower, the more disastrous the fall. Be sure to save some money for where the real work happens. \n\n After you place your desired investment, we roll the dice. Should a 7 be rolled, the front business is a success and we don't even need to get into the mire of our more seedy activities. Your investment wins even money and returned to you, then we repeat the process until we roll anything but a 7. \n\n For our craps-playing friends in the crowd, this is the come-out roll, and you are placing a wager on the pass line.",
       highlightSelector: ".yi-felt-pass",
-      mockState: { table: { phase: "comeOut", point: null }, bets: { passLine: 100 } }
+      mockState: { easyMode: false, table: { phase: "comeOut", point: null }, bets: { passLine: 100 } }
     },
     {
       title: "Active Case Files",
       dialogue: "The number rolled in the previous step determines our main focus of business, but it's also the business that the police have started investigating. Should they bust this part of our business, our entire enterprise will fall to the ground like a disappointing glass of wine. \n\n If a 7 is rolled right now, the police crack down on our business, and we lose all money invested. \n\nShould we roll a 6, as in this example, we get away scot free, all money on the felt is returned, and our seed investment wins even money. The front is cleanly shut down, the cops are off of our back, and we may start over with a brand new front. Our primary business will remain highlighted, so you need not remember.",
-      mockState: { table: { phase: "point", point: 6 }, bets: { passLine: 100 } }
+      mockState: { easyMode: false, table: { phase: "point", point: 6 }, bets: { passLine: 100 } }
     },
     {
       title: "Diversification",
-      dialogue: "As you can see here, we have many options for business diversification. \n\n Each number corresponds to a different type of business we have our fingers in, and each one can be invested in individually. When the dice are rolled, if they land on a number that we have invested in, we will see a return on our investment. \n\n The returns on these are adjusted according to how often they would be rolled, mathematically-speaking; the less frequent numbers will pay far more than more common numbers. \n\nIn our example here, you can see that we have invested in the 2, the 6, and the 8, and the returns are noted on the felt. You can always refer to the 'Odds' button at the top of the screen for the payout structure. \n\n For our craps enthusiasts at this tasting, these are simply place bets.",
+      dialogue: "As you can see here, we have many options for business diversification. \n\n Each number corresponds to a different type of business we have our fingers in, and each one can be invested in individually. When the dice are rolled, if they land on a number that we have invested in, we will see a return on our investment. \n\n The returns on these are adjusted according to how often they would be rolled, mathematically-speaking; the less frequent numbers will pay far more than more common numbers. \n\nIn our example here, you can see that we have invested in the 2, the 6, the 8, and the 10. The returns are noted on the felt. You can always refer to the 'Odds' button at the top of the screen for the payout structure. \n\n For our craps enthusiasts at this tasting, these are simply place bets.",
       highlightSelector: ".yi-felt-placeArc",
-      mockState: { table: { phase: "point", point: 6 }, bets: { passLine: 100, place: { 2: 50, 6: 50, 8: 50 } } }
+      mockState: { easyMode: false, table: { phase: "point", point: 6 }, bets: { passLine: 100, place: { 2: 100, 6: 50, 8: 50, 10: 50 } } }
     },
     {
       title: "Divestment",
-      dialogue: "Should the heat feel like it's too much, click the Divest button. \n\nThis will return all money invested in the various businesses, but your seed investment is locked down. You may re-invest after a divestment, but your returns will be lower until the start of the next hand. \n\nA savvy businessperson knows when to cut and run, but the street knows a chicken when it clucks. \n\n Speaking of, please do try our chicken marinara this evening, it's impeccable. Please ask if you need a wine pairing recommendation.",
+      dialogue: "Should the heat feel like it's too much, click the Divest button. \n\nThis will return all money invested in the various businesses, but your seed investment is locked down. You may re-invest after a divestment, but your returns will be lower until the start of the next hand. \n\nA savvy businessperson knows when to cut and run, but the street knows a chicken when it clucks. \n\n Speaking of, do try our chicken marinara this evening, it's impeccable. Please ask if you need a wine pairing recommendation.",
       highlightSelector: ".yi-felt-divest-container",
-      mockState: { table: { phase: "point", point: 6, hasUsedDivest: false }, bets: { passLine: 100, place: { 2: 50, 6: 50, 8: 50 } } }
+      mockState: { easyMode: false, table: { phase: "point", point: 6, hasUsedDivest: false }, bets: { passLine: 100, place: { 2: 50, 6: 50, 8: 50 } } }
     },
     {
       title: "Heat",
-      dialogue: "A good wine should never be hot in most cases, but here in 7 Year Itch, heat can be a good thing. \n\nFor every bet placed on the felt, we add tension to the operation. The more you have on the felt, the more heat you generate. Every roll, we add to the heat meter at the top of the table. \n\nWhen this fills, you may select from an offering of favors that can increase our payouts, allow us a clean divestment with no downside, or even give us a second chance after rolling a 7. \n\nBig bets mean bigger chances to win, but also bigger falls when the wrong people come knocking at your office door.\n\nThat should be everything you need to know! Best of luck, and I will be around should you need advice or another bottle.",
+      dialogue: "A good wine should never be hot in most cases, but here in 7 Year Itch, heat can be a good thing. \n\nFor every bet placed on the felt, we add tension to the operation. The more you have on the felt, the more heat you generate. Every roll, we add to the heat meter at the top of the table. \n\nWhen this fills, you may select from an offering of favors that can increase our payouts, allow us a clean divestment with no downside, or even give us a second chance after rolling a 7. \n\nBig bets mean bigger chances to win, but also bigger falls when the wrong people come knocking at your office door.",
       highlightSelector: ".yi-felt-heat-meter",
-      mockState: { table: { phase: "point", point: 6, hasUsedDivest: true, heat: 24, }, bets: { passLine: 100, place: { 2: 50, 6: 50, 8: 50 } } }
-    }
+      mockState: { easyMode: false, table: { phase: "point", point: 6, hasUsedDivest: true, heat: 24 }, bets: { passLine: 100, place: { 2: 50, 6: 50, 8: 50 } } }
+    },
+    {
+      title: "Easy Betting Mode",
+      dialogue: "By default, the table opens in Easy Mode. \n\nLook at the top of the layout: instead of individual numbers, you see 5 columns representing grouped 'sister numbers' (pairs that share odds: 2/12, 3/11, 4/10, 5/9, and 6/8). \n\nPlacing a place bet on one of these groups acts as if you are betting on both numbers at the same time. This keeps our illicit portfolio nicely balanced, but does cost double since you're placing a bet on both numbers.",
+      highlightSelector: ".yi-felt-placeArc",
+      mockState: { easyMode: true, table: { phase: "point", point: 6 }, bets: { passLine: 100 } }
+    },
+    {
+      title: "Normal Mode and the Felt Switch",
+      dialogue: "If you prefer more granular control over your operations, look to the lower-left corner of the felt. \n\nYou can flip the custom walnut-brass Easy Mode toggle switch to switch between betting modes. In Normal Mode, you can place bets on any individual number independently, and each chip bet costs exactly its face value. \n\nLet's switch to Normal Mode to see how the board changes. The rest of our training flight will remain in Normal Mode.",
+      highlightSelector: ".yi-easy-toggle-label",
+      mockState: { easyMode: false, table: { phase: "comeOut", point: null }, bets: { passLine: 100 } }
+    },
   ],
   fateseal_silver: [
     {

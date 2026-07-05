@@ -389,29 +389,22 @@
 
 .abstract-wave-beat {
   padding: 0;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition:
-    transform calc(var(--card-transition-ms, 400) * 1ms) cubic-bezier(0.22, 1, 0.36, 1),
-    opacity calc(var(--card-transition-ms, 400) * 1ms) ease-out,
-    filter calc(var(--card-transition-ms, 400) * 1ms) ease-out;
+    transform 650ms cubic-bezier(0.19, 1, 0.22, 1),
+    opacity 650ms ease,
+    filter 650ms ease;
+  pointer-events: none;
 }
 
 .abstract-wave-beat-enter {
   opacity: 0;
-  transform: translateX(26px) translateY(12px) scale(0.978);
-  filter: blur(2.2px);
-}
-
-.abstract-wave-beat-cards,
-.abstract-wave-beat-result {
-  opacity: 1;
-  transform: translateY(0) scale(1.002);
-  filter: blur(0);
-}
-
-.abstract-wave-beat-exit {
-  opacity: 0;
-  transform: translateX(-24px) translateY(-2px) scale(0.996);
-  filter: blur(0.55px);
+  transform: translateY(30px) scale(0.95);
+  filter: blur(2px);
 }
 
 .abstract-wave-beat.is-exiting-overlay {
@@ -570,6 +563,8 @@
 
 .wave-hand-cards-featured {
   gap: 10px;
+  transform-style: preserve-3d;
+  transform: rotateX(12deg) rotateY(-2deg) translateZ(0);
 }
 
 .wave-hand-cards-compact {
@@ -593,7 +588,7 @@
   font-weight: 700;
   transform-origin: center bottom;
   transition:
-    transform calc(var(--card-transition-ms, 400) * 1ms) cubic-bezier(0.16, 1, 0.3, 1),
+    transform calc(var(--card-transition-ms, 400) * 1ms) cubic-bezier(0.175, 0.885, 0.32, 1.275),
     box-shadow 220ms ease-out,
     filter 220ms ease-out;
   will-change: transform, opacity;
@@ -643,31 +638,23 @@
 .abstract-wave-beat-enter .wave-hand-card-featured {
   opacity: 0;
   transform:
-    translateY(32px)
+    translateX(120px)
+    translateY(-60px)
     rotateX(-10deg)
-    rotate(calc((var(--card-order) - 2) * 3deg))
-    scale(0.94);
+    rotate(15deg)
+    scale(0.92);
 }
 
 .abstract-wave-beat-cards .wave-hand-card-featured,
 .abstract-wave-beat-result .wave-hand-card-featured {
-  opacity: 1;
-  transform:
-    translateY(0)
-    rotateX(0deg)
-    rotate(calc((var(--card-order) - 2) * 1.2deg))
-    scale(1);
-}
-
-.abstract-wave-beat-cards .wave-hand-card-featured {
-  animation: abstractWaveFeaturedCardSettle 960ms cubic-bezier(0.16, 1, 0.3, 1) both;
-  animation-delay: calc(var(--card-order) * 70ms);
+  animation: dealerDealCard calc(var(--card-transition-ms, 450) * 1.5 * 1ms) cubic-bezier(0.19, 1, 0.22, 1) both;
+  animation-delay: calc(var(--card-order) * 75ms);
 }
 
 .abstract-wave-stage-stack.is-overlapping
   .abstract-wave-beat.is-active-overlay.abstract-wave-beat-cards
   .wave-hand-card-featured {
-  animation-delay: calc(120ms + (var(--card-order) * 70ms));
+  animation-delay: calc(120ms + (var(--card-order) * 75ms));
 }
 
 .abstract-wave-beat-result .wave-hand-card-featured {
@@ -683,13 +670,7 @@
 }
 
 .abstract-wave-beat-exit .wave-hand-card-featured {
-  opacity: 0.16;
-  transform:
-    translateX(-22px)
-    translateY(-2px)
-    rotateX(5deg)
-    rotate(calc((var(--card-order) - 2) * 0.75deg))
-    scale(0.994);
+  animation: dealerSweepExit calc(var(--card-transition-ms, 400) * 1.2 * 1ms) cubic-bezier(0.19, 1, 0.22, 1) both;
 }
 
 .abstract-wave-stage-stack.is-overlapping .abstract-wave-beat.is-exiting-overlay .wave-hand-card-featured {
@@ -697,13 +678,7 @@
 }
 
 .abstract-wave-stage-stack.is-overlapping .abstract-wave-beat-exit .wave-hand-card-featured {
-  opacity: 0.1;
-  transform:
-    translateX(-18px)
-    translateY(-1px)
-    rotateX(4deg)
-    rotate(calc((var(--card-order) - 2) * 0.6deg))
-    scale(0.996);
+  animation: dealerSweepExit calc(var(--card-transition-ms, 400) * 1ms) cubic-bezier(0.19, 1, 0.22, 1) both;
 }
 
 .phase-b-bottom-bar {
@@ -829,6 +804,49 @@
     transform: translateX(340%) skewX(-18deg);
   }
 }
+
+@keyframes dealerDealCard {
+  0% {
+    opacity: 0;
+    transform:
+      translateX(120px)
+      translateY(-60px)
+      rotateX(-10deg)
+      rotate(15deg)
+      scale(0.92);
+  }
+  100% {
+    opacity: 1;
+    transform:
+      translateX(0)
+      translateY(0)
+      rotateX(0deg)
+      rotate(calc((var(--card-order) - 2) * 1.2deg))
+      scale(1);
+  }
+}
+
+@keyframes dealerSweepExit {
+  0% {
+    opacity: 1;
+    transform:
+      translateX(0)
+      translateY(0)
+      rotateX(0deg)
+      rotate(calc((var(--card-order) - 2) * 1.2deg))
+      scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform:
+      translateX(-160px)
+      translateY(40px)
+      rotateX(5deg)
+      rotate(-10deg)
+      scale(0.92);
+  }
+}
+
 
 @media (max-width: 900px) {
   .parallel-hands-animation-container.phase-b-layout {
@@ -1024,146 +1042,182 @@
 }
 
 /* ==========================================================================
-   Scanner HUD Styles
+   Shared/Held Cards and Deal Styles
    ========================================================================== */
-.oubliette-scanner-hud {
+.wave-hand-card.is-held {
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(214, 184, 94, 0.35) inset,
+    0 0 14px rgba(214, 184, 94, 0.3);
+  border-color: rgba(214, 184, 94, 0.55);
+
+  /* Skip deal slide animation for held cards, they just fade in cleanly in place */
+  .abstract-wave-beat-enter & {
+    opacity: 0;
+    transform: translateY(0) rotate(calc((var(--card-order) - 2) * 1.2deg)) scale(1) !important;
+  }
+  
+  .abstract-wave-beat-cards &,
+  .abstract-wave-beat-result & {
+    animation: heldCardSettle calc(var(--card-transition-ms, 450) * 1.5 * 1ms) ease-out both;
+  }
+}
+
+.abstract-wave-beat-enter .wave-hand-card.is-drawn {
+  opacity: 0;
+  transform:
+    translateX(120px)
+    translateY(-60px)
+    rotateX(-10deg)
+    rotate(15deg)
+    scale(0.92);
+}
+
+.abstract-wave-beat-cards .wave-hand-card.is-drawn,
+.abstract-wave-beat-result .wave-hand-card.is-drawn {
+  animation: dealerDealCard calc(var(--card-transition-ms, 450) * 1.5 * 1ms) cubic-bezier(0.19, 1, 0.22, 1) both;
+  animation-delay: calc(var(--card-order) * 75ms);
+}
+
+.wave-hand-card-featured.is-drawn-start {
+  margin-left: 20px;
+}
+
+.wave-hand-card-compact.is-drawn-start {
+  margin-left: 8px;
+}
+
+@keyframes heldCardSettle {
+  0% {
+    opacity: 0;
+    filter: brightness(0.8) contrast(0.9);
+  }
+  100% {
+    opacity: 1;
+    filter: brightness(1) contrast(1.05);
+  }
+}
+
+/* ==========================================================================
+   Implicit Particle Stream Styles
+   ========================================================================== */
+.implicit-particle-stream {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: rgba(14, 10, 12, 0.82);
-  border: 1px solid var(--game-border);
-  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.95), 0 8px 24px rgba(0, 0, 0, 0.65);
-  border-radius: 16px;
-  padding: 20px;
-  width: 290px;
-  margin: 0 auto;
-  gap: 12px;
-  position: relative;
-  overflow: hidden;
-  backdrop-filter: blur(8px);
-
-  &::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    border: 1px solid rgba(255, 255, 255, 0.03);
-    border-radius: 15px;
-    z-index: 2;
-  }
+  z-index: 10;
 }
 
-.oubliette-scanner-cards {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  position: relative;
-  width: 100%;
-  height: 70px;
-  perspective: 600px;
-}
-
-.scanner-card-ghost {
-  width: 48px;
-  height: 68px;
-  background: #fdfaf7;
-  border-radius: 6px;
-  border: 1px solid var(--game-border);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-family: monospace;
-  font-weight: bold;
-  font-size: 16px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-  position: relative;
-  animation: scannerCardShake 0.15s infinite;
-
-  .rank {
-    line-height: 1;
-  }
-  .suit {
-    font-size: 18px;
-    line-height: 1;
-    margin-top: 2px;
-  }
-
-  &.is-red {
-    color: var(--game-accent-red-bright, #b91c28);
-  }
-  &.is-black {
-    color: #121212;
-  }
-}
-
-.scanner-card-ghost.left-card {
-  transform: rotate(-6deg);
-}
-
-.scanner-card-ghost.right-card {
-  transform: rotate(6deg);
-}
-
-@keyframes scannerCardShake {
-  0% { transform: translateY(0) rotate(-6deg); }
-  50% { transform: translateY(-2px) rotate(-4deg); }
-  100% { transform: translateY(0) rotate(-6deg); }
-}
-
-.oubliette-scanner-gear {
-  width: 42px;
-  height: 42px;
+.implicit-particle {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  background: var(--game-accent-gold);
   border-radius: 50%;
-  border: 2px dashed var(--game-accent-gold-dim);
+  box-shadow: 0 0 8px var(--game-accent-gold), 0 0 16px var(--game-accent-gold);
+  opacity: 0;
+  animation: implicitParticleFly 850ms cubic-bezier(0.25, 1, 0.5, 1) infinite;
+  animation-delay: var(--p-delay);
+}
+
+@keyframes implicitParticleFly {
+  0% {
+    opacity: 0;
+    transform: translate(var(--p-x), var(--p-y)) scale(0.4);
+  }
+  20% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-380px, calc(var(--p-y) - 40px)) scale(1.3);
+  }
+}
+
+/* ==========================================================================
+   Reveal Animations & Stack Styles (Cascade)
+   ========================================================================== */
+.abstract-wave-stage-stack {
   position: relative;
-  animation: abstractWaveSigilSpin 4s linear infinite;
+  width: min(100%, 720px);
+  max-width: min(100%, 720px);
+  height: clamp(180px, 36vh, 320px);
+}
+
+/* Base style for stacking beats */
+.abstract-wave-stage-stack .abstract-wave-beat {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition:
+    transform 650ms cubic-bezier(0.19, 1, 0.22, 1),
+    opacity 650ms ease,
+    filter 650ms ease;
+  pointer-events: none;
+}
 
-  &::after {
-    content: "✵";
-    font-size: 20px;
-    color: var(--game-accent-gold);
-    line-height: 1;
+/* --- Cascade Mode --- */
+.parallel-hands-animation-container[data-animation-style="cascade"] {
+  .abstract-wave-beat {
+    &[data-stack-index="0"] {
+      transform: translateY(20px) scale(1.05);
+      opacity: 1;
+      z-index: 10;
+      filter: none;
+      pointer-events: auto;
+    }
+    &[data-stack-index="1"] {
+      transform: translateY(-55px) scale(0.9);
+      opacity: 0.72;
+      z-index: 9;
+      filter: none; /* remove blur entirely for high legibility */
+    }
+    &[data-stack-index="2"] {
+      transform: translateY(-120px) scale(0.78);
+      opacity: 0.42;
+      z-index: 8;
+      filter: blur(0.6px); /* extremely soft blur */
+    }
+    &[data-stack-index="3"] {
+      transform: translateY(-175px) scale(0.66);
+      opacity: 0.12;
+      z-index: 7;
+      filter: blur(1.5px);
+    }
+    
+    /* When the hand is fanned back (data-stack-index is 1 or greater), move the grade to the right */
+    &[data-stack-index="1"],
+    &[data-stack-index="2"],
+    &[data-stack-index="3"] {
+      .abstract-wave-result-layer {
+        position: absolute;
+        inset: auto auto auto calc(50% + 170px);
+        top: 50%;
+        transform: translateY(-50%);
+        align-items: flex-start;
+        opacity: 0.75;
+        transition: all 650ms cubic-bezier(0.19, 1, 0.22, 1);
+      }
+
+      .abstract-wave-result-rank {
+        font-size: 1.15rem;
+        white-space: nowrap;
+        text-align: left;
+        text-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
+      }
+
+      .abstract-wave-result-payout {
+        font-size: 0.95rem;
+        white-space: nowrap;
+        text-align: left;
+      }
+    }
   }
 }
 
-.oubliette-scanner-stats {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  gap: 6px;
-  font-family: monospace;
-  font-size: 12px;
-  color: var(--game-text-muted);
-}
 
-.scanner-stat-row {
-  display: flex;
-  justify-content: space-between;
-  border-bottom: 1px dotted rgba(255, 255, 255, 0.08);
-  padding-bottom: 2px;
-
-  .label {
-    letter-spacing: 0.5px;
-  }
-  .value {
-    color: var(--game-text);
-  }
-}
-
-.scanner-status-ticker {
-  font-size: 10px;
-  text-align: center;
-  color: var(--game-text-dim);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  min-height: 15px;
-  margin-top: 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}

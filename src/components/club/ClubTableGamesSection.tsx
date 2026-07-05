@@ -18,6 +18,7 @@ import {
 } from "@/game/sessionSettlement";
 import { useClubWallet } from "@/game/clubWalletStore";
 import { clubTokens } from "@/theme/clubTokens";
+import { resolveLigneeRoyaleGameMode } from "@/config/minigames/ligneeRoyaleConfig";
 
 function startSessionErrorMessage(reason: "session_active" | "insufficient_funds" | "invalid_buy_in"): string {
   switch (reason) {
@@ -45,6 +46,7 @@ export function ClubTableGamesSection() {
   const [startingFateseal, setStartingFateseal] = useState(false);
   const [startingMasterson, setStartingMasterson] = useState(false);
   const [startingLigneeRoyale, setStartingLigneeRoyale] = useState(false);
+  const [ligneeRoyaleMode, setLigneeRoyaleMode] = useState<"normalGame" | "highStakes">("normalGame");
   const [sessionError, setSessionError] = useState<string | null>(null);
 
   const oublietteBuyIn = villainsGameDefaults.oublietteNo9.defaultBuyIn;
@@ -84,10 +86,13 @@ export function ClubTableGamesSection() {
     [mastersonSettlementPreview],
   );
 
-  const ligneeRoyaleBuyIn = villainsGameDefaults.ligneeRoyale.defaultBuyIn;
+  const ligneeRoyaleBuyIn =
+    ligneeRoyaleMode === "highStakes"
+      ? resolveLigneeRoyaleGameMode("highStakes").buyIn
+      : villainsGameDefaults.ligneeRoyale.defaultBuyIn;
   const ligneeRoyaleSettlementPreview = useMemo(
-    () => buildLigneeRoyaleSettlementProfile(ligneeRoyaleBuyIn),
-    [ligneeRoyaleBuyIn],
+    () => buildLigneeRoyaleSettlementProfile(ligneeRoyaleBuyIn, ligneeRoyaleMode),
+    [ligneeRoyaleBuyIn, ligneeRoyaleMode],
   );
   const ligneeRoyaleReturnCeiling = useMemo(
     () => getLigneeRoyaleBaseReturnCeiling(ligneeRoyaleSettlementPreview),
@@ -233,13 +238,13 @@ export function ClubTableGamesSection() {
       return;
     }
     setStartingLigneeRoyale(true);
-    const settlement = buildLigneeRoyaleSettlementProfile(ligneeRoyaleBuyIn);
+    const settlement = buildLigneeRoyaleSettlementProfile(ligneeRoyaleBuyIn, ligneeRoyaleMode);
     const result = startSession({
       gameId: "lignee_royale",
       drinkId: "lignee_royale",
       buyIn: ligneeRoyaleBuyIn,
       settlement,
-      gameModeId: villainsGameDefaults.ligneeRoyale.defaultGameModeId,
+      gameModeId: ligneeRoyaleMode,
     });
     if (!result.ok) {
       setSessionError(startSessionErrorMessage(result.reason));
@@ -404,16 +409,37 @@ export function ClubTableGamesSection() {
         {mastersonReturnCeiling.toLocaleString()} credits before overachievement.
       </Text>
 
-      <ClubButton
-        fullWidth
-        variant="light"
-        color="red"
-        disabled={!canAffordLigneeRoyale || anyTableOpen || startingLigneeRoyale}
-        loading={startingLigneeRoyale}
-        onClick={startLigneeRoyale}
-      >
-        Lignée Royale (card slots)
-      </ClubButton>
+      <Stack gap={4}>
+        <Group gap="xs" grow>
+          <ClubButton
+            variant={ligneeRoyaleMode === "normalGame" ? "filled" : "outline"}
+            size="xs"
+            disabled={anyTableOpen || startingLigneeRoyale}
+            onClick={() => setLigneeRoyaleMode("normalGame")}
+          >
+            Normal (2,000 cr)
+          </ClubButton>
+          <ClubButton
+            variant={ligneeRoyaleMode === "highStakes" ? "filled" : "outline"}
+            color="red"
+            size="xs"
+            disabled={anyTableOpen || startingLigneeRoyale}
+            onClick={() => setLigneeRoyaleMode("highStakes")}
+          >
+            High Stakes (10,000 cr)
+          </ClubButton>
+        </Group>
+        <ClubButton
+          fullWidth
+          variant="light"
+          color="red"
+          disabled={!canAffordLigneeRoyale || anyTableOpen || startingLigneeRoyale}
+          loading={startingLigneeRoyale}
+          onClick={startLigneeRoyale}
+        >
+          Lignée Royale (card slots)
+        </ClubButton>
+      </Stack>
       <Text size="xs" c={clubTokens.text.muted} style={{ lineHeight: 1.45 }}>
         Buy-in {ligneeRoyaleBuyIn.toLocaleString()} credits. Card slot layout — return to the club capped near{" "}
         {ligneeRoyaleReturnCeiling.toLocaleString()} credits before overachievement.

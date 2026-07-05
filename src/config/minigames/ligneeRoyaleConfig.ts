@@ -30,12 +30,12 @@ export const ligneeRoyaleGameConfig = {
     buyIn: 2000,
     maxReturnMultipleOfBuyIn: 50,
     startingCredits: 2000,
-    minBet: 5,
-    maxBet: 100,
+    minBet: 10,
+    maxBet: 200,
     maxPayout: 100000,
 
     // Adjusted special card settings for balanced slot machine RTP (~95%)
-    maxWildCards: 2,      // 1x standard wild
+    maxWildCards: 3,      // 1x standard wild
     maxWild2xCards: 1,    // 2x multiplier wild
     maxWild3xCards: 0,    // 3x multiplier wild (0 by default)
     maxWild5xCards: 0,    // 5x multiplier wild (0 by default)
@@ -72,10 +72,10 @@ export const ligneeRoyaleGameConfig = {
       minBet: 25,
       maxBet: 2500,
       maxWildCards: 0,
-      maxWild2xCards: 0,
+      maxWild2xCards: 1,
       maxWild3xCards: 1,
       maxWild5xCards: 1,
-      maxDeadCards: 12,
+      maxDeadCards: 14,
     }
   }
 } as const;

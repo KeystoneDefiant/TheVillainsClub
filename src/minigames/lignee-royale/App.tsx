@@ -252,7 +252,7 @@ export function LigneeRoyaleRoot({
 
   // Main spin handler
   const handleSpin = useCallback((preRiggedGrid?: Card[][]) => {
-    const cost = betAmount * betMultiplier;
+    const cost = betAmount * activeLinesCount;
     if (credits < cost) {
       playSfx("cheater.ogg");
       setAutoPlay(false);
@@ -328,13 +328,13 @@ export function LigneeRoyaleRoot({
         }
       }, delay);
     });
-  }, [betAmount, betMultiplier, credits, generateLigneeRoyaleDeck, evaluateSpin, playSfx]);
+  }, [betAmount, activeLinesCount, credits, generateLigneeRoyaleDeck, evaluateSpin, playSfx]);
 
   // Autoplay hook
   useEffect(() => {
     if (autoPlay && !isSpinning && !showTutorial) {
       const timer = setTimeout(() => {
-        const cost = betAmount * betMultiplier;
+        const cost = betAmount * activeLinesCount;
         if (credits >= cost) {
           handleSpin();
         } else {
@@ -343,7 +343,7 @@ export function LigneeRoyaleRoot({
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [autoPlay, isSpinning, credits, betAmount, betMultiplier, handleSpin, showTutorial]);
+  }, [autoPlay, isSpinning, credits, betAmount, activeLinesCount, handleSpin, showTutorial]);
 
   // Cycle through winning lines in sequence
   useEffect(() => {
@@ -826,7 +826,7 @@ export function LigneeRoyaleRoot({
                   <ClubButton
                     fancy
                     size="lg"
-                    disabled={isSpinning || credits < betAmount * betMultiplier}
+                    disabled={isSpinning || credits < betAmount * activeLinesCount}
                     onClick={() => handleSpin()}
                     style={{ width: isMobile ? "100%" : 260, height: 52 }}
                   >
@@ -886,7 +886,7 @@ export function LigneeRoyaleRoot({
                 <Stack gap={2}>
                   <Text size="xs" c={clubTokens.text.muted}>TOTAL BET:</Text>
                   <Text size="md" fw={700} c={clubTokens.text.brass}>
-                    {(betAmount * betMultiplier).toLocaleString()} cr
+                    {(betAmount * activeLinesCount).toLocaleString()} cr
                   </Text>
                 </Stack>
                 

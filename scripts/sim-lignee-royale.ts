@@ -89,7 +89,7 @@ export function runLigneeRoyaleSimulations() {
 
       for (let r = 0; r < ROUNDS; r++) {
         const betAmount = mode.minBet;
-        const spinBet = betAmount * mult;
+        const spinBet = betAmount * activeLinesCount;
         totalBet += spinBet;
 
         // Shuffle deck
@@ -151,7 +151,7 @@ export function runLigneeRoyaleSimulations() {
       const rtp = (totalPayout / totalBet) * 100;
       const hitFreq = (winningSpins / ROUNDS) * 100;
 
-      console.log(`\n  Multiplier: ${mult}x (${activeLinesCount} active lines)`);
+      console.log(`\n  Lines: ${activeLinesCount} (bet multiplier index ${mult})`);
       console.log(`    Total Bet: ${totalBet.toLocaleString()} cr`);
       console.log(`    Total Return: ${totalPayout.toLocaleString()} cr`);
       console.log(`    Calculated RTP: ${rtp.toFixed(2)}% (Target: 85.00% - 98.00%)`);

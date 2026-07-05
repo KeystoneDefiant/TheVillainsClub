@@ -94,10 +94,10 @@
       ],
       "interlude_files": [],
       "modifier": {
-        "game_id": "oubliette_no9",
-        "payout_multiplier": 1.05,
-        "max_win_multiplier": 1.05,
-        "description": "+5% payout and max win in Oubliette Number 9"
+        "game_id": "lignee_royale",
+        "payout_multiplier": 1.15,
+        "max_win_multiplier": 1.15,
+        "description": "+15% payout and max win in Lignee Royale"
       }
     },
     {

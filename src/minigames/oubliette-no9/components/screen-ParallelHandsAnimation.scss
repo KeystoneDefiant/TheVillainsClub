@@ -1022,3 +1022,148 @@
     font-size: 11px;
   }
 }
+
+/* ==========================================================================
+   Scanner HUD Styles
+   ========================================================================== */
+.oubliette-scanner-hud {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(14, 10, 12, 0.82);
+  border: 1px solid var(--game-border);
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.95), 0 8px 24px rgba(0, 0, 0, 0.65);
+  border-radius: 16px;
+  padding: 20px;
+  width: 290px;
+  margin: 0 auto;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    border-radius: 15px;
+    z-index: 2;
+  }
+}
+
+.oubliette-scanner-cards {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  position: relative;
+  width: 100%;
+  height: 70px;
+  perspective: 600px;
+}
+
+.scanner-card-ghost {
+  width: 48px;
+  height: 68px;
+  background: #fdfaf7;
+  border-radius: 6px;
+  border: 1px solid var(--game-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: monospace;
+  font-weight: bold;
+  font-size: 16px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  position: relative;
+  animation: scannerCardShake 0.15s infinite;
+
+  .rank {
+    line-height: 1;
+  }
+  .suit {
+    font-size: 18px;
+    line-height: 1;
+    margin-top: 2px;
+  }
+
+  &.is-red {
+    color: var(--game-accent-red-bright, #b91c28);
+  }
+  &.is-black {
+    color: #121212;
+  }
+}
+
+.scanner-card-ghost.left-card {
+  transform: rotate(-6deg);
+}
+
+.scanner-card-ghost.right-card {
+  transform: rotate(6deg);
+}
+
+@keyframes scannerCardShake {
+  0% { transform: translateY(0) rotate(-6deg); }
+  50% { transform: translateY(-2px) rotate(-4deg); }
+  100% { transform: translateY(0) rotate(-6deg); }
+}
+
+.oubliette-scanner-gear {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 2px dashed var(--game-accent-gold-dim);
+  position: relative;
+  animation: abstractWaveSigilSpin 4s linear infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &::after {
+    content: "✵";
+    font-size: 20px;
+    color: var(--game-accent-gold);
+    line-height: 1;
+  }
+}
+
+.oubliette-scanner-stats {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 6px;
+  font-family: monospace;
+  font-size: 12px;
+  color: var(--game-text-muted);
+}
+
+.scanner-stat-row {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px dotted rgba(255, 255, 255, 0.08);
+  padding-bottom: 2px;
+
+  .label {
+    letter-spacing: 0.5px;
+  }
+  .value {
+    color: var(--game-text);
+  }
+}
+
+.scanner-status-ticker {
+  font-size: 10px;
+  text-align: center;
+  color: var(--game-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  min-height: 15px;
+  margin-top: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { StreakMultiplierConfig } from '../utils/streakCalculator';
-import './StreakProgressBar.css';
+import './StreakProgressBar.scss';
 
 interface StreakProgressBarProps {
   currentStreak: number;
@@ -104,6 +104,7 @@ export function StreakProgressBar({
           className="thermometer-fill" 
           style={{ height: `${Math.min(100, Math.max(0, progress))}%` }}
         />
+        <div className="thermometer-container-bottom-cap" />
         <div className="thermometer-label">
           <span className="current-count">{currentStreak}</span>
         </div>

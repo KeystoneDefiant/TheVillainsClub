@@ -1,0 +1,166 @@
+/* Oubliette Shop Grid & Card Styling */
+.oubliette-shop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  width: 100%;
+}
+
+.oubliette-shop-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-radius: 12px;
+  padding: 24px;
+  background: radial-gradient(circle at 50% 0%, #150f11 0%, #0d0a0c 100%);
+  border: 1px solid rgba(199, 158, 87, 0.22);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.02),
+    0 8px 24px rgba(0, 0, 0, 0.5);
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+  min-height: 220px;
+  height: 100%;
+
+  &:hover {
+    border-color: rgba(199, 158, 87, 0.45);
+    box-shadow: 
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      0 12px 30px rgba(0, 0, 0, 0.7),
+      0 0 12px rgba(199, 158, 87, 0.15);
+    transform: translateY(-2px);
+  }
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    pointer-events: none;
+    z-index: 0;
+    background: radial-gradient(circle at center, rgba(199, 158, 87, 0.04) 0%, transparent 60%);
+    transition: opacity 0.3s ease;
+  }
+}
+
+/* Specific card accents for Oubliette themes */
+.oubliette-shop-card--wild {
+  border-color: rgba(201, 162, 39, 0.35);
+  &::before {
+    background: radial-gradient(circle at center, rgba(201, 162, 39, 0.06) 0%, transparent 60%);
+  }
+}
+
+.oubliette-shop-card--dead {
+  border-color: rgba(139, 21, 32, 0.35);
+  &::before {
+    background: radial-gradient(circle at center, rgba(139, 21, 32, 0.06) 0%, transparent 60%);
+  }
+  &:hover {
+    border-color: rgba(185, 28, 40, 0.55);
+    box-shadow: 
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      0 12px 30px rgba(0, 0, 0, 0.7),
+      0 0 12px rgba(185, 28, 40, 0.25);
+  }
+}
+
+/* VIP Shop - golden sheen on background */
+.shop-vip-sheen {
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+      135deg,
+      transparent 0%,
+      transparent 38%,
+      rgba(201, 162, 39, 0.04) 42%,
+      rgba(201, 162, 39, 0.10) 50%,
+      rgba(201, 162, 39, 0.04) 58%,
+      transparent 62%,
+      transparent 100%
+    );
+    animation: shop-vip-sheen 12s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  > * {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+@keyframes shop-vip-sheen {
+  0%, 100% { transform: translate(-20%, -20%); }
+  50% { transform: translate(20%, 20%); }
+}
+
+/* VIP Shop option cards - sheen overlay + animated gradient border */
+.shop-vip-card {
+  position: relative;
+  border-radius: 14px;
+  padding: 2px;
+  height: 100%;
+  background: linear-gradient(
+    135deg,
+    transparent 0%,
+    rgba(201, 162, 39, 0.15) 25%,
+    rgba(201, 162, 39, 0.45) 50%,
+    rgba(201, 162, 39, 0.15) 75%,
+    transparent 100%
+  );
+  background-size: 200% 200%;
+  animation: shop-vip-border-sheen 12s ease-in-out infinite;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+      135deg,
+      transparent 0%,
+      transparent 38%,
+      rgba(201, 162, 39, 0.05) 42%,
+      rgba(201, 162, 39, 0.12) 50%,
+      rgba(201, 162, 39, 0.05) 58%,
+      transparent 62%,
+      transparent 100%
+    );
+    animation: shop-vip-sheen 30s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  > * {
+    position: relative;
+    z-index: 1;
+    border-radius: 12px;
+    height: 100%;
+  }
+}
+
+@keyframes shop-vip-border-sheen {
+  0%, 100% { background-position: 0% 0%; }
+  50% { background-position: 100% 100%; }
+}
+
+/* Align purchase buttons to the bottom of the card and horizontally center them */
+.oubliette-shop-card-wrap .game-panel .oubliette-action-button {
+  margin-top: auto !important;
+  align-self: center !important;
+}

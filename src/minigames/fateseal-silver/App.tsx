@@ -759,13 +759,54 @@ export function FatesealSilverRoot(props: FatesealShellBinding) {
   );
 
   return (
-    <Box className="fateseal-root" data-testid="fateseal-root">
+    <Box
+      className={[
+        "fateseal-root",
+        busy ? "fateseal-root--busy" : "",
+        tomeToggle ? "fateseal-root--tome-active" : "",
+      ].filter(Boolean).join(" ")}
+      data-testid="fateseal-root"
+    >
+      <div className="fateseal-vignette" aria-hidden="true" />
+
       {/* Ambient Occult Background Effects */}
       <div className="fateseal-bg-ambient" aria-hidden="true">
         <div className="fateseal-bg-nebula-purple" />
         <div className="fateseal-bg-nebula-indigo" />
         <div className="fateseal-bg-cracks" />
-        <div className="fateseal-bg-runic-seal" />
+        
+        {/* Modernized complex SVG Runic Seal */}
+        <svg className="fateseal-bg-runic-seal-svg" viewBox="0 0 100 100">
+          {/* Outer ring with dashed decor */}
+          <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" strokeWidth="0.5" strokeDasharray="1 3" className="fateseal-bg-runic-ring-1" />
+          <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="8 4 2 4" className="fateseal-bg-runic-ring-1" />
+          
+          {/* Middle ring with glyph markers */}
+          <circle cx="50" cy="50" r="38" fill="none" stroke="currentColor" strokeWidth="0.75" className="fateseal-bg-runic-ring-2" />
+          <g className="fateseal-bg-runic-ring-2">
+            <path d="M 50,8 L 50,14 M 50,86 L 50,92 M 8,50 L 14,50 M 86,50 L 92,50" stroke="currentColor" strokeWidth="0.75" />
+            <circle cx="50" cy="14" r="1" fill="currentColor" />
+            <circle cx="50" cy="86" r="1" fill="currentColor" />
+            <circle cx="14" cy="50" r="1" fill="currentColor" />
+            <circle cx="86" cy="50" r="1" fill="currentColor" />
+            <path d="M 24.5,24.5 L 28.5,28.5 M 71.5,21.5 L 75.5,25.5 M 24.5,75.5 L 28.5,71.5 M 71.5,71.5 L 75.5,75.5" stroke="currentColor" strokeWidth="0.5" />
+          </g>
+
+          {/* Inner ring & heptagram */}
+          <circle cx="50" cy="50" r="28" fill="none" stroke="currentColor" strokeWidth="0.5" strokeDasharray="3 3" className="fateseal-bg-runic-ring-3" />
+          <g className="fateseal-bg-runic-ring-3">
+            <path 
+              d="M 50,22 L 77.3,56.2 L 37.8,75.2 L 28.1,32.5 L 71.9,32.5 L 62.2,75.2 L 22.7,56.2 Z" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="0.75" 
+              opacity="0.8" 
+            />
+            <path d="M 50,42 L 55,51 H 45 Z" fill="none" stroke="currentColor" strokeWidth="0.75" />
+            <path d="M 50,51 L 50,56 M 47,54 H 53" fill="none" stroke="currentColor" strokeWidth="0.75" />
+          </g>
+        </svg>
+
         <div className="fateseal-bg-sparks" />
       </div>
 

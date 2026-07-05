@@ -45,7 +45,7 @@ import { useMotionPresetStore } from "@/motion/motionPresetStore";
 import { clubTokens } from "@/theme/clubTokens";
 import { useClubWallet, getPlayerTitle } from "@/game/clubWalletStore";
 import { villainsGameDefaults } from "@/config/villainsGameDefaults";
-import "@/minigames/oubliette-no9/styles/global.css";
+import "@/minigames/oubliette-no9/styles/global.scss";
 
 
 

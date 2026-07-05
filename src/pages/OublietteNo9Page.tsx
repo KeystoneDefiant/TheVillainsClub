@@ -14,7 +14,7 @@ import { resolveOublietteGameMode } from "@/config/minigames/oublietteNo9GameRul
 import { OublietteGameModeProvider } from "@/minigames/oubliette-no9/OublietteGameModeContext";
 
 
-import "@/minigames/oubliette-no9/styles/global.css";
+import "@/minigames/oubliette-no9/styles/global.scss";
 
 const OublietteNo9Root = lazy(() => import("@/minigames/oubliette-no9/App"));
 
@@ -109,7 +109,10 @@ export function OublietteNo9Page({ standalone = false }: OublietteNo9PageProps) 
 
   return (
     <Box
-      className={reduceMotion ? undefined : "shell-route-fade-in"}
+      className={[
+        reduceMotion ? "" : "shell-route-fade-in",
+        "oubliette-root-scope",
+      ].filter(Boolean).join(" ")}
       style={{
         height: "100%",
         overflow: "hidden",

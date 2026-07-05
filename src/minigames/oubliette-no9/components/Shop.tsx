@@ -15,7 +15,7 @@ import {
 } from '../utils/config';
 import { gameConfig } from '@/config/minigames/oublietteNo9GameRules';
 import { useOublietteGameMode } from '../OublietteGameModeContext';
-import './Shop.css';
+import './Shop.scss';
 import { ShopOptionType } from '../types';
 import { formatCredits } from '../utils/format';
 import { GameButton } from './GameButton';
@@ -279,14 +279,14 @@ export function Shop({
       case 'parallel-hands-bundle-5':
         return (
           <div
-            className="game-panel rounded-xl p-6 hover:opacity-95 transition-all flex flex-col h-full"
+            className="game-panel oubliette-shop-card"
             title="More parallel hands = more chances to win each round. Each hand is evaluated separately."
           >
             <div className="flex justify-between items-center mb-3">
               <h3 className="text-xl font-bold" style={{ color: 'var(--game-text)' }}>Parallel Hands +5</h3>
               <span style={{ color: 'var(--game-text-muted)' }}>Current: {handCount}</span>
             </div>
-            <p className="mb-4" style={{ color: 'var(--game-text-muted)' }}>Add 5 Parallel Hands</p>
+            <p className="mb-4" style={{ color: 'var(--game-text-muted)', fontSize: '0.82rem' }}>Invite 5 extra parallel hands into the game mat.</p>
             <GameButton
               onClick={() =>
                 attemptPurchase(
@@ -310,14 +310,14 @@ export function Shop({
       case 'parallel-hands-bundle-10':
         return (
           <div
-            className="game-panel rounded-xl p-6 hover:opacity-95 transition-all flex flex-col h-full"
+            className="game-panel oubliette-shop-card"
             title="More parallel hands = more chances to win each round. Each hand is evaluated separately."
           >
             <div className="flex justify-between items-center mb-3">
               <h3 className="text-xl font-bold" style={{ color: 'var(--game-text)' }}>Parallel Hands +10</h3>
               <span style={{ color: 'var(--game-text-muted)' }}>Current: {handCount}</span>
             </div>
-            <p className="mb-4" style={{ color: 'var(--game-text-muted)' }}>Add 10 Parallel Hands</p>
+            <p className="mb-4" style={{ color: 'var(--game-text-muted)', fontSize: '0.82rem' }}>Invite 10 extra parallel hands into the game mat.</p>
             <GameButton
               onClick={() =>
                 attemptPurchase(
@@ -343,14 +343,14 @@ export function Shop({
       case 'parallel-hands-bundle-25':
         return (
           <div
-            className="game-panel rounded-xl p-6 hover:opacity-95 transition-all flex flex-col h-full"
+            className="game-panel oubliette-shop-card"
             title="More parallel hands = more chances to win each round. Each hand is evaluated separately."
           >
             <div className="flex justify-between items-center mb-3">
               <h3 className="text-xl font-bold" style={{ color: 'var(--game-text)' }}>Parallel Hands +25</h3>
               <span style={{ color: 'var(--game-text-muted)' }}>Current: {handCount}</span>
             </div>
-            <p className="mb-4" style={{ color: 'var(--game-text-muted)' }}>Add 25 Parallel Hands</p>
+            <p className="mb-4" style={{ color: 'var(--game-text-muted)', fontSize: '0.82rem' }}>Invite 25 extra parallel hands into the game mat.</p>
             <GameButton
               onClick={() =>
                 attemptPurchase(
@@ -376,14 +376,14 @@ export function Shop({
       case 'parallel-hands-bundle-50':
         return (
           <div
-            className="game-panel rounded-xl p-6 hover:opacity-95 transition-all flex flex-col h-full"
+            className="game-panel oubliette-shop-card"
             title="More parallel hands = more chances to win each round. Each hand is evaluated separately."
           >
             <div className="flex justify-between items-center mb-3">
               <h3 className="text-xl font-bold" style={{ color: 'var(--game-text)' }}>Parallel Hands +50</h3>
               <span style={{ color: 'var(--game-text-muted)' }}>Current: {handCount}</span>
             </div>
-            <p className="mb-4" style={{ color: 'var(--game-text-muted)' }}>Add 50 Parallel Hands</p>
+            <p className="mb-4" style={{ color: 'var(--game-text-muted)', fontSize: '0.82rem' }}>Invite 50 extra parallel hands into the game mat.</p>
             <GameButton
               onClick={() =>
                 attemptPurchase(
@@ -409,14 +409,14 @@ export function Shop({
       case 'parallel-hands-bundle-100':
         return (
           <div
-            className="game-panel rounded-xl p-6 hover:opacity-95 transition-all flex flex-col h-full"
+            className="game-panel oubliette-shop-card"
             title="More parallel hands = more chances to win each round. Each hand is evaluated separately."
           >
             <div className="flex justify-between items-center mb-3">
               <h3 className="text-xl font-bold" style={{ color: 'var(--game-text)' }}>Parallel Hands +100</h3>
               <span style={{ color: 'var(--game-text-muted)' }}>Current: {handCount}</span>
             </div>
-            <p className="mb-4" style={{ color: 'var(--game-text-muted)' }}>Add 100 Parallel Hands</p>
+            <p className="mb-4" style={{ color: 'var(--game-text-muted)', fontSize: '0.82rem' }}>Invite 100 extra parallel hands into the game mat.</p>
             <GameButton
               onClick={() =>
                 attemptPurchase(
@@ -442,14 +442,14 @@ export function Shop({
       case 'parallel-hands-bundle-250':
         return (
           <div
-            className="game-panel rounded-xl p-6 hover:opacity-95 transition-all flex flex-col h-full"
+            className="game-panel oubliette-shop-card"
             title="More parallel hands = more chances to win each round. Each hand is evaluated separately."
           >
             <div className="flex justify-between items-center mb-3">
               <h3 className="text-xl font-bold" style={{ color: 'var(--game-text)' }}>Parallel Hands +250</h3>
               <span style={{ color: 'var(--game-text-muted)' }}>Current: {handCount}</span>
             </div>
-            <p className="mb-4" style={{ color: 'var(--game-text-muted)' }}>Add 250 Parallel Hands</p>
+            <p className="mb-4" style={{ color: 'var(--game-text-muted)', fontSize: '0.82rem' }}>Invite 250 extra parallel hands into the game mat.</p>
             <GameButton
               onClick={() =>
                 attemptPurchase(
@@ -475,14 +475,14 @@ export function Shop({
       case 'parallel-hands-bundle-500':
         return (
           <div
-            className="game-panel rounded-xl p-6 hover:opacity-95 transition-all flex flex-col h-full"
+            className="game-panel oubliette-shop-card"
             title="More parallel hands = more chances to win each round. Each hand is evaluated separately."
           >
             <div className="flex justify-between items-center mb-3">
               <h3 className="text-xl font-bold" style={{ color: 'var(--game-text)' }}>Parallel Hands +500</h3>
               <span style={{ color: 'var(--game-text-muted)' }}>Current: {handCount}</span>
             </div>
-            <p className="mb-4" style={{ color: 'var(--game-text-muted)' }}>Add 500 Parallel Hands</p>
+            <p className="mb-4" style={{ color: 'var(--game-text-muted)', fontSize: '0.82rem' }}>Invite 500 extra parallel hands into the game mat.</p>
             <GameButton
               onClick={() =>
                 attemptPurchase(
@@ -508,14 +508,14 @@ export function Shop({
       case 'parallel-hands-bundle-1000':
         return (
           <div
-            className="game-panel rounded-xl p-6 hover:opacity-95 transition-all flex flex-col h-full"
+            className="game-panel oubliette-shop-card"
             title="More parallel hands = more chances to win each round. Each hand is evaluated separately."
           >
             <div className="flex justify-between items-center mb-3">
               <h3 className="text-xl font-bold" style={{ color: 'var(--game-text)' }}>Parallel Hands +1000</h3>
               <span style={{ color: 'var(--game-text-muted)' }}>Current: {handCount}</span>
             </div>
-            <p className="mb-4" style={{ color: 'var(--game-text-muted)' }}>Add 1000 Parallel Hands</p>
+            <p className="mb-4" style={{ color: 'var(--game-text-muted)', fontSize: '0.82rem' }}>Invite 1000 extra parallel hands into the game mat.</p>
             <GameButton
               onClick={() =>
                 attemptPurchase(
@@ -541,7 +541,7 @@ export function Shop({
       case 'dead-card':
         return (
           <div
-            className="game-panel rounded-xl p-6 hover:opacity-95 transition-all flex flex-col h-full"
+            className="game-panel oubliette-shop-card oubliette-shop-card--dead"
             title="Dead cards are drawn but don't count toward your hand. Add one to receive credits."
           >
             <div className="flex justify-between items-center mb-3">
@@ -550,7 +550,7 @@ export function Shop({
                 {deadCards.length}/{gameConfig.deadCardLimit}
               </span>
             </div>
-            <p className="mb-4" style={{ color: 'var(--game-text-muted)' }}>
+            <p className="mb-4" style={{ color: 'var(--game-text-muted)', fontSize: '0.82rem' }}>
               Add a card that doesn't count toward your hand to your deck. Receive{' '}
               {formatCredits(currentMode.shop.deadCard.creditReward)} credits
             </p>
@@ -575,8 +575,7 @@ export function Shop({
       case 'wild-card':
         return (
           <div
-            className="game-panel rounded-xl p-6 hover:opacity-95 transition-all flex flex-col h-full border border-[var(--game-accent-gold)]"
-            style={{ boxShadow: '0 0 16px rgba(201, 162, 39, 0.15)' }}
+            className="game-panel oubliette-shop-card oubliette-shop-card--wild"
             title="Wild cards can substitute for any rank and suit. Great for completing straights, flushes, and high pairs."
           >
             <div className="flex justify-between items-center mb-3">
@@ -585,7 +584,7 @@ export function Shop({
                 {wildCardCount}/{currentMode.shop.wildCard.maxCount}
               </span>
             </div>
-            <p className="mb-4" style={{ color: 'var(--game-text-muted)' }}>
+            <p className="mb-4" style={{ color: 'var(--game-text-muted)', fontSize: '0.82rem' }}>
               Add a card that counts as any rank and suit (max {currentMode.shop.wildCard.maxCount})
             </p>
             <GameButton
@@ -610,14 +609,14 @@ export function Shop({
       case 'extra-draw':
         return (
           <div
-            className="game-panel rounded-xl p-6 hover:opacity-95 transition-all flex flex-col h-full"
+            className="game-panel oubliette-shop-card"
             title="Get a second draw phase: hold 1 card, redraw the other 4. One-time purchase."
           >
             <div className="flex justify-between items-center mb-3">
               <h3 className="text-xl font-bold" style={{ color: 'var(--game-text)' }}>Extra Draw</h3>
             </div>
-            <p className="mb-4" style={{ color: 'var(--game-text-muted)' }}>
-              Adds an additonal draw phase after you hold cards.
+            <p className="mb-4" style={{ color: 'var(--game-text-muted)', fontSize: '0.82rem' }}>
+              Adds an additional draw phase after you hold cards.
             </p>
             <GameButton
               onClick={() =>
@@ -645,14 +644,14 @@ export function Shop({
         );
       case 'extra-card-in-hand':
         return (
-          <div className="game-panel rounded-lg p-6 hover:opacity-95 transition-all flex flex-col h-full">
+          <div className="game-panel oubliette-shop-card">
             <div className="flex justify-between items-center mb-3">
-              <h3 className="text-xl font-bold" style={{ color: 'var(--game-text)' }}>Extra Card in Hand</h3>
+              <h3 className="text-xl font-bold" style={{ color: 'var(--game-text)' }}>Extra Card</h3>
               <span style={{ color: 'var(--game-text-muted)' }}>
                 {extraCardsInHand}/{currentMode.shop.extraCardInHand.maxPurchases}
               </span>
             </div>
-            <p className="mb-4" style={{ color: 'var(--game-text-muted)' }}>Deals an additional card during your draw phase.</p>
+            <p className="mb-4" style={{ color: 'var(--game-text-muted)', fontSize: '0.82rem' }}>Deals an additional card during your draw phase.</p>
             <GameButton
               onClick={() =>
                 attemptPurchase(
@@ -681,14 +680,14 @@ export function Shop({
         );
       case 'remove-single-dead-card':
         return (
-          <div className="game-panel rounded-lg p-6 hover:opacity-95 transition-all flex flex-col h-full">
+          <div className="game-panel oubliette-shop-card">
             <div className="flex justify-between items-center mb-3">
               <h3 className="text-xl font-bold" style={{ color: 'var(--game-text)' }}>Remove Dead Card</h3>
               <span style={{ color: 'var(--game-text-muted)' }}>
                 {deadCards.length > 0 ? `1/${deadCards.length}` : 'None'}
               </span>
             </div>
-            <p className="mb-4" style={{ color: 'var(--game-text-muted)' }}>Permanently remove one dead card from deck</p>
+            <p className="mb-4" style={{ color: 'var(--game-text-muted)', fontSize: '0.82rem' }}>Permanently remove one dead card from deck</p>
             <GameButton
               onClick={() =>
                 attemptPurchase(
@@ -717,12 +716,12 @@ export function Shop({
         );
       case 'remove-all-dead-cards':
         return (
-          <div className="game-panel rounded-lg p-6 hover:opacity-95 transition-all flex flex-col h-full">
+          <div className="game-panel oubliette-shop-card">
             <div className="flex justify-between items-center mb-3">
               <h3 className="text-xl font-bold" style={{ color: 'var(--game-text)' }}>Remove All Dead Cards</h3>
               <span style={{ color: 'var(--game-text-muted)' }}>{deadCards.length} total</span>
             </div>
-            <p className="mb-4" style={{ color: 'var(--game-text-muted)' }}>Remove all {deadCards.length} dead cards at once</p>
+            <p className="mb-4" style={{ color: 'var(--game-text-muted)', fontSize: '0.82rem' }}>Remove all {deadCards.length} dead cards at once</p>
             <GameButton
               onClick={() =>
                 attemptPurchase(
@@ -749,17 +748,17 @@ export function Shop({
         );
       case 'devils-deal-chance':
         return devilsDealConfig ? (
-          <div className="game-panel rounded-xl p-6 hover:opacity-95 transition-all flex flex-col h-full">
+          <div className="game-panel oubliette-shop-card">
             <div className="flex justify-between items-center mb-3">
-              <h3 className="text-xl font-bold" style={{ color: 'var(--game-text)' }}>Increase Devil's Deal Chance</h3>
+              <h3 className="text-xl font-bold" style={{ color: 'var(--game-text)' }}>Devil&apos;s Deal Chance</h3>
               <span style={{ color: 'var(--game-text-muted)' }}>
                 {devilsDealChancePurchases}/{devilsDealConfig.maxChancePurchases}
               </span>
             </div>
-            <p className="mb-2" style={{ color: 'var(--game-text-muted)' }}>
+            <p className="mb-2" style={{ color: 'var(--game-text-muted)', fontSize: '0.82rem' }}>
               Increase chance by {devilsDealConfig.chanceIncreasePerPurchase}% per purchase
             </p>
-            <p className="text-sm mb-4" style={{ color: 'var(--game-text-dim)' }}>Current chance: {effectiveChance}%</p>
+            <p className="text-sm mb-4" style={{ color: 'var(--game-text-dim)', fontSize: '0.78rem' }}>Current chance: {effectiveChance}%</p>
             <GameButton
               onClick={() =>
                 attemptPurchase(
@@ -788,17 +787,17 @@ export function Shop({
         ) : null;
       case 'devils-deal-cost-reduction':
         return devilsDealConfig ? (
-          <div className="game-panel rounded-xl p-6 hover:opacity-95 transition-all flex flex-col h-full">
+          <div className="game-panel oubliette-shop-card">
             <div className="flex justify-between items-center mb-3">
-              <h3 className="text-xl font-bold" style={{ color: 'var(--game-text)' }}>Reduce Devil's Deal Cost</h3>
+              <h3 className="text-xl font-bold" style={{ color: 'var(--game-text)' }}>Reduce Devil&apos;s Deal Cost</h3>
               <span style={{ color: 'var(--game-text-muted)' }}>
                 {devilsDealCostReductionPurchases}/{devilsDealConfig.maxCostReductionPurchases}
               </span>
             </div>
-            <p className="mb-2" style={{ color: 'var(--game-text-muted)' }}>
+            <p className="mb-2" style={{ color: 'var(--game-text-muted)', fontSize: '0.82rem' }}>
               Reduce cost by {devilsDealConfig.costReductionPerPurchase}% per purchase
             </p>
-            <p className="text-sm mb-4" style={{ color: 'var(--game-text-dim)' }}>
+            <p className="text-sm mb-4" style={{ color: 'var(--game-text-dim)', fontSize: '0.78rem' }}>
               Current cost: {effectiveCostPercent}% of payout
             </p>
             <GameButton

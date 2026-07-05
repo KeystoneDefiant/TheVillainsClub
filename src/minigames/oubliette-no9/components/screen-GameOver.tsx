@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Box, Divider, Group, Paper, Stack, Text, Title } from "@mantine/core";
+import { Box, Paper, Stack } from "@mantine/core";
 import type { OublietteSettlementProfile } from "@/game/sessionSettlement";
 import { computeOublietteReturn, getOublietteBaseReturnCeiling } from "@/game/sessionSettlement";
 import { clubTokens } from "@/theme/clubTokens";
@@ -17,19 +17,6 @@ interface GameOverProps {
   /** When embedded in the club shell, show capped return + overachievement bonus. */
   settlementProfile?: OublietteSettlementProfile | null;
   onReturnToMenu: () => void;
-}
-
-function GroupRow({ label, value, large }: { label: string; value: string; large?: boolean }) {
-  return (
-    <Group justify="space-between" gap="sm" wrap="wrap">
-      <Text size={large ? "md" : "sm"} c={clubTokens.text.primary}>
-        {label}
-      </Text>
-      <Text size={large ? "lg" : "sm"} fw={700} c={clubTokens.text.brass}>
-        {value}
-      </Text>
-    </Group>
-  );
 }
 
 export function GameOver({
@@ -226,60 +213,47 @@ export function GameOver({
           </Box>
 
           <Box className="grid gap-4 lg:grid-cols-[1.4fr_0.9fr]">
-            <Paper
-              className="game-panel-muted rounded-2xl p-5 sm:p-6"
-              style={{ border: `1px solid ${clubTokens.surface.brassStroke}`, backgroundColor: "rgba(0,0,0,0.18)" }}
-            >
+            <div className="flex flex-col gap-4">
               {clubReturn && settlementProfile && baseReturnCeiling != null ? (
-                <Stack
-                  gap="xs"
-                  mb="lg"
-                  p="md"
-                  style={{
-                    borderRadius: "var(--mantine-radius-md)",
-                    border: `1px solid ${clubTokens.surface.brassStroke}`,
-                    backgroundColor: "rgba(0,0,0,0.22)",
-                  }}
-                >
-                  <Title order={5} tt="uppercase" fz="xs" c={clubTokens.text.muted} fw={600}>
-                    Return to club wallet
-                  </Title>
-                  <Text size="xs" c={clubTokens.text.secondary}>
-                    Buy-in for this table was{" "}
-                    <Text span fw={700} c={clubTokens.text.brass}>
-                      {formatCredits(settlementProfile.buyIn)}
-                    </Text>
-                    . The main return is capped at{" "}
-                    <Text span fw={700} c={clubTokens.text.brass}>
-                      {formatCredits(baseReturnCeiling)}
-                    </Text>{" "}
-                    (buy-in × return multiple × active specials). Overachievement adds bonuses on top of that cap
-                    from uncapped table performance.
-                  </Text>
-                  <Divider color={clubTokens.surface.brassStroke} />
-                  <GroupRow
-                    label="Table payout (capped portion)"
-                    value={formatCredits(clubReturn.basePayout)}
-                  />
-                  <GroupRow
-                    label={`Overachievement bonus${clubReturn.tiers > 0 ? ` (${clubReturn.tiers} tier${clubReturn.tiers === 1 ? "" : "s"})` : ""}`}
-                    value={formatCredits(clubReturn.overachievementBonus)}
-                  />
-                  <Divider color={clubTokens.surface.brassStroke} />
-                  <GroupRow label="Total returned to club" value={formatCredits(clubReturn.totalReturn)} large />
-                  <Text size="xs" c={clubTokens.text.muted}>
-                    In-table credits this run: {formatCredits(clubReturn.uncappedCredits)} (club rules apply on exit,
-                    not during play).
-                  </Text>
-                </Stack>
+                <div className="oubliette-receipt-panel">
+                  <div className="receipt-header">
+                    Return to Club Wallet
+                  </div>
+                  <div className="receipt-row">
+                    <span>Table Buy-in:</span>
+                    <span>{formatCredits(settlementProfile.buyIn)}</span>
+                  </div>
+                  <div className="receipt-row">
+                    <span>Main Return Cap (Buy-in × Mult):</span>
+                    <span>{formatCredits(baseReturnCeiling)}</span>
+                  </div>
+                  <div className="receipt-row">
+                    <span>Table Payout (Capped):</span>
+                    <span>{formatCredits(clubReturn.basePayout)}</span>
+                  </div>
+                  <div className="receipt-row">
+                    <span>Overachievement Bonus{clubReturn.tiers > 0 ? ` (${clubReturn.tiers} Tiers)` : ""}:</span>
+                    <span>{formatCredits(clubReturn.overachievementBonus)}</span>
+                  </div>
+                  <div className="receipt-total">
+                    <span>Total Club Return:</span>
+                    <span>{formatCredits(clubReturn.totalReturn)}</span>
+                  </div>
+                  <p className="text-[0.68rem] text-center mt-3" style={{ color: "var(--game-text-dim)", fontFamily: "sans-serif" }}>
+                    In-table Credits: {formatCredits(clubReturn.uncappedCredits)} (club rules apply on exit)
+                  </p>
+                </div>
               ) : null}
-              <p className="text-xs uppercase tracking-[0.18em] mb-3" style={{ color: clubTokens.text.muted }}>
-                Your highball glass whispers...
-              </p>
-              <p className="text-lg sm:text-xl font-semibold" style={{ color: clubTokens.text.brass }}>
-                {display.tip}
-              </p>
-            </Paper>
+
+              <div className="oubliette-whisper-card">
+                <p className="text-xs uppercase tracking-[0.18em] mb-2" style={{ color: clubTokens.text.muted }}>
+                  Your highball glass whispers...
+                </p>
+                <p className="text-base sm:text-lg font-semibold" style={{ color: clubTokens.text.brass, fontStyle: "italic" }}>
+                  "{display.tip}"
+                </p>
+              </div>
+            </div>
 
             <Paper
               radius="xl"
@@ -287,6 +261,9 @@ export function GameOver({
               style={{
                 border: `2px solid ${display.isVoluntaryEnd ? clubTokens.text.brass : clubTokens.text.accent}`,
                 background: display.isVoluntaryEnd ? "rgba(201, 162, 39, 0.12)" : "rgba(139, 21, 32, 0.2)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
               <GameButton

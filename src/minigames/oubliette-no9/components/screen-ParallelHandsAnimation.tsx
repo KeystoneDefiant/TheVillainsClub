@@ -12,7 +12,7 @@ import {
 import { StreakProgressBar } from './StreakProgressBar';
 import { PlayingCardFace } from '@/ui/cards';
 import { Card } from './Card';
-import './screen-ParallelHandsAnimation.css';
+import './screen-ParallelHandsAnimation.scss';
 import { useThemeAudio } from '../hooks/useThemeAudio';
 import { formatCreditsWithSuffix } from '../utils/format';
 
@@ -151,6 +151,75 @@ function clamp(value: number, min: number, max: number): number {
 
 function isPremiumRank(rank: string): boolean {
   return PREMIUM_RANKS.has(rank);
+}
+
+function RapidCardScanner({
+  resolvedCount,
+  winRate,
+  healthLabel,
+  healthColor,
+}: {
+  resolvedCount: number;
+  totalCount: number;
+  winRate: number;
+  healthLabel: string;
+  healthColor: string;
+}) {
+  const suits = [
+    { char: "♠", isRed: false },
+    { char: "♥", isRed: true },
+    { char: "♦", isRed: true },
+    { char: "♣", isRed: false },
+  ];
+  const ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
+  
+  const s1 = suits[resolvedCount % 4]!;
+  const s2 = suits[(resolvedCount + 1) % 4]!;
+  const r1 = ranks[resolvedCount % 13];
+  const r2 = ranks[(resolvedCount + 5) % 13];
+
+  const statusTexts = [
+    "Coalescing Realities...",
+    "Sifting Parallel Mats...",
+    "Resolving Deck Probabilities...",
+    "Collecting Soul Tax...",
+    "Alchemizing Void Cards...",
+    "Calculating Table Leverage...",
+  ];
+  const activeStatus = statusTexts[Math.floor(resolvedCount / 12) % statusTexts.length];
+
+  return (
+    <div className="oubliette-scanner-hud">
+      <div className="oubliette-scanner-cards">
+        <div className={`scanner-card-ghost left-card ${s1.isRed ? "is-red" : "is-black"}`}>
+          <span className="rank">{r1}</span>
+          <span className="suit">{s1.char}</span>
+        </div>
+        <div className={`scanner-card-ghost right-card ${s2.isRed ? "is-red" : "is-black"}`}>
+          <span className="rank">{r2}</span>
+          <span className="suit">{s2.char}</span>
+        </div>
+      </div>
+
+      <div className="oubliette-scanner-gear" />
+
+      <div className="oubliette-scanner-stats">
+        <div className="scanner-stat-row">
+          <span className="label">MAT STATE:</span>
+          <span className="value font-bold" style={{ color: healthColor, textShadow: `0 0 8px ${healthColor}` }}>
+            {healthLabel}
+          </span>
+        </div>
+        <div className="scanner-stat-row">
+          <span className="label">WIN RATIO:</span>
+          <span className="value">{winRate}%</span>
+        </div>
+        <div className="scanner-status-ticker">
+          {activeStatus}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function getWaveTimingProfile(
@@ -326,12 +395,22 @@ function WaveBeatStage({
   ambientGhostCards,
   variant = 'active',
   idleVariant = 'sigil',
+  resolvedCount = 0,
+  totalCount = 0,
+  winRate = 0,
+  healthLabel = 'INERT',
+  healthColor = 'var(--game-text-dim)',
 }: {
   event: RevealEvent | null;
   phase: RevealPhase | null;
   ambientGhostCards: number;
   variant?: 'active' | 'exiting';
   idleVariant?: 'sigil' | 'empty';
+  resolvedCount?: number;
+  totalCount?: number;
+  winRate?: number;
+  healthLabel?: string;
+  healthColor?: string;
 }) {
   if (!event) {
     return (
@@ -368,11 +447,13 @@ function WaveBeatStage({
         {event.kind === 'featured' && event.featuredHand ? (
           <WaveHandCards cards={event.featuredHand.hand.cards} size="featured" />
         ) : (
-          <div className="abstract-wave-pulse" aria-hidden="true">
-            <span className="abstract-wave-pulse-line" />
-            <span className="abstract-wave-pulse-line" />
-            <span className="abstract-wave-pulse-line" />
-          </div>
+          <RapidCardScanner
+            resolvedCount={resolvedCount}
+            totalCount={totalCount}
+            winRate={winRate}
+            healthLabel={healthLabel}
+            healthColor={healthColor}
+          />
         )}
 
         <div
@@ -585,6 +666,22 @@ export function ParallelHandsAnimation({
     [displayedScoreByRank]
   );
   const focusedRank = previewEvent?.featuredHand?.rank ?? null;
+
+  const totalWins = useMemo(() => {
+    return Object.values(displayedScoreByRank).reduce((sum, entry) => sum + entry.count, 0);
+  }, [displayedScoreByRank]);
+
+  const liveWinRate = displayedRevealedCount > 0 
+    ? Math.round((totalWins / displayedRevealedCount) * 100) 
+    : 0;
+
+  const healthStatus = useMemo(() => {
+    if (displayedRevealedCount === 0) return { label: "INERT", color: "var(--game-text-dim)" };
+    if (liveWinRate < 15) return { label: "VOID", color: "#b91c28" };
+    if (liveWinRate < 25) return { label: "UNSTABLE", color: "#c79e57" };
+    if (liveWinRate < 35) return { label: "PROSPEROUS", color: "#c79e57" };
+    return { label: "FORTUNATE", color: "#ff7300" };
+  }, [liveWinRate, displayedRevealedCount]);
 
   const skipToSummary = () => {
     onAnimationComplete(completionSummary);
@@ -902,6 +999,11 @@ export function ParallelHandsAnimation({
                 phase={exitingBeat.phase}
                 ambientGhostCards={ambientGhostCards}
                 variant="exiting"
+                resolvedCount={displayedRevealedCount}
+                totalCount={parallelHands.length}
+                winRate={liveWinRate}
+                healthLabel={healthStatus.label}
+                healthColor={healthStatus.color}
               />
             ) : null}
             {activeEvent ? (
@@ -910,6 +1012,11 @@ export function ParallelHandsAnimation({
                 phase={activePhase}
                 ambientGhostCards={ambientGhostCards}
                 variant="active"
+                resolvedCount={displayedRevealedCount}
+                totalCount={parallelHands.length}
+                winRate={liveWinRate}
+                healthLabel={healthStatus.label}
+                healthColor={healthStatus.color}
               />
             ) : !exitingBeat ? (
               <WaveBeatStage

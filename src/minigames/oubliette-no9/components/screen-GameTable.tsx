@@ -125,14 +125,15 @@ export function GameTable({
         />
 
         <Paper
+          className="game-panel"
           p={{ base: "sm", sm: "lg" }}
           radius="lg"
           style={{
             flex: 1,
             display: "flex",
-            backgroundColor: clubTokens.surface.panel,
-            border: `1px solid ${clubTokens.surface.brassStroke}`,
-            backdropFilter: "blur(6px)",
+            border: `${useSmallCards ? "6px" : "12px"} solid #3d2314`,
+            outline: `1px solid ${clubTokens.surface.brassStroke}`,
+            boxShadow: "inset 0 0 25px rgba(0, 0, 0, 0.95), 0 8px 32px rgba(0, 0, 0, 0.6)",
           }}
         >
           <Stack className="oubliette-scroll-section" gap="md" style={{ flex: 1, width: "100%" }}>
@@ -180,7 +181,7 @@ export function GameTable({
                     size={useSmallCards ? "md" : "lg"}
                     className={
                       focusedIndex === cardCount
-                        ? "ring-2 ring-[var(--game-accent-gold)] ring-offset-2 ring-offset-[var(--game-bg-card)]"
+                        ? "oubliette-focused-action"
                         : ""
                     }
                   >
@@ -200,7 +201,7 @@ export function GameTable({
                     size={useSmallCards ? "md" : "lg"}
                     className={
                       focusedIndex === cardCount
-                        ? "ring-2 ring-[var(--game-accent-gold)] ring-offset-2 ring-offset-[var(--game-bg-card)]"
+                        ? "oubliette-focused-action"
                         : ""
                     }
                   >

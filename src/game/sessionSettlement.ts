@@ -12,6 +12,7 @@ import { resolveOublietteGameMode } from "@/config/minigames/oublietteNo9GameRul
 import { resolveSevenYearItchGameMode } from "@/config/minigames/sevenYearItchRules";
 import { resolveFatesealGameMode } from "@/config/minigames/fatesealRules";
 import { resolveMastersonGameMode } from "@/config/minigames/mastersonRules";
+import { resolveLigneeRoyaleGameMode } from "@/config/minigames/ligneeRoyaleConfig";
 
 /** Snapshot at table open; used when settling the session. */
 export type OublietteSettlementProfile = {
@@ -88,8 +89,19 @@ export type FatesealShellBinding = {
   isTutorial?: boolean;
 };
 
-/** Props for Masterton 1881 — settlement shape matches {@link OublietteSettlementProfile}. */
+/** Props for Masterton 1881 — reverse roulette rigging sim. */
 export type MastersonShellBinding = {
+  sessionCredits: number;
+  settlement: OublietteSettlementProfile;
+  gameModeId?: string;
+  onReturnToClubMenu?: (detail: ClubTableReturnDetail) => void;
+  onPauseToClub?: () => void;
+  onAbandonRun?: () => void;
+  isTutorial?: boolean;
+};
+
+/** Props for Lignée Royale — slot machine. */
+export type LigneeRoyaleShellBinding = {
   sessionCredits: number;
   settlement: OublietteSettlementProfile;
   gameModeId?: string;
@@ -123,6 +135,22 @@ export function buildMastersonSettlementProfile(buyIn: number, gameModeId?: stri
   const resolvedMode = resolveMastersonGameMode(gameModeId);
   const maxReturnMult = resolvedMode?.maxReturnMultipleOfBuyIn ?? villainsGameDefaults.masterson1881.maxReturnMultipleOfBuyIn;
   const cfg = villainsGameDefaults.masterson1881;
+  return {
+    buyIn: b,
+    maxReturnMultipleOfBuyIn: maxReturnMult,
+    capModifierProduct: allMinigamesCapMult,
+    overachievement: { ...cfg.overachievement },
+  };
+}
+
+export function buildLigneeRoyaleSettlementProfile(buyIn: number, gameModeId?: string, now: Date = new Date()): OublietteSettlementProfile {
+  const b = Math.floor(buyIn);
+  const special = resolveActiveClubSpecial(now);
+  const row = resolveSpecialDefinitionRow(special);
+  const { allMinigamesCapMult } = capModifiersFromSpecialDefinition(row);
+  const resolvedMode = resolveLigneeRoyaleGameMode(gameModeId);
+  const maxReturnMult = resolvedMode?.maxReturnMultipleOfBuyIn ?? villainsGameDefaults.ligneeRoyale.maxReturnMultipleOfBuyIn;
+  const cfg = villainsGameDefaults.ligneeRoyale;
   return {
     buyIn: b,
     maxReturnMultipleOfBuyIn: maxReturnMult,
@@ -191,6 +219,10 @@ export function getMastersonBaseReturnCeiling(profile: OublietteSettlementProfil
   return getOublietteBaseReturnCeiling(profile, "masterson_1881");
 }
 
+export function getLigneeRoyaleBaseReturnCeiling(profile: OublietteSettlementProfile): number {
+  return getOublietteBaseReturnCeiling(profile, "lignee_royale");
+}
+
 /** Same cap / tier math as Oubliette; profile comes from {@link buildSevenYearItchSettlementProfile}. */
 export function computeSevenYearItchReturn(
   uncappedCredits: number,
@@ -207,8 +239,15 @@ export function computeFatesealReturn(uncappedCredits: number, profile: Oubliett
 export function computeMastersonReturn(
   uncappedCredits: number,
   profile: OublietteSettlementProfile,
-): ClubTableReturnDetail {
+  ): ClubTableReturnDetail {
   return computeOublietteReturn(uncappedCredits, profile, "masterson_1881");
+}
+
+export function computeLigneeRoyaleReturn(
+  uncappedCredits: number,
+  profile: OublietteSettlementProfile,
+  ): ClubTableReturnDetail {
+  return computeOublietteReturn(uncappedCredits, profile, "lignee_royale");
 }
 
 /**

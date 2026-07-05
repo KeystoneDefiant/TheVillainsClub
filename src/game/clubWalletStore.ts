@@ -8,6 +8,7 @@ import {
   buildSevenYearItchSettlementProfile,
   buildFatesealSettlementProfile,
   buildMastersonSettlementProfile,
+  buildLigneeRoyaleSettlementProfile,
 } from "./sessionSettlement";
 import type { ClubTableReturnDetail } from "./sessionSettlement";
 
@@ -88,6 +89,7 @@ export const useClubWallet = create<ClubWalletState>()(
         seven_year_itch: false,
         fateseal_silver: false,
         masterson_1881: false,
+        lignee_royale: false,
       },
       startSession: (input) => {
         const { clubBalance, activeSession, isBum } = get();
@@ -123,7 +125,9 @@ export const useClubWallet = create<ClubWalletState>()(
               ? buildFatesealSettlementProfile(1000)
               : gameId === "masterson_1881"
                 ? buildMastersonSettlementProfile(1000)
-                : buildSevenYearItchSettlementProfile(1000);
+                : gameId === "lignee_royale"
+                  ? buildLigneeRoyaleSettlementProfile(1000)
+                  : buildSevenYearItchSettlementProfile(1000);
         set({
           activeSession: {
             gameId,
@@ -193,6 +197,7 @@ export const useClubWallet = create<ClubWalletState>()(
             seven_year_itch: false,
             fateseal_silver: false,
             masterson_1881: false,
+            lignee_royale: false,
           },
         }),
       selectPlayerTitle: (titleId) => {

@@ -9,10 +9,12 @@ import {
   buildOublietteSettlementProfile,
   buildSevenYearItchSettlementProfile,
   buildMastersonSettlementProfile,
+  buildLigneeRoyaleSettlementProfile,
   getFatesealBaseReturnCeiling,
   getOublietteBaseReturnCeiling,
   getSevenYearItchBaseReturnCeiling,
   getMastersonBaseReturnCeiling,
+  getLigneeRoyaleBaseReturnCeiling,
 } from "@/game/sessionSettlement";
 import { useClubWallet } from "@/game/clubWalletStore";
 import { clubTokens } from "@/theme/clubTokens";
@@ -42,6 +44,7 @@ export function ClubTableGamesSection() {
   const [starting7yi, setStarting7yi] = useState(false);
   const [startingFateseal, setStartingFateseal] = useState(false);
   const [startingMasterson, setStartingMasterson] = useState(false);
+  const [startingLigneeRoyale, setStartingLigneeRoyale] = useState(false);
   const [sessionError, setSessionError] = useState<string | null>(null);
 
   const oublietteBuyIn = villainsGameDefaults.oublietteNo9.defaultBuyIn;
@@ -79,6 +82,16 @@ export function ClubTableGamesSection() {
   const mastersonReturnCeiling = useMemo(
     () => getMastersonBaseReturnCeiling(mastersonSettlementPreview),
     [mastersonSettlementPreview],
+  );
+
+  const ligneeRoyaleBuyIn = villainsGameDefaults.ligneeRoyale.defaultBuyIn;
+  const ligneeRoyaleSettlementPreview = useMemo(
+    () => buildLigneeRoyaleSettlementProfile(ligneeRoyaleBuyIn),
+    [ligneeRoyaleBuyIn],
+  );
+  const ligneeRoyaleReturnCeiling = useMemo(
+    () => getLigneeRoyaleBaseReturnCeiling(ligneeRoyaleSettlementPreview),
+    [ligneeRoyaleSettlementPreview],
   );
 
   const startOubliette = () => {
@@ -205,14 +218,47 @@ export function ClubTableGamesSection() {
     navigate("/minigames/masterson-1881");
   };
 
+  const startLigneeRoyale = () => {
+    setSessionError(null);
+    if (activeSession?.gameId === "lignee_royale") {
+      navigate("/minigames/lignee-royale");
+      return;
+    }
+    if (activeSession) {
+      setSessionError(startSessionErrorMessage("session_active"));
+      return;
+    }
+    if (clubBalance < ligneeRoyaleBuyIn) {
+      setSessionError(startSessionErrorMessage("insufficient_funds"));
+      return;
+    }
+    setStartingLigneeRoyale(true);
+    const settlement = buildLigneeRoyaleSettlementProfile(ligneeRoyaleBuyIn);
+    const result = startSession({
+      gameId: "lignee_royale",
+      drinkId: "lignee_royale",
+      buyIn: ligneeRoyaleBuyIn,
+      settlement,
+      gameModeId: villainsGameDefaults.ligneeRoyale.defaultGameModeId,
+    });
+    if (!result.ok) {
+      setSessionError(startSessionErrorMessage(result.reason));
+      setStartingLigneeRoyale(false);
+      return;
+    }
+    navigate("/minigames/lignee-royale");
+  };
+
   const canAffordOubliette = clubBalance >= oublietteBuyIn;
   const canAfford7yi = clubBalance >= sevenYearItchBuyIn;
   const canAffordFateseal = clubBalance >= fatesealBuyIn;
   const canAffordMasterson = clubBalance >= mastersonBuyIn;
+  const canAffordLigneeRoyale = clubBalance >= ligneeRoyaleBuyIn;
   const oublietteSessionOpen = activeSession?.gameId === "oubliette_no9";
   const sevenYearItchSessionOpen = activeSession?.gameId === "seven_year_itch";
   const fatesealSessionOpen = activeSession?.gameId === "fateseal_silver";
   const mastersonSessionOpen = activeSession?.gameId === "masterson_1881";
+  const ligneeRoyaleSessionOpen = activeSession?.gameId === "lignee_royale";
   const anyTableOpen = Boolean(activeSession);
 
   return (
@@ -274,6 +320,18 @@ export function ClubTableGamesSection() {
           You have an active Masterton 1881 session. Step back in or settle it.
           <ClubButton fullWidth mt="sm" variant="filled" color="yellow" onClick={() => navigate("/minigames/masterson-1881")}>
             Resume Masterton 1881
+          </ClubButton>
+          <ClubButton fullWidth mt="xs" variant="subtle" color="red" onClick={openAbandon}>
+            Abandon table…
+          </ClubButton>
+        </Alert>
+      ) : null}
+
+      {ligneeRoyaleSessionOpen ? (
+        <Alert color="red" variant="light" title="Table still open">
+          You have an active Lignée Royale session. Step back in or settle it.
+          <ClubButton fullWidth mt="sm" variant="filled" color="red" onClick={() => navigate("/minigames/lignee-royale")}>
+            Resume Lignée Royale
           </ClubButton>
           <ClubButton fullWidth mt="xs" variant="subtle" color="red" onClick={openAbandon}>
             Abandon table…
@@ -344,6 +402,21 @@ export function ClubTableGamesSection() {
       <Text size="xs" c={clubTokens.text.muted} style={{ lineHeight: 1.45 }}>
         Buy-in {mastersonBuyIn.toLocaleString()} credits. Croupier rigging simulator — return to the club capped near{" "}
         {mastersonReturnCeiling.toLocaleString()} credits before overachievement.
+      </Text>
+
+      <ClubButton
+        fullWidth
+        variant="light"
+        color="red"
+        disabled={!canAffordLigneeRoyale || anyTableOpen || startingLigneeRoyale}
+        loading={startingLigneeRoyale}
+        onClick={startLigneeRoyale}
+      >
+        Lignée Royale (card slots)
+      </ClubButton>
+      <Text size="xs" c={clubTokens.text.muted} style={{ lineHeight: 1.45 }}>
+        Buy-in {ligneeRoyaleBuyIn.toLocaleString()} credits. Card slot layout — return to the club capped near{" "}
+        {ligneeRoyaleReturnCeiling.toLocaleString()} credits before overachievement.
       </Text>
 
       <Modal opened={abandonOpened} onClose={closeAbandon} title="Abandon this table?" centered>

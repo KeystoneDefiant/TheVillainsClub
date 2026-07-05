@@ -144,6 +144,7 @@ describe("clubWalletStore playedGames tracking", () => {
       seven_year_itch: false,
       fateseal_silver: false,
       masterson_1881: false,
+      lignee_royale: false,
     });
   });
 
@@ -182,6 +183,7 @@ describe("clubWalletStore playedGames tracking", () => {
       seven_year_itch: false,
       fateseal_silver: false,
       masterson_1881: false,
+      lignee_royale: false,
     });
   });
 });

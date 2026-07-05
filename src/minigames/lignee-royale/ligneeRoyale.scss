@@ -1,0 +1,257 @@
+/* ==========================================================================
+   Lignée Royale Scoped Stylesheet
+   Premium card-slot aesthetic aligned with The Villains Club theme.
+   ========================================================================== */
+
+.lignee-royale-scope {
+  --color-gold: #c79e57;
+  --color-gold-bright: #ffd780;
+  --color-walnut: #261814;
+  --color-walnut-dark: #140c0a;
+  --color-brass-stroke: rgba(199, 158, 87, 0.4);
+  --color-brass-glow: rgba(199, 158, 87, 0.2);
+
+  box-sizing: border-box;
+  font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
+  color: #f0e8db;
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background-color: #0f0d0b;
+  overflow-x: hidden;
+
+  h1, h2, h3, .lr-title {
+    font-family: 'Cinzel', Georgia, serif;
+    letter-spacing: 0.06em;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+  }
+
+  .lr-card-grid-container {
+    position: relative;
+    padding: 16px;
+    background: radial-gradient(circle at center, #261814 0%, #150d0b 100%);
+    border: 2px solid var(--color-gold);
+    border-radius: 16px;
+    box-shadow: 
+      inset 0 0 40px rgba(0, 0, 0, 0.9),
+      0 12px 36px rgba(0, 0, 0, 0.7);
+    overflow: hidden;
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.015) 1.5px, transparent 0);
+      background-size: 16px 16px;
+      pointer-events: none;
+      z-index: 1;
+    }
+  }
+
+  /* Responsive layout boxes */
+  .lr-main-group {
+    display: flex;
+    flex-direction: row;
+    gap: 24px;
+    align-items: flex-start;
+    justify-content: center;
+    width: 100%;
+    
+    @media (max-width: 768px) {
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+  }
+
+  .lr-side-panel-left {
+    width: 220px;
+    @media (max-width: 768px) {
+      width: 100%;
+      max-width: 480px;
+      order: 3;
+    }
+  }
+
+  .lr-center-panel {
+    max-width: 640px;
+    @media (max-width: 768px) {
+      width: 100%;
+      max-width: 480px;
+      order: 1;
+      display: flex;
+      justify-content: center;
+    }
+  }
+
+  .lr-side-panel-right {
+    width: 220px;
+    @media (max-width: 768px) {
+      width: 100%;
+      max-width: 480px;
+      order: 2;
+    }
+  }
+
+  /* Slot Reels Column container - play area is 3x5 viewport, hiding overflow rows */
+  .lr-reel-column {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: relative;
+    padding: 8px 4px 20px 4px;
+    background: rgba(0, 0, 0, 0.35);
+    border-radius: 8px;
+    border: 1px solid rgba(199, 158, 87, 0.08);
+    overflow: hidden;
+    height: 424px; /* Prior 3x5 viewport height fitting 3 large cards */
+    justify-content: flex-start; /* Align top, offset using margin-top */
+  }
+
+  /* Reel spinning animation: fast vertical scroll with motion blur */
+  .lr-reel-spinning {
+    animation: lrReelSpin 0.12s linear infinite;
+    filter: blur(4px);
+    pointer-events: none;
+  }
+
+  @keyframes lrReelSpin {
+    0% {
+      transform: translateY(0);
+    }
+    100% {
+      transform: translateY(-140px); /* Scroll exactly 1 card height + gap */
+    }
+  }
+
+  /* Snappy physical reel stop bounce settle */
+  .lr-reel-bounce {
+    animation: lrReelSettleBounce 0.38s cubic-bezier(0.25, 1.15, 0.5, 1.15) both;
+  }
+
+  @keyframes lrReelSettleBounce {
+    0% {
+      transform: translateY(-25px);
+    }
+    50% {
+      transform: translateY(12px); /* Snappy overshoot down */
+    }
+    75% {
+      transform: translateY(-4px); /* Minor spring back */
+    }
+    100% {
+      transform: translateY(0); /* Locked in place */
+    }
+  }
+
+  /* Semi-transparent blur styling for non-scoring backdrop cards */
+  .lr-card-non-scoring {
+    opacity: 0.25;
+    filter: blur(1px) grayscale(0.4) scale(0.9);
+    transition: opacity 0.3s ease, filter 0.3s ease;
+  }
+
+  /* Glass panel headers & ledgers */
+  .lr-glass-panel {
+    background: rgba(30, 20, 18, 0.85);
+    border: 1px solid var(--color-brass-stroke);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 0 12px rgba(199, 158, 87, 0.05);
+    backdrop-filter: blur(10px);
+    transition: all 0.25s ease;
+  }
+
+  /* Glow indicators for winning paylines */
+  .lr-payline-glowing {
+    stroke-dasharray: 8 4;
+    animation: lrDash 30s linear infinite;
+  }
+
+  @keyframes lrDash {
+    to {
+      stroke-dashoffset: -1000;
+    }
+  }
+
+  /* Card modifiers styling */
+  .card-special-badge {
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+    border: 1px solid;
+    white-space: nowrap;
+  }
+
+  .card-special-wild {
+    border-color: #ffd780 !important;
+    box-shadow: 0 0 12px rgba(199, 158, 87, 0.6) !important;
+  }
+
+  .card-special-wild-2x {
+    border-color: #ff9900 !important;
+    box-shadow: 0 0 15px rgba(255, 153, 0, 0.8) !important;
+  }
+
+  .card-special-wild-3x {
+    border-color: #ff5500 !important;
+    box-shadow: 0 0 18px rgba(255, 85, 0, 0.9) !important;
+  }
+
+  .card-special-wild-5x {
+    border-color: #e50914 !important;
+    box-shadow: 0 0 22px rgba(229, 9, 20, 1.0) !important;
+  }
+
+  .card-special-dead {
+    filter: grayscale(0.8) brightness(0.5) contrast(1.2);
+    border-color: #555 !important;
+    box-shadow: none !important;
+    background-color: #111 !important;
+    
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle, transparent 30%, rgba(0,0,0,0.85) 100%);
+      pointer-events: none;
+    }
+  }
+
+  /* Neon pulsing line for winning payline indicator */
+  .lr-neon-line {
+    filter: drop-shadow(0 0 5px currentColor);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: opacity 0.3s ease;
+  }
+
+  /* Card winning highlights with smooth inner glow transition, no upscaling */
+  .lr-card-highlighted {
+    box-shadow: inset 0 0 20px 6px var(--color-gold-bright), 0 0 15px rgba(255, 215, 128, 0.4) !important;
+    z-index: 100 !important;
+  }
+
+  /* Mobile Responsive adjustments */
+  @media (max-width: 768px) {
+    .lr-reel-column {
+      height: 320px !important;
+      gap: 8px !important;
+      padding: 8px 4px 20px 4px !important;
+    }
+    .lr-card-grid-container {
+      padding: 8px !important;
+      border-radius: 12px !important;
+    }
+  }
+}

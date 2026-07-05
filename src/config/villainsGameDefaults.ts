@@ -90,4 +90,17 @@ export const villainsGameDefaults = {
       bonusMultipleOfBuyInPerTier: 5,
     },
   },
+
+  /** Lignée Royale — card slot machine. */
+  ligneeRoyale: {
+    defaultBuyIn: 2000,
+    defaultGameModeId: "normalGame" as const,
+    maxReturnMultipleOfBuyIn: 50,
+    overachievement: {
+      capMultiple: 50,
+      buyInSlab: 1,
+      tierStepMultiple: 5,
+      bonusMultipleOfBuyInPerTier: 5,
+    },
+  },
 } as const;

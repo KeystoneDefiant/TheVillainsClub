@@ -8,6 +8,7 @@ import { runFatesealSimulations } from "./sim-fateseal";
 import { runItchSimulations } from "./sim-seven-year-itch";
 import { runOublietteSimulations } from "./sim-oubliette";
 import { runMastersonSimulations } from "./sim-masterson";
+import { runLigneeRoyaleSimulations } from "./sim-lignee-royale";
 
 console.log("==============================================================================");
 console.log("===                   THE VILLAINS CLUB BALANCE TUNING DASHBOARD           ===");
@@ -24,6 +25,9 @@ runOublietteSimulations();
 
 console.log("\nStarting Masterton 1881 Simulations...");
 runMastersonSimulations();
+
+console.log("\nStarting Lignée Royale Simulations...");
+runLigneeRoyaleSimulations();
 
 console.log("\n==============================================================================");
 console.log("===                          SIMULATIONS COMPLETED                         ===");

@@ -349,5 +349,27 @@ export const sommelierTutorialCatalog: Record<string, SommelierTutorialStep[]> =
         }
       }
     }
+  ],
+  lignee_royale: [
+    {
+      title: "Lignée Royale",
+      dialogue: "Welcome to Lignée Royale, {playerName}. I am Pazillus A. Rabellum, the club's sommelier.\n\nThis is a playing card slot machine. You spin a deck of 52 cards, and 35 cards are dealt onto a 3-row, 5-column grid. Payouts are made by forming poker hands along active paylines.",
+      highlightSelector: ".lr-card-grid-container"
+    },
+    {
+      title: "Paylines & Multipliers",
+      dialogue: "Only the middle row is active at a 1x bet. Increasing your bet multiplier activates more lines:\n\n• 3 Lines (2x Bet): Activates top & bottom rows\n• 5 Lines (3x Bet): Adds the main diagonals\n• 7 Lines (4x Bet): Adds both off-diagonals.",
+      highlightSelector: ".lr-side-panel-left"
+    },
+    {
+      title: "Wild Multipliers & Stacking",
+      dialogue: "Keep an eye out for special Wild cards! Standard wilds act as jokers. We also have 2x, 3x, and 5x Multiplier Wilds. If multiple multiplier wilds land on a winning line, their effects stack multiplicatively!",
+      highlightSelector: ".lr-card-grid-container"
+    },
+    {
+      title: "Dead Reel Spaces",
+      dialogue: "Watch out for Dead cards! These cards represent dead slots on the grid and are ignored during evaluation, reducing the number of valid cards on that line.",
+      highlightSelector: ".lr-card-grid-container"
+    }
   ]
 };

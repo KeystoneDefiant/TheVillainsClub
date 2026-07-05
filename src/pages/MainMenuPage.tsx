@@ -43,6 +43,7 @@ import {
   buildOublietteSettlementProfile,
   buildSevenYearItchSettlementProfile,
   buildMastersonSettlementProfile,
+  buildLigneeRoyaleSettlementProfile,
   getFatesealBaseReturnCeiling,
   getOublietteBaseReturnCeiling,
   getSevenYearItchBaseReturnCeiling,
@@ -55,8 +56,9 @@ import { gameConfig as oublietteConfig, resolveOublietteGameMode } from "@/confi
 import { sevenYearItchGameConfig, resolveSevenYearItchGameMode } from "@/config/minigames/sevenYearItchRules";
 import { fatesealGameConfig, resolveFatesealGameMode } from "@/config/minigames/fatesealRules";
 import { mastersonGameConfig, resolveMastersonGameMode } from "@/config/minigames/mastersonRules";
+import { ligneeRoyaleGameConfig, resolveLigneeRoyaleGameMode } from "@/config/minigames/ligneeRoyaleConfig";
 
-type GameKey = "oubliette_no9" | "seven_year_itch" | "fateseal_silver" | "masterson_1881";
+type GameKey = "oubliette_no9" | "seven_year_itch" | "fateseal_silver" | "masterson_1881" | "lignee_royale";
 
 type GameMenuEntry = {
   id: GameKey;
@@ -132,6 +134,18 @@ const GAME_ENTRIES: GameMenuEntry[] = [
       });
     },
   },
+  {
+    id: "lignee_royale",
+    title: "Lignée Royale",
+    subtitle: "A Regal 3x5 Poker Card Slot Machine",
+    route: "/minigames/lignee-royale",
+    buyIn: villainsGameDefaults.ligneeRoyale.defaultBuyIn,
+    get rulesets() {
+      return [
+        { value: "normalGame", label: "Normal Game" }
+      ];
+    },
+  },
 ];
 
 const CONFIG_LABEL_MAP: Record<string, string> = {
@@ -175,6 +189,9 @@ function getActiveGameModeConfig(gameId: GameKey, rulesetId: string) {
   if (gameId === "masterson_1881") {
     return resolveMastersonGameMode(rulesetId);
   }
+  if (gameId === "lignee_royale") {
+    return resolveLigneeRoyaleGameMode(rulesetId);
+  }
   return null;
 }
 
@@ -190,6 +207,9 @@ function getGameModeDefaultConfig(gameId: GameKey) {
   }
   if (gameId === "masterson_1881") {
     return mastersonGameConfig.defaultGameMode;
+  }
+  if (gameId === "lignee_royale") {
+    return ligneeRoyaleGameConfig.defaultGameMode;
   }
   return null;
 }
@@ -451,7 +471,9 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
             ? buildFatesealSettlementProfile(buyInToUse, ruleset)
             : game.id === "masterson_1881"
               ? buildMastersonSettlementProfile(buyInToUse, ruleset)
-              : buildSevenYearItchSettlementProfile(buyInToUse, ruleset);
+              : game.id === "lignee_royale"
+                ? buildLigneeRoyaleSettlementProfile(buyInToUse, ruleset)
+                : buildSevenYearItchSettlementProfile(buyInToUse, ruleset);
       const drinkId =
         game.id === "oubliette_no9"
           ? "club_table"
@@ -459,7 +481,9 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
             ? "fateseal_silver"
             : game.id === "masterson_1881"
               ? "masterson_1881"
-              : "seven_year_itch";
+              : game.id === "lignee_royale"
+                ? "lignee_royale"
+                : "seven_year_itch";
       const result = startSession({
         gameId: game.id,
         drinkId,

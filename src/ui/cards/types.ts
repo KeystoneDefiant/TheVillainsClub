@@ -21,6 +21,10 @@ export interface PlayingCardFaceData {
   rank: PlayingCardRank;
   isWild?: boolean;
   isDead?: boolean;
+  isScatter?: boolean;
+  isCoin?: boolean;
+  isEmptySlot?: boolean;
+  coinValueMultiplier?: number;
 }
 
 /** `sprite` reserved for a future atlas; until then, typography is used as fallback. */

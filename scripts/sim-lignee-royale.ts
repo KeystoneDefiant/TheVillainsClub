@@ -4,7 +4,7 @@
  *
  * Run: `npm run sim:lignee-royale` (or `npx tsx scripts/sim-lignee-royale.ts`)
  */
-import { resolveLigneeRoyaleGameMode as getGameMode } from "../src/config/minigames/ligneeRoyaleConfig";
+import { resolveLigneeRoyaleGameMode as getGameMode, getRandomCoinMultiplier } from "../src/config/minigames/ligneeRoyaleConfig";
 import { createFullDeck, shuffleDeck } from "../src/game/poker/deck";
 import { PokerEvaluator } from "../src/game/poker/pokerEvaluator";
 import { Card } from "../src/game/poker/types";
@@ -44,15 +44,20 @@ export function runLigneeRoyaleSimulations() {
 
   for (const modeId of modeIds) {
     const mode = getGameMode(modeId);
-    
+
     // We will test all multipliers: 1x (1 line), 2x (3 lines), 3x (5 lines), 4x (7 lines)
     const multipliers = [1, 2, 3, 4];
 
     console.log(`\n--- Game Mode: ${mode.displayName} ---`);
     console.log(`Buy-in: ${mode.buyIn} | Min Bet: ${mode.minBet} | Max Bet: ${mode.maxBet}`);
-    
-    // Create base deck representation (before custom special cards)
-    const baseDeck = createFullDeck([], [], [], mode.deckComposition.suits, mode.deckComposition.ranks);
+
+    // Create base deck representation (double deck)
+    const baseDeck1 = createFullDeck([], [], [], mode.deckComposition.suits, mode.deckComposition.ranks);
+    const baseDeck2 = createFullDeck([], [], [], mode.deckComposition.suits, mode.deckComposition.ranks);
+    const baseDeck = [
+      ...baseDeck1.map(c => ({ ...c, id: `${c.id}-1` })),
+      ...baseDeck2.map(c => ({ ...c, id: `${c.id}-2` }))
+    ];
 
     // Create special cards list
     const specialCards: Card[] = [];
@@ -71,10 +76,13 @@ export function runLigneeRoyaleSimulations() {
     for (let i = 0; i < mode.maxDeadCards; i++) {
       specialCards.push({ suit: "hearts", rank: "2", id: `dead-card-${i}`, isDead: true });
     }
+    for (let i = 0; i < mode.maxScatterCards; i++) {
+      specialCards.push({ suit: "diamonds", rank: "2", id: `scatter-card-${i}`, isScatter: true });
+    }
 
     const fullSimulationDeck = [...baseDeck, ...specialCards];
     console.log(`Total Deck Size (standard + special): ${fullSimulationDeck.length} cards`);
-    console.log(`Wilds: ${mode.maxWildCards} | Wild 2x: ${mode.maxWild2xCards} | Wild 3x: ${mode.maxWild3xCards} | Wild 5x: ${mode.maxWild5xCards} | Dead: ${mode.maxDeadCards}`);
+    console.log(`Wilds: ${mode.maxWildCards} | Wild 2x: ${mode.maxWild2xCards} | Wild 3x: ${mode.maxWild3xCards} | Wild 5x: ${mode.maxWild5xCards} | Dead: ${mode.maxDeadCards} | Scatters: ${mode.maxScatterCards}`);
 
     for (const mult of multipliers) {
       let totalBet = 0;
@@ -115,13 +123,13 @@ export function runLigneeRoyaleSimulations() {
 
         for (const line of activeLines) {
           const lineCards = line.rows.map((rowIdx, colIdx) => grid[rowIdx][colIdx]);
-          
+
           try {
             const result = PokerEvaluator.evaluate(lineCards, { minimumPairRank: mode.minimumPairRank });
-            
+
             if (result.score > 0 && mode.rewards[result.rank] > 0) {
               const baseMult = mode.rewards[result.rank];
-              
+
               // Calculate wild multiplier stacking
               let wildMult = 1;
               lineCards.forEach((c) => {
@@ -141,6 +149,52 @@ export function runLigneeRoyaleSimulations() {
           }
         }
 
+        // Count scatters in the visible grid (rows 2, 3, 4)
+        let scatterCount = 0;
+        for (let r = 2; r <= 4; r++) {
+          for (let c = 0; c < 5; c++) {
+            if (grid[r][c].isScatter) {
+              scatterCount++;
+            }
+          }
+        }
+
+        if (scatterCount >= 3) {
+          isWin = true;
+          let spinsLeft = 3;
+          let lockedPositions = scatterCount;
+          let accumulatedBonusMultiplier = 0;
+
+          // Convert triggering scatters into coins
+          for (let i = 0; i < scatterCount; i++) {
+            accumulatedBonusMultiplier += getRandomCoinMultiplier(rng);
+          }
+
+          // Hold-and-Respin mechanics
+          const landChance = 0.10; // We'll run the sim to see what RTP this yields!
+          while (spinsLeft > 0 && lockedPositions < 15) {
+            const openSpots = 15 - lockedPositions;
+            let coinsLandedThisSpin = 0;
+
+            for (let i = 0; i < openSpots; i++) {
+              if (rng() < landChance) {
+                coinsLandedThisSpin++;
+                accumulatedBonusMultiplier += getRandomCoinMultiplier(rng);
+              }
+            }
+
+            if (coinsLandedThisSpin > 0) {
+              lockedPositions += coinsLandedThisSpin;
+              spinsLeft = 3; // Reset spins left
+            } else {
+              spinsLeft--;
+            }
+          }
+
+          const bonusPayout = betAmount * accumulatedBonusMultiplier;
+          spinPayout += bonusPayout;
+        }
+
         const finalPayout = Math.min(spinPayout, mode.maxPayout);
         totalPayout += finalPayout;
         if (isWin) {
@@ -150,13 +204,21 @@ export function runLigneeRoyaleSimulations() {
 
       const rtp = (totalPayout / totalBet) * 100;
       const hitFreq = (winningSpins / ROUNDS) * 100;
+      const avgWinOnHit = winningSpins > 0 ? totalPayout / winningSpins : 0;
+      const spinBet = mode.minBet * activeLinesCount;
+      const avgWinMultiplierOnHit = winningSpins > 0 ? avgWinOnHit / spinBet : 0;
+      const rtpOnWins = winningSpins > 0 ? (totalPayout / (winningSpins * spinBet)) * 100 : 0;
 
       console.log(`\n  Lines: ${activeLinesCount} (bet multiplier index ${mult})`);
+      console.log(`    Spin Bet: ${spinBet} cr`);
       console.log(`    Total Bet: ${totalBet.toLocaleString()} cr`);
       console.log(`    Total Return: ${totalPayout.toLocaleString()} cr`);
       console.log(`    Calculated RTP: ${rtp.toFixed(2)}% (Target: 85.00% - 98.00%)`);
       console.log(`    Hit Frequency: ${hitFreq.toFixed(2)}%`);
-      
+      console.log(`    Average Win on Hit: ${avgWinOnHit.toFixed(2)} cr`);
+      console.log(`    Average Win Multiplier on Hit: ${avgWinMultiplierOnHit.toFixed(2)}x bet`);
+      console.log(`    RTP of Winning Spins Only: ${rtpOnWins.toFixed(2)}%`);
+
       if (mult === 4) {
         console.log(`    Hand distributions (total hits across all paylines):`);
         Object.entries(handCounts)

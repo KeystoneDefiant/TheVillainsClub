@@ -1,4 +1,5 @@
 import { Box, Text } from "@mantine/core";
+import { clubTokens } from "@/theme/clubTokens";
 import type { CSSProperties } from "react";
 import type { PlayingCardFaceData, PlayingCardFaceMode, PlayingCardSize } from "./types";
 
@@ -59,6 +60,89 @@ export function PlayingCardFace({
 
   const suitSymbol = SUIT_SYMBOLS[card.suit] || "";
   const suitColor = SUIT_COLOR_CLASS[card.suit] || "card-suit-black";
+
+  if (card.isEmptySlot) {
+    return (
+      <Box
+        className={`card-face-front card-face-empty ${className || ""}`}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100%",
+          width: "100%",
+          background: "rgba(0, 0, 0, 0.4)",
+          border: `1px dashed ${clubTokens.surface.brassStroke}`,
+          borderRadius: "var(--mantine-radius-md, 8px)",
+          boxShadow: "inset 0 0 10px rgba(0, 0, 0, 0.5)",
+          ...style,
+        }}
+      />
+    );
+  }
+
+  if (card.isScatter) {
+    return (
+      <Box
+        className={`card-face-front card-face-scatter ${className || ""}`}
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100%",
+          width: "100%",
+          padding: "4px",
+          position: "relative",
+          background: "linear-gradient(135deg, #1a1a1a 0%, #2c2518 50%, #443722 100%)",
+          ...style,
+        }}
+      >
+        <div className="card-face-inner-border" style={{ borderColor: "#c79e57" }} />
+        <div className="card-index-top-left" style={{ color: "#ffd780", fontSize: density === "small" ? "8px" : "10px" }}>👑</div>
+        <div className="card-index-bottom-right" style={{ color: "#ffd780", fontSize: density === "small" ? "8px" : "10px", transform: "rotate(180deg)" }}>👑</div>
+
+        <div className="card-center-symbol card-scatter-crown" style={{ fontSize: density === "small" ? "1.6rem" : density === "medium" ? "2.4rem" : "3.0rem", filter: "drop-shadow(0 0 8px rgba(199, 158, 87, 0.6))" }}>
+          👑
+        </div>
+        <Text fz={density === "small" ? "7px" : "8px"} fw={900} c="#ffd780" tt="uppercase" style={{ letterSpacing: "1px", position: "absolute", bottom: density === "small" ? "6px" : "12px", zIndex: 2 }}>
+          SCATTER
+        </Text>
+      </Box>
+    );
+  }
+
+  if (card.isCoin || card.coinValueMultiplier !== undefined) {
+    const val = card.coinValueMultiplier ?? 3;
+    return (
+      <Box
+        className={`card-face-front card-face-coin ${className || ""}`}
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100%",
+          width: "100%",
+          padding: "4px",
+          position: "relative",
+          background: "linear-gradient(135deg, #111 0%, #1c1917 100%)",
+          ...style,
+        }}
+      >
+        <div className="card-face-inner-border" style={{ borderColor: "rgba(199, 158, 87, 0.4)" }} />
+        <div className="card-index-top-left" style={{ color: "#ffd780", fontSize: density === "small" ? "8px" : "10px" }}>🪙</div>
+        <div className="card-index-bottom-right" style={{ color: "#ffd780", fontSize: density === "small" ? "8px" : "10px", transform: "rotate(180deg)" }}>🪙</div>
+
+        <div className="card-center-symbol card-coin-gold" style={{ fontSize: density === "small" ? "1.8rem" : density === "medium" ? "2.6rem" : "3.2rem", filter: "drop-shadow(0 0 10px rgba(255, 215, 0, 0.5))" }}>
+          🪙
+        </div>
+        <Text fz={density === "small" ? "9px" : "11px"} fw={900} c="#ffd780" style={{ textShadow: "0 0 5px rgba(0,0,0,0.8)", zIndex: 3, position: "absolute", bottom: density === "small" ? "4px" : "10px" }}>
+          {val}x
+        </Text>
+      </Box>
+    );
+  }
 
   if (card.isDead) {
     return (

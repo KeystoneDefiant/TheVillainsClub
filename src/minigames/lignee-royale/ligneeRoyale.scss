@@ -242,6 +242,38 @@
     z-index: 100 !important;
   }
 
+  /* Individual card spinning / bounce during Hold & Respin */
+  .lr-card-spinning {
+    animation: lrCardSpin 0.12s linear infinite;
+    filter: blur(4px);
+    pointer-events: none;
+  }
+
+  @keyframes lrCardSpin {
+    0% {
+      transform: translateY(0);
+    }
+    100% {
+      transform: translateY(-20px);
+    }
+  }
+
+  .lr-card-bounce {
+    animation: lrCardSettleBounce 0.38s cubic-bezier(0.25, 1.15, 0.5, 1.15) both;
+  }
+
+  @keyframes lrCardSettleBounce {
+    0% {
+      transform: translateY(-15px);
+    }
+    50% {
+      transform: translateY(6px);
+    }
+    100% {
+      transform: translateY(0);
+    }
+  }
+
   /* Mobile Responsive adjustments */
   @media (max-width: 768px) {
     .lr-reel-column {

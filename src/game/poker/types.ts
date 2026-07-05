@@ -7,6 +7,10 @@ export interface Card {
   id: string; // Unique identifier for React keys
   isWild?: boolean; // Wild card flag
   isDead?: boolean; // Dead card flag
+  isScatter?: boolean; // Scatter card flag
+  isCoin?: boolean; // Coin card flag
+  isEmptySlot?: boolean; // Empty slot flag for bonus respin mode
+  coinValueMultiplier?: number; // Coin multiplier value (e.g. 3, 5, ..., 1000)
   wildMultiplier?: number; // Optional wild multiplier (e.g. 2, 3, 5)
 }
 

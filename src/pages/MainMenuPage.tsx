@@ -121,7 +121,7 @@ const GAME_ENTRIES: GameMenuEntry[] = [
   {
     id: "masterson_1881",
     title: "Masterton 1881",
-    subtitle: "Run a Roulette Game or Run a Scam - It's All The Same.",
+    subtitle: "Run a Roulette Game or Run a Scam - It's All The Same",
     route: "/minigames/masterson-1881",
     buyIn: villainsGameDefaults.masterson1881.defaultBuyIn,
     get rulesets() {
@@ -137,13 +137,17 @@ const GAME_ENTRIES: GameMenuEntry[] = [
   {
     id: "lignee_royale",
     title: "Lignée Royale",
-    subtitle: "A Regal 3x5 Poker Card Slot Machine",
+    subtitle: "Trace a Lineage of Royalty to Your Wallet",
     route: "/minigames/lignee-royale",
     buyIn: villainsGameDefaults.ligneeRoyale.defaultBuyIn,
     get rulesets() {
-      return [
-        { value: "normalGame", label: "Normal Game" }
-      ];
+      return Object.keys(ligneeRoyaleGameConfig.gameModes).map((key) => {
+        const mode = ligneeRoyaleGameConfig.gameModes[key as keyof typeof ligneeRoyaleGameConfig.gameModes] as { displayName?: string };
+        return {
+          value: key,
+          label: mode.displayName || ligneeRoyaleGameConfig.defaultGameMode.displayName,
+        };
+      });
     },
   },
 ];
@@ -527,6 +531,7 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
       seven_year_itch: "7 Year Itch",
       fateseal_silver: "Fateseal Silver",
       masterson_1881: "Masterton 1881",
+      lignee_royale: "Lignée Royale",
     };
     return GAME_TITLE[settlementFlash.lastTable.gameId] ?? settlementFlash.lastTable.gameId.replace(/_/g, " ");
   }, [settlementFlash]);
@@ -751,21 +756,21 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
                     >
                       <ClubPanel maw={470} w="100%" className="club-menu-card">
                         <Stack gap="md">
-                            <Box style={{ width: "100%", display: "flex", justifyContent: "center" }}>
-                              <Link
-                                to="/onboarding"
-                                state={{ skipName: true }}
-                                style={{
-                                  cursor: "pointer",
-                                  display: "inline-flex",
-                                  textDecoration: "none",
-                                  transition: "transform 0.2s ease, filter 0.2s ease",
-                                }}
-                                className="club-logo-link"
-                              >
-                                <VcLogoBarMark width={180} />
-                              </Link>
-                            </Box>
+                          <Box style={{ width: "100%", display: "flex", justifyContent: "center" }}>
+                            <Link
+                              to="/onboarding"
+                              state={{ skipName: true }}
+                              style={{
+                                cursor: "pointer",
+                                display: "inline-flex",
+                                textDecoration: "none",
+                                transition: "transform 0.2s ease, filter 0.2s ease",
+                              }}
+                              className="club-logo-link"
+                            >
+                              <VcLogoBarMark width={180} />
+                            </Link>
+                          </Box>
                           <Stack gap={2}>
                             <Text size="xs" tt="uppercase" fw={700} c={clubTokens.text.muted}>
                               Club modifiers
@@ -916,7 +921,7 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
                                 </Group>
 
                               </Group>
-                               <Text size="sm" c={clubTokens.text.secondary}>
+                              <Text size="sm" c={clubTokens.text.secondary}>
                                 Buy-in {activeBuyIn.toLocaleString()} credits. Base return ceiling{" "}
                                 {activeReturnCeiling.toLocaleString()} credits before tonight’s specials.
                               </Text>
@@ -941,9 +946,9 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
                                 disabled={Boolean(activeSession && activeSession.gameId === game.id)}
                               />
                               {rulesetDifferences.length > 0 ? (
-                                <Stack gap={6} style={{ 
-                                  backgroundColor: "rgba(0, 0, 0, 0.2)", 
-                                  borderRadius: "6px", 
+                                <Stack gap={6} style={{
+                                  backgroundColor: "rgba(0, 0, 0, 0.2)",
+                                  borderRadius: "6px",
                                   padding: "10px",
                                   border: `1px solid ${clubTokens.surface.brassStroke}`,
                                   marginTop: "4px"
@@ -1297,10 +1302,10 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
                           {t.id === "new_villain"
                             ? "Default starting title"
                             : t.id === "villain"
-                            ? "Unlocked after playing your first game"
-                            : t.id === "known_villain"
-                            ? "Requires 30,000+ club credits"
-                            : "Requires 1,000,000+ club credits"}
+                              ? "Unlocked after playing your first game"
+                              : t.id === "known_villain"
+                                ? "Requires 30,000+ club credits"
+                                : "Requires 1,000,000+ club credits"}
                         </Text>
                       </Stack>
                       <Group gap="xs">
@@ -1342,8 +1347,8 @@ export function MainMenuPage({ forceEntered = false }: MainMenuPageProps) {
                 Get Square with the Club
               </Title>
               <Text size="xs" c="rgba(255, 255, 255, 0.8)" lh={1.4}>
-                The house has covered your bankruptcy, but your reputation is currently set to <strong>Smelly Bum</strong>. 
-                To settle your debt and restore your villainous title, you must pay the house a fee of <strong>10,000 credits</strong>. 
+                The house has covered your bankruptcy, but your reputation is currently set to <strong>Smelly Bum</strong>.
+                To settle your debt and restore your villainous title, you must pay the house a fee of <strong>10,000 credits</strong>.
                 This requires having at least <strong>30,000 credits</strong> in hand.
               </Text>
               <Group justify="space-between" mt="xs" align="center">

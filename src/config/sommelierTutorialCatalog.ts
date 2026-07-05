@@ -353,7 +353,7 @@ export const sommelierTutorialCatalog: Record<string, SommelierTutorialStep[]> =
   lignee_royale: [
     {
       title: "Lignée Royale",
-      dialogue: "Welcome to Lignée Royale, {playerName}. I am Pazillus A. Rabellum, the club's sommelier.\n\nThis is a playing card slot machine. You spin a deck of 52 cards, and 35 cards are dealt onto a 3-row, 5-column grid. Payouts are made by forming poker hands along active paylines.",
+      dialogue: "Welcome to Lignée Royale, {playerName}. I am Pazillus A. Rabellum, the club's sommelier.\n\nThe game's name, Lignée Royale, translates to Royal Descendants. Much like a family tree, we follow lines that make up a poker hand in this playing card slot machine.\n\nYou spin a deck of 52 cards, and 35 cards are dealt onto a 3-row, 5-column grid. Payouts are made by forming poker hands along active paylines.",
       highlightSelector: ".lr-card-grid-container"
     },
     {
@@ -369,6 +369,11 @@ export const sommelierTutorialCatalog: Record<string, SommelierTutorialStep[]> =
     {
       title: "Dead Reel Spaces",
       dialogue: "Watch out for Dead cards! These cards represent dead slots on the grid and are ignored during evaluation, reducing the number of valid cards on that line.",
+      highlightSelector: ".lr-card-grid-container"
+    },
+    {
+      title: "Hold & Respin Bonus",
+      dialogue: "Landing 3 or more Scatter cards anywhere on the visible grid triggers the Hold & Respin Bonus Game!\n\nCoins carrying random multipliers (3x to 1000x of your base bet) appear on the reels. You get 3 free spins to land more coins. Landing new coins locks them in place and resets the counter to 3. Collect as many as you can before running out of spins!",
       highlightSelector: ".lr-card-grid-container"
     }
   ]

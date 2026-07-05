@@ -4,7 +4,7 @@ import { ClubButton } from "@/components/ui/ClubButton";
 import { PlayingCard } from "@/ui/cards";
 import { useClubAudioStore } from "@/audio/clubAudioStore";
 import { LigneeRoyaleShellBinding, ClubTableReturnDetail } from "@/game/sessionSettlement";
-import { resolveLigneeRoyaleGameMode, LigneeRoyaleGameModeConfig } from "@/config/minigames/ligneeRoyaleConfig";
+import { resolveLigneeRoyaleGameMode, LigneeRoyaleGameModeConfig, getRandomCoinMultiplier } from "@/config/minigames/ligneeRoyaleConfig";
 import { Card, Suit, Rank, HandResult } from "@/game/poker/types";
 import { createFullDeck, shuffleDeck } from "@/game/poker/deck";
 import { PokerEvaluator } from "@/game/poker/pokerEvaluator";
@@ -62,7 +62,7 @@ export function LigneeRoyaleRoot({
       const base = import.meta.env.BASE_URL;
       const audio = new Audio(`${base}sounds/Classic/${fileName}`);
       audio.volume = sfxVolume;
-      void audio.play().catch(() => {});
+      void audio.play().catch(() => { });
     } catch {
       // silence
     }
@@ -94,7 +94,7 @@ export function LigneeRoyaleRoot({
   const [grid, setGrid] = useState<Card[][]>(initialCards);
   const [isSpinning, setIsSpinning] = useState(false);
   const [spinningReels, setSpinningReels] = useState<boolean[]>([false, false, false, false, false]);
-  
+
   // Snappy reel stops bounce animations classes states
   const [bounceReels, setBounceReels] = useState<boolean[]>([false, false, false, false, false]);
 
@@ -128,6 +128,13 @@ export function LigneeRoyaleRoot({
   // Spin trigger index to refresh animations
   const [spinTriggerId, setSpinTriggerId] = useState(0);
 
+  // Scatter Hold-and-Respin states
+  const [bonusActive, setBonusActive] = useState(false);
+  const [bonusSpinsLeft, setBonusSpinsLeft] = useState(0);
+  const [bonusOverlayState, setBonusOverlayState] = useState<'idle' | 'triggered' | 'countup'>('idle');
+  const [bonusTotalWinMultiplier, setBonusTotalWinMultiplier] = useState(0);
+  const [bonusWinnings, setBonusWinnings] = useState(0);
+
   // Compute number of active lines based on bet multiplier
   const activeLinesCount = useMemo(() => {
     if (betMultiplier === 1) return 1;
@@ -139,12 +146,37 @@ export function LigneeRoyaleRoot({
   const activeLines = useMemo(() => {
     return LIGNEE_ROYALE_LINES.slice(0, activeLinesCount);
   }, [activeLinesCount]);
+  const handleCashOut = useCallback((reason?: string) => {
+    if (onReturnToClubMenu) {
+      const statsList: ClubTableReturnDetail["stats"] = [
+        { label: "Total Spins", value: totalSpins },
+        { label: "Total Wins", value: totalWins },
+        { label: "Total Payout", value: `${totalPayout} credits` },
+        { label: "Highest Win", value: `${highestWin} credits` },
+      ];
+      onReturnToClubMenu({
+        uncappedCredits: credits,
+        basePayout: credits,
+        overachievementBonus: 0,
+        tiers: 0,
+        totalReturn: credits,
+        tableRound: totalSpins,
+        endReason: reason || `Voluntary cash-out at spin ${totalSpins}`,
+        stats: statsList,
+      });
+    }
+  }, [credits, totalSpins, totalWins, totalPayout, highestWin, onReturnToClubMenu]);
 
-  // Create customized deck with special card types (wild multipliers, dead cards)
+  // Create customized deck with special card types (wild multipliers, dead cards, scatters)
   const generateLigneeRoyaleDeck = useCallback(() => {
-    const baseDeck = createFullDeck([], [], [], config.deckComposition.suits, config.deckComposition.ranks);
+    const baseDeck1 = createFullDeck([], [], [], config.deckComposition.suits, config.deckComposition.ranks);
+    const baseDeck2 = createFullDeck([], [], [], config.deckComposition.suits, config.deckComposition.ranks);
+    const baseDeck = [
+      ...baseDeck1.map(c => ({ ...c, id: `${c.id}-1` })),
+      ...baseDeck2.map(c => ({ ...c, id: `${c.id}-2` }))
+    ];
     const specialCards: Card[] = [];
-    
+
     // Standard Wilds
     for (let i = 0; i < config.maxWildCards; i++) {
       specialCards.push({ suit: "hearts", rank: "A", id: `wild-std-${i}`, isWild: true });
@@ -165,6 +197,10 @@ export function LigneeRoyaleRoot({
     for (let i = 0; i < config.maxDeadCards; i++) {
       specialCards.push({ suit: "hearts", rank: "2", id: `dead-card-${i}`, isDead: true });
     }
+    // Scatters
+    for (let i = 0; i < config.maxScatterCards; i++) {
+      specialCards.push({ suit: "diamonds", rank: "2", id: `scatter-card-${i}`, isScatter: true });
+    }
 
     return [...baseDeck, ...specialCards];
   }, [config]);
@@ -177,13 +213,13 @@ export function LigneeRoyaleRoot({
     activeLines.forEach((line) => {
       // Extract cards on payline (row indices 2, 3, and 4 are the scoring ones)
       const lineCards: Card[] = line.rows.map((rowIdx, colIdx) => currentGrid[rowIdx][colIdx]);
-      
+
       try {
         const handResult = PokerEvaluator.evaluate(lineCards, { minimumPairRank: config.minimumPairRank });
-        
+
         if (handResult.score > 0 && config.rewards[handResult.rank] > 0) {
           const baseMult = config.rewards[handResult.rank];
-          
+
           // Calculate wild multipliers along the line
           let wildMultProduct = 1;
           lineCards.forEach((card) => {
@@ -217,14 +253,14 @@ export function LigneeRoyaleRoot({
       setTotalWins((w) => w + 1);
       setTotalPayout((p) => p + finalWin);
       setHighestWin((h) => Math.max(h, finalWin));
-      
+
       // Start cycling through the winning paylines one by one
       setActiveWinLineIdx(0);
 
       // Play sound based on highest winning hand
-      const highestWinHand = winsList.reduce((prev, curr) => 
+      const highestWinHand = winsList.reduce((prev, curr) =>
         (curr.handResult.score > prev.handResult.score) ? curr : prev
-      , winsList[0]);
+        , winsList[0]);
 
       if (highestWinHand) {
         const soundMap: Record<string, string> = {
@@ -247,7 +283,68 @@ export function LigneeRoyaleRoot({
     }
 
     setTotalSpins((s) => s + 1);
-    setIsSpinning(false);
+
+    // Count scatters in visible scoring grid (rows 2-4, columns 0-4)
+    let scatterCount = 0;
+    for (let r = 2; r <= 4; r++) {
+      for (let c = 0; c < 5; c++) {
+        if (currentGrid[r][c]?.isScatter) {
+          scatterCount++;
+        }
+      }
+    }
+
+    if (scatterCount >= 3) {
+      setAutoPlay(false);
+      setBonusOverlayState('triggered');
+      playSfx("fiveofakind.ogg");
+      setIsSpinning(true);
+
+      setTimeout(() => {
+        setBonusActive(true);
+        setBonusSpinsLeft(3);
+        setBonusOverlayState('idle');
+
+        // Initialize bonus grid
+        let initialMultiplierSum = 0;
+        const newGrid = currentGrid.map((row, r) =>
+          row.map((card, c) => {
+            const isScoring = r >= 2 && r <= 4;
+            if (isScoring && card.isScatter) {
+              const val = getRandomCoinMultiplier();
+              initialMultiplierSum += val;
+              return {
+                suit: "hearts",
+                rank: "A",
+                id: `coin-${r}-${c}`,
+                isCoin: true,
+                coinValueMultiplier: val,
+              } as Card;
+            } else if (isScoring) {
+              return {
+                suit: "hearts",
+                rank: "2",
+                id: `empty-${r}-${c}`,
+                isEmptySlot: true,
+              } as Card;
+            } else {
+              return {
+                suit: "hearts",
+                rank: "2",
+                id: `empty-nonscoring-${r}-${c}`,
+                isEmptySlot: true,
+              } as Card;
+            }
+          })
+        );
+
+        setGrid(newGrid);
+        setBonusTotalWinMultiplier(initialMultiplierSum);
+        setIsSpinning(false);
+      }, 2000);
+    } else {
+      setIsSpinning(false);
+    }
   }, [activeLines, betAmount, config, playSfx]);
 
   // Main spin handler
@@ -289,7 +386,7 @@ export function LigneeRoyaleRoot({
 
     // Staggered stop logic
     const delays = [600, 900, 1200, 1500, 1800];
-    
+
     delays.forEach((delay, idx) => {
       setTimeout(() => {
         setGrid((currentGrid) => {
@@ -305,7 +402,7 @@ export function LigneeRoyaleRoot({
           next[idx] = false;
           return next;
         });
-        
+
         // Trigger reel stop snappy bounce settlement animation
         setBounceReels((prev) => {
           const next = [...prev];
@@ -330,9 +427,181 @@ export function LigneeRoyaleRoot({
     });
   }, [betAmount, activeLinesCount, credits, generateLigneeRoyaleDeck, evaluateSpin, playSfx]);
 
+  const handleBonusSpin = useCallback(() => {
+    if (!bonusActive || bonusSpinsLeft <= 0 || isSpinning) return;
+
+    playSfx("button-click.ogg");
+    setIsSpinning(true);
+    setSpinTriggerId((s) => s + 1);
+
+    // Identify which columns need to spin (those with empty slots in rows 2, 3, 4)
+    const colsToSpin = [0, 1, 2, 3, 4].map((colIdx) =>
+      [2, 3, 4].some((rowIdx) => grid[rowIdx][colIdx]?.isEmptySlot)
+    );
+
+    setSpinningReels(colsToSpin);
+    setBounceReels([false, false, false, false, false]);
+
+    // Calculate outcomes for each slot in the 7x5 grid
+    const nextGrid = grid.map((row, r) =>
+      row.map((card, c) => {
+        const isScoring = r >= 2 && r <= 4;
+        if (isScoring) {
+          if (card.isCoin) {
+            return card;
+          } else {
+            const coinLanded = Math.random() < 0.10;
+            if (coinLanded) {
+              return {
+                suit: "hearts",
+                rank: "A",
+                id: `coin-${r}-${c}-${Date.now()}`,
+                isCoin: true,
+                coinValueMultiplier: getRandomCoinMultiplier(),
+              } as Card;
+            } else {
+              return card;
+            }
+          }
+        }
+        return card;
+      })
+    );
+
+    // Delays
+    const delays = [600, 900, 1200, 1500, 1800];
+
+    delays.forEach((delay, idx) => {
+      setTimeout(() => {
+        if (colsToSpin[idx]) {
+          setGrid((currentGrid) => {
+            const next = currentGrid.map((row) => [...row]);
+            for (let r = 0; r < 7; r++) {
+              next[r][idx] = nextGrid[r][idx];
+            }
+            return next;
+          });
+
+          setSpinningReels((prev) => {
+            const next = [...prev];
+            next[idx] = false;
+            return next;
+          });
+
+          setBounceReels((prev) => {
+            const next = [...prev];
+            next[idx] = true;
+            return next;
+          });
+
+          // Check if a new coin landed in this column
+          const newCoinLanded = [2, 3, 4].some(
+            (r) => nextGrid[r][idx]?.isCoin && !grid[r][idx]?.isCoin
+          );
+
+          if (newCoinLanded) {
+            playSfx("onepair.ogg"); // Chime sound for landing coin
+          } else {
+            playSfx("button-click.ogg");
+          }
+
+          setTimeout(() => {
+            setBounceReels((prev) => {
+              const next = [...prev];
+              next[idx] = false;
+              return next;
+            });
+          }, 400);
+        }
+
+        if (idx === 4) {
+          // Final evaluations
+          let coinCount = 0;
+          let currentMultiplierSum = 0;
+          for (let r = 2; r <= 4; r++) {
+            for (let c = 0; c < 5; c++) {
+              if (nextGrid[r][c]?.isCoin) {
+                coinCount++;
+                currentMultiplierSum += nextGrid[r][c].coinValueMultiplier ?? 0;
+              }
+            }
+          }
+
+          const previousCoinCount = grid.reduce(
+            (sum, row, r) =>
+              sum +
+              row.reduce((s, card) => s + (r >= 2 && r <= 4 && card.isCoin ? 1 : 0), 0),
+            0
+          );
+
+          const newCoinsCount = coinCount - previousCoinCount;
+
+          if (newCoinsCount > 0) {
+            setBonusSpinsLeft(3);
+            setBonusTotalWinMultiplier(currentMultiplierSum);
+            playSfx("twopair.ogg"); // Success chime
+          } else {
+            setBonusSpinsLeft((prev) => Math.max(0, prev - 1));
+          }
+
+          setIsSpinning(false);
+        }
+      }, delay);
+    });
+  }, [bonusActive, bonusSpinsLeft, isSpinning, grid, playSfx]);
+
+  // Trigger bonus end / count-up when spins left reaches 0
+  useEffect(() => {
+    if (bonusActive && !isSpinning && (bonusSpinsLeft === 0 || grid.every((row, r) => row.every((card) => (r >= 2 && r <= 4 ? card.isCoin : true))))) {
+      const totalPayoutMultiplier = bonusTotalWinMultiplier;
+      const finalWinnings = betAmount * totalPayoutMultiplier;
+
+      setBonusWinnings(finalWinnings);
+      setBonusOverlayState('countup');
+      playSfx("flush.ogg");
+
+      setTimeout(() => {
+        setCredits((c) => c + finalWinnings);
+        setTotalWins((w) => w + 1);
+        setTotalPayout((p) => p + finalWinnings);
+        setHighestWin((h) => Math.max(h, finalWinnings));
+        setLastWinAmount(finalWinnings);
+
+        setBonusActive(false);
+        setBonusOverlayState('idle');
+        setWinningLines([]);
+        setActiveWinLineIdx(null);
+
+        // Reset to initialCards or a fresh standard grid
+        const deck = generateLigneeRoyaleDeck();
+        const shuffled = shuffleDeck(deck);
+        const normalGrid = [
+          [shuffled[0], shuffled[7], shuffled[14], shuffled[21], shuffled[28]],
+          [shuffled[1], shuffled[8], shuffled[15], shuffled[22], shuffled[29]],
+          [shuffled[2], shuffled[9], shuffled[16], shuffled[23], shuffled[30]],
+          [shuffled[3], shuffled[10], shuffled[17], shuffled[24], shuffled[31]],
+          [shuffled[4], shuffled[11], shuffled[18], shuffled[25], shuffled[32]],
+          [shuffled[5], shuffled[12], shuffled[19], shuffled[26], shuffled[33]],
+          [shuffled[6], shuffled[13], shuffled[20], shuffled[27], shuffled[34]],
+        ];
+        setGrid(normalGrid);
+      }, 3000); // 3 seconds count up overlay
+    }
+  }, [bonusActive, isSpinning, bonusSpinsLeft, grid, bonusTotalWinMultiplier, betAmount, playSfx, generateLigneeRoyaleDeck]);
+
+  // Free spins respin hook
+  useEffect(() => {
+    if (bonusActive && !isSpinning && bonusSpinsLeft > 0) {
+      const timer = setTimeout(() => {
+        handleBonusSpin();
+      }, 1200); // 1.2s delay between free spins
+      return () => clearTimeout(timer);
+    }
+  }, [bonusActive, isSpinning, bonusSpinsLeft, handleBonusSpin]);
+
   // Autoplay hook
   useEffect(() => {
-    if (autoPlay && !isSpinning && !showTutorial) {
+    if (autoPlay && !isSpinning && !showTutorial && !bonusActive) {
       const timer = setTimeout(() => {
         const cost = betAmount * activeLinesCount;
         if (credits >= cost) {
@@ -343,7 +612,7 @@ export function LigneeRoyaleRoot({
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [autoPlay, isSpinning, credits, betAmount, activeLinesCount, handleSpin, showTutorial]);
+  }, [autoPlay, isSpinning, credits, betAmount, activeLinesCount, handleSpin, showTutorial, bonusActive]);
 
   // Cycle through winning lines in sequence
   useEffect(() => {
@@ -362,6 +631,16 @@ export function LigneeRoyaleRoot({
 
     return () => clearInterval(timer);
   }, [isSpinning, winningLines, activeWinLineIdx]);
+
+  // Automatic Bankruptcy / Out of Credits Cash-Out check
+  useEffect(() => {
+    if (!isSpinning && !bonusActive && credits < config.minBet) {
+      const timer = setTimeout(() => {
+        handleCashOut(`Out of credits: cannot afford minimum bet of ${config.minBet} cr`);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [credits, isSpinning, bonusActive, config.minBet, handleCashOut]);
 
   // Pre-rigged tutorial layout (7x5 grid)
   const handlePreRiggedTutorialSpin = () => {
@@ -427,26 +706,7 @@ export function LigneeRoyaleRoot({
     handleSpin(tutorialCards);
   };
 
-  const handleCashOut = () => {
-    if (onReturnToClubMenu) {
-      const statsList: ClubTableReturnDetail["stats"] = [
-        { label: "Total Spins", value: totalSpins },
-        { label: "Total Wins", value: totalWins },
-        { label: "Total Payout", value: `${totalPayout} credits` },
-        { label: "Highest Win", value: `${highestWin} credits` },
-      ];
-      onReturnToClubMenu({
-        uncappedCredits: credits,
-        basePayout: credits,
-        overachievementBonus: 0,
-        tiers: 0,
-        totalReturn: credits,
-        tableRound: totalSpins,
-        endReason: `Voluntary cash-out at spin ${totalSpins}`,
-        stats: statsList,
-      });
-    }
-  };
+
 
   // Helper to resolve card points on responsive layouts (restored to prior 3x5 centers)
   const getLinePoints = useCallback((line: PaylineConfig) => {
@@ -480,10 +740,7 @@ export function LigneeRoyaleRoot({
         onShowSettings={() => setSettingsOpened(true)}
         extraButtons={
           <Group gap="sm" wrap="nowrap">
-            <ClubButton variant="outline" size="sm" onClick={() => setShowTutorial(true)}>
-              Rules
-            </ClubButton>
-            <ClubButton variant="filled" color="red" size="sm" onClick={handleCashOut} disabled={isSpinning}>
+            <ClubButton variant="filled" color="red" size="sm" onClick={() => handleCashOut()} disabled={isSpinning || bonusActive}>
               Settle / Cash Out
             </ClubButton>
           </Group>
@@ -492,83 +749,107 @@ export function LigneeRoyaleRoot({
 
       {/* Main Layout Grid */}
       <Box className="lr-main-group" style={{ marginTop: 12 }}>
-        
+
         {/* Left Side Paylines Panel */}
         <Box className="lr-side-panel-left">
           <Stack gap="xs">
             <Box className="lr-glass-panel" p="md">
-              <Text size="sm" fw={600} c={clubTokens.text.brass} mb="xs">
-                Active Paylines ({activeLinesCount})
-              </Text>
-              <Stack gap={4}>
-                {LIGNEE_ROYALE_LINES.map((line, idx) => {
-                  const isActive = idx < activeLinesCount;
-                  const isWin = winningLines.some((w) => w.lineId === line.id);
-                  const isCurrentActive = activeWinLineIdx !== null && winningLines[activeWinLineIdx]?.lineId === line.id;
-                  const lineWin = winningLines.find((w) => w.lineId === line.id);
+              {bonusActive ? (
+                <>
+                  <Text size="sm" fw={600} c={clubTokens.text.brass} mb="xs">
+                    Hold & Respin
+                  </Text>
+                  <Stack gap="xs" mt="sm">
+                    <Text size="xs" c={clubTokens.text.primary} fw={600}>
+                      Coins are locked in place.
+                    </Text>
+                    <Text size="xs" c={clubTokens.text.muted} style={{ lineHeight: 1.4 }}>
+                      • Each spin uses one Free Spin.
+                    </Text>
+                    <Text size="xs" c={clubTokens.text.muted} style={{ lineHeight: 1.4 }}>
+                      • Landing any new coin resets the counter to 3.
+                    </Text>
+                    <Text size="xs" c={clubTokens.text.muted} style={{ lineHeight: 1.4 }}>
+                      • When spins reach 0 or the matrix is full, all coin values are aggregated and paid out!
+                    </Text>
+                  </Stack>
+                </>
+              ) : (
+                <>
+                  <Text size="sm" fw={600} c={clubTokens.text.brass} mb="xs">
+                    Active Paylines ({activeLinesCount})
+                  </Text>
+                  <Stack gap={4}>
+                    {LIGNEE_ROYALE_LINES.map((line, idx) => {
+                      const isActive = idx < activeLinesCount;
+                      const isWin = winningLines.some((w) => w.lineId === line.id);
+                      const isCurrentActive = activeWinLineIdx !== null && winningLines[activeWinLineIdx]?.lineId === line.id;
+                      const lineWin = winningLines.find((w) => w.lineId === line.id);
 
-                  return (
-                    <Group
-                      key={line.id}
-                      justify="space-between"
-                      wrap="nowrap"
-                      align="center" // Align items to vertical middle of the Group container
-                      style={{
-                        padding: "6px 8px",
-                        borderRadius: 4,
-                        backgroundColor: isCurrentActive
-                          ? "rgba(199, 158, 87, 0.25)"
-                          : isWin
-                            ? "rgba(199, 158, 87, 0.1)"
-                            : hoveredLine === line.id
-                              ? "rgba(255, 255, 255, 0.05)"
-                              : "transparent",
-                        cursor: "pointer",
-                        border: isCurrentActive 
-                          ? `2px solid ${line.color}` 
-                          : isWin 
-                            ? `1px dashed ${line.color}` 
-                            : "1px solid transparent",
-                        opacity: isActive ? 1 : 0.4,
-                        // Fixed height row layout to prevent jumping list heights
-                        height: 52,
-                        boxSizing: "border-box",
-                      }}
-                      onMouseEnter={() => setHoveredLine(line.id)}
-                      onMouseLeave={() => setHoveredLine(null)}
-                    >
-                      <Stack gap={0} style={{ minWidth: 0, flexGrow: 1, height: "100%", justifyContent: "center" }}>
-                        <Text size="xs" fw={isCurrentActive ? 700 : 500} c={isActive ? clubTokens.text.primary : clubTokens.text.muted} style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                          {line.name}
-                        </Text>
-                        
-                        {isActive && lineWin && (
-                          <Stack gap={0} style={{ marginTop: 2 }}>
-                            <Text size="xxs" c="green" fw={700} style={{ fontSize: "0.66rem", lineHeight: 1.1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                              {lineWin.handResult.rank.toUpperCase().replace(/-/g, " ")}
-                              {lineWin.wildMultiplier > 1 && ` (x${lineWin.wildMultiplier})`}
+                      return (
+                        <Group
+                          key={line.id}
+                          justify="space-between"
+                          wrap="nowrap"
+                          align="center" // Align items to vertical middle of the Group container
+                          style={{
+                            padding: "6px 8px",
+                            borderRadius: 4,
+                            backgroundColor: isCurrentActive
+                              ? "rgba(199, 158, 87, 0.25)"
+                              : isWin
+                                ? "rgba(199, 158, 87, 0.1)"
+                                : hoveredLine === line.id
+                                  ? "rgba(255, 255, 255, 0.05)"
+                                  : "transparent",
+                            cursor: "pointer",
+                            border: isCurrentActive
+                              ? `2px solid ${line.color}`
+                              : isWin
+                                ? `1px dashed ${line.color}`
+                                : "1px solid transparent",
+                            opacity: isActive ? 1 : 0.4,
+                            // Fixed height row layout to prevent jumping list heights
+                            height: 52,
+                            boxSizing: "border-box",
+                          }}
+                          onMouseEnter={() => setHoveredLine(line.id)}
+                          onMouseLeave={() => setHoveredLine(null)}
+                        >
+                          <Stack gap={0} style={{ minWidth: 0, flexGrow: 1, height: "100%", justifyContent: "center" }}>
+                            <Text size="xs" fw={isCurrentActive ? 700 : 500} c={isActive ? clubTokens.text.primary : clubTokens.text.muted} style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                              {line.name}
                             </Text>
-                            <Text size="xxs" c="green" fw={600} style={{ fontSize: "0.62rem", lineHeight: 1 }}>
-                              {`+${lineWin.payout} cr`}
-                            </Text>
+
+                            {isActive && lineWin && (
+                              <Stack gap={0} style={{ marginTop: 2 }}>
+                                <Text size="xxs" c="green" fw={700} style={{ fontSize: "0.66rem", lineHeight: 1.1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                  {lineWin.handResult.rank.toUpperCase().replace(/-/g, " ")}
+                                  {lineWin.wildMultiplier > 1 && ` (x${lineWin.wildMultiplier})`}
+                                </Text>
+                                <Text size="xxs" c="green" fw={600} style={{ fontSize: "0.62rem", lineHeight: 1 }}>
+                                  {`+${lineWin.payout} cr`}
+                                </Text>
+                              </Stack>
+                            )}
                           </Stack>
-                        )}
-                      </Stack>
-                      <Box
-                        style={{
-                          width: 12,
-                          height: 12,
-                          borderRadius: "50%",
-                          backgroundColor: line.color,
-                          boxShadow: isActive ? `0 0 6px ${line.color}` : "none",
-                          flexShrink: 0,
-                          alignSelf: "center", // Explicit vertical middle alignment for indicator badge
-                        }}
-                      />
-                    </Group>
-                  );
-                })}
-              </Stack>
+                          <Box
+                            style={{
+                              width: 12,
+                              height: 12,
+                              borderRadius: "50%",
+                              backgroundColor: line.color,
+                              boxShadow: isActive ? `0 0 6px ${line.color}` : "none",
+                              flexShrink: 0,
+                              alignSelf: "center", // Explicit vertical middle alignment for indicator badge
+                            }}
+                          />
+                        </Group>
+                      );
+                    })}
+                  </Stack>
+                </>
+              )}
             </Box>
 
             {/* Stats Box */}
@@ -605,53 +886,55 @@ export function LigneeRoyaleRoot({
           <Stack gap="md" style={{ width: "100%" }}>
             <Box className="lr-card-grid-container" style={{ paddingBottom: 24 }}>
               {/* SVG lines overlay */}
-              <svg
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  width: "100%",
-                  height: "100%",
-                  pointerEvents: "none",
-                  zIndex: 5,
-                }}
-              >
-                {LIGNEE_ROYALE_LINES.map((line, idx) => {
-                  const isActive = idx < activeLinesCount;
-                  const isCurrentActiveWinLine = activeWinLineIdx !== null && winningLines[activeWinLineIdx]?.lineId === line.id;
-                  const shouldDraw = isCurrentActiveWinLine || (hoveredLine === line.id && isActive);
+              {!bonusActive && (
+                <svg
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    width: "100%",
+                    height: "100%",
+                    pointerEvents: "none",
+                    zIndex: 5,
+                  }}
+                >
+                  {LIGNEE_ROYALE_LINES.map((line, idx) => {
+                    const isActive = idx < activeLinesCount;
+                    const isCurrentActiveWinLine = activeWinLineIdx !== null && winningLines[activeWinLineIdx]?.lineId === line.id;
+                    const shouldDraw = isCurrentActiveWinLine || (hoveredLine === line.id && isActive);
 
-                  if (!shouldDraw) return null;
+                    if (!shouldDraw) return null;
 
-                  const points = getLinePoints(line);
+                    const points = getLinePoints(line);
 
-                  return (
-                    <polyline
-                      key={line.id}
-                      points={points}
-                      fill="none"
-                      stroke={line.color}
-                      strokeWidth={isCurrentActiveWinLine ? 5 : 2}
-                      className={isCurrentActiveWinLine ? "lr-neon-line lr-payline-glowing" : "lr-neon-line"}
-                      style={{
-                        color: line.color,
-                        opacity: isCurrentActiveWinLine ? 1 : 0.6,
-                      }}
-                    />
-                  );
-                })}
-              </svg>
+                    return (
+                      <polyline
+                        key={line.id}
+                        points={points}
+                        fill="none"
+                        stroke={line.color}
+                        strokeWidth={isCurrentActiveWinLine ? 5 : 2}
+                        className={isCurrentActiveWinLine ? "lr-neon-line lr-payline-glowing" : "lr-neon-line"}
+                        style={{
+                          color: line.color,
+                          opacity: isCurrentActiveWinLine ? 1 : 0.6,
+                        }}
+                      />
+                    );
+                  })}
+                </svg>
+              )}
 
               {/* The 7x5 Grid Layout - Viewport cropped to 3 rows height, overflow hidden */}
               <Group gap={isMobile ? "xs" : "md"} wrap="nowrap">
                 {[0, 1, 2, 3, 4].map((colIdx) => {
                   const isReelSpinning = spinningReels[colIdx];
                   const hasBounceTrigger = bounceReels[colIdx];
-                  
+
                   // Reel column style: spin blur while spinning, snappy vertical bounce when stopped
                   let reelColumnClass = "lr-reel-column";
-                  if (isReelSpinning) {
+                  if (isReelSpinning && !bonusActive) {
                     reelColumnClass += " lr-reel-spinning";
-                  } else if (hasBounceTrigger) {
+                  } else if (hasBounceTrigger && !bonusActive) {
                     reelColumnClass += " lr-reel-bounce";
                   }
 
@@ -659,18 +942,18 @@ export function LigneeRoyaleRoot({
                     <Stack key={colIdx} gap={isMobile ? "xs" : "md"} className={reelColumnClass}>
                       {[0, 1, 2, 3, 4, 5, 6].map((rowIdx) => {
                         const card = grid[rowIdx][colIdx];
-                        const isWinningCard = activeWinLineIdx !== null && 
+                        const isWinningCard = activeWinLineIdx !== null &&
                           winningLines[activeWinLineIdx]?.rows[colIdx] === rowIdx;
-                        
+
                         // Scoring rows are indices 2, 3, and 4. Rows 0,1 and 5,6 are dimmed backdrop overflow.
                         const isScoringRow = rowIdx >= 2 && rowIdx <= 4;
-                        
+
                         // Card style modifiers (ignored during active reel spinning)
                         let cardClass = "";
                         if (!isScoringRow) {
                           cardClass = "lr-card-non-scoring";
                         }
-                        
+
                         if (!isReelSpinning) {
                           if (isScoringRow) {
                             if (card.isDead) cardClass = "card-special-dead";
@@ -684,6 +967,14 @@ export function LigneeRoyaleRoot({
                               cardClass += " lr-card-highlighted";
                             }
                           }
+                        } else {
+                          if (bonusActive && !card.isCoin) {
+                            cardClass += " lr-card-spinning";
+                          }
+                        }
+
+                        if (hasBounceTrigger && bonusActive && !card.isCoin) {
+                          cardClass += " lr-card-bounce";
                         }
 
                         // Generate a key that forces a remount on spin trigger to clear highlights/decays
@@ -711,9 +1002,13 @@ export function LigneeRoyaleRoot({
                                 rank: card.rank,
                                 isWild: card.isWild,
                                 isDead: card.isDead,
+                                isScatter: card.isScatter,
+                                isCoin: card.isCoin,
+                                isEmptySlot: card.isEmptySlot,
+                                coinValueMultiplier: card.coinValueMultiplier,
                               }}
                               size={cardSize}
-                              showBack={isReelSpinning} // Card backs show only while active spinning is running
+                              showBack={isReelSpinning && !card.isCoin} // Card backs show only while active spinning is running and card is not a locked coin
                             />
                             {/* Display custom badge overlays only when NOT spinning & row is scoring */}
                             {!isReelSpinning && isScoringRow && card.isWild && (
@@ -735,7 +1030,7 @@ export function LigneeRoyaleRoot({
                                   color: "#fff",
                                 }}
                               >
-                                  DEAD
+                                DEAD
                               </Box>
                             )}
                           </Box>
@@ -747,7 +1042,7 @@ export function LigneeRoyaleRoot({
               </Group>
 
               {/* Centered Floating Win Indicator over playfield */}
-              {activeWinLineIdx !== null && winningLines[activeWinLineIdx] && (
+              {!bonusActive && activeWinLineIdx !== null && winningLines[activeWinLineIdx] && (
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activeWinLineIdx}
@@ -806,63 +1101,100 @@ export function LigneeRoyaleRoot({
 
             {/* Swapped Bottom Spin Control Bar - Now includes Select Active Lines */}
             <Box className="lr-glass-panel" p="md">
-              <Stack gap="md">
-                <Group justify="space-between" align="center" wrap="wrap" gap="sm">
-                  <Group gap="sm" style={{ flexGrow: 1 }}>
-                    <Text size="xs" c={clubTokens.text.muted}>
-                      Autoplay
-                    </Text>
-                    <Switch
-                      checked={autoPlay}
-                      onChange={(e) => {
-                        playSfx("button-click.ogg");
-                        setAutoPlay(e.currentTarget.checked);
-                      }}
-                      disabled={isSpinning}
-                      color="red"
-                    />
-                  </Group>
-                  
-                  <ClubButton
-                    fancy
-                    size="lg"
-                    disabled={isSpinning || credits < betAmount * activeLinesCount}
-                    onClick={() => handleSpin()}
-                    style={{ width: isMobile ? "100%" : 260, height: 52 }}
-                  >
-                    SPIN
-                  </ClubButton>
-                </Group>
-
-                {/* Select Active Lines buttons under the spin button section */}
-                <Stack gap="xs" style={{ borderTop: `1px solid ${clubTokens.surface.brassStroke}`, paddingTop: 12 }}>
-                  <Group justify="space-between" align="center" wrap="wrap" gap="xs">
-                    <Text size="xs" fw={600} c={clubTokens.text.brass}>
-                      Select Active Lines (Bet Multiplier)
-                    </Text>
-                    <Text size="xxs" c={clubTokens.text.muted}>
-                      More lines increases total bet cost
-                    </Text>
-                  </Group>
-                  <Group grow gap="xs" wrap="nowrap">
-                    {[1, 2, 3, 4].map((mult) => (
-                      <ClubButton
-                        key={mult}
-                        variant={betMultiplier === mult ? "filled" : "outline"}
-                        size="xs"
-                        disabled={isSpinning}
-                        onClick={() => {
-                          playSfx("button-click.ogg");
-                          setBetMultiplier(mult);
+              {bonusActive ? (
+                <Stack gap="sm" align="center">
+                  <Group justify="space-between" style={{ width: "100%" }}>
+                    <Stack gap={2}>
+                      <Text size="xs" c={clubTokens.text.muted}>BONUS MODE ACTIVE</Text>
+                      <Text
+                        size="md"
+                        fw={800}
+                        c="#ffd780"
+                        style={{
+                          textShadow: "0 0 10px rgba(255, 215, 0, 0.4)",
                         }}
-                        style={{ fontSize: "0.75rem", padding: "4px 2px" }}
                       >
-                        {MULTIPLIER_LINES[mult]}
-                      </ClubButton>
-                    ))}
+                        FREE SPINS LEFT: {bonusSpinsLeft}
+                      </Text>
+                    </Stack>
+
+                    <Stack gap={2} align="flex-end">
+                      <Text size="xs" c={clubTokens.text.muted}>BONUS WINNINGS</Text>
+                      <Text
+                        size="md"
+                        fw={800}
+                        c="green"
+                        style={{
+                          textShadow: "0 0 10px rgba(0, 255, 0, 0.4)",
+                        }}
+                      >
+                        {bonusTotalWinMultiplier}x ({ (bonusTotalWinMultiplier * betAmount).toLocaleString() } cr)
+                      </Text>
+                    </Stack>
                   </Group>
+                  <Text size="xs" c={clubTokens.text.muted} ta="center">
+                    Coins hold in place. Open spaces spin automatically. Counter resets to 3 when a new coin lands!
+                  </Text>
                 </Stack>
-              </Stack>
+              ) : (
+                <Stack gap="md">
+                  <Group justify="space-between" align="center" wrap="wrap" gap="sm">
+                    <Group gap="sm" style={{ flexGrow: 1 }}>
+                      <Text size="xs" c={clubTokens.text.muted}>
+                        Autoplay
+                      </Text>
+                      <Switch
+                        checked={autoPlay}
+                        onChange={(e) => {
+                          playSfx("button-click.ogg");
+                          setAutoPlay(e.currentTarget.checked);
+                        }}
+                        disabled={isSpinning}
+                        color="red"
+                      />
+                    </Group>
+
+                    <ClubButton
+                      fancy
+                      size="lg"
+                      disabled={isSpinning || credits < betAmount * activeLinesCount}
+                      onClick={() => handleSpin()}
+                      style={{ width: isMobile ? "100%" : 260, height: 52 }}
+                    >
+                      SPIN
+                    </ClubButton>
+                  </Group>
+
+                  {/* Select Active Lines buttons under the spin button section */}
+                  <Stack gap="xs" style={{ borderTop: `1px solid ${clubTokens.surface.brassStroke}`, paddingTop: 12 }}>
+                    <Group justify="space-between" align="center" wrap="wrap" gap="xs">
+                      <Text size="xs" fw={600} c={clubTokens.text.brass}>
+                        Select Active Lines (Bet Multiplier)
+                      </Text>
+                      <Text size="xxs" c={clubTokens.text.muted}>
+                        More lines increases total bet cost
+                      </Text>
+                    </Group>
+                    <Group grow gap="xs" wrap="nowrap">
+                      {[1, 2, 3, 4].map((mult) => (
+                        <ClubButton
+                          key={mult}
+                          variant={betMultiplier === mult ? "filled" : "outline"}
+                          size="xs"
+                          disabled={isSpinning}
+                          onClick={() => {
+                            playSfx("button-click.ogg");
+                            setBetMultiplier(mult);
+                          }}
+                          style={{ fontSize: "0.75rem", padding: "4px 2px" }}
+                        >
+                          {MULTIPLIER_LINES[mult]}
+                        </ClubButton>
+                      ))}
+                    </Group>
+                  </Stack>
+                </Stack>
+              )}
             </Box>
           </Stack>
         </Box>
@@ -882,14 +1214,14 @@ export function LigneeRoyaleRoot({
                     {credits.toLocaleString()} cr
                   </Text>
                 </Stack>
-                
+
                 <Stack gap={2}>
                   <Text size="xs" c={clubTokens.text.muted}>TOTAL BET:</Text>
                   <Text size="md" fw={700} c={clubTokens.text.brass}>
                     {(betAmount * activeLinesCount).toLocaleString()} cr
                   </Text>
                 </Stack>
-                
+
                 <Stack gap={2}>
                   <Text size="xs" c={lastWinAmount !== null && lastWinAmount > 0 ? "green" : clubTokens.text.muted} fw={600}>
                     LAST WIN:
@@ -923,31 +1255,31 @@ export function LigneeRoyaleRoot({
                   <ClubButton
                     variant="outline"
                     size="xs"
-                    disabled={betAmount <= config.minBet || isSpinning}
+                    disabled={betAmount <= config.minBet || isSpinning || bonusActive}
                     onClick={() => {
                       playSfx("button-click.ogg");
-                      setBetAmount((b) => Math.max(config.minBet, b - 5));
+                      setBetAmount((b) => Math.max(config.minBet, b - config.minBet));
                     }}
                   >
-                    -5
+                    -{config.minBet}
                   </ClubButton>
                   <ClubButton
                     variant="outline"
                     size="xs"
-                    disabled={betAmount >= config.maxBet || isSpinning}
+                    disabled={betAmount >= config.maxBet || isSpinning || bonusActive}
                     onClick={() => {
                       playSfx("button-click.ogg");
-                      setBetAmount((b) => Math.min(config.maxBet, b + 5));
+                      setBetAmount((b) => Math.min(config.maxBet, b + config.minBet));
                     }}
                   >
-                    +5
+                    +{config.minBet}
                   </ClubButton>
                 </Group>
                 <Group grow gap="xs">
                   <ClubButton
                     variant="outline"
                     size="xs"
-                    disabled={isSpinning}
+                    disabled={isSpinning || bonusActive}
                     onClick={() => {
                       playSfx("button-click.ogg");
                       setBetAmount(config.minBet);
@@ -958,7 +1290,7 @@ export function LigneeRoyaleRoot({
                   <ClubButton
                     variant="outline"
                     size="xs"
-                    disabled={isSpinning}
+                    disabled={isSpinning || bonusActive}
                     onClick={() => {
                       playSfx("button-click.ogg");
                       setBetAmount(config.maxBet);
@@ -999,6 +1331,128 @@ export function LigneeRoyaleRoot({
           onClose={() => setShowTutorial(false)}
         />
       )}
+
+      {/* Hold & Respin Trigger Overlay */}
+      <AnimatePresence>
+        {bonusOverlayState === 'triggered' && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.2 }}
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 999,
+              background: "rgba(0, 0, 0, 0.9)",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              backdropFilter: "blur(8px)",
+            }}
+          >
+            <motion.div
+              animate={{
+                scale: [1, 1.1, 1],
+                rotate: [0, 5, -5, 0],
+              }}
+              transition={{ repeat: Infinity, duration: 2 }}
+              style={{ fontSize: "5rem", marginBottom: 20 }}
+            >
+              👑
+            </motion.div>
+            <Text
+              size="xl"
+              fw={900}
+              c="#ffd780"
+              style={{
+                fontSize: "3rem",
+                textAlign: "center",
+                textTransform: "uppercase",
+                letterSpacing: "4px",
+                textShadow: "0 0 20px rgba(255, 215, 0, 0.8), 0 0 40px rgba(255, 215, 0, 0.4)",
+              }}
+            >
+              Hold & Respin
+            </Text>
+            <Text
+              size="md"
+              c="var(--game-card-suit-red)"
+              fw={700}
+              style={{
+                letterSpacing: "2px",
+                marginTop: 10,
+                textTransform: "uppercase",
+              }}
+            >
+              Bonus Game Triggered
+            </Text>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Bonus Winnings Count-Up Overlay */}
+      <AnimatePresence>
+        {bonusOverlayState === 'countup' && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 999,
+              background: "rgba(0, 0, 0, 0.95)",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              backdropFilter: "blur(12px)",
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.5, y: 50 }}
+              animate={{ scale: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 100 }}
+              style={{ textAlign: "center" }}
+            >
+              <Text
+                size="sm"
+                fw={800}
+                c="#ffd780"
+                style={{ letterSpacing: "3px", textTransform: "uppercase", marginBottom: 10 }}
+              >
+                Bonus Total Win
+              </Text>
+              
+              {/* Dynamic Count Up */}
+              <Text
+                size="xl"
+                fw={900}
+                c="green"
+                style={{
+                  fontSize: "5rem",
+                  lineHeight: 1,
+                  textShadow: "0 0 30px rgba(0, 255, 0, 0.7), 0 0 60px rgba(0, 255, 0, 0.4)",
+                  fontFamily: "monospace",
+                }}
+              >
+                +{bonusWinnings.toLocaleString()} cr
+              </Text>
+
+              <Text size="sm" c={clubTokens.text.muted} mt="md" style={{ letterSpacing: "1px" }}>
+                Total Multiplier: {bonusTotalWinMultiplier}x
+              </Text>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Box>
   );
 }

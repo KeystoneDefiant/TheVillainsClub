@@ -35,9 +35,9 @@ export const ligneeRoyaleGameConfig = {
     maxPayout: 100000,
 
     // Adjusted special card settings for balanced slot machine RTP (~95%)
-    maxWildCards: 1,      // 1x standard wild
+    maxWildCards: 2,      // 1x standard wild
     maxWild2xCards: 1,    // 2x multiplier wild
-    maxWild3xCards: 1,    // 3x multiplier wild (0 by default)
+    maxWild3xCards: 0,    // 3x multiplier wild (0 by default)
     maxWild5xCards: 0,    // 5x multiplier wild (0 by default)
     maxDeadCards: 4,      // dead cards
 
@@ -68,8 +68,14 @@ export const ligneeRoyaleGameConfig = {
       displayName: "High Stakes",
       buyIn: 10000,
       startingCredits: 10000,
-      minBet: 10,
+      maxReturnMultipleOfBuyIn: 100,
+      minBet: 25,
       maxBet: 2500,
+      maxWildCards: 0,
+      maxWild2xCards: 0,
+      maxWild3xCards: 1,
+      maxWild5xCards: 1,
+      maxDeadCards: 12,
     }
   }
 } as const;
@@ -89,11 +95,11 @@ export function resolveLigneeRoyaleGameMode(modeId: string | undefined): LigneeR
       minBet: override.minBet,
       maxBet: override.maxBet,
       maxPayout: base.maxPayout,
-      maxWildCards: base.maxWildCards,
-      maxWild2xCards: base.maxWild2xCards,
-      maxWild3xCards: base.maxWild3xCards,
-      maxWild5xCards: base.maxWild5xCards,
-      maxDeadCards: base.maxDeadCards,
+      maxWildCards: (override as { maxWildCards?: number }).maxWildCards ?? base.maxWildCards,
+      maxWild2xCards: (override as { maxWild2xCards?: number }).maxWild2xCards ?? base.maxWild2xCards,
+      maxWild3xCards: (override as { maxWild3xCards?: number }).maxWild3xCards ?? base.maxWild3xCards,
+      maxWild5xCards: (override as { maxWild5xCards?: number }).maxWild5xCards ?? base.maxWild5xCards,
+      maxDeadCards: (override as { maxDeadCards?: number }).maxDeadCards ?? base.maxDeadCards,
       deckComposition: {
         suits: [...base.deckComposition.suits],
         ranks: [...base.deckComposition.ranks],

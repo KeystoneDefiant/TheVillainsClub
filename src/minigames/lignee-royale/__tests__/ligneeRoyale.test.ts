@@ -29,7 +29,7 @@ describe("Lignée Royale Configuration", () => {
   });
 
   it("should resolve unknown game mode to default normal mode", () => {
-    const config = resolveLigneeRoyaleGameMode("nonExistent" as any);
+    const config = resolveLigneeRoyaleGameMode("nonExistent");
     expect(config.displayName).toBe(ligneeRoyaleGameConfig.defaultGameMode.displayName);
   });
 });

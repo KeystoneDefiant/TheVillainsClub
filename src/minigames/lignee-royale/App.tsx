@@ -41,15 +41,13 @@ const MULTIPLIER_LINES: Record<number, string> = {
   4: "7 Lines",
 };
 
-export interface LigneeRoyaleRootProps extends LigneeRoyaleShellBinding {}
+export type LigneeRoyaleRootProps = LigneeRoyaleShellBinding;
 
 export function LigneeRoyaleRoot({
   sessionCredits,
-  settlement: _settlement,
   gameModeId,
   onReturnToClubMenu,
   onAbandonRun,
-  onPauseToClub: _onPauseToClub,
   isTutorial = false,
 }: LigneeRoyaleRootProps) {
   const config: LigneeRoyaleGameModeConfig = useMemo(() => resolveLigneeRoyaleGameMode(gameModeId), [gameModeId]);

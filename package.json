@@ -20,6 +20,7 @@
     "sim:itch": "npx tsx scripts/sim-seven-year-itch.ts",
     "sim:oubliette": "npx tsx scripts/sim-oubliette.ts",
     "sim:masterson": "npx tsx scripts/sim-masterson.ts",
+    "sim:royale": "npx tsx scripts/sim-lignee-royale.ts",
     "sim:all": "npx tsx scripts/sim-all.ts",
     "pack": "npm run build && electron-builder --dir --publish never",
     "dist": "npm run build && electron-builder --publish never",

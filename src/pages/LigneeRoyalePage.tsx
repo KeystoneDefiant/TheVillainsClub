@@ -85,7 +85,7 @@ export function LigneeRoyalePage() {
         transform: "translate3d(0, 0, 0)",
         backfaceVisibility: "hidden",
         opacity: reduceMotion ? 1 : undefined,
-        background: "radial-gradient(ellipse at 50% 0%, rgba(185, 28, 40, 0.08), transparent 55%), #0f0d0b",
+        background: "#0f0d0b",
         ...(reduceMotion ? {} : { ["--shell-route-fade-dur" as string]: "0.35s" }),
       }}
     >

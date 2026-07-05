@@ -19,7 +19,14 @@
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  background-color: #0f0d0b;
+  background:
+    radial-gradient(circle at 50% 30%, rgba(185, 28, 40, 0.16) 0%, transparent 65%),
+    radial-gradient(circle at center, transparent 30%, rgba(0, 0, 0, 0.8) 100%),
+    linear-gradient(135deg, rgba(199, 158, 87, 0.02) 25%, transparent 25%) -20px 0,
+    linear-gradient(225deg, rgba(199, 158, 87, 0.02) 25%, transparent 25%) -20px 0,
+    linear-gradient(45deg, rgba(199, 158, 87, 0.02) 25%, transparent 25%),
+    linear-gradient(315deg, rgba(199, 158, 87, 0.02) 25%, #0f0d0b 25%);
+  background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px, 40px 40px, 40px 40px;
   overflow-x: hidden;
 
   h1, h2, h3, .lr-title {

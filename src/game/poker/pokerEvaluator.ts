@@ -27,7 +27,7 @@ export class PokerEvaluator {
 
     const minimumPairRank = opts?.minimumPairRank ?? 11;
 
-    const activeHand = hand.filter((card) => !card.isDead);
+    const activeHand = hand.filter((card) => !card.isDead && !card.isScatter && !card.isCoin && !card.isEmptySlot);
 
     if (activeHand.length === 0) {
       return {

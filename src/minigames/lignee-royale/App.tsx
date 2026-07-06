@@ -94,6 +94,17 @@ export function LigneeRoyaleRoot({
   const [grid, setGrid] = useState<Card[][]>(initialCards);
   const [isSpinning, setIsSpinning] = useState(false);
   const [spinningReels, setSpinningReels] = useState<boolean[]>([false, false, false, false, false]);
+  const [showReelBacks, setShowReelBacks] = useState<boolean[]>([false, false, false, false, false]);
+  const [slowingReels, setSlowingReels] = useState<boolean[]>([false, false, false, false, false]);
+  const [spinningSlots, setSpinningSlots] = useState<boolean[][]>(
+    Array(7).fill(null).map(() => Array(5).fill(false))
+  );
+  const [slowingSlots, setSlowingSlots] = useState<boolean[][]>(
+    Array(7).fill(null).map(() => Array(5).fill(false))
+  );
+  const [showSlotBacks, setShowSlotBacks] = useState<boolean[][]>(
+    Array(7).fill(null).map(() => Array(5).fill(false))
+  );
 
   // Snappy reel stops bounce animations classes states
   const [bounceReels, setBounceReels] = useState<boolean[]>([false, false, false, false, false]);
@@ -363,6 +374,8 @@ export function LigneeRoyaleRoot({
     setActiveWinLineIdx(null);
     setIsSpinning(true);
     setSpinningReels([true, true, true, true, true]);
+    setShowReelBacks([true, true, true, true, true]);
+    setSlowingReels([false, false, false, false, false]);
     setBounceReels([false, false, false, false, false]); // Reset bounce animation triggers
     setSpinTriggerId((s) => s + 1);
 
@@ -385,9 +398,10 @@ export function LigneeRoyaleRoot({
     }
 
     // Staggered stop logic
-    const delays = [600, 900, 1200, 1500, 1800];
+    [0, 1, 2, 3, 4].forEach((idx) => {
+      const slowStartTime = 200 + idx * 300;
 
-    delays.forEach((delay, idx) => {
+      // Transition to slowing phase
       setTimeout(() => {
         setGrid((currentGrid) => {
           const next = currentGrid.map((row) => [...row]);
@@ -396,34 +410,36 @@ export function LigneeRoyaleRoot({
           }
           return next;
         });
-
+        setShowReelBacks((prev) => {
+          const next = [...prev];
+          next[idx] = false;
+          return next;
+        });
         setSpinningReels((prev) => {
           const next = [...prev];
           next[idx] = false;
           return next;
         });
-
-        // Trigger reel stop snappy bounce settlement animation
-        setBounceReels((prev) => {
+        setSlowingReels((prev) => {
           const next = [...prev];
           next[idx] = true;
           return next;
         });
-        playSfx("button-click.ogg");
+      }, slowStartTime);
 
-        // Clear bounce class after duration to prevent overlap
-        setTimeout(() => {
-          setBounceReels((prev) => {
-            const next = [...prev];
-            next[idx] = false;
-            return next;
-          });
-        }, 400);
+      // Stop and settle
+      setTimeout(() => {
+        setSlowingReels((prev) => {
+          const next = [...prev];
+          next[idx] = false;
+          return next;
+        });
+        playSfx("button-click.ogg");
 
         if (idx === 4) {
           evaluateSpin(nextGrid);
         }
-      }, delay);
+      }, slowStartTime + 800);
     });
   }, [betAmount, activeLinesCount, credits, generateLigneeRoyaleDeck, evaluateSpin, playSfx]);
 
@@ -434,13 +450,14 @@ export function LigneeRoyaleRoot({
     setIsSpinning(true);
     setSpinTriggerId((s) => s + 1);
 
-    // Identify which columns need to spin (those with empty slots in rows 2, 3, 4)
-    const colsToSpin = [0, 1, 2, 3, 4].map((colIdx) =>
-      [2, 3, 4].some((rowIdx) => grid[rowIdx][colIdx]?.isEmptySlot)
+    // Identify which slot cells are empty and need to spin
+    const nextSpinningSlots = grid.map((row, r) =>
+      row.map((card) => r >= 2 && r <= 4 && !!card.isEmptySlot)
     );
 
-    setSpinningReels(colsToSpin);
-    setBounceReels([false, false, false, false, false]);
+    setSpinningSlots(nextSpinningSlots);
+    setShowSlotBacks(nextSpinningSlots);
+    setSlowingSlots(grid.map((row) => row.map(() => false)));
 
     // Calculate outcomes for each slot in the 7x5 grid
     const nextGrid = grid.map((row, r) =>
@@ -468,86 +485,102 @@ export function LigneeRoyaleRoot({
       })
     );
 
-    // Delays
-    const delays = [600, 900, 1200, 1500, 1800];
+    // Determine stop timers for each cell (index 0 to 14)
+    let maxStopTime = 0;
+    let hasAnySpinning = false;
 
-    delays.forEach((delay, idx) => {
-      setTimeout(() => {
-        if (colsToSpin[idx]) {
-          setGrid((currentGrid) => {
-            const next = currentGrid.map((row) => [...row]);
-            for (let r = 0; r < 7; r++) {
-              next[r][idx] = nextGrid[r][idx];
-            }
-            return next;
-          });
+    for (let r = 2; r <= 4; r++) {
+      for (let c = 0; c < 5; c++) {
+        if (nextSpinningSlots[r][c]) {
+          hasAnySpinning = true;
+          const cellIdx = (r - 2) * 5 + c;
+          const slowStartTime = 200 + cellIdx * 200;
+          const stopTime = slowStartTime + 800;
+          maxStopTime = Math.max(maxStopTime, stopTime);
 
-          setSpinningReels((prev) => {
-            const next = [...prev];
-            next[idx] = false;
-            return next;
-          });
-
-          setBounceReels((prev) => {
-            const next = [...prev];
-            next[idx] = true;
-            return next;
-          });
-
-          // Check if a new coin landed in this column
-          const newCoinLanded = [2, 3, 4].some(
-            (r) => nextGrid[r][idx]?.isCoin && !grid[r][idx]?.isCoin
-          );
-
-          if (newCoinLanded) {
-            playSfx("onepair.ogg"); // Chime sound for landing coin
-          } else {
-            playSfx("button-click.ogg");
-          }
-
+          // Transition cell (r, c) to slowing phase
           setTimeout(() => {
-            setBounceReels((prev) => {
-              const next = [...prev];
-              next[idx] = false;
+            setGrid((currentGrid) => {
+              const next = currentGrid.map((row) => [...row]);
+              next[r][c] = nextGrid[r][c];
               return next;
             });
-          }, 400);
-        }
+            setShowSlotBacks((prev) => {
+              const next = prev.map((row) => [...row]);
+              next[r][c] = false;
+              return next;
+            });
+            setSpinningSlots((prev) => {
+              const next = prev.map((row) => [...row]);
+              next[r][c] = false;
+              return next;
+            });
+            setSlowingSlots((prev) => {
+              const next = prev.map((row) => [...row]);
+              next[r][c] = true;
+              return next;
+            });
+          }, slowStartTime);
 
-        if (idx === 4) {
-          // Final evaluations
-          let coinCount = 0;
-          let currentMultiplierSum = 0;
-          for (let r = 2; r <= 4; r++) {
-            for (let c = 0; c < 5; c++) {
-              if (nextGrid[r][c]?.isCoin) {
-                coinCount++;
-                currentMultiplierSum += nextGrid[r][c].coinValueMultiplier ?? 0;
-              }
+          // Stop cell (r, c) and settle
+          setTimeout(() => {
+            setSlowingSlots((prev) => {
+              const next = prev.map((row) => [...row]);
+              next[r][c] = false;
+              return next;
+            });
+
+            // Check if a coin landed
+            if (nextGrid[r][c]?.isCoin) {
+              playSfx("onepair.ogg"); // Chime sound for landing coin
+            } else {
+              playSfx("button-click.ogg");
             }
-          }
-
-          const previousCoinCount = grid.reduce(
-            (sum, row, r) =>
-              sum +
-              row.reduce((s, card) => s + (r >= 2 && r <= 4 && card.isCoin ? 1 : 0), 0),
-            0
-          );
-
-          const newCoinsCount = coinCount - previousCoinCount;
-
-          if (newCoinsCount > 0) {
-            setBonusSpinsLeft(3);
-            setBonusTotalWinMultiplier(currentMultiplierSum);
-            playSfx("twopair.ogg"); // Success chime
-          } else {
-            setBonusSpinsLeft((prev) => Math.max(0, prev - 1));
-          }
-
-          setIsSpinning(false);
+          }, stopTime);
         }
-      }, delay);
-    });
+      }
+    }
+
+    // Final evaluation callback
+    const performEvaluation = () => {
+      let coinCount = 0;
+      let currentMultiplierSum = 0;
+      for (let r = 2; r <= 4; r++) {
+        for (let c = 0; c < 5; c++) {
+          if (nextGrid[r][c]?.isCoin) {
+            coinCount++;
+            currentMultiplierSum += nextGrid[r][c].coinValueMultiplier ?? 0;
+          }
+        }
+      }
+
+      const previousCoinCount = grid.reduce(
+        (sum, row, r) =>
+          sum +
+          row.reduce((s, card) => s + (r >= 2 && r <= 4 && card.isCoin ? 1 : 0), 0),
+        0
+      );
+
+      const newCoinsCount = coinCount - previousCoinCount;
+
+      if (newCoinsCount > 0) {
+        setBonusSpinsLeft(3);
+        setBonusTotalWinMultiplier(currentMultiplierSum);
+        playSfx("twopair.ogg"); // Success chime
+      } else {
+        setBonusSpinsLeft((prev) => Math.max(0, prev - 1));
+      }
+
+      setIsSpinning(false);
+    };
+
+    if (hasAnySpinning) {
+      setTimeout(() => {
+        performEvaluation();
+      }, maxStopTime);
+    } else {
+      performEvaluation();
+    }
   }, [bonusActive, bonusSpinsLeft, isSpinning, grid, playSfx]);
 
   // Trigger bonus end / count-up when spins left reaches 0
@@ -708,19 +741,18 @@ export function LigneeRoyaleRoot({
 
 
 
-  // Helper to resolve card points on responsive layouts (restored to prior 3x5 centers)
   const getLinePoints = useCallback((line: PaylineConfig) => {
     return line.rows
       .map((rowIdx, colIdx) => {
         const visibleRowIdx = rowIdx - 2; // Maps Rows 2,3,4 inside the visible 3-row viewport
         if (isMobile) {
-          // medium size: 64w x 96h, container pad = 8, col padding top = 8, gap = 8
-          const x = 8 + colIdx * (64 + 8) + 32;
+          // medium size: 64w x 96h, container pad = 8, col padding = 4, gap = 8 (col width = 72)
+          const x = 8 + colIdx * (72 + 8) + 4 + 32;
           const y = 8 + 4 + visibleRowIdx * (96 + 8) + 48;
           return `${x},${y}`;
         } else {
-          // large size: 80w x 128h, container pad = 16, col padding top = 8, gap = 12
-          const x = 16 + colIdx * (80 + 16) + 40;
+          // large size: 80w x 128h, container pad = 16, col padding = 4, gap = 16 (col width = 88)
+          const x = 16 + colIdx * (88 + 16) + 4 + 40;
           const y = 16 + 8 + visibleRowIdx * (128 + 12) + 64;
           return `${x},${y}`;
         }
@@ -928,20 +960,30 @@ export function LigneeRoyaleRoot({
               <Group gap={isMobile ? "xs" : "md"} wrap="nowrap">
                 {[0, 1, 2, 3, 4].map((colIdx) => {
                   const isReelSpinning = spinningReels[colIdx];
+                  const isReelSlowing = slowingReels[colIdx];
                   const hasBounceTrigger = bounceReels[colIdx];
 
                   // Reel column style: spin blur while spinning, snappy vertical bounce when stopped
                   let reelColumnClass = "lr-reel-column";
                   if (isReelSpinning && !bonusActive) {
                     reelColumnClass += " lr-reel-spinning";
+                  } else if (isReelSlowing && !bonusActive) {
+                    reelColumnClass += " lr-reel-slowing";
                   } else if (hasBounceTrigger && !bonusActive) {
                     reelColumnClass += " lr-reel-bounce";
                   }
 
                   return (
                     <Stack key={colIdx} gap={isMobile ? "xs" : "md"} className={reelColumnClass}>
-                      {[0, 1, 2, 3, 4, 5, 6].map((rowIdx) => {
-                        const card = grid[rowIdx][colIdx];
+                      {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((rowIdx) => {
+                        let card = grid[rowIdx]?.[colIdx];
+                        if (!card) {
+                          card = {
+                            suit: "hearts",
+                            rank: "A",
+                            id: `extra-buffer-${rowIdx}-${colIdx}`,
+                          };
+                        }
                         const isWinningCard = activeWinLineIdx !== null &&
                           winningLines[activeWinLineIdx]?.rows[colIdx] === rowIdx;
 
@@ -954,7 +996,10 @@ export function LigneeRoyaleRoot({
                           cardClass = "lr-card-non-scoring";
                         }
 
-                        if (!isReelSpinning) {
+                        const isSlotSpinning = bonusActive ? spinningSlots[rowIdx]?.[colIdx] : isReelSpinning;
+                        const isSlotSlowing = bonusActive ? slowingSlots[rowIdx]?.[colIdx] : isReelSlowing;
+
+                        if (!isSlotSpinning && !isSlotSlowing) {
                           if (isScoringRow) {
                             if (card.isDead) cardClass = "card-special-dead";
                             else if (card.isWild) {
@@ -967,10 +1012,6 @@ export function LigneeRoyaleRoot({
                               cardClass += " lr-card-highlighted";
                             }
                           }
-                        } else {
-                          if (bonusActive && !card.isCoin) {
-                            cardClass += " lr-card-spinning";
-                          }
                         }
 
                         if (hasBounceTrigger && bonusActive && !card.isCoin) {
@@ -978,12 +1019,14 @@ export function LigneeRoyaleRoot({
                         }
 
                         // Generate a key that forces a remount on spin trigger to clear highlights/decays
-                        const cardKey = `${spinTriggerId}-${rowIdx}-${colIdx}-${isReelSpinning}`;
+                        const cardKey = `${spinTriggerId}-${rowIdx}-${colIdx}-${isSlotSpinning}-${isSlotSlowing}`;
 
                         // Calculate vertical margin shift offset to align Rows 2, 3, and 4 inside the viewport
                         // Desktop offset: -280px (2 cards * 128 height + 2 gaps * 12)
                         // Mobile offset: -208px (2 cards * 96 height + 2 gaps * 8)
                         const shiftMargin = rowIdx === 0 ? (isMobile ? -208 : -280) : undefined;
+
+                        const showSpinningSlotStack = bonusActive && (isSlotSpinning || isSlotSlowing);
 
                         return (
                           <Box
@@ -996,22 +1039,55 @@ export function LigneeRoyaleRoot({
                               marginTop: shiftMargin,
                             }}
                           >
-                            <PlayingCard
-                              card={{
-                                suit: card.suit,
-                                rank: card.rank,
-                                isWild: card.isWild,
-                                isDead: card.isDead,
-                                isScatter: card.isScatter,
-                                isCoin: card.isCoin,
-                                isEmptySlot: card.isEmptySlot,
-                                coinValueMultiplier: card.coinValueMultiplier,
-                              }}
-                              size={cardSize}
-                              showBack={isReelSpinning && !card.isCoin} // Card backs show only while active spinning is running and card is not a locked coin
-                            />
-                            {/* Display custom badge overlays only when NOT spinning & row is scoring */}
-                            {!isReelSpinning && isScoringRow && card.isWild && (
+                            {showSpinningSlotStack ? (
+                              <Box
+                                style={{
+                                  width: isMobile ? 64 : 80,
+                                  height: isMobile ? 96 : 128,
+                                  overflow: "hidden",
+                                  borderRadius: 12,
+                                  position: "relative",
+                                }}
+                              >
+                                <Stack
+                                  gap={isMobile ? "xs" : "md"}
+                                  className={isSlotSlowing ? "lr-reel-slowing" : "lr-reel-spinning"}
+                                >
+                                  {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((idx) => {
+                                    const displayCard = idx === 0 ? card : (
+                                      idx % 2 === 0
+                                        ? { suit: "hearts" as const, rank: "A" as const, id: `temp-${idx}` }
+                                        : { isCoin: true, coinValueMultiplier: 5, suit: "hearts" as const, rank: "A" as const, id: `temp-${idx}` }
+                                    );
+                                    return (
+                                      <PlayingCard
+                                        key={idx}
+                                        card={displayCard}
+                                        size={cardSize}
+                                        showBack={showSlotBacks[rowIdx]?.[colIdx] && idx !== 0}
+                                      />
+                                    );
+                                  })}
+                                </Stack>
+                              </Box>
+                            ) : (
+                              <PlayingCard
+                                card={{
+                                  suit: card.suit,
+                                  rank: card.rank,
+                                  isWild: card.isWild,
+                                  isDead: card.isDead,
+                                  isScatter: card.isScatter,
+                                  isCoin: card.isCoin,
+                                  isEmptySlot: card.isEmptySlot,
+                                  coinValueMultiplier: card.coinValueMultiplier,
+                                }}
+                                size={cardSize}
+                                showBack={showReelBacks[colIdx] && !card.isCoin} // Card backs show only while active spinning is running and card is not a locked coin
+                              />
+                            )}
+                            {/* Display custom badge overlays only when NOT spinning/slowing & row is scoring */}
+                            {!isSlotSpinning && !isSlotSlowing && isScoringRow && card.isWild && (
                               <Box
                                 className="card-special-badge"
                                 style={{
@@ -1022,7 +1098,7 @@ export function LigneeRoyaleRoot({
                                 {card.wildMultiplier ? `WILD ${card.wildMultiplier}x` : "WILD"}
                               </Box>
                             )}
-                            {!isReelSpinning && isScoringRow && card.isDead && (
+                            {!isReelSpinning && !isReelSlowing && isScoringRow && card.isDead && (
                               <Box
                                 className="card-special-badge"
                                 style={{

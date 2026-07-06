@@ -41,6 +41,9 @@
     background: radial-gradient(circle at center, #261814 0%, #150d0b 100%);
     border: 2px solid var(--color-gold);
     border-radius: 16px;
+    width: 536px;
+    max-width: 100%;
+    margin: 0 auto;
     box-shadow: 
       inset 0 0 40px rgba(0, 0, 0, 0.9),
       0 12px 36px rgba(0, 0, 0, 0.7);
@@ -117,35 +120,36 @@
     justify-content: flex-start; /* Align top, offset using margin-top */
   }
 
-  /* Reel spinning animation: fast vertical scroll with motion blur */
   .lr-reel-spinning {
     animation: lrReelSpin 0.12s linear infinite;
     filter: blur(4px);
     pointer-events: none;
   }
 
+  .lr-reel-slowing {
+    animation: lrReelSettle 0.8s cubic-bezier(0.2, 0.8, 0.35, 1) forwards;
+    pointer-events: none;
+  }
+
   @keyframes lrReelSpin {
     0% {
-      transform: translateY(0);
+      transform: translateY(-140px); /* Start shifted up */
     }
     100% {
-      transform: translateY(-140px); /* Scroll exactly 1 card height + gap */
+      transform: translateY(0); /* Scroll down to fit seamless loop */
     }
   }
 
-  /* Snappy physical reel stop bounce settle */
-  .lr-reel-bounce {
-    animation: lrReelSettleBounce 0.38s cubic-bezier(0.25, 1.15, 0.5, 1.15) both;
-  }
-
-  @keyframes lrReelSettleBounce {
+  @keyframes lrReelSettle {
     0% {
-      transform: translateY(-25px);
+      transform: translateY(-420px); /* Start 3 card cycles up to match fast loop visual position */
+      filter: blur(2px);
     }
-    50% {
+    60% {
       transform: translateY(12px); /* Snappy overshoot down */
+      filter: blur(0);
     }
-    75% {
+    80% {
       transform: translateY(-4px); /* Minor spring back */
     }
     100% {
@@ -256,6 +260,12 @@
     pointer-events: none;
   }
 
+  .lr-card-slowing {
+    animation: lrCardSpin 0.35s linear infinite;
+    filter: blur(1.5px);
+    pointer-events: none;
+  }
+
   @keyframes lrCardSpin {
     0% {
       transform: translateY(0);
@@ -289,8 +299,42 @@
       padding: 8px 4px 20px 4px !important;
     }
     .lr-card-grid-container {
+      width: 100% !important;
+      max-width: 408px !important;
       padding: 8px !important;
       border-radius: 12px !important;
+    }
+    .lr-reel-slowing {
+      animation: lrReelSettleMobile 0.8s cubic-bezier(0.2, 0.8, 0.35, 1) forwards !important;
+    }
+    .lr-reel-spinning {
+      animation: lrReelSpinMobile 0.12s linear infinite !important;
+    }
+  }
+
+  @keyframes lrReelSpinMobile {
+    0% {
+      transform: translateY(-104px); /* Start shifted up */
+    }
+    100% {
+      transform: translateY(0); /* Scroll down to fit seamless loop */
+    }
+  }
+
+  @keyframes lrReelSettleMobile {
+    0% {
+      transform: translateY(-312px); /* Start 3 card cycles up to match mobile loops */
+      filter: blur(2px);
+    }
+    60% {
+      transform: translateY(8px); /* Mobile overshoot down */
+      filter: blur(0);
+    }
+    80% {
+      transform: translateY(-3px); /* Mobile spring back */
+    }
+    100% {
+      transform: translateY(0); /* Locked in place */
     }
   }
 }

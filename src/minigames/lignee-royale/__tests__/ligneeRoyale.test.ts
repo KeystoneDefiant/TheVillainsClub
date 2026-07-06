@@ -104,4 +104,17 @@ describe("Lignée Royale Payout Evaluation", () => {
     const result = PokerEvaluator.evaluate(cards);
     expect(result.rank).toBe("three-of-a-kind");
   });
+
+  it("should not count scatters or coins as card values or suits during evaluation", () => {
+    // Two Kings + Scatter + Coin + 2 = One Pair (Jacks or Better) / None
+    const cards: Card[] = [
+      { suit: "hearts", rank: "K", id: "c1" },
+      { suit: "diamonds", rank: "K", id: "c2" },
+      { suit: "clubs", rank: "A", id: "c3", isScatter: true },
+      { suit: "spades", rank: "A", id: "c4", isCoin: true },
+      { suit: "hearts", rank: "2", id: "c5" },
+    ];
+    const result = PokerEvaluator.evaluate(cards);
+    expect(result.rank).toBe("one-pair");
+  });
 });
